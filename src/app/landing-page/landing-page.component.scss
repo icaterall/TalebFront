@@ -1,0 +1,47 @@
+
+@import '../../styles.tokens.css';
+
+.hero{
+  background: radial-gradient(1200px 480px at 80% -10%, rgba(37,99,235,.25), transparent 60%),
+              linear-gradient(0deg, var(--bg), var(--bg));
+  padding: 1rem 0 2rem;
+}
+.nav{
+  display:flex; align-items:center; gap:1rem; height: 64px;
+}
+.logo{ font-weight:800; color:var(--brand-primary); text-decoration:none; font-size:1.2rem; }
+.spacer{ flex:1; }
+.lang{
+  border:1px solid var(--ring); background:var(--surface); color:var(--ink);
+  width:2.4rem; height:2.4rem; border-radius:12px; margin-inline: .25rem;
+}
+.hero__inner{ display:grid; grid-template-columns: 1.1fr 0.9fr; gap:2rem; align-items:center; padding: 2rem 0; }
+.hero__copy h1{ font-size: clamp(1.8rem, 3vw + 1rem, 3rem); line-height:1.15; margin: .75rem 0; color:var(--ink); }
+.hero__copy p{ max-width: 56ch; }
+.cta{ display:flex; gap:.75rem; margin: 1rem 0; flex-wrap:wrap; }
+.benefits{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:.5rem; list-style:none; padding:0; margin:1rem 0 0; }
+.hero__art img{ width:100%; height:auto; border-radius: var(--radius); border:1px solid var(--ring); box-shadow: var(--shadow); }
+
+.partners{ padding:2rem 0; text-align:center; }
+.partners .logos{ display:flex; gap:2rem; justify-content:center; align-items:center; flex-wrap:wrap; opacity:.8; }
+
+.features{ padding: 2rem 0; }
+.features h2{ font-size:1.8rem; margin-bottom:.25rem; }
+.features__grid{ grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.features__grid .f{ padding:1rem; }
+
+.cta2{ margin:2rem auto; padding:1.25rem; display:flex; gap:1rem; align-items:center; justify-content:space-between; }
+.cta2__copy h2{ margin:0; }
+
+.footer{ padding:2rem 0; border-top:1px solid var(--ring); background:var(--surface); }
+.footer__grid{ display:grid; gap:1rem; grid-template-columns: 2fr 1fr 1fr; align-items:start; }
+.footer a{ color: var(--ink); text-decoration:none; }
+.footer ul{ list-style:none; padding:0; margin:0; display:grid; gap:.5rem; }
+.tiny{ font-size:.85rem; color:var(--muted); margin-top: .75rem; }
+
+/* Responsive */
+@media (max-width: 900px){
+  .hero__inner{ grid-template-columns: 1fr; }
+  .cta2{ flex-direction:column; align-items:stretch; text-align:center; }
+  .footer__grid{ grid-template-columns: 1fr; text-align:center; }
+}

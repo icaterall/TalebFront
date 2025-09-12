@@ -1,0 +1,61 @@
+{
+  "nav": {
+    "signin": "Sign in",
+    "get_started": "Get started"
+  },
+  "hero": {
+    "badge": "AI‑enabled • Free for fragile zones",
+    "title": "Build better learning with ANATALEB",
+    "subtitle": "An Arabic‑first, AI‑driven platform that helps institutions manage learning, teachers run classes, students succeed, and parents stay informed — built to work fast even on slow internet.",
+    "cta_primary": "Try the live demo",
+    "cta_secondary": "How it works",
+    "b1": "Arabic + English with full RTL support",
+    "b2": "AI personalization and analytics by default",
+    "b3": "Multi‑role access: Admin, Institution, Teacher, Student, Parent",
+    "b4": "Lightweight, resilient design for low bandwidth"
+  },
+  "partners": {
+    "text": "Trusted and inspired by educators and NGOs working in fragile contexts"
+  },
+  "features": {
+    "title": "Everything you need to teach, learn, and manage at scale",
+    "kicker": "Purpose‑built for schools and centers in fragile regions",
+    "institutions": {
+      "title": "Institutions",
+      "desc": "Enrollments, sections, attendance, policies, term setup, and deep analytics."
+    },
+    "teachers": {
+      "title": "Teachers",
+      "desc": "Class dashboards, quizzes, rubrics, AI feedback, and content sequencing."
+    },
+    "students": {
+      "title": "Students",
+      "desc": "Clear learning paths, multi‑format content, instant feedback, and progress."
+    },
+    "parents": {
+      "title": "Parents",
+      "desc": "Private updates, attendance alerts, homework view, and achievement badges."
+    },
+    "ai": {
+      "title": "AI at the core",
+      "desc": "Personalized recommendations, risk alerts, and learning style detection (FSLSM)."
+    },
+    "content": {
+      "title": "Flexible content",
+      "desc": "Videos, PDFs, SCORM, audio, images, and HTML activities — all optimized for low bandwidth."
+    }
+  },
+  "cta2": {
+    "title": "Ready to empower your learners?",
+    "subtitle": "ANATALEB is free for fragile‑zone schools and NGOs.",
+    "button": "Get started — it’s free"
+  },
+  "footer": {
+    "mission": "Arabic‑first education technology that respects bandwidth constraints and empowers schools in fragile contexts.",
+    "about": "About",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "try": "Try the demo",
+    "copyright": "ANATALEB. All rights reserved."
+  }
+}

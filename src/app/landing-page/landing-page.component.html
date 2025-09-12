@@ -1,0 +1,102 @@
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<section class="hero">
+  <nav class="nav container" aria-label="Primary">
+    <a class="logo" href="/" aria-label="ANATALEB Home">ANATALEB</a>
+    <div class="spacer"></div>
+    <button class="lang" (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')" aria-label="Toggle language">
+      {{ (currentLang === 'ar' ? 'EN' : 'ع') }}
+    </button>
+    <a class="btn btn-ghost" href="/login">{{ 'nav.signin' | translate }}</a>
+    <a class="btn btn-primary" href="/signup">{{ 'nav.get_started' | translate }}</a>
+  </nav>
+
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <span class="tag">{{ 'hero.badge' | translate }}</span>
+      <h1>{{ 'hero.title' | translate }}</h1>
+      <p class="text-muted">{{ 'hero.subtitle' | translate }}</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="/demo">{{ 'hero.cta_primary' | translate }}</a>
+        <a class="btn btn-ghost" href="/learn-more">{{ 'hero.cta_secondary' | translate }}</a>
+      </div>
+      <ul class="benefits" aria-label="Key benefits">
+        <li>⚡ {{ 'hero.b1' | translate }}</li>
+        <li>🧠 {{ 'hero.b2' | translate }}</li>
+        <li>🌐 {{ 'hero.b3' | translate }}</li>
+        <li>📶 {{ 'hero.b4' | translate }}</li>
+      </ul>
+    </div>
+    <div class="hero__art">
+      <img src="/assets/hero-illustration.svg" width="560" height="380" loading="eager" decoding="async" alt="Illustration of AI‑enabled education">
+    </div>
+  </div>
+</section>
+
+<section class="partners container" aria-label="Trusted by">
+  <p class="text-muted">{{ 'partners.text' | translate }}</p>
+  <div class="logos">
+    <img src="/assets/partner-1.svg" alt="Partner 1" width="96" height="32" loading="lazy" decoding="async">
+    <img src="/assets/partner-2.svg" alt="Partner 2" width="96" height="32" loading="lazy" decoding="async">
+    <img src="/assets/partner-3.svg" alt="Partner 3" width="96" height="32" loading="lazy" decoding="async">
+  </div>
+</section>
+
+<section class="features container" aria-label="Features">
+  <h2>{{ 'features.title' | translate }}</h2>
+  <p class="text-muted">{{ 'features.kicker' | translate }}</p>
+  <div class="grid features__grid">
+    <article class="card f">
+      <h3>🏫 {{ 'features.institutions.title' | translate }}</h3>
+      <p>{{ 'features.institutions.desc' | translate }}</p>
+    </article>
+    <article class="card f">
+      <h3>👩‍🏫 {{ 'features.teachers.title' | translate }}</h3>
+      <p>{{ 'features.teachers.desc' | translate }}</p>
+    </article>
+    <article class="card f">
+      <h3>👨‍🎓 {{ 'features.students.title' | translate }}</h3>
+      <p>{{ 'features.students.desc' | translate }}</p>
+    </article>
+    <article class="card f">
+      <h3>👨‍👩‍👧 {{ 'features.parents.title' | translate }}</h3>
+      <p>{{ 'features.parents.desc' | translate }}</p>
+    </article>
+    <article class="card f">
+      <h3>🤖 {{ 'features.ai.title' | translate }}</h3>
+      <p>{{ 'features.ai.desc' | translate }}</p>
+    </article>
+    <article class="card f">
+      <h3>🧩 {{ 'features.content.title' | translate }}</h3>
+      <p>{{ 'features.content.desc' | translate }}</p>
+    </article>
+  </div>
+</section>
+
+<section class="cta2 container card">
+  <div class="cta2__copy">
+    <h2>{{ 'cta2.title' | translate }}</h2>
+    <p class="text-muted">{{ 'cta2.subtitle' | translate }}</p>
+  </div>
+  <a class="btn btn-primary" href="/signup">{{ 'cta2.button' | translate }}</a>
+</section>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <strong>ANATALEB</strong>
+      <p class="text-muted">{{ 'footer.mission' | translate }}</p>
+    </div>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/about">{{ 'footer.about' | translate }}</a></li>
+        <li><a href="/privacy">{{ 'footer.privacy' | translate }}</a></li>
+        <li><a href="/terms">{{ 'footer.terms' | translate }}</a></li>
+      </ul>
+    </nav>
+    <div class="foot-cta">
+      <a class="btn btn-primary" href="/demo">{{ 'footer.try' | translate }}</a>
+    </div>
+  </div>
+  <p class="container tiny">© {{ 'footer.copyright' | translate }}</p>
+</footer>
