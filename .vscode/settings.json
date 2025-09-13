@@ -1,0 +1,17 @@
+{
+  "stylelint.validate": ["css", "scss"],
+  "stylelint.run": "onSave",
+  "editor.codeActionsOnSave": { "source.fixAll.stylelint": true },
+
+  // Hard override for the extension (used even if another config exists)
+  "stylelint.config": {
+    "customSyntax": "postcss-scss",
+    "rules": {
+      "no-duplicate-selectors": [true, { "severity": "error" }],
+      "declaration-block-no-duplicate-properties": [
+        true,
+        { "ignore": ["consecutive-duplicates-with-different-values"], "severity": "error" }
+      ]
+    }
+  },
+}

@@ -1,61 +1,88 @@
-{
+{"logo-title": "ANATALEB",
+  "topbar": {
+    "text": "Built for schools in low-resource and conflict zones",
+    "cta": "How we save bandwidth"
+  },
   "nav": {
+    "features": "Features",
+    "categories": "AI Modules",
+    "impact": "Impact",
     "signin": "Sign in",
     "get_started": "Get started"
   },
   "hero": {
-    "badge": "AI‑enabled • Free for fragile zones",
-    "title": "Build better learning with ANATALEB",
-    "subtitle": "An Arabic‑first, AI‑driven platform that helps institutions manage learning, teachers run classes, students succeed, and parents stay informed — built to work fast even on slow internet.",
+    "badge": "AI-enabled e-learning platform",
+    "title": "Manage, teach, and learn — smarter and faster",
+    "subtitle": "Institutions, teachers, students, and parents on one secure platform. Arabic-first with full English support. Optimized for slow internet.",
     "cta_primary": "Try the live demo",
     "cta_secondary": "How it works",
-    "b1": "Arabic + English with full RTL support",
-    "b2": "AI personalization and analytics by default",
-    "b3": "Multi‑role access: Admin, Institution, Teacher, Student, Parent",
-    "b4": "Lightweight, resilient design for low bandwidth"
+    "b1": "Arabic & English UI",
+    "b2": "AI for analytics & personalization",
+    "b3": "Multi-role dashboards",
+    "b4": "Low-bandwidth mode",
+    "search_placeholder": "Search courses, subjects, or topics"
   },
   "partners": {
-    "text": "Trusted and inspired by educators and NGOs working in fragile contexts"
+    "text": "Trusted by educators and NGOs"
   },
   "features": {
-    "title": "Everything you need to teach, learn, and manage at scale",
-    "kicker": "Purpose‑built for schools and centers in fragile regions",
+    "title": "Everything you need to run learning at scale",
+    "kicker": "Five roles. One simple, secure platform.",
     "institutions": {
       "title": "Institutions",
-      "desc": "Enrollments, sections, attendance, policies, term setup, and deep analytics."
+      "desc": "Programs, semesters, courses, policies, attendance, and analytics."
     },
     "teachers": {
       "title": "Teachers",
-      "desc": "Class dashboards, quizzes, rubrics, AI feedback, and content sequencing."
+      "desc": "Manage classes, assignments, quizzes, multimedia content, and feedback."
     },
     "students": {
       "title": "Students",
-      "desc": "Clear learning paths, multi‑format content, instant feedback, and progress."
+      "desc": "Personalized paths, results, certificates, and offline-friendly learning."
     },
     "parents": {
       "title": "Parents",
-      "desc": "Private updates, attendance alerts, homework view, and achievement badges."
-    },
-    "ai": {
-      "title": "AI at the core",
-      "desc": "Personalized recommendations, risk alerts, and learning style detection (FSLSM)."
-    },
-    "content": {
-      "title": "Flexible content",
-      "desc": "Videos, PDFs, SCORM, audio, images, and HTML activities — all optimized for low bandwidth."
+      "desc": "Follow progress, attendance, and alerts — with a simple Arabic interface."
     }
   },
-  "cta2": {
-    "title": "Ready to empower your learners?",
-    "subtitle": "ANATALEB is free for fragile‑zone schools and NGOs.",
-    "button": "Get started — it’s free"
+  "categories": {
+    "title": "AI Modules & Smart Tools"
+  },
+  "cards": {
+    "c1": "Style-aware recommendations (FSLSM)",
+    "c2": "Cheating & anomaly detection",
+    "c3": "Early-risk alerts & nudges",
+    "c4": "Bandwidth-aware content delivery",
+    "meta": "Fast • Secure • Mobile-ready"
+  },
+  "case": {
+    "title": "Built with and for conflict-zone schools",
+    "text": "ANATALEB is open and free. Our mission is to keep learning going — even with low connectivity and power cuts.",
+    "cta": "Read our story",
+    "stat1_desc": "Retention rate among users",
+    "stat2_desc": "Positive impact on productivity"
+  },
+  "impact": {
+    "uptime": "Uptime SLA",
+    "low_bw": "Less data vs. standard LMS",
+    "criteria": "Ethical design criteria",
+    "roles": "User roles"
   },
   "footer": {
-    "mission": "Arabic‑first education technology that respects bandwidth constraints and empowers schools in fragile contexts.",
+    "mission": "A bilingual, ethical, AI-enabled platform that keeps learning going anywhere.",
     "about": "About",
     "privacy": "Privacy",
     "terms": "Terms",
     "try": "Try the demo",
-    "copyright": "ANATALEB. All rights reserved."
-  }
+    "links_title": "Links",
+    "legal_title": "Policies",
+    "try_title": "Try the platform",
+    "try_text": "Start a live demo and see how AI supports teaching and learning.",
+    "copyright": "2025 ANATALEB. All rights reserved."
+  },
+  
+  "topstrip": { "students": "For Students", "instructors": "For Instructors", "institutions": "For Institutions" },
+  "header": { "explore": "Explore", "online_degrees": "Online Degrees", "careers": "Careers" }
+
+
 }

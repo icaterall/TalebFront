@@ -1,13 +1,28 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>AnatalebFrontend</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-  <app-root></app-root>
-</body>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>ANATALEB</title>
+
+    <!-- 🔶 EARLY: lock lang/dir from saved preference -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('anataleb.lang');
+          var nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'ar';
+          var lang = (saved || nav || 'ar').toLowerCase().startsWith('ar') ? 'ar' : 'en';
+          var dir = lang === 'ar' ? 'rtl' : 'ltr';
+          var html = document.documentElement;
+
+          html.setAttribute('lang', lang);
+          html.setAttribute('dir', dir);
+          if (dir === 'rtl') { document.body && document.body.classList.add('rtl'); }
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
+    <!-- your styles bundle is fine after this -->
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
 </html>
