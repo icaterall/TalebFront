@@ -1,4 +1,3 @@
-<!-- Top black strip -->
 <div class="superbar">
   <div class="container d-flex align-items-center justify-content-between">
     <ul class="list-unstyled d-flex gap-4 mb-0 superbar__links" role="list" dir="ltr">
@@ -10,7 +9,6 @@
   </div>
 </div>
 
-<!-- Main header -->
 <header class="header border-bottom bg-white sticky-top">
   <div class="container py-2 d-flex align-items-center gap-3">
     <button
@@ -20,11 +18,14 @@
       <i class="bi" [ngClass]="isMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
     </button>
 
-  <a class="navbar-brand fw-bold text-primary brand-mobile" href="/">
-    {{ 'logo-title' | translate }}
-  </a>
-    <!-- Search pill (desktop) -->
-    <form class="flex-grow-1 header-search d-none d-lg-block" role="search">
+    <a class="navbar-brand fw-bold text-primary brand-mobile d-lg-none ms-auto" href="/">
+      {{ 'logo-title' | translate }}
+    </a>
+    <a class="navbar-brand fw-bold text-primary brand-mobile d-none d-lg-inline" href="/">
+      {{ 'logo-title' | translate }}
+    </a>
+
+    <form class="flex-grow-1 header-search d-none d-lg-block ms-auto" role="search">
       <div class="input-group header-search__group rounded-pill shadow-sm">
         <input class="form-control ps-3" type="search"
                [placeholder]="'hero.search_placeholder' | translate" aria-label="Search">
@@ -34,27 +35,27 @@
       </div>
     </form>
 
-    <!-- Right links (desktop) -->
-    <nav class="d-none d-lg-flex align-items-center ms-auto gap-3">
-      <a class="link-secondary text-decoration-none" href="/degrees">{{ 'header.online_degrees' | translate }}</a>
-      <a class="link-secondary text-decoration-none" href="/login">{{ 'nav.signin' | translate }}</a>
-      <a class="btn btn-outline-primary rounded-3" href="/signup">{{ 'nav.get_started' | translate }}</a>
+    <div class="d-flex align-items-center gap-3" dir="ltr">
+      <nav class="d-none d-lg-flex align-items-center gap-3">
+        <a class="link-secondary text-decoration-none" href="/degrees">{{ 'header.online_degrees' | translate }}</a>
+        <a class="link-secondary text-decoration-none" href="/login">{{ 'nav.signin' | translate }}</a>
+        <a class="btn btn-outline-primary rounded-3" href="/signup">{{ 'nav.get_started' | translate }}</a>
+      </nav>
+
       <button class="btn btn-light border lang-btn"
               (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
               aria-label="Toggle language">{{ currentLang === 'ar' ? 'EN' : 'ع' }}</button>
-    </nav>
 
-    <!-- Mobile search icon (placeholder) -->
-<button
-  class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
-  type="button"
-  aria-label="Search">
-  <i class="bi bi-search"></i>
-</button>
+      <button
+        class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
+        type="button"
+        aria-label="Search">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
   </div>
 </header>
 
-<!-- Mobile drawer -->
 <aside class="mobile-drawer" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
   <div class="mobile-drawer__head d-flex align-items-center justify-content-between">
     <span class="navbar-brand fw-bold text-primary">{{ 'logo-title' | translate }}</span>

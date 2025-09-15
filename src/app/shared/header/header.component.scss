@@ -93,26 +93,16 @@ $mobile-bp: 1060px;
   }
 }
 
-/* ===== Mobile layout: center brand between burger & search ===== */
-/* mobile layout: 3-column grid, edge-hugging icons */
+/* ===== Mobile layout adjustments ===== */
 @media (max-width: $mobile-bp) {
   .header .container{
-    display: grid !important;
-    grid-template-columns: 40px 1fr 40px; /* left icon | brand | right icon */
-    align-items: center;
-    gap: .5rem;
-    padding-inline: 8px; /* reduce padding so icons sit near screen edge */
+    /* reduce padding so icons sit near screen edge */
+    padding-inline: 8px;
   }
-
-  .brand-mobile{ justify-self: center; }
-
-  /* default (LTR): menu left, search right */
-  .mobile-btn{ justify-self: start; margin-inline: 0; }
-  .mobile-btn--search{ justify-self: end; }
-
-  /* RTL: flip positions (search left, menu right) */
-  html[dir='rtl'] .mobile-btn--menu{ justify-self: end; }
-  html[dir='rtl'] .mobile-btn--search{ justify-self: start; }
+  .brand-mobile {
+    /* Reduce the gap between menu icon and brand on mobile */
+    margin-inline-start: -8px;
+  }
 }
 
 /* ===== Mobile drawer ===== */
