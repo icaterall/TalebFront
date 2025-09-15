@@ -1,0 +1,72 @@
+<!-- Top black strip -->
+<div class="superbar">
+  <div class="container d-flex align-items-center justify-content-between">
+    <ul class="list-unstyled d-flex gap-4 mb-0 superbar__links" role="list" dir="ltr">
+      <li><a class="super-link active" href="/students">{{ 'topstrip.students' | translate }}</a></li>
+      <li><a class="super-link" href="/instructors">{{ 'topstrip.instructors' | translate }}</a></li>
+      <li><a class="super-link" href="/institutions">{{ 'topstrip.institutions' | translate }}</a></li>
+    </ul>
+    <div class="d-none d-md-flex align-items-center gap-3"></div>
+  </div>
+</div>
+
+<!-- Main header -->
+<header class="header border-bottom bg-white sticky-top">
+  <div class="container py-2 d-flex align-items-center gap-3">
+    <button
+      class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--menu"
+      (click)="toggleMobileMenu()"
+      aria-label="Menu">
+      <i class="bi" [ngClass]="isMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
+    </button>
+
+  <a class="navbar-brand fw-bold text-primary brand-mobile" href="/">
+    {{ 'logo-title' | translate }}
+  </a>
+    <!-- Search pill (desktop) -->
+    <form class="flex-grow-1 header-search d-none d-lg-block" role="search">
+      <div class="input-group header-search__group rounded-pill shadow-sm">
+        <input class="form-control ps-3" type="search"
+               [placeholder]="'hero.search_placeholder' | translate" aria-label="Search">
+        <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
+
+    <!-- Right links (desktop) -->
+    <nav class="d-none d-lg-flex align-items-center ms-auto gap-3">
+      <a class="link-secondary text-decoration-none" href="/degrees">{{ 'header.online_degrees' | translate }}</a>
+      <a class="link-secondary text-decoration-none" href="/login">{{ 'nav.signin' | translate }}</a>
+      <a class="btn btn-outline-primary rounded-3" href="/signup">{{ 'nav.get_started' | translate }}</a>
+      <button class="btn btn-light border lang-btn"
+              (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
+              aria-label="Toggle language">{{ currentLang === 'ar' ? 'EN' : 'ع' }}</button>
+    </nav>
+
+    <!-- Mobile search icon (placeholder) -->
+<button
+  class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
+  type="button"
+  aria-label="Search">
+  <i class="bi bi-search"></i>
+</button>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<aside class="mobile-drawer" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
+  <div class="mobile-drawer__head d-flex align-items-center justify-content-between">
+    <span class="navbar-brand fw-bold text-primary">{{ 'logo-title' | translate }}</span>
+    <button class="btn btn-link icon-btn" (click)="closeMobileMenu()" aria-label="Close">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item"><a class="drawer-link" href="/students" (click)="closeMobileMenu()">{{ 'topstrip.students' | translate }}</a></li>
+    <li class="list-group-item"><a class="drawer-link" href="/instructors" (click)="closeMobileMenu()">{{ 'topstrip.instructors' | translate }}</a></li>
+    <li class="list-group-item"><a class="drawer-link" href="/institutions" (click)="closeMobileMenu()">{{ 'topstrip.institutions' | translate }}</a></li>
+    <li class="list-group-item"><a class="drawer-link" href="#features" (click)="closeMobileMenu()">{{ 'nav.features' | translate }}</a></li>
+  </ul>
+</aside>
+<div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>

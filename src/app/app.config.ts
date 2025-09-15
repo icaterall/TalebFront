@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
         prefix: './assets/i18n/',   // not /assets/...
         suffix: '.json'
       }),
-      lang: 'en',
+      lang: 'ar',
       fallbackLang: 'en'
     })
   ]

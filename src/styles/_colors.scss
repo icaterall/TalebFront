@@ -1,0 +1,36 @@
+/* Brand palette (your blues) */
+$brand-500: #180a3d;
+$brand-450: #281160;
+$brand-400: #371783;
+$brand-350: #431ca3; // <— primary
+$brand-300: #5022c3;
+$brand-250: #8072e6;
+$brand-200: #c0c4fc;
+$brand-150: #d8e0fb;
+$brand-100: #eeeffc;
+
+/* Neutral palette (used app-wide) */
+$gray-900:#111827; $gray-800:#1f2937; $gray-700:#374151; $gray-600:#4b5563;
+$gray-500:#6b7280; $gray-400:#9ca3af; $gray-300:#d1d5db; $gray-200:#e5e7eb;
+$gray-100:#f3f4f6; $gray-50:#f9fafb;
+
+/* CSS variables (runtime use from any component) */
+:root{
+  --color-blue-500:#{$brand-500};
+  --color-blue-450:#{$brand-450};
+  --color-blue-400:#{$brand-400};
+  --color-blue-350:#{$brand-350};
+  --color-blue-300:#{$brand-300};
+  --color-blue-250:#{$brand-250};
+  --color-blue-200:#{$brand-200};
+  --color-blue-150:#{$brand-150};
+  --color-blue-100:#{$brand-100};
+
+  --gray-900:#{$gray-900}; --gray-800:#{$gray-800}; --gray-700:#{$gray-700};
+  --gray-600:#{$gray-600}; --gray-500:#{$gray-500}; --gray-400:#{$gray-400};
+  --gray-300:#{$gray-300}; --gray-200:#{$gray-200}; --gray-100:#{$gray-100}; --gray-50:#{$gray-50};
+
+  /* Bootstrap-friendly variables for utility CSS that reads them */
+  --bs-primary:#{$brand-350};
+  --bs-primary-rgb: 67, 28, 163; /* rgb of $brand-350 */
+}

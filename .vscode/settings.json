@@ -1,7 +1,9 @@
 {
   "stylelint.validate": ["css", "scss"],
   "stylelint.run": "onSave",
-  "editor.codeActionsOnSave": { "source.fixAll.stylelint": true },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.stylelint": "explicit"
+  },
 
   // Hard override for the extension (used even if another config exists)
   "stylelint.config": {

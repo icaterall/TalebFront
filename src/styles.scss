@@ -1,26 +1,41 @@
-/* load the font-face rules */
-@use "bootstrap/scss/bootstrap" as *;
+/* --- 1) Modules first (no regular CSS above this line) --- */
+@use './styles/colors' as c;
 @use 'assets/fonts/fonts' as *;
 
-/* Stacks for English vs Arabic */
+@use "bootstrap/scss/bootstrap" with (
+  $primary: c.$brand-350,
+  $theme-colors: (
+    "primary": c.$brand-350,
+    "secondary": #475569,
+    "success": #16a34a,
+    "info": #0ea5e9,
+    "warning": #f59e0b,
+    "danger": #ef4444,
+    "light": #f8fafc,
+    "dark":  #0f172a
+  ),
+  $border-radius: .75rem,
+  $btn-border-radius: .75rem,
+  $body-color: #0f172a,
+  $body-bg: #fff,
+  /* 👇 wrap the list */
+  $font-family-sans-serif: ('HKGrotesk','Tajawal',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif),
+);
+
+
+/* --- 2) Now regular CSS is fine --- */
+/* Global font stacks + RTL/LTR */
 :root{
   --font-en: 'HKGrotesk', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-ar: 'Tajawal', 'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-ar: 'font-primary', 'Tajawal', 'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
-
-/* Use EN stack for LTR, AR stack for RTL */
 html[dir="ltr"] body { font-family: var(--font-en); }
 html[dir="rtl"] body { font-family: var(--font-ar); }
 
-/* —— Bootstrap theming (keeps components consistent before dir toggles) —— */
-$font-family-sans-serif: 'HKGrotesk','Tajawal',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
-$body-color: #0f172a; $body-bg: #fff;
-$anataleb-primary: #1266cd; $anataleb-secondary:#0ea5e9; $anataleb-dark:#0f172a; $anataleb-light:#f8fafc;
-$border-radius:.75rem; $btn-border-radius:.75rem;
-$theme-colors: ("primary":$anataleb-primary,"secondary":#475569,"success":#16a34a,"info":$anataleb-secondary,"warning":#f59e0b,"danger":#ef4444,"light":$anataleb-light,"dark":$anataleb-dark);
-
-
-/* helpers + RTL niceties */
+/* Helpers */
 .tag{padding:.25rem .5rem;border-radius:.5rem;background:rgba(37,99,235,.08);color:#2563eb;font-weight:700}
 .text-secondary{color:#64748b!important}
-body.rtl{direction:rtl} body.rtl .text-start{text-align:right!important} body.rtl .text-end{text-align:left!important}
+body.rtl{direction:rtl}
+body.rtl .text-start{text-align:right!important}
+body.rtl .text-end{text-align:left!important}
+.no-scroll{overflow:hidden}

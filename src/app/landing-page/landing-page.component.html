@@ -1,81 +1,4 @@
-<!-- Top black strip (Coursera-style) -->
-<div class="superbar">
-  <div class="container d-flex align-items-center justify-content-between">
-    <ul class="list-unstyled d-flex gap-4 mb-0 superbar__links" role="list" dir="ltr">
-      <li><a class="super-link active" href="/students">{{ 'topstrip.students' | translate }}</a></li>
-      <li><a class="super-link" href="/instructors">{{ 'topstrip.instructors' | translate }}</a></li>
-      <li><a class="super-link" href="/institutions">{{ 'topstrip.institutions' | translate }}</a></li>
-    </ul>
-    <div class="d-none d-md-flex align-items-center gap-3"></div>
-  </div>
-</div>
-
-
-<!-- Main header -->
-<header class="header border-bottom bg-white sticky-top">
-  <div class="container py-2 d-flex align-items-center gap-3">
-
-<!-- burger -->
-<button class="btn btn-link icon-btn d-lg-none" (click)="toggleMobileMenu()">
-    <i class="bi" [ngClass]="isMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
-</button>
-
-<div class="mobile-drawer" [class.show]="isMenuOpen">
-    </div>
-<div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>
-
-<!-- brand -->
-<a class="navbar-brand fw-bold text-primary brand-mobile" href="/">
-  {{ 'logo-title' | translate }}
-</a>
-
-
-    <!-- Search pill (desktop only) -->
-    <form class="flex-grow-1 header-search d-none d-lg-block" role="search">
-      <div class="input-group header-search__group rounded-pill shadow-sm">
-        <input class="form-control ps-3" type="search"
-               [placeholder]="'hero.search_placeholder' | translate" aria-label="Search">
-        <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
-          <i class="bi bi-search"></i>
-        </button>
-      </div>
-    </form>
-
-    <!-- Right links (desktop) -->
-    <nav class="d-none d-lg-flex align-items-center ms-auto gap-3">
-      <a class="link-secondary text-decoration-none" href="/degrees">{{ 'header.online_degrees' | translate }}</a>
-      <a class="link-secondary text-decoration-none" href="/login">{{ 'nav.signin' | translate }}</a>
-      <a class="btn btn-outline-primary rounded-3" href="/signup">{{ 'nav.get_started' | translate }}</a>
-      <button class="btn btn-light border lang-btn"
-              (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
-              aria-label="Toggle language">{{ currentLang === 'ar' ? 'EN' : 'ع' }}</button>
-    </nav>
-
-    <!-- Search icon (mobile, optional) -->
-    <button class="btn btn-link icon-btn ms-auto d-lg-none" type="button" aria-label="Search">
-      <i class="bi bi-search mobile-search"></i>
-    </button>
-  </div>
-</header>
-
-<!-- Mobile drawer -->
-<div class="mobile-drawer" id="mobileMenu" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
-  <div class="mobile-drawer__head d-flex align-items-center justify-content-between">
-    <span class="navbar-brand fw-bold text-primary">{{ 'logo-title' | translate }}</span>
-    <button class="btn btn-link icon-btn" (click)="closeMobileMenu()" aria-label="Close">
-      <i class="bi bi-x-lg"></i>
-    </button>
-  </div>
-
-  <ul class="list-group list-group-flush">
-    <li class="list-group-item"><a class="drawer-link" href="/students" (click)="closeMobileMenu()">{{ 'topstrip.students' | translate }}</a></li>
-    <li class="list-group-item"><a class="drawer-link" href="/instructors" (click)="closeMobileMenu()">{{ 'topstrip.instructors' | translate }}</a></li>
-    <li class="list-group-item"><a class="drawer-link" href="/institutions" (click)="closeMobileMenu()">{{ 'topstrip.institutions' | translate }}</a></li>
-    <li class="list-group-item"><a class="drawer-link" href="#features" (click)="closeMobileMenu()">{{ 'nav.features' | translate }}</a></li>
-  </ul>
-</div>
-<div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>
-
+<app-header></app-header>
 <section class="hero-section py-5">
   <div class="container">
     <div class="row align-items-center">
@@ -92,7 +15,44 @@
         </ul>
       </div>
       <div class="col-lg-6 d-none d-lg-block">
-        <img src="assets/anataleb/hero-visual.svg" class="img-fluid rounded shadow-lg" alt="Learning illustration">
+         <div className="relative">
+            <div className="relative bg-gradient-to-br from-purple-100 to-emerald-100 rounded-3xl p-8 shadow-2xl">
+              <img
+                src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800"
+                alt="Students learning online"
+                className="w-full h-80 object-cover rounded-2xl"
+              />
+
+              <!-- Floating Course Cards -->
+              <div className="absolute -top-4 -left-4 bg-white p-4 rounded-xl shadow-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <!-- play icon in box -->
+                    <i class="bi bi-play
+-fill text-purple-600 text-lg"></i>
+
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Web Development</h4>
+                    <p className="text-sm text-gray-600">120+ courses</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-4 -right-4 bg-white p-4 rounded-xl shadow-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                   <!-- star icon in box -->
+                    <i class="bi bi-star-fill text-emerald-600 text-lg"></i>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">4.9 Rating</h4>
+                    <p className="text-sm text-gray-600">500K+ reviews</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   </div>
@@ -143,37 +103,4 @@
   </div>
 </section>
 
-
-<footer class="py-5 bg-dark text-white">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-4 mb-4 mb-lg-0">
-        <h5 class="fw-bold text-primary">{{ 'logo-title' | translate }}</h5>
-        <p class="text-muted">{{ 'footer.mission' | translate }}</p>
-      </div>
-      <div class="col-6 col-lg-2 offset-lg-1 mb-4 mb-lg-0">
-        <h5 class="mb-3">{{ 'footer.links_title' | translate }}</h5>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="#features" class="text-white text-decoration-none">{{ 'nav.features' | translate }}</a></li>
-          <li class="mb-2"><a href="#categories" class="text-white text-decoration-none">{{ 'nav.categories' | translate }}</a></li>
-          <li class="mb-2"><a href="#impact" class="text-white text-decoration-none">{{ 'nav.impact' | translate }}</a></li>
-        </ul>
-      </div>
-      <div class="col-6 col-lg-2 mb-4 mb-lg-0">
-        <h5 class="mb-3">{{ 'footer.legal_title' | translate }}</h5>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="/about" class="text-white text-decoration-none">{{ 'footer.about' | translate }}</a></li>
-          <li class="mb-2"><a href="/privacy" class="text-white text-decoration-none">{{ 'footer.privacy' | translate }}</a></li>
-          <li class="mb-2"><a href="/terms" class="text-white text-decoration-none">{{ 'footer.terms' | translate }}</a></li>
-        </ul>
-      </div>
-      <div class="col-lg-3">
-        <h5 class="mb-3">{{ 'footer.try_title' | translate }}</h5>
-        <p class="text-muted">{{ 'footer.try_text' | translate }}</p>
-        <a class="btn btn-primary" href="/demo">{{ 'footer.try' | translate }}</a>
-      </div>
-    </div>
-    <hr class="my-4">
-    <p class="text-center text-muted small">&copy; {{ 'footer.copyright' | translate }}</p>
-  </div>
-</footer>
+    <app-footer></app-footer>
