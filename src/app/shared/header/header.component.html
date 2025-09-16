@@ -1,34 +1,58 @@
 <div class="superbar">
   <div class="container d-flex align-items-center justify-content-between">
     <ul class="list-unstyled d-flex gap-4 mb-0 superbar__links" role="list" dir="ltr">
-      <li><a class="super-link active" href="/students">{{ 'topstrip.students' | translate }}</a></li>
-      <li><a class="super-link" href="/instructors">{{ 'topstrip.instructors' | translate }}</a></li>
-      <li><a class="super-link" href="/institutions">{{ 'topstrip.institutions' | translate }}</a></li>
+      <li>
+        <a class="super-link active" href="/students">{{ 'topstrip.students' | translate }}</a>
+      </li>
+      <li>
+        <a class="super-link" href="/instructors">{{ 'topstrip.instructors' | translate }}</a>
+      </li>
+      <li>
+        <a class="super-link" href="/institutions">{{ 'topstrip.institutions' | translate }}</a>
+      </li>
     </ul>
     <div class="d-none d-md-flex align-items-center gap-3"></div>
   </div>
 </div>
 
 <header class="header border-bottom bg-white sticky-top">
-  <div class="container py-2 d-flex align-items-center gap-3">
-    <button
-      class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--menu"
-      (click)="toggleMobileMenu()"
-      aria-label="Menu">
-      <i class="bi" [ngClass]="isMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
-    </button>
+  <div class="container py-2 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-2 d-lg-none">
+      <button
+        class="btn btn-link icon-btn mobile-btn mobile-btn--menu"
+        (click)="toggleMobileMenu()"
+        aria-label="Menu"
+      >
+        <i class="bi" [ngClass]="isMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
+      </button>
+      <div class="css-0">
+        <a
+          href="/"
+          class="c-mobile-logo horizontal-box align-items-vertical-center isLohpRebrand">
+          <div style="display: flex">
+            <img
+              src="../../../assets/logo.svg"
+              class="rc-CourseraLogo"
+              alt="Coursera"
+              aria-hidden="false"
+            /></div
+        >
+      </a>
+      </div>
+    </div>
 
-    <a class="navbar-brand fw-bold text-primary brand-mobile d-lg-none ms-auto" href="/">
+    <a class="navbar-brand fw-bold text-primary d-none d-lg-inline" href="/">
       {{ 'logo-title' | translate }}
     </a>
-    <a class="navbar-brand fw-bold text-primary brand-mobile d-none d-lg-inline" href="/">
-      {{ 'logo-title' | translate }}
-    </a>
 
-    <form class="flex-grow-1 header-search d-none d-lg-block ms-auto" role="search">
+    <form class="flex-grow-1 header-search d-none d-lg-block mx-lg-4" role="search">
       <div class="input-group header-search__group rounded-pill shadow-sm">
-        <input class="form-control ps-3" type="search"
-               [placeholder]="'hero.search_placeholder' | translate" aria-label="Search">
+        <input
+          class="form-control ps-3"
+          type="search"
+          [placeholder]="'hero.search_placeholder' | translate"
+          aria-label="Search"
+        />
         <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
           <i class="bi bi-search"></i>
         </button>
@@ -37,20 +61,31 @@
 
     <div class="d-flex align-items-center gap-3" dir="ltr">
       <nav class="d-none d-lg-flex align-items-center gap-3">
-        <a class="link-secondary text-decoration-none" href="/degrees">{{ 'header.online_degrees' | translate }}</a>
-        <a class="link-secondary text-decoration-none" href="/login">{{ 'nav.signin' | translate }}</a>
-        <a class="btn btn-outline-primary rounded-3" href="/signup">{{ 'nav.get_started' | translate }}</a>
+        <a class="link-secondary text-decoration-none" href="/degrees">{{
+          'header.online_degrees' | translate
+        }}</a>
+        <a class="link-secondary text-decoration-none" href="/login">{{
+          'nav.signin' | translate
+        }}</a>
+        <a class="btn btn-outline-primary rounded-3" href="/signup">{{
+          'nav.get_started' | translate
+        }}</a>
       </nav>
-
-      <button class="btn btn-light border lang-btn"
-              (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
-              aria-label="Toggle language">{{ currentLang === 'ar' ? 'EN' : 'ع' }}</button>
 
       <button
         class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
         type="button"
-        aria-label="Search">
+        aria-label="Search"
+      >
         <i class="bi bi-search"></i>
+      </button>
+
+      <button
+        class="btn btn-light border lang-btn"
+        (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
+        aria-label="Toggle language"
+      >
+        {{ currentLang === 'ar' ? 'EN' : 'ع' }}
       </button>
     </div>
   </div>
@@ -64,10 +99,26 @@
     </button>
   </div>
   <ul class="list-group list-group-flush">
-    <li class="list-group-item"><a class="drawer-link" href="/students" (click)="closeMobileMenu()">{{ 'topstrip.students' | translate }}</a></li>
-    <li class="list-group-item"><a class="drawer-link" href="/instructors" (click)="closeMobileMenu()">{{ 'topstrip.instructors' | translate }}</a></li>
-    <li class="list-group-item"><a class="drawer-link" href="/institutions" (click)="closeMobileMenu()">{{ 'topstrip.institutions' | translate }}</a></li>
-    <li class="list-group-item"><a class="drawer-link" href="#features" (click)="closeMobileMenu()">{{ 'nav.features' | translate }}</a></li>
+    <li class="list-group-item">
+      <a class="drawer-link" href="/students" (click)="closeMobileMenu()">{{
+        'topstrip.students' | translate
+      }}</a>
+    </li>
+    <li class="list-group-item">
+      <a class="drawer-link" href="/instructors" (click)="closeMobileMenu()">{{
+        'topstrip.instructors' | translate
+      }}</a>
+    </li>
+    <li class="list-group-item">
+      <a class="drawer-link" href="/institutions" (click)="closeMobileMenu()">{{
+        'topstrip.institutions' | translate
+      }}</a>
+    </li>
+    <li class="list-group-item">
+      <a class="drawer-link" href="#features" (click)="closeMobileMenu()">{{
+        'nav.features' | translate
+      }}</a>
+    </li>
   </ul>
 </aside>
 <div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>
