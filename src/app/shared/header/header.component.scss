@@ -12,7 +12,7 @@ $mobile-bp: 1060px;
   font-size: .9rem;
 
   &__links {
-    direction: ltr;
+    direction: ltr; /* keep order the same in RTL */
     .super-link {
       color: #cbd5e1;
       text-decoration: none;
@@ -28,10 +28,49 @@ $mobile-bp: 1060px;
   }
 }
 
+/* === MOBILE STYLES === */
 @media (max-width: $mobile-bp) {
-  .superbar { display: none !important; }
-}
+  /* Hide the top black bar on mobile */
+  .superbar {
+    display: none !important;
+  }
 
+  /* Apply grid layout to the main header */
+  .header-row {
+    display: grid !important;
+    grid-template-columns: 44px 1fr auto; /* three zones: [menu] [brand] [right cluster] */
+    align-items: center;
+    padding-inline: 8px;
+    min-height: 64px;
+  }
+  .brand {
+    justify-self: center; /* perfectly centered brand */
+  }
+  .right-cluster {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+/* === DESKTOP STYLES === */
+@media (min-width: #{$mobile-bp + 1}) {
+  .header-row {
+    display: flex !important;
+    align-items: center;
+    gap: .75rem;
+    padding-inline: 16px;
+  }
+  .brand {
+    margin-inline-start:.25rem;
+  }
+  .right-cluster {
+    margin-inline-start: auto;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+}
 /* ===== Header baseline ===== */
 .header {
 
@@ -63,7 +102,6 @@ $mobile-bp: 1060px;
   font-weight: 700;
   border-radius: 8px;
 }
-
 /* ===== Desktop search pill ===== */
 .header-search {
   &__group{
