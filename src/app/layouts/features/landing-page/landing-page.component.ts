@@ -1,8 +1,9 @@
 import { Component, inject, Renderer2, OnInit, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT, DecimalPipe, CurrencyPipe } from '@angular/common';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
-import { FooterComponent } from '../shared/footer/footer.component';
-import { HeaderComponent } from '../shared/header/header.component';
+import { HeaderComponent } from '../../../shared/header/header.component';
+import { FooterComponent } from '../../../shared/footer/footer.component';
+
 
 type Lang = 'ar' | 'en';
 

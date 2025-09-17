@@ -54,13 +54,6 @@ ease-in-out;
   }
 }
 
-
-:host, .css-header, .superbar, .header { display:block; width:100%; }
-.header.sticky-top { left:0; right:0; } /* avoid any parent clipping */
-.superbar .container-fluid,
-.header > .container-fluid { padding-inline:4px; } /* ≈ 4px edges */
-
-
 /* === MOBILE STYLES === */
 @media (max-width: $mobile-bp) {
   /* Hide the top black bar on mobile */
