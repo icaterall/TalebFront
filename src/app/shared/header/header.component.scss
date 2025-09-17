@@ -55,7 +55,8 @@ ease-in-out;
 }
 
 
-:host, .css-header, .superbar, .header { display:block; width:100%; }
+:host, .css-header, 
+.superbar, .header { display:block; width:100%; }
 .header.sticky-top { left:0; right:0; } /* avoid any parent clipping */
 .superbar .container-fluid,
 .header > .container-fluid { padding-inline:4px; } /* ≈ 4px edges */
@@ -169,8 +170,8 @@ ease-in-out;
   }
   .header {
       --header-h: 65px;
-      
-      padding: 7px 0;
+    padding: 5px 4px 5px 15px;
+   
   }
   
   .container { min-height: var(--header-h); }
@@ -242,3 +243,18 @@ img {
 }
 .brand-desktop .brand-img { display:block; height:28px; } /* match your design */
 .c-mobile-logo img { display:block; height:28px; }        /* keep mobile the same */
+/* Full-bleed header without risking overflow */
+.css-header,
+.header,
+.superbar {
+  overflow-x: clip;
+  width: 100%;
+}
+
+/* Make only the header/superbar containers span the viewport,
+   but keep small edge padding so icons sit ~4px from the sides. */
+.superbar > .container,
+.header > .container {
+  max-width: 100%;
+  padding-inline: 4px;
+}

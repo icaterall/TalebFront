@@ -1,6 +1,6 @@
 import { Component, inject, Renderer2, OnInit, Inject, PLATFORM_ID, HostListener } from '@angular/core';
-import { CommonModule, isPlatformBrowser, DOCUMENT, DecimalPipe, CurrencyPipe } from '@angular/common';
-import { TranslateService, TranslatePipe } from '@ngx-translate/core';
+import { CommonModule, isPlatformBrowser, DOCUMENT, DecimalPipe, CurrencyPipe, NgOptimizedImage } from '@angular/common';
+import { TranslateService, TranslatePipe, TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/header/header.component';
 import { FooterComponent } from '../../../shared/footer/footer.component';
 
@@ -10,7 +10,10 @@ type Lang = 'ar' | 'en';
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe,HeaderComponent, FooterComponent ],
+ imports: [
+  CommonModule,
+  TranslateModule
+],
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.scss']
 })

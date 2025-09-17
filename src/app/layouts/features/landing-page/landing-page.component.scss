@@ -2,6 +2,26 @@
    Landing Page (body) styles
    — header/footer removed —
    =========================== */
+/* Kill horizontal overflow coming from hero visuals/floating bits */
+.hero,
+.hero-section {
+  overflow-x: clip; /* use clip over hidden (no scroll bar, better perf) */
+}
+
+/* Ensure hero artwork never pushes width wider than the container */
+.hero__art img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* If partner logos are in a single row, allow wrapping to avoid overflow */
+.partners .logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  min-width: 0; /* prevents flex children from forcing width */
+}
 
 /* Hero section gradient */
 .hero-section {
