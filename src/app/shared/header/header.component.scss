@@ -15,21 +15,22 @@ ease-in-out;
         border-bottom: 1px solid #dae1ed;
 }
 /* Top black strip (Coursera-style) */
+@media (min-width: 0px) {
+    .superbar__content {
+        padding: 0px 48px !important;
+    }
+}
 @media (min-width: 1024px) {
     .superbar__content {
         padding: 0 48px;
     }
 }
-@media (min-width: 0px) {
-    .superbar__content {
-        padding: 0 var(--cds-spacing-200);
-    }
-}
+
 .superbar {
   color: #fff;
   min-height: 36px;
   font-size: .9rem;
-      position: relative;
+  position: relative;
     top: 0;
     width: 100%;
     background: #0f1114;
@@ -38,7 +39,7 @@ ease-in-out;
   
 
   &__links {
-    direction: ltr; /* keep order the same in RTL */
+    direction: inherit; /* keep order the same in RTL */
     .super-link {
       color: #cbd5e1;
       text-decoration: none;
@@ -130,12 +131,33 @@ ease-in-out;
 .lang-btn{
   width: 36px; height: 36px;
   padding: 0 !important;
-  display: inline-flex;
-  align-items: center; justify-content: center;
-  line-height: 1;
-  font-weight: 700;
+  display: grid;               /* grid gives rock-solid centering */
+  place-items: center;
+  line-height: 1;              /* no extra vertical space */
   border-radius: 8px;
+  font-weight: 800;
+  /* remove any inherited text alignment quirks */
+  text-align: center;
 }
+
+.lang-btn .lang-text{
+  display: block;
+  font-size: 16px;             /* adjust if you want larger/smaller */
+}
+
+/* When the visible label is Arabic (ع), use Arabic font + 1px nudge */
+.lang-btn.is-ar-label .lang-text{
+  font-family: 'Tajawal','Cairo','Noto Naskh Arabic', system-ui, sans-serif;
+  transform: translateY(1px);  /* optical centering for Arabic glyphs */
+      margin-top: -5px;
+}
+
+/* Optional: keep EN crisp */
+.lang-btn:not(.is-ar-label) .lang-text{
+  font-family: 'HKGrotesk', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: .2px;
+}
+
 /* ===== Desktop search pill ===== */
 .header-search {
   &__group{
@@ -241,8 +263,8 @@ img {
     vertical-align: middle;
     border: 0;
 }
-.brand-desktop .brand-img { display:block; height:28px; } /* match your design */
-.c-mobile-logo img { display:block; height:28px; }        /* keep mobile the same */
+.brand-desktop .brand-img { display:block; height:25px; } /* match your design */
+.c-mobile-logo img { display:block; height:25px; }        /* keep mobile the same */
 /* Full-bleed header without risking overflow */
 .css-header,
 .header,
@@ -258,3 +280,30 @@ img {
   max-width: 100%;
   padding-inline: 4px;
 }
+
+@media (min-width: 1061px) {
+    .header {
+        margin: -16px;
+        width: calc(100% + 32px);
+    }
+}
+.header-padding {
+    padding-right: 2.25rem !important;
+    padding-left: 2.25rem !important;
+}
+/* Make the whole right cluster stick to the inline end (works LTR & RTL) */
+.right-cluster { margin-inline-start: auto; }
+
+/* Superbar: flip item order in RTL so the first item is at the start (right in RTL) */
+html[dir="rtl"] .superbar__links { flex-direction: row-reverse; }
+
+/* Desktop right nav (degrees | login | CTA): flip order in RTL so CTA stays at the edge */
+html[dir="rtl"] .header nav { flex-direction: row-reverse; }
+/* 1) Remove any forced LTR or reverse you may have */
+
+html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clarity */
+
+
+
+
+/* If you previously set .superbar__links { direction:ltr; } remove it */

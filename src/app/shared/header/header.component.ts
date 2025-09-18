@@ -1,6 +1,7 @@
-import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, Inject, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { I18nService } from '../../core/services/i18n.service';
 
 type Lang = 'ar' | 'en';
 
@@ -10,29 +11,37 @@ type Lang = 'ar' | 'en';
   imports: [CommonModule, TranslateModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent {
   isMenuOpen = false;
-  currentLang: Lang = 'ar';
-  constructor(
-    private i18n: TranslateService,
-    @Inject(PLATFORM_ID) private platformId: object
-  ) { this.setLang((this.i18n.currentLang as Lang) || 'ar'); }
 
-  toggleMobileMenu(){ this.isMenuOpen = !this.isMenuOpen;
-    if (isPlatformBrowser(this.platformId)) document.body.classList.toggle('no-scroll', this.isMenuOpen);
-  }
-  closeMobileMenu(){ if (!this.isMenuOpen) return;
-    this.isMenuOpen = false; if (isPlatformBrowser(this.platformId)) document.body.classList.remove('no-scroll');
-  }
-  @HostListener('document:keydown.escape') onEsc(){ this.closeMobileMenu(); }
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly i18n = inject(I18nService);
 
-  setLang(lang: Lang) {
-    this.currentLang = lang; this.i18n.use(lang);
-    if (!isPlatformBrowser(this.platformId)) return;
-    const dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', dir);
-    document.body.classList.toggle('rtl', dir==='rtl');
+  // Read-only snapshot of the current lang (service is the single source of truth)
+  get currentLang(): Lang { return this.i18n.current; }
+
+  // Toggle language via the service (persists to sessionStorage + flips dir/lang)
+  setLang(next: Lang) {
+    this.i18n.setLang(next);
   }
+
+  toggleMobileMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.classList.toggle('no-scroll', this.isMenuOpen);
+    }
+  }
+
+  closeMobileMenu() {
+    if (!this.isMenuOpen) return;
+    this.isMenuOpen = false;
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.classList.remove('no-scroll');
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEsc() { this.closeMobileMenu(); }
 }
