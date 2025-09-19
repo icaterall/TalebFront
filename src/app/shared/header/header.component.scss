@@ -305,5 +305,49 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
 
 
+/* header.component.scss additions */
+@media (max-width: 1060px) {
+  .header {
+    min-height: 65px; /* match your design */
+    padding-block: 0.5rem;
+  }
 
-/* If you previously set .superbar__links { direction:ltr; } remove it */
+  .brand-img {
+    height: 28px !important; /* larger logo on mobile */
+  }
+
+  .mobile-btn {
+    font-size: 1.4rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .lang-btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* styles.scss additions */
+@media (max-width: 1060px) {
+  .lp-hero__title {
+    font-size: clamp(22px, 6vw, 34px); /* bigger */
+    text-align: center;
+  }
+
+  .lp-hero__lead {
+    font-size: clamp(16px, 4vw, 22px);
+    text-align: center;
+    margin-block: 0.75rem 1rem;
+  }
+
+  .lp-cta {
+    grid-template-columns: 1fr !important; /* stack */
+    gap: 12px;
+  }
+
+  .lp-btn {
+    font-size: 1rem;
+    padding: 1rem;
+    min-height: 52px; /* larger tap area */
+  }
+}

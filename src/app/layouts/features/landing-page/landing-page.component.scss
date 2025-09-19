@@ -1,20 +1,20 @@
 /* ===============================
    Vars (respect your header stack)
    =============================== */
-:root{
+:root {
   --ana-superbar-h: 56px;   /* superbar */
-  --ana-header-h:   64px;   /* header (desktop), 65px on mobile in your header CSS */
+  --ana-header-h:   64px;   /* header (desktop), 65px on mobile in header CSS */
   --ana-header-stack: calc(var(--ana-superbar-h) + var(--ana-header-h));
 }
 
 /* ===============================
    Base + container
    =============================== */
-.lp{ color:#0f172a; line-height:1.5; }
-.lp *{ box-sizing:border-box; }
-.lp img{ max-width:100%; height:auto; display:block; }
+.lp { color:#0f172a; line-height:1.5; }
+.lp * { box-sizing:border-box; }
+.lp img { max-width:100%; height:auto; display:block; }
 
-.lp-container{
+.lp-container {
   width:100%;
   margin-inline:auto;
   padding-inline: clamp(16px, 3.5vw, 32px);
@@ -25,43 +25,39 @@
   border-radius:16px;
   overflow:hidden;
 }
-@media (min-width: 576px){  .lp-container{ max-width:600px;  } }
-@media (min-width: 768px){  .lp-container{ max-width:950px;  } }
-@media (min-width: 1061px){ .lp-container{ max-width:1050px; } } /* your lg */
-@media (min-width: 1200px){ .lp-container{ max-width:1220px; } }
-@media (min-width: 1400px){ .lp-container{ max-width:1350px; } }
-@media (min-width: 1600px){ .lp-container{ max-width:1500px; } }
+@media (min-width: 576px) { .lp-container { max-width:600px; } }
+@media (min-width: 768px) { .lp-container { max-width:950px; } }
+@media (min-width: 1061px){ .lp-container { max-width:1050px; } }
+@media (min-width: 1200px){ .lp-container { max-width:1220px; } }
+@media (min-width: 1400px){ .lp-container { max-width:1350px; } }
+@media (min-width: 1600px){ .lp-container { max-width:1500px; } }
+
 /* ===============================
    Grid
    =============================== */
-.lp-grid{ display:grid; align-items:center; gap: clamp(16px, 2.5vw, 28px); }
-.lp-grid--2{ grid-template-columns: 1fr; }
+.lp-grid { display:grid; align-items:center; gap: clamp(16px, 2.5vw, 28px); }
+.lp-grid--2 { grid-template-columns: 1fr; }
 
-/* ≥992px two columns (image smaller, copy wider) */
-@media (min-width: 992px){
-  .lp-grid--2{ 
-            grid-template-columns: minmax(320px, 1.05fr) 1.15fr;
-   }
+@media (min-width: 992px) {
+  .lp-grid--2 { grid-template-columns: minmax(320px, 1.05fr) 1.15fr; }
 }
-
-/* ≥1200px give copy even more room */
-@media (min-width: 1200px){
-  .lp-grid--2{ grid-template-columns: minmax(360px, 1.05fr) 1.2fr !important; }
+@media (min-width: 1200px) {
+  .lp-grid--2 { grid-template-columns: minmax(360px, 1.05fr) 1.2fr !important; }
 }
 
 /* ===============================
    Hero section
    =============================== */
-.lp-hero{
+.lp-hero {
   overflow-x: clip;
   scroll-margin-top: var(--ana-header-stack);
-  padding-top:    calc(var(--ana-header-stack) + clamp(0px, 2.5vw, 0px));
+  padding-top: calc(var(--ana-header-stack) + clamp(0px, 2.5vw, 0px));
   padding-bottom: clamp(10px, 6vw, 15px);
 }
 
 /* Portrait card */
-.lp-hero__media{ position:relative; display:grid; place-items:center; }
-.lp-photo{
+.lp-hero__media { position:relative; display:grid; place-items:center; }
+.lp-photo {
   width: clamp(240px, 26vw, 320px);
   aspect-ratio: 4 / 5;
   border: 6px solid #fff;
@@ -70,216 +66,135 @@
   transform: rotate(-5deg);
   box-shadow: 0 16px 36px rgba(0,0,0,.12);
 }
-.lp-photo img{ width:100%; height:100%; object-fit:cover; }
-@media (max-width: 575.98px){ .lp-photo{ width:64vw; } }
+.lp-photo img { width:100%; height:100%; object-fit:cover; }
+@media (max-width: 575.98px){ .lp-photo { width:64vw; } }
 
 /* Doodles */
-.lp-deco{ position:absolute; pointer-events:none; }
-.lp-deco--star{
-  width:28px;height:28px; left:-18px; top:-14px; background:#ffb703;
-  clip-path: polygon(50% 0%, 62% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 38% 35%);
+.lp-deco { position:absolute; pointer-events:none; }
+.lp-deco--star {
+  width:28px; height:28px; left:-18px; top:-14px; background:#ffb703;
+  clip-path: polygon(50% 0%,62% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,38% 35%);
 }
-.lp-deco--diamond{ width:14px;height:14px; right:-10px; top:24px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
-.lp-deco--scribble{
-  width:120px;height:22px; left:22%; bottom:-14px; opacity:.45;
+.lp-deco--diamond { width:14px; height:14px; right:-10px; top:24px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
+.lp-deco--scribble {
+  width:120px; height:22px; left:22%; bottom:-14px; opacity:.45;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 36c38-22 66-10 96 0s58 12 100-12' fill='none' stroke='%23121' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
   background-size:100% 100%;
 }
 @media (max-width: 575.98px){
-  .lp-deco--star,.lp-deco--diamond,.lp-deco--scribble{ display:none; }
+  .lp-deco--star, .lp-deco--diamond, .lp-deco--scribble { display:none; }
 }
 
-/* Copy (alias your custom class names too) */
-.lp-hero__copy, .lp-herocopy{ text-align:center; }
-@media (min-width: 992px){ .lp-hero__copy, .lp-herocopy{ text-align:start; } }
+/* Copy */
+.lp-hero__copy, .lp-herocopy { text-align:center; }
+@media (min-width: 992px){ .lp-hero__copy, .lp-herocopy { text-align:start; } }
 
-.lp-hero__title, .lp-herotitle{
+.lp-hero__title, .lp-herotitle {
   margin:0 0 .5rem;
   font-weight:800;
   line-height:1.15;
   letter-spacing:-.01em;
   font-size: clamp(26px, 3.4vw, 40px);
 }
-@media (min-width: 1200px)
-{ .lp-hero__title, 
-  .lp-herotitle{ 
-        font-size: clamp(14px, 1.65vw, 25px);
-  } 
+@media (min-width: 1200px){
+  .lp-hero__title, .lp-herotitle { font-size: clamp(14px, 1.65vw, 25px); }
 }
 
-.lp-hero__lead{ 
-  max-width:62ch; 
+.lp-hero__lead {
+  max-width:62ch;
   font-size: clamp(14px, 1.45vw, 25px);
- }
-@media (min-width: 992px){ 
-  .lp-hero__lead{ margin:0; } 
+}
+@media (min-width: 992px){ .lp-hero__lead { margin:0; } }
+@media (max-width: 1060px){
+  .lp-hero__lead { text-align:center; display:inline-block; font-size: clamp(14px, 2.5vw, 30px); }
+  .lp-hero {
+    scroll-margin-top: calc(0px + 63px);
+    padding-top: calc(25px + clamp(0px, 2.5vw, 0px));
+  }
 }
 
-
-
-@media (min-width: 768px){
-  .lp-cta{ grid-template-columns: repeat(3, auto); justify-items:start; justify-content:start; }
+/* CTA */
+.lp-cta {
+  display:grid;
+  gap:16px;
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  align-items:stretch;
+  justify-items:stretch;
+  margin-top: clamp(14px, 3vw, 22px);
+}
+@media (max-width: 767.98px){ .lp-cta { grid-template-columns: 1fr; } }
+@media (min-width: 992px) and (max-width: 1060.98px){
+  .lp-cta {
+    grid-template-columns: repeat(3, minmax(150px, max-content));
+    justify-content: center;
+    gap:12px;
+  }
+  .lp-cta .lp-btn { width:auto; min-width:150px; padding:0.5rem 1rem; }
 }
 
-
+.lp-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:100%; min-height:44px;
+  padding:0.85rem 1.25rem;
+  border-radius:8px;
+  background:#2563EB; color:#fff;
+  font-weight:700;
+  border:2px solid transparent;
+  text-decoration:none;
+  transition: border-color .12s ease, transform .12s ease, box-shadow .12s ease;
+}
+.lp-btn:hover { border-color:#fff; transform:translateY(-1px); box-shadow:0 6px 18px rgba(26,115,232,.25); }
+.lp-btn:focus-visible { outline:none; border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.7); }
+.lp-btn:active { transform:translateY(1px); }
+.lp-btn--primary { background:#2563EB; color:#fff; }
 
 /* ===============================
-   bk-hero layer (bk-hero)
+   bk-hero layer
    =============================== */
-/* Default (LTR): pin to inline-start/left and mirror so arcs face the text */
-.lp .bk-hero{
+.lp .bk-hero {
   position:absolute; inset:0;
   display:flex; align-items:flex-end; justify-content:flex-start;
   padding: clamp(0px, 2.4vw, 0px);
   z-index:0; pointer-events:none; overflow:hidden;
 }
-.lp .bk-hero img{
+.lp .bk-hero img {
   max-width: min(45%, 560px);
   height:auto; object-fit:contain;
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.08));
   opacity:.9;
-  transform-origin:center;
 }
 
-/* RTL: pin to inline-end/right and remove mirror */
-html[dir="rtl"] .lp .bk-hero{ justify-content:flex-end; }
-html[dir="rtl"] .lp .bk-hero img{ transform:none; }
-/* default LTR: left, no flip */
-.bk-hero{ justify-content: flex-start; }
-.bk-hero img{ transform: none; }
+html[dir="rtl"] .lp .bk-hero { justify-content:flex-end; }
+html[dir="rtl"] .lp .bk-hero img { transform:none; }
 
-/* flip & move only when any ancestor has dir="rtl" (html/body/app) */
-:host-context([dir="rtl"]) .bk-hero{ justify-content: flex-start; }
-:host-context([dir="rtl"]) .bk-hero img{ transform: scaleX(-1); }
-/* Between lg and xl only: 1061px–1199.98px */
+.bk-hero { justify-content:flex-start; }
+.bk-hero img { transform:none; }
+
+:host-context([dir="rtl"]) .bk-hero img { transform: scaleX(-1); }
 
 @media (min-width: 1061px) and (max-width: 1199.98px) {
-  .lp .bk-hero img{
-  max-width: min(40%, 560px);
-  }
-  /* put your tweaks here */
+  .lp .bk-hero img { max-width: min(40%, 560px); }
   .lp-grid--2 { grid-template-columns: minmax(370px, .95fr) 1.05fr; }
   .lp-photo { width: clamp(240px, 22vw, 300px); }
-  .css-e4e1hn img { max-width: 44%; opacity: .85; }
 }
 
-
-/* If you keep a mobile override, ensure it stays AFTER the rules above */
 @media (max-width: 991.98px){
-  .bk-hero{ position: static; justify-content: center; }
-  .bk-hero img{ transform: none !important; } /* centered artwork on mobile */
-}
-
-
-/* Make hero content sit above the background layer */
-.lp-grid > :not(.bk-hero){ position:relative; z-index:1; }
-
-/* ===============================
-   Responsive (<992px): drop bk-hero into the flow
-   =============================== */
-@media (max-width: 991.98px){
-  .lp-grid{ grid-template-columns: 1fr; }
-
-  .lp-hero__media{ order:1; }
-  .lp .bk-hero{
-    order:2;
-    justify-content:center; align-items:center;
+  .bk-hero { position: static; justify-content:center; }
+  .bk-hero img { transform:none !important; max-width:60%; margin:30px; }
+  .lp-hero__media { order:1; }
+  .lp .bk-hero {
+    order:2; justify-content:center; align-items:center;
     padding:0; z-index:auto; pointer-events:auto;
   }
-  .lp .bk-hero img{
-        max-width: 60%;
-        transform: rotate(180deg) !important;
-        margin: 30px 30px 310px 405px;
+  .lp .bk-hero img {
+    max-width:60%;
+    transform: rotate(180deg) !important;
+    margin:30px 30px 310px 405px;
   }
-  .lp-hero__copy, .lp-herocopy{ order:3; }
+  .lp-hero__copy { order:3; }
 }
 
+@media (max-width: 575.98px){ .lp .bk-hero { padding:12px; } }
 
-/* ===============================
-   Optional: very small tweaks
-   =============================== */
-@media (max-width: 575.98px){
-  .lp .bk-hero{ padding:12px; }
-}
-
-/* === CTA strip: long, equal-width rectangles === */
-
-/* make the 3 buttons the same width */
-.lp-cta{
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(3, minmax(190px, 1fr));
-  align-items: stretch;
-  justify-items: stretch;
-    margin-top: clamp(14px, 3vw, 22px); 
-}
-
-/* stack on small screens */
-@media (max-width: 767.98px){
-  .lp-cta{ grid-template-columns: 1fr; }
-}
-
-/* button look */
-.lp-btn{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;                   /* fill grid cell → long rectangle */
-  min-height: 44px;              /* comfortable tap target */
-  padding: 0.85rem 1.25rem;
-  border-radius: 8px;            /* small rounded corners like screenshot */
-  background: #2563EB;           /* blue */
-  color: #fff;
-  font-weight: 700;
-  border: 2px solid transparent; /* becomes white on hover/focus */
-  text-decoration: none;         /* no underline */
-  transition: border-color .12s ease, transform .12s ease, box-shadow .12s ease;
-}
-
-/* keep “no underline” on hover */
-.lp-btn:hover{ 
-  text-decoration: none; 
-  border-color: #fff;
-  transform: translateY(-1px); 
-  box-shadow: 0 6px 18px rgba(26,115,232,.25); 
-}
-
-/* keyboard focus: match hover and add subtle ring */
-.lp-btn:focus-visible{
-  outline: none;
-  border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(255,255,255,.7);
-}
-
-/* click feedback (optional) */
-.lp-btn:active{ transform: translateY(1px); }
-
-/* if you only want this style for the blue variant */
-.lp-btn--primary{ background:#2563EB; color:#fff; }
-/* 992–1060px: make CTA buttons narrower and not full-width */
-@media (min-width: 992px) and (max-width: 1060.98px){
-  .lp-cta{
-    /* compact three-up; tracks size to content but never below 150px */
-    grid-template-columns: repeat(3, minmax(150px, max-content));
-    justify-content: center;   /* keep them centered in the row */
-    gap: 12px;
-  }
-
-  .lp-cta .lp-btn{
-        width: auto;
-        min-width: 150px;
-        padding: 0.5rem 1rem;
-  }
-}
-@media (max-width: 1060px){
-  .lp-hero__lead{ 
-        text-align: center;
-        display: inline-block;
-        font-size: clamp(14px, 2.5vw, 30px);
- }
-  .lp-hero {
-    overflow-x: clip;
-    scroll-margin-top: calc(0px + 63px);
-    padding-top: calc(calc(0px + 25px) + clamp(0px, 2.5vw, 0px));
-  }
-}
+/* Layer ordering */
+.lp-grid > :not(.bk-hero){ position:relative; z-index:1; }
