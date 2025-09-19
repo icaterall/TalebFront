@@ -108,8 +108,8 @@
 @media (max-width: 1060px){
   .lp-hero__lead { text-align:center; display:inline-block; font-size: clamp(14px, 2.5vw, 30px); }
   .lp-hero {
-    scroll-margin-top: calc(0px + 63px);
-    padding-top: calc(25px + clamp(0px, 2.5vw, 20px));
+    scroll-margin-top: 75px;       
+    padding-top: calc(75px + 16px); /* header + breathing space */
   }
 }
 

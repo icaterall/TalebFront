@@ -153,9 +153,9 @@ ease-in-out;
 
 /* When the visible label is Arabic (ع), use Arabic font + 1px nudge */
 .lang-btn.is-ar-label .lang-text{
-  font-family: 'Tajawal','Cairo','Noto Naskh Arabic', system-ui, sans-serif;
+  font-family: 'serif';
   transform: translateY(1px);  /* optical centering for Arabic glyphs */
-      margin-top: -5px;
+      margin-top: -10px;
 }
 
 /* Optional: keep EN crisp */
@@ -296,6 +296,8 @@ img {
 .header-padding {
     padding-right: 2.25rem !important;
     padding-left: 2.25rem !important;
+        padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
 }
 /* Make the whole right cluster stick to the inline end (works LTR & RTL) */
 .right-cluster { margin-inline-start: auto; }
@@ -315,45 +317,69 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
 @media (max-width: 1060px) {
   .header {
-    min-height: 90px;          /* increased from 65px */
+    min-height: 75px;          /* increased from 65px */
     padding-block: 1rem;        /* increased from 0.5rem */
   }
-  .brand-img {
-    height: 42px !important;    /* increased from 28px */
+    /* Add spacing between menu and logo */
+  .d-flex.align-items-center.gap-2.d-lg-none {
+    gap: 1rem !important;          /* increase gap from menu to logo */
   }
-  .mobile-btn {
-    width: 48px;                   /* wider button */
-    height: 48px;                  /* taller button */
-    font-size: 28px;               /* much larger icons */
+  .brand-img {
+    height: 34px !important;       /* Coursera uses ~24px logo height */
+  }
+  /* Menu button styling */
+  .mobile-btn--menu {
+    width: 40px;                   
+    height: 40px;                  
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -4px;             /* slight negative margin to align with edge */
+  }
+  
+  .mobile-btn--menu .bi-list {
+    font-size: 50px !important;    /* hamburger icon size */
+    line-height: 1;
+  }
+  
+   /* Search button */
+  .mobile-btn--search {
+    width: 70px;
+    height: 70px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   
-  .mobile-btn--menu .bi-list {
-    font-size: 32px !important;    /* extra large menu icon */
-  }
-  
   .mobile-btn--search .bi-search {
-    font-size: 24px !important;    /* larger search icon */
+    font-size: 30px !important;    
   }
   
+  /* Language button */
   .lang-btn {
-    width: 48px;                   /* larger language button */
-    height: 48px;
-    font-size: 1.3rem;             /* bigger text */
-    font-weight: 700;
-    border-radius: 10px;
+    width: 40px;                   
+    height: 40px;
+    font-size: 1.1rem;             
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
   }
   
   .lang-btn .lang-text {
-    font-size: 20px;               /* larger language text */
+    font-size: 30px;               
   }
   
-  /* Adjust container padding for better spacing */
+  /* Container padding for proper edge spacing */
   .header .container-fluid {
-    padding-inline: 12px;          /* more edge padding */
+    padding-inline: 16px;          /* Coursera uses ~16px edge padding */
+  }
+  
+  /* Remove any extra button styling */
+  .mobile-btn {
+    background: transparent;
+    border: none;
+    color: #374151;
   }
 }
 
