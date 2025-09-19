@@ -1,5 +1,5 @@
 # Stage 1: Build the Angular app
-FROM --platform=linux/amd64 node:20-alpine AS build
+FROM --platform=linux/amd64 node:20-alpine3.21 AS build
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build -- --configuration=production
 
 # Stage 2: Serve the Angular app with Nginx
-FROM nginx:1.21.0-alpine
+FROM nginx:1.25-alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
