@@ -315,19 +315,45 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
 @media (max-width: 1060px) {
   .header {
-    min-height: 80px;          /* increased from 65px */
+    min-height: 90px;          /* increased from 65px */
     padding-block: 1rem;        /* increased from 0.5rem */
   }
   .brand-img {
-    height: 32px !important;    /* increased from 28px */
+    height: 42px !important;    /* increased from 28px */
   }
   .mobile-btn {
-    font-size: 1.6rem;          /* increased from 1.4rem */
-    padding: 0.4rem 0.7rem;     /* increased padding */
+    width: 48px;                   /* wider button */
+    height: 48px;                  /* taller button */
+    font-size: 28px;               /* much larger icons */
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+  
+  .mobile-btn--menu .bi-list {
+    font-size: 32px !important;    /* extra large menu icon */
+  }
+  
+  .mobile-btn--search .bi-search {
+    font-size: 24px !important;    /* larger search icon */
+  }
+  
   .lang-btn {
-    padding: 0.25rem 0.75rem;
-    font-size: 0.95rem;
+    width: 48px;                   /* larger language button */
+    height: 48px;
+    font-size: 1.3rem;             /* bigger text */
+    font-weight: 700;
+    border-radius: 10px;
+  }
+  
+  .lang-btn .lang-text {
+    font-size: 20px;               /* larger language text */
+  }
+  
+  /* Adjust container padding for better spacing */
+  .header .container-fluid {
+    padding-inline: 12px;          /* more edge padding */
   }
 }
 
