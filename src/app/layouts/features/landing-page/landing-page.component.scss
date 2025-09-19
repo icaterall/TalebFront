@@ -26,7 +26,7 @@
   overflow:hidden;
 }
 @media (min-width: 576px) { .lp-container { max-width:600px; } }
-@media (min-width: 768px) { .lp-container { max-width:950px; } }
+@media (min-width: 768px) { .lp-container { max-width:1000px; } }
 @media (min-width: 1061px){ .lp-container { max-width:1050px; } }
 @media (min-width: 1200px){ .lp-container { max-width:1220px; } }
 @media (min-width: 1400px){ .lp-container { max-width:1350px; } }
@@ -57,22 +57,31 @@
 
 /* Portrait card */
 .lp-hero__media { position:relative; display:grid; place-items:center; }
+/* Portrait card */
 .lp-photo {
   width: clamp(240px, 26vw, 320px);
   aspect-ratio: 4 / 5;
   border: 6px solid #fff;
   border-radius: 15px;
-  overflow:hidden;
+  overflow: hidden;
   transform: rotate(-5deg);
   box-shadow: 0 16px 36px rgba(0,0,0,.12);
 }
+@media (max-width: 992px) {
+  /* add .lp to slightly increase specificity, and !important once to break ties */
+  .lp .lp-photo {
+    width: clamp(260px, 64vw, 400px) !important;
+    margin-top: 20px;
+  }
+}
+
 .lp-photo img { width:100%; height:100%; object-fit:cover; }
-@media (max-width: 575.98px){ .lp-photo { width:64vw; } }
+
 
 /* Doodles */
 .lp-deco { position:absolute; pointer-events:none; }
 .lp-deco--star {
-  width:28px; height:28px; left:-18px; top:-14px; background:#ffb703;
+  width:28px; height:28px; left:-18px; top:0px; background:#ffb703;
   clip-path: polygon(50% 0%,62% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,38% 35%);
 }
 .lp-deco--diamond { width:14px; height:14px; right:-10px; top:24px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
@@ -109,7 +118,7 @@
   .lp-hero__lead { text-align:center; display:inline-block; font-size: clamp(14px, 2.5vw, 30px); }
   .lp-hero {
     scroll-margin-top: 75px;       
-    padding-top: calc(75px + 16px); /* header + breathing space */
+    padding-top: 65px; /* header + breathing space */
   }
 }
 
@@ -198,8 +207,11 @@ html[dir="rtl"] .lp .bk-hero img { transform:none; }
   .bk-hero img { transform:none !important; max-width:60%; margin:30px; }
   .lp-hero__media { order:1; }
   .lp .bk-hero {
-    order:2; justify-content:center; align-items:center;
-    padding:0; z-index:auto; pointer-events:auto;
+    order:2; justify-content:center; 
+    align-items:center;
+    padding:0; z-index:auto; 
+    pointer-events:auto;
+            margin-bottom: 200px;
   }
   .lp .bk-hero img {
     max-width:60%;
