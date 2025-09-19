@@ -49,5 +49,5 @@ jobs:
 
       - name: Update Kubernetes deployment
         run: |
-          sed -i "s|533267169159.dkr.ecr.us-east-2.amazonaws.com/front-test-anataleb:latest|533267169159.dkr.ecr.us-east-2.amazonaws.com/front-test-anataleb:$IMAGE_TAG|" kubernetes/frontend-test-deployment.yaml
-          kubectl apply -f kubernetes/frontend-test-deployment.yaml
+          sed -i "s|533267169159.dkr.ecr.us-east-2.amazonaws.com/front-test-anataleb:latest|533267169159.dkr.ecr.us-east-2.amazonaws.com/front-test-anataleb:$IMAGE_TAG|" kubernetes/frontend-deployment.yaml
+          kubectl apply -f kubernetes/frontend-deployment.yaml
