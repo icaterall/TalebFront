@@ -88,6 +88,12 @@ ease-in-out;
     gap: 8px;
   }
 }
+@media (max-width: 1060.98px){
+  :root{
+    --ana-superbar-h: 0px;
+    --ana-header-h: 80px;       /* changed from 65px to 80px */
+  }
+}
 /* === DESKTOP STYLES === */
 @media (min-width: #{$mobile-bp + 1}) {
   .header-row {
@@ -306,48 +312,22 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
 
 /* header.component.scss additions */
+
 @media (max-width: 1060px) {
   .header {
-    min-height: 65px; /* match your design */
-    padding-block: 0.5rem;
+    min-height: 80px;          /* increased from 65px */
+    padding-block: 1rem;        /* increased from 0.5rem */
   }
-
   .brand-img {
-    height: 28px !important; /* larger logo on mobile */
+    height: 32px !important;    /* increased from 28px */
   }
-
   .mobile-btn {
-    font-size: 1.4rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 1.6rem;          /* increased from 1.4rem */
+    padding: 0.4rem 0.7rem;     /* increased padding */
   }
-
   .lang-btn {
     padding: 0.25rem 0.75rem;
     font-size: 0.95rem;
   }
 }
 
-/* styles.scss additions */
-@media (max-width: 1060px) {
-  .lp-hero__title {
-    font-size: clamp(22px, 6vw, 34px); /* bigger */
-    text-align: center;
-  }
-
-  .lp-hero__lead {
-    font-size: clamp(16px, 4vw, 22px);
-    text-align: center;
-    margin-block: 0.75rem 1rem;
-  }
-
-  .lp-cta {
-    grid-template-columns: 1fr !important; /* stack */
-    gap: 12px;
-  }
-
-  .lp-btn {
-    font-size: 1rem;
-    padding: 1rem;
-    min-height: 52px; /* larger tap area */
-  }
-}

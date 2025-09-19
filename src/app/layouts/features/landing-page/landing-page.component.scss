@@ -109,7 +109,7 @@
   .lp-hero__lead { text-align:center; display:inline-block; font-size: clamp(14px, 2.5vw, 30px); }
   .lp-hero {
     scroll-margin-top: calc(0px + 63px);
-    padding-top: calc(25px + clamp(0px, 2.5vw, 0px));
+    padding-top: calc(25px + clamp(0px, 2.5vw, 20px));
   }
 }
 
@@ -121,6 +121,21 @@
   align-items:stretch;
   justify-items:stretch;
   margin-top: clamp(14px, 3vw, 22px);
+}
+@media (max-width: 1060px){ 
+  .lp-cta { 
+    grid-template-columns: 1fr;    /* single column for all mobile */
+    gap: 12px;                     /* slightly tighter gap */
+    max-width: 400px;              /* limit width on mobile */
+    margin-inline: auto;           /* center the buttons */
+  }
+}
+@media (max-width: 1060px){
+  .lp-btn {
+    min-height: 52px;              /* taller buttons on mobile */
+    font-size: 1.05rem;            /* slightly larger text */
+    padding: 1rem 1.5rem;          /* more padding */
+  }
 }
 @media (max-width: 767.98px){ .lp-cta { grid-template-columns: 1fr; } }
 @media (min-width: 992px) and (max-width: 1060.98px){

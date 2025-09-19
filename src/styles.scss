@@ -89,9 +89,7 @@ body.rtl .text-start{text-align:right!important}
 body.rtl .text-end{text-align:left!important}
 .no-scroll{overflow:hidden}
 
-
-@media (max-width: 1060.98px){        /* your lg breakpoint */
-  /* mobile: superbar hidden, header is ~65 */
+@media (max-width: 1060.98px){
   :root{
     --ana-superbar-h: 0px;
     --ana-header-h: 65px;
