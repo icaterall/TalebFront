@@ -1,476 +1,285 @@
-/* ===========================
-   Landing Page (body) styles
-   — header/footer removed —
-   =========================== */
-/* Kill horizontal overflow coming from hero visuals/floating bits */
-.hero,
-.hero-section {
-  overflow-x: clip; /* use clip over hidden (no scroll bar, better perf) */
+/* ===============================
+   Vars (respect your header stack)
+   =============================== */
+:root{
+  --ana-superbar-h: 56px;   /* superbar */
+  --ana-header-h:   64px;   /* header (desktop), 65px on mobile in your header CSS */
+  --ana-header-stack: calc(var(--ana-superbar-h) + var(--ana-header-h));
 }
 
-/* Ensure hero artwork never pushes width wider than the container */
-.hero__art img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+/* ===============================
+   Base + container
+   =============================== */
+.lp{ color:#0f172a; line-height:1.5; }
+.lp *{ box-sizing:border-box; }
+.lp img{ max-width:100%; height:auto; display:block; }
+
+.lp-container{
+  width:100%;
+  margin-inline:auto;
+  padding-inline: clamp(16px, 3.5vw, 32px);
+  padding-block:  clamp(6px, 1.2vw, 12px);
+  position:relative;
+  background:#f0f6ff;
+  color:#0f1114;
+  border-radius:16px;
+  overflow:hidden;
+}
+@media (min-width: 576px){  .lp-container{ max-width:600px;  } }
+@media (min-width: 768px){  .lp-container{ max-width:950px;  } }
+@media (min-width: 1061px){ .lp-container{ max-width:1050px; } } /* your lg */
+@media (min-width: 1200px){ .lp-container{ max-width:1220px; } }
+@media (min-width: 1400px){ .lp-container{ max-width:1350px; } }
+@media (min-width: 1600px){ .lp-container{ max-width:1500px; } }
+/* ===============================
+   Grid
+   =============================== */
+.lp-grid{ display:grid; align-items:center; gap: clamp(16px, 2.5vw, 28px); }
+.lp-grid--2{ grid-template-columns: 1fr; }
+
+/* ≥992px two columns (image smaller, copy wider) */
+@media (min-width: 992px){
+  .lp-grid--2{ 
+            grid-template-columns: minmax(320px, 1.05fr) 1.15fr;
+   }
 }
 
-/* If partner logos are in a single row, allow wrapping to avoid overflow */
-.partners .logos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .75rem;
-  min-width: 0; /* prevents flex children from forcing width */
+/* ≥1200px give copy even more room */
+@media (min-width: 1200px){
+  .lp-grid--2{ grid-template-columns: minmax(360px, 1.05fr) 1.2fr !important; }
 }
 
-/* Hero section gradient */
-.hero-section {
-  background:
-    radial-gradient(1200px 480px at 80% -10%, rgb(var(--bs-primary-rgb), .1), transparent 60%),
-    linear-gradient(0deg, #fff, #fff);
+/* ===============================
+   Hero section
+   =============================== */
+.lp-hero{
+  overflow-x: clip;
+  scroll-margin-top: var(--ana-header-stack);
+  padding-top:    calc(var(--ana-header-stack) + clamp(0px, 2.5vw, 0px));
+  padding-bottom: clamp(10px, 6vw, 15px);
 }
 
-/* Partner logos */
-.partner-logo {
-  height: 32px;
-  width: auto;
-  opacity: 0.7;
-  filter: grayscale(100%);
-  transition: all 0.2s ease-in-out;
+/* Portrait card */
+.lp-hero__media{ position:relative; display:grid; place-items:center; }
+.lp-photo{
+  width: clamp(240px, 26vw, 320px);
+  aspect-ratio: 4 / 5;
+  border: 6px solid #fff;
+  border-radius: 15px;
+  overflow:hidden;
+  transform: rotate(-5deg);
+  box-shadow: 0 16px 36px rgba(0,0,0,.12);
+}
+.lp-photo img{ width:100%; height:100%; object-fit:cover; }
+@media (max-width: 575.98px){ .lp-photo{ width:64vw; } }
 
-  &:hover {
-    opacity: 1;
-    filter: grayscale(0%);
+/* Doodles */
+.lp-deco{ position:absolute; pointer-events:none; }
+.lp-deco--star{
+  width:28px;height:28px; left:-18px; top:-14px; background:#ffb703;
+  clip-path: polygon(50% 0%, 62% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 38% 35%);
+}
+.lp-deco--diamond{ width:14px;height:14px; right:-10px; top:24px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
+.lp-deco--scribble{
+  width:120px;height:22px; left:22%; bottom:-14px; opacity:.45;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 36c38-22 66-10 96 0s58 12 100-12' fill='none' stroke='%23121' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-size:100% 100%;
+}
+@media (max-width: 575.98px){
+  .lp-deco--star,.lp-deco--diamond,.lp-deco--scribble{ display:none; }
+}
+
+/* Copy (alias your custom class names too) */
+.lp-hero__copy, .lp-herocopy{ text-align:center; }
+@media (min-width: 992px){ .lp-hero__copy, .lp-herocopy{ text-align:start; } }
+
+.lp-hero__title, .lp-herotitle{
+  margin:0 0 .5rem;
+  font-weight:800;
+  line-height:1.15;
+  letter-spacing:-.01em;
+  font-size: clamp(26px, 3.4vw, 40px);
+}
+@media (min-width: 1200px)
+{ .lp-hero__title, 
+  .lp-herotitle{ 
+        font-size: clamp(14px, 1.65vw, 25px);
+  } 
+}
+
+.lp-hero__lead{ 
+  max-width:62ch; 
+  font-size: clamp(14px, 1.45vw, 25px);
+ }
+@media (min-width: 992px){ 
+  .lp-hero__lead{ margin:0; } 
+}
+
+
+
+@media (min-width: 768px){
+  .lp-cta{ grid-template-columns: repeat(3, auto); justify-items:start; justify-content:start; }
+}
+
+
+
+/* ===============================
+   bk-hero layer (bk-hero)
+   =============================== */
+/* Default (LTR): pin to inline-start/left and mirror so arcs face the text */
+.lp .bk-hero{
+  position:absolute; inset:0;
+  display:flex; align-items:flex-end; justify-content:flex-start;
+  padding: clamp(0px, 2.4vw, 0px);
+  z-index:0; pointer-events:none; overflow:hidden;
+}
+.lp .bk-hero img{
+  max-width: min(45%, 560px);
+  height:auto; object-fit:contain;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,.08));
+  opacity:.9;
+  transform-origin:center;
+}
+
+/* RTL: pin to inline-end/right and remove mirror */
+html[dir="rtl"] .lp .bk-hero{ justify-content:flex-end; }
+html[dir="rtl"] .lp .bk-hero img{ transform:none; }
+/* default LTR: left, no flip */
+.bk-hero{ justify-content: flex-start; }
+.bk-hero img{ transform: none; }
+
+/* flip & move only when any ancestor has dir="rtl" (html/body/app) */
+:host-context([dir="rtl"]) .bk-hero{ justify-content: flex-start; }
+:host-context([dir="rtl"]) .bk-hero img{ transform: scaleX(-1); }
+/* Between lg and xl only: 1061px–1199.98px */
+
+@media (min-width: 1061px) and (max-width: 1199.98px) {
+  .lp .bk-hero img{
+  max-width: min(40%, 560px);
   }
+  /* put your tweaks here */
+  .lp-grid--2 { grid-template-columns: minmax(370px, .95fr) 1.05fr; }
+  .lp-photo { width: clamp(240px, 22vw, 300px); }
+  .css-e4e1hn img { max-width: 44%; opacity: .85; }
 }
 
-/* Course card styling */
-.course-card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--bs-box-shadow-lg) !important;
+/* If you keep a mobile override, ensure it stays AFTER the rules above */
+@media (max-width: 991.98px){
+  .bk-hero{ position: static; justify-content: center; }
+  .bk-hero img{ transform: none !important; } /* centered artwork on mobile */
+}
+
+
+/* Make hero content sit above the background layer */
+.lp-grid > :not(.bk-hero){ position:relative; z-index:1; }
+
+/* ===============================
+   Responsive (<992px): drop bk-hero into the flow
+   =============================== */
+@media (max-width: 991.98px){
+  .lp-grid{ grid-template-columns: 1fr; }
+
+  .lp-hero__media{ order:1; }
+  .lp .bk-hero{
+    order:2;
+    justify-content:center; align-items:center;
+    padding:0; z-index:auto; pointer-events:auto;
   }
+  .lp .bk-hero img{
+        max-width: 60%;
+        transform: rotate(180deg) !important;
+        margin: 30px 30px 310px 405px;
+  }
+  .lp-hero__copy, .lp-herocopy{ order:3; }
 }
 
-.course-card .card-img-top {
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
+
+/* ===============================
+   Optional: very small tweaks
+   =============================== */
+@media (max-width: 575.98px){
+  .lp .bk-hero{ padding:12px; }
 }
 
-/* Feature icon styling */
-.feature-icon {
-  width: 64px;
-  height: 64px;
+/* === CTA strip: long, equal-width rectangles === */
+
+/* make the 3 buttons the same width */
+.lp-cta{
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  align-items: stretch;
+  justify-items: stretch;
+    margin-top: clamp(14px, 3vw, 22px); 
+}
+
+/* stack on small screens */
+@media (max-width: 767.98px){
+  .lp-cta{ grid-template-columns: 1fr; }
+}
+
+/* button look */
+.lp-btn{
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  width: 100%;                   /* fill grid cell → long rectangle */
+  min-height: 44px;              /* comfortable tap target */
+  padding: 0.85rem 1.25rem;
+  border-radius: 8px;            /* small rounded corners like screenshot */
+  background: #2563EB;           /* blue */
+  color: #fff;
+  font-weight: 700;
+  border: 2px solid transparent; /* becomes white on hover/focus */
+  text-decoration: none;         /* no underline */
+  transition: border-color .12s ease, transform .12s ease, box-shadow .12s ease;
 }
 
-/* Soft background color (used in hero badge, etc.) */
-.bg-primary-soft {
-  background-color: rgb(var(--bs-primary-rgb), 0.1);
-}
-.cds-168{
-   margin-top: 99px;
-}
-// Section1
-.css-box8pc
- {
-    position: relative;
-    width: 1px;
-    height: 1px;
-    top: calc(-100px + 1px);
-    margin-top: -1px;
-}
-.css-1ucfkdb {
-    background-color: #0056d2;
-    color: #ffffff;
-}
-.css-1pntud3.css-1pntud3 {
-    padding-bottom: 20px;
+/* keep “no underline” on hover */
+.lp-btn:hover{ 
+  text-decoration: none; 
+  border-color: #fff;
+  transform: translateY(-1px); 
+  box-shadow: 0 6px 18px rgba(26,115,232,.25); 
 }
 
-@media (min-width: 1024px) {
-    .css-1pntud3 {
-        padding: 0 48px;
-    }
-}
-@media (min-width: 0px) {
-    .css-1pntud3 {
-        padding: 0 16px;
-    }
-}
-.css-1pntud3 {
-    position: relative;
+/* keyboard focus: match hover and add subtle ring */
+.lp-btn:focus-visible{
+  outline: none;
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.7);
 }
 
+/* click feedback (optional) */
+.lp-btn:active{ transform: translateY(1px); }
 
-@media (min-width: 1440px) {
-    .cds-7 {
-        max-width: 1440px;
-    }
-}
+/* if you only want this style for the blue variant */
+.lp-btn--primary{ background:#2563EB; color:#fff; }
+/* 992–1060px: make CTA buttons narrower and not full-width */
+@media (min-width: 992px) and (max-width: 1060.98px){
+  .lp-cta{
+    /* compact three-up; tracks size to content but never below 150px */
+    grid-template-columns: repeat(3, minmax(150px, max-content));
+    justify-content: center;   /* keep them centered in the row */
+    gap: 12px;
+  }
 
-
-.cds-2 {
-    padding-left: 0;
-    padding-right: 0;
+  .lp-cta .lp-btn{
+        width: auto;
+        min-width: 150px;
+        padding: 0.5rem 1rem;
+  }
 }
-
-
-.cds-1 {
-    width: 100%;
-    display: block;
-    box-sizing: border-box;
-    margin-left: auto;
-    margin-right: auto;
-}
-@media (min-width: 1024px) {
-    .css-1kspkkz {
-        margin: -16px;
-        width: calc(100% + 32px);
-    }
-}
-
-@media (min-width: 600px) {
-    .css-1kspkkz {
-        margin: -8px;
-        width: calc(100% + 16px);
-    }
-}
-@media (min-width: 0px) {
-    .css-1kspkkz {
-        margin: -4px;
-        width: calc(100% + 8px);
-    }
-}
-
-.cds-27 {
-    justify-content: center;
-}
-
-.cds-19 {
-    align-items: flex-start;
-}
-
-.cds-10 {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    box-sizing: border-box;
-}
-@media (min-width: 1024px) {
-    .css-1kspkkz>.cds-grid-item {
-        padding: 16px;
-    }
-}
-@media (min-width: 600px) {
-    .css-1kspkkz>.cds-grid-item {
-        padding: 8px;
-    }
-}
-@media (min-width: 0px) {
-    .css-1kspkkz>.cds-grid-item {
-        padding: 4px;
-    }
-}
-.css-pnx9l {
-    position: relative;
-    -webkit-align-self: stretch;
-    -ms-flex-item-align: stretch;
-    -ms-grid-row-align: stretch;
-    align-self: stretch;
-}
-
-@media (min-width: 600px) {
-    .cds-64 {
-        flex-grow: 0;
-        max-width: 50%;
-        flex-basis: 50%;
-    }
-}
-
-.cds-56 {
-    flex-grow: 0;
-    max-width: 100%;
-    flex-basis: 100%;
-}
-
-.cds-11 {
-    margin: 0;
-    box-sizing: border-box;
-}
-.css-1htxtrr {
-    height: 100%;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex
-;
-    -webkit-flex-direction: column;
-    -ms-flex-direction: column;
-    flex-direction: column;
-    -webkit-box-pack: center;
-    -ms-flex-pack: center;
-    -webkit-justify-content: center;
-    justify-content: center;
-}
-.css-7skehp {
-    margin-bottom: 4px;
-}
-.css-ylpfmv
- {
-    margin: 0;
-    font: 600 1.75rem / 2rem Source Sans Pro,Arial,sans-serif;
-    letter-spacing: -0.01em;
-    color: inherit;
-}
-.css-13uzvl2 {
-    margin: 0;
-    font: 400 1rem / 1.5rem Source Sans Pro,Arial,sans-serif;
-    letter-spacing: 0em;
-    color: inherit;
-    margin-top: 4px;
-}
-@media (min-width: 1024px) {
-    .css-dxlk5w {
-        width: 80%;
-    }
-}
-.css-dxlk5w {
-    margin-bottom: 16px;
-    white-space: pre-line;
-}
-p {
-    margin: 8px 0;
-}
-.css-zga7gs {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex
-;
-    -webkit-flex-direction: row;
-    -ms-flex-direction: row;
-    flex-direction: row;
-    margin-top: 16px;
-    gap: 16px;
-}
-.css-1lfbp87.css-1lfbp87 {
-    -webkit-text-decoration: none;
-    text-decoration: none;
-}
-.css-ibj382.css-ibj382, .css-ibj382:hover {
-    border: 1px solid #f0f6ff;
-}
-.css-ibj382.css-ibj382 {
-    background-color: transparent;
-}
-
-
-.cds-149 {
-    color: inherit;
-    border: 0;
-    cursor: pointer;
-    margin: 0;
-    display: inline-flex
-;
-    outline: 0;
-    padding: 0;
-    position: relative;
-    align-items: center;
-    user-select: none;
-    border-radius: 0;
-    vertical-align: middle;
-    -moz-appearance: none;
-    justify-content: center;
-    text-decoration: none;
-    background-color: transparent;
-    -webkit-appearance: none;
-    -webkit-tap-highlight-color: transparent;
-}
-.css-1lfbp87 {
-    border-radius: 4px;
-    text-transform: none;
-    max-width: 320px;
-    min-width: unset;
-    -webkit-transition: none;
-    transition: none;
-    box-sizing: border-box;
-    color: #0056d2;
-    background-color: #ffffff;
-    box-shadow: inset 0 0 0 1px #0056d2;
-    font: 600 1rem / 1.5rem Source Sans Pro,Arial,sans-serif;
-    letter-spacing: 0.01em;
-    padding: 12px 24px;
-}
-
-.css-1lfbp87 .cds-button-label {
-    text-transform: none;
-    width: 100%;
-    display: inherit
-;
-    -webkit-align-items: inherit;
-    -webkit-box-align: inherit;
-    -ms-flex-align: inherit;
-    align-items: inherit;
-    -webkit-box-pack: inherit;
-    -ms-flex-pack: inherit;
-    -webkit-justify-content: inherit;
-    justify-content: inherit;
-}
-*, :after, :before {
-    box-sizing: border-box;
-}
-* {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-.css-ibj382 {
-    border-radius: 4px;
-    text-transform: none;
-    max-width: 320px;
-    min-width: unset;
-    -webkit-transition: none;
-    transition: none;
-    box-sizing: border-box;
-    color: #ffffff;
-    background-color: #0056d2;
-    box-shadow: inset 0 0 0 1px #0056d2;
-    font: 600 1rem / 1.5rem Source Sans Pro,Arial,sans-serif;
-    letter-spacing: 0.01em;
-    padding: 12px 24px;
-}
-.css-ibj382 .cds-button-label {
-    text-transform: none;
-    width: 100%;
-    display: inherit
-;
-    -webkit-align-items: inherit;
-    -webkit-box-align: inherit;
-    -ms-flex-align: inherit;
-    align-items: inherit;
-    -webkit-box-pack: inherit;
-    -ms-flex-pack: inherit;
-    -webkit-justify-content: inherit;
-    justify-content: inherit;
-}
-
-@media (min-width: 1024px) {
-    .css-1kspkkz>.cds-grid-item {
-        padding: 16px;
-    }
-}
-@media (min-width: 600px) {
-    .css-1kspkkz>.cds-grid-item {
-        padding: 8px;
-    }
-}
-@media (min-width: 0px) {
-    .css-1kspkkz>.cds-grid-item {
-        padding: 16px;
-    }
-}
-.css-d7c5ti {
-    position: relative;
-    -webkit-align-self: stretch;
-    -ms-flex-item-align: stretch;
-    -ms-grid-row-align: stretch;
-    align-self: stretch;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex
-;
-    -webkit-align-items: center;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-}
-
-@media (min-width: 600px) {
-    .cds-64 {
-        flex-grow: 0;
-        max-width: 50%;
-        flex-basis: 50%;
-    }
-}
-.css-125uo4z {
-    width: calc(100% + 18px);
-    margin: calc(24px * -1);
-    margin-right: calc(48px * -1);
-    margin-left: 0;
-}
-.css-125uo4z img {
-    display: block;
-    margin: 0 auto;
-}
-img {
-    vertical-align: middle;
-    border: 0;
-}
-@media (max-width: 1439.95px) {
-  .cds-168{
-   margin-top: 74px;
-}
-    .css-1pntud3.css-1pntud3 {
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-}
-
-@media (min-width: 1024px) {
-    .css-1pntud3 {
-        padding: 0 48px;
-    }
-}
-@media (max-width: 1439.95px) {
-    .css-125uo4z {
-        width: calc(100% + 32px);
-        margin: calc(14px * -1);
-        margin-right: calc(16px * -1);
-        margin-left: -20px;
-    }
-}
-@media (min-width: 1024px) {
-    .css-1kspkkz>.cds-grid-item {
-        padding: 16px;
-    }
-}
-@media (min-width: 600px) {
-    .css-1htxtrr{margin: 10px;}
-    .css-1kspkkz>.cds-grid-item {
-        padding: 8px;
-    }
-}
-@media (max-width: 1060x) {
-    .css-1pntud3.css-1pntud3 {
-        padding-top: 16px;
-        padding-bottom:2px;
-    }
-}
-@media (max-width: 992px) {
- .css-1pntud3.css-1pntud3 {
-        padding-top: 0px;
-        padding-bottom: 0px;
-    }
-}
-
-
-
-@media (max-width: 1199.95px) {
-    .css-box8pc {
-        top: calc(-56px + 1px);
-    }
-}
-@media (max-width: 1023.95px) {
-    .css-zga7gs {
-        -webkit-flex-direction: column;
-        -ms-flex-direction: column;
-        flex-direction: column;
-    }
+@media (max-width: 1060px){
+  .lp-hero__lead{ 
+        text-align: center;
+        display: inline-block;
+        font-size: clamp(14px, 2.5vw, 30px);
+ }
+  .lp-hero {
+    overflow-x: clip;
+    scroll-margin-top: calc(0px + 63px);
+    padding-top: calc(calc(0px + 25px) + clamp(0px, 2.5vw, 0px));
+  }
 }

@@ -1,7 +1,8 @@
-{"logo-title": "ANATALEB",
+{
+  "logo-title": "ANATALEB",
   "topbar": {
-    "text": "Built for schools in low-resource and conflict zones",
-    "cta": "How we save bandwidth"
+    "text": "Designed for schools in low-resource and conflict-affected areas",
+    "cta": "How we reduce data usage"
   },
   "nav": {
     "features": "Features",
@@ -11,16 +12,25 @@
     "get_started": "Get started"
   },
   "hero": {
-    "badge": "AI-enabled e-learning platform",
+    "badge": "AI-powered e-learning platform",
     "title": "Manage, teach, and learn — smarter and faster",
-    "subtitle": "Institutions, teachers, students, and parents on one secure platform. Arabic-first with full English support. Optimized for slow internet.",
     "cta_primary": "Try the live demo",
-    "cta_secondary": "How it works",
+    "cta_secondary": "How the platform works",
     "b1": "Arabic & English UI",
     "b2": "AI for analytics & personalization",
     "b3": "Multi-role dashboards",
-    "b4": "Low-bandwidth mode",
-    "search_placeholder": "Search courses, subjects, or topics"
+    "b4": "Low-data mode",
+    "search_placeholder": "Search courses, subjects, or topics",
+        "headline_l1": "For every student,",
+    "headline_l2": "every classroom.",
+    "headline_l3": "Real results.",
+    "subtitle": "We’re a nonprofit with a mission to provide free, world-class education for anyone, anywhere."
+  
+  },
+  "cta": {
+    "learners": "Learners",
+    "teachers": "Teachers",
+    "parents": "Parents"
   },
   "partners": {
     "text": "Trusted by educators and NGOs"
@@ -30,19 +40,19 @@
     "kicker": "Five roles. One simple, secure platform.",
     "institutions": {
       "title": "Institutions",
-      "desc": "Programs, semesters, courses, policies, attendance, and analytics."
+      "desc": "Programs, classes, courses, policies, attendance, and analytics."
     },
     "teachers": {
       "title": "Teachers",
-      "desc": "Manage classes, assignments, quizzes, multimedia content, and feedback."
+      "desc": "Manage classes, assignments, quizzes, media content, and feedback."
     },
     "students": {
       "title": "Students",
-      "desc": "Personalized paths, results, certificates, and offline-friendly learning."
+      "desc": "Personalized paths, results & certificates, and low-data learning."
     },
     "parents": {
       "title": "Parents",
-      "desc": "Follow progress, attendance, and alerts — with a simple Arabic interface."
+      "desc": "Track progress, attendance, and alerts — with a simple Arabic UI."
     }
   },
   "categories": {
@@ -56,33 +66,30 @@
     "meta": "Fast • Secure • Mobile-ready"
   },
   "case": {
-    "title": "Built with and for conflict-zone schools",
-    "text": "ANATALEB is open and free. Our mission is to keep learning going — even with low connectivity and power cuts.",
+    "title": "Built with — and for — schools in conflict zones",
+    "text": "ANATALEB is open and free. Our mission is to keep learning going, even with low connectivity and power cuts.",
     "cta": "Read our story",
-    "stat1_desc": "Retention rate among users",
+    "stat1_desc": "User retention rate",
     "stat2_desc": "Positive impact on productivity"
   },
   "impact": {
     "uptime": "Uptime SLA",
-    "low_bw": "Less data vs. standard LMS",
+    "low_bw": "Less data than standard LMS",
     "criteria": "Ethical design criteria",
     "roles": "User roles"
   },
   "footer": {
-    "mission": "A bilingual, ethical, AI-enabled platform that keeps learning going anywhere.",
+    "mission": "A bilingual, ethical, AI-powered platform that keeps learning going anywhere.",
     "about": "About",
     "privacy": "Privacy",
     "terms": "Terms",
-    "try": "Try the demo",
+    "try": "Try the live demo",
     "links_title": "Links",
     "legal_title": "Policies",
     "try_title": "Try the platform",
     "try_text": "Start a live demo and see how AI supports teaching and learning.",
-    "copyright": "2025 ANATALEB. All rights reserved."
+    "copyright": "© 2025 ANATALEB. All rights reserved."
   },
-  
   "topstrip": { "students": "For Students", "instructors": "For Instructors", "institutions": "For Institutions" },
   "header": { "explore": "Explore", "online_degrees": "Online Degrees", "careers": "Careers" }
-
-
 }

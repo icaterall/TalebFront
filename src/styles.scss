@@ -71,6 +71,9 @@
   --neutral-50:#F8FAFC;
   --neutral-100:#F1F5F9;
   --neutral-900:#0F172A;
+    --ana-superbar-h: 32px;
+  --ana-header-h: 30px;
+  --ana-header-stack: calc(var(--ana-superbar-h) + var(--ana-header-h)); 
 }
 
 html[dir="ltr"] body { font-family: var(--font-en); }
@@ -85,3 +88,20 @@ body.rtl{direction:rtl}
 body.rtl .text-start{text-align:right!important}
 body.rtl .text-end{text-align:left!important}
 .no-scroll{overflow:hidden}
+
+
+@media (max-width: 1060.98px){        /* your lg breakpoint */
+  /* mobile: superbar hidden, header is ~65 */
+  :root{
+    --ana-superbar-h: 0px;
+    --ana-header-h: 65px;
+  }
+}
+
+/* push the whole routed content below the fixed header stack */
+main.min-vh-100{
+  padding-top: var(--ana-header-stack);
+}
+
+/* anchor targets won’t hide under the fixed header */
+:target{ scroll-margin-top: var(--ana-header-stack); }

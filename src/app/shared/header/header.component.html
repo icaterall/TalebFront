@@ -20,16 +20,24 @@
                 (click)="toggleMobileMenu()" aria-label="Menu">
           <i class="bi" [ngClass]="isMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
         </button>
-        <a href="/" class="c-mobile-logo">
-          <img src="../../../assets/logo.png" alt="ANATALEB" class="rc-CourseraLogo" height="20"/>
-        </a>
+<a href="/" class="c-mobile-logo">
+  <img *ngIf="currentLang === 'ar'; else enLogo"
+       src="assets/logo-ar.png" alt="أناتالب" class="brand-img" height="20" />
+  <ng-template #enLogo>
+    <img src="assets/logo.png" alt="ANATALEB" class="brand-img" height="20" />
+  </ng-template>
+</a>
+
       </div>
 
       <!-- Desktop brand -->
-      <a class="navbar-brand d-none d-lg-inline brand-desktop" href="/">
-        <img src="../../../assets/logo.png" alt="ANATALEB" class="brand-img" height="20"/>
-        <span class="visually-hidden">{{ 'logo-title' | translate }}</span>
-      </a>
+<a class="navbar-brand d-none d-lg-inline brand-desktop" href="/">
+  <img *ngIf="currentLang === 'ar'; else enDeskLogo"
+       src="assets/logo-ar.png" alt="أناتالب" class="brand-img" height="20" />
+  <ng-template #enDeskLogo>
+    <img src="assets/logo.png" alt="ANATALEB" class="brand-img" height="20" />
+  </ng-template>
+</a>
 
       <!-- Desktop search -->
       <form class="flex-grow-1 header-search d-none d-lg-block mx-lg-4" role="search">
