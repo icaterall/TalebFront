@@ -155,7 +155,7 @@ ease-in-out;
 .lang-btn.is-ar-label .lang-text{
   font-family: 'serif';
   transform: translateY(1px);  /* optical centering for Arabic glyphs */
-      margin-top: -10px;
+      margin-top: -12px;
 }
 
 /* Optional: keep EN crisp */
@@ -358,8 +358,8 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   
   /* Language button */
   .lang-btn {
-    width: 40px;                   
-    height: 40px;
+    width: 60px;                   
+    height: 60px;
     font-size: 1.1rem;             
     font-weight: 600;
     border-radius: 8px;
@@ -367,7 +367,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   }
   
   .lang-btn .lang-text {
-    font-size: 30px;               
+    font-size: 35px;               
   }
   
   /* Container padding for proper edge spacing */
