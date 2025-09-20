@@ -286,12 +286,16 @@ img {
         margin: -16px;
         width: calc(100% + 32px);
     }
+.header-padding {
+        padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+}
 }
 .header-padding {
     padding-right: 6.25rem !important;
     padding-left: 6.25rem !important;
-padding-top: 1.25rem !important;
-    padding-bottom: 1.25rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
 }
 /* Make the whole right cluster stick to the inline end (works LTR & RTL) */
 .right-cluster { margin-inline-start: auto; }

@@ -69,10 +69,11 @@
   box-shadow: 0 16px 36px rgba(0,0,0,.12);
 }
 @media (max-width: 992px) {
+   .lp-hero__lead { font-size: 40px!important; }
   /* add .lp to slightly increase specificity, and !important once to break ties */
   .lp .lp-photo {
     width: clamp(260px, 64vw, 400px) !important;
-    margin-top: 20px;
+    margin-top: 40px;
   }
 }
 
@@ -82,7 +83,7 @@
 /* Doodles */
 .lp-deco { position:absolute; pointer-events:none; }
 .lp-deco--star {
-  width:28px; height:28px; left:-18px; top:0px; background:#ffb703;
+  width:28px; height:28px; left:-18px; top:15px; background:#ffb703;
   clip-path: polygon(50% 0%,62% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,38% 35%);
 }
 .lp-deco--diamond { width:14px; height:14px; right:-10px; top:24px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
@@ -116,10 +117,10 @@
 }
 @media (min-width: 992px){ .lp-hero__lead { margin:0; } }
 @media (max-width: 1060px){
-  .lp-hero__lead { text-align:center; display:inline-block; font-size: 36px; }
+  .lp-hero__lead { text-align:center; display:inline-block; font-size: 25px; }
   .lp-hero {
     scroll-margin-top: 75px;       
-    padding-top: 120px; /* header + breathing space */
+    padding-top: 100px; /* header + breathing space */
   }
   .lp-hero__title{
         font-size: 50px;
@@ -161,7 +162,7 @@
     justify-content: center;
     gap:12px;
   }
-  .lp-cta .lp-btn { width:auto; min-width:150px; padding:0.5rem 1rem; }
+  .lp-cta .lp-btn { width:auto; min-width:150px; padding:0.5rem 1rem;font-size: 20px;}
 }
 
 .lp-btn {
@@ -219,7 +220,7 @@ html[dir="rtl"] .lp .bk-hero img { transform:none; }
     align-items:center;
     padding:0; z-index:auto; 
     pointer-events:auto;
-            margin-bottom: 360px;
+            margin-bottom: 400px;
   }
   .lp .bk-hero img {
     max-width:60%;
