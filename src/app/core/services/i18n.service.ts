@@ -32,7 +32,7 @@ export class I18nService {
     }
   }
 
-  /** SSR-safe: don’t rely on window; globalThis exists but we only read it in browser */
+  /** SSR-safe: don't rely on window; globalThis exists but we only read it in browser */
   private readInlineStartup(): Lang | null {
     if (!this.isBrowser) return null;
     try {
@@ -43,11 +43,24 @@ export class I18nService {
     }
   }
 
-  /** Apply lang/dir to <html>. Works on server (Domino) and browser. */
+  /** Apply lang/dir to <html> and body. Works on server (Domino) and browser. */
   private apply(lang: Lang): void {
     const dir = lang === 'ar' ? 'rtl' : 'ltr';
+    
+    // Apply to HTML element
     this.doc.documentElement.setAttribute('lang', lang);
     this.doc.documentElement.setAttribute('dir', dir);
+    
+    // Apply to body for CSS hooks
+    if (this.doc.body) {
+      if (dir === 'rtl') {
+        this.doc.body.classList.add('rtl');
+        this.doc.body.setAttribute('dir', 'rtl');
+      } else {
+        this.doc.body.classList.remove('rtl');
+        this.doc.body.setAttribute('dir', 'ltr');
+      }
+    }
   }
 
   /** Called via APP_INITIALIZER. Promise makes Angular wait before first paint. */
@@ -60,7 +73,8 @@ export class I18nService {
 
     this._lang$.next(initial);
     this.apply(initial);
-    this.translate.setDefaultLang(initial);
+    this.translate.setDefaultLang('en'); // Set fallback
+    this.translate.use(initial);
 
     // On the browser, wait for translations to load to avoid flicker.
     // On the server, skip waiting for HTTP to avoid window/DOM issues.
@@ -69,16 +83,28 @@ export class I18nService {
     }
   }
 
-  /** Public API used by header toggle */
-  setLang(lang: Lang): void {
+  /** Public API used by header toggle - THIS IS THE KEY FIX */
+  async setLang(lang: Lang): Promise<void> {
     if (lang !== 'ar' && lang !== 'en') return;
+    
+    // Update the BehaviorSubject
     this._lang$.next(lang);
+    
+    // Apply the language and direction changes
     this.apply(lang);
-    this.translate.use(lang);
+    
+    // Update translation service
+    await firstValueFrom(this.translate.use(lang));
+    
+    // Save to storage
     if (this.isBrowser) {
-      try { sessionStorage.setItem(this.STORAGE_KEY, lang); } catch {}
+      try { 
+        sessionStorage.setItem(this.STORAGE_KEY, lang);
+      } catch {}
     }
   }
 
-  get current(): Lang { return this._lang$.value; }
+  get current(): Lang { 
+    return this._lang$.value; 
+  }
 }

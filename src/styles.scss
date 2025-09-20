@@ -23,7 +23,7 @@
     "light":    #F8FAFC,
     "dark":     #0F172A,
 
-    /* Extra brand keys (you can use .text-ai, .bg-ai, .text-gold, etc.) */
+    /* Extra brand keys */
     "ai":       #7C3AED,  // Iris/Violet for AI moments
     "gold":     #D97706   // Same as warning, convenient alias
   ),
@@ -60,46 +60,156 @@
 
 /* --- 2) Now regular CSS is fine --- */
 /* Global font stacks + RTL/LTR */
-:root{
+:root {
   --font-en: 'HKGrotesk', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-ar: 'font-primary', 'Tajawal', 'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --brand-primary-600:#0056d2;
-  --brand-primary-500:#3B82F6;
-  --brand-green-600:#16A34A;
-  --brand-gold-600:#D97706;
-  --brand-iris-600:#7C3AED;
-  --neutral-50:#F8FAFC;
-  --neutral-100:#F1F5F9;
-  --neutral-900:#0F172A;
-    --ana-superbar-h: 32px;
-  --ana-header-h: 30px;
+  --brand-primary-600: #0056d2;
+  --brand-primary-500: #3B82F6;
+  --brand-green-600: #16A34A;
+  --brand-gold-600: #D97706;
+  --brand-iris-600: #7C3AED;
+  --neutral-50: #F8FAFC;
+  --neutral-100: #F1F5F9;
+  --neutral-900: #0F172A;
+  --ana-superbar-h: 56px;
+  --ana-header-h: 64px;
   --ana-header-stack: calc(var(--ana-superbar-h) + var(--ana-header-h)); 
 }
 
-html[dir="ltr"] body { font-family: var(--font-en); }
-html[dir="rtl"] body { font-family: var(--font-ar); }
-.ai-gradient{
-  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+/* Base direction and font setup */
+html {
+  transition: none; // Prevent FOUC during language switch
 }
-/* Helpers */
-.tag{padding:.25rem .5rem;border-radius:.5rem;background:rgba(37,99,235,.08);color:#2563eb;font-weight:700}
-.text-secondary{color:#64748b!important}
-body.rtl{direction:rtl}
-body.rtl .text-start{text-align:right!important}
-body.rtl .text-end{text-align:left!important}
-.no-scroll{overflow:hidden}
 
-@media (max-width: 1060.98px){
-  :root{
-    --ana-superbar-h: 0px;
-    --ana-header-h: 65px;
+html[dir="ltr"] {
+  direction: ltr;
+  
+  body {
+    font-family: var(--font-en);
+    direction: ltr;
+    text-align: left;
   }
 }
 
-/* push the whole routed content below the fixed header stack */
-main.min-vh-100{
+html[dir="rtl"] {
+  direction: rtl;
+  
+  body {
+    font-family: var(--font-ar);
+    direction: rtl;
+    text-align: right;
+  }
+}
+
+/* RTL specific overrides */
+body.rtl,
+html[dir="rtl"] body {
+  direction: rtl;
+  font-family: var(--font-ar);
+  
+  // Bootstrap utility overrides for RTL
+  .text-start { text-align: right !important; }
+  .text-end { text-align: left !important; }
+  .ms-auto { margin-right: auto !important; margin-left: 0 !important; }
+  .me-auto { margin-left: auto !important; margin-right: 0 !important; }
+  
+  // Padding and margin utilities
+  .ps-1 { padding-right: 0.25rem !important; padding-left: 0 !important; }
+  .ps-2 { padding-right: 0.5rem !important; padding-left: 0 !important; }
+  .ps-3 { padding-right: 1rem !important; padding-left: 0 !important; }
+  .ps-4 { padding-right: 1.5rem !important; padding-left: 0 !important; }
+  .ps-5 { padding-right: 3rem !important; padding-left: 0 !important; }
+  
+  .pe-1 { padding-left: 0.25rem !important; padding-right: 0 !important; }
+  .pe-2 { padding-left: 0.5rem !important; padding-right: 0 !important; }
+  .pe-3 { padding-left: 1rem !important; padding-right: 0 !important; }
+  .pe-4 { padding-left: 1.5rem !important; padding-right: 0 !important; }
+  .pe-5 { padding-left: 3rem !important; padding-right: 0 !important; }
+  
+  .ms-1 { margin-right: 0.25rem !important; margin-left: 0 !important; }
+  .ms-2 { margin-right: 0.5rem !important; margin-left: 0 !important; }
+  .ms-3 { margin-right: 1rem !important; margin-left: 0 !important; }
+  .ms-4 { margin-right: 1.5rem !important; margin-left: 0 !important; }
+  .ms-5 { margin-right: 3rem !important; margin-left: 0 !important; }
+  
+  .me-1 { margin-left: 0.25rem !important; margin-right: 0 !important; }
+  .me-2 { margin-left: 0.5rem !important; margin-right: 0 !important; }
+  .me-3 { margin-left: 1rem !important; margin-right: 0 !important; }
+  .me-4 { margin-left: 1.5rem !important; margin-right: 0 !important; }
+  .me-5 { margin-left: 3rem !important; margin-right: 0 !important; }
+  
+  // Float utilities
+  .float-start { float: right !important; }
+  .float-end { float: left !important; }
+  
+  // Border utilities
+  .border-start { border-right: 1px solid #dee2e6 !important; border-left: 0 !important; }
+  .border-end { border-left: 1px solid #dee2e6 !important; border-right: 0 !important; }
+  
+  // Rounded corners
+  .rounded-start { 
+    border-top-right-radius: 0.25rem !important;
+    border-bottom-right-radius: 0.25rem !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+  .rounded-end {
+    border-top-left-radius: 0.25rem !important;
+    border-bottom-left-radius: 0.25rem !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+}
+
+/* Smooth transition for language switching */
+body {
+  transition: font-family 0.2s ease-out;
+}
+
+/* AI gradient helper */
+.ai-gradient {
+  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+}
+
+/* Helpers */
+.tag {
+  padding: .25rem .5rem;
+  border-radius: .5rem;
+  background: rgba(37,99,235,.08);
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.text-secondary {
+  color: #64748b !important;
+}
+
+.no-scroll {
+  overflow: hidden;
+}
+
+@media (max-width: 1060.98px) {
+  :root {
+    --ana-superbar-h: 0px;
+    --ana-header-h: 75px;
+  }
+}
+
+/* Push the whole routed content below the fixed header stack */
+main.min-vh-100 {
   padding-top: var(--ana-header-stack);
 }
 
-/* anchor targets won’t hide under the fixed header */
-:target{ scroll-margin-top: var(--ana-header-stack); }
+/* Anchor targets won't hide under the fixed header */
+:target { 
+  scroll-margin-top: var(--ana-header-stack); 
+}
+
+/* Force recalculation on language change */
+html[dir="rtl"],
+html[dir="ltr"] {
+  * {
+    // This ensures all elements respect the direction
+    unicode-bidi: embed;
+  }
+}
