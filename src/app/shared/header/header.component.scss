@@ -31,7 +31,7 @@ ease-in-out;
   min-height: 36px;
   font-size: .9rem;
   position: relative;
-    top: 0;
+      top: -14px;
     width: 100%;
     background: #0f1114;
     z-index: 999;
@@ -296,8 +296,8 @@ img {
 .header-padding {
     padding-right: 2.25rem !important;
     padding-left: 2.25rem !important;
-        padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
+padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
 }
 /* Make the whole right cluster stick to the inline end (works LTR & RTL) */
 .right-cluster { margin-inline-start: auto; }
