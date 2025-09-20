@@ -73,7 +73,7 @@
   /* add .lp to slightly increase specificity, and !important once to break ties */
   .lp .lp-photo {
     width: clamp(260px, 64vw, 400px) !important;
-    margin-top: 40px;
+    margin-top: 75px;
   }
 }
 
@@ -83,10 +83,10 @@
 /* Doodles */
 .lp-deco { position:absolute; pointer-events:none; }
 .lp-deco--star {
-  width:28px; height:28px; left:-18px; top:15px; background:#ffb703;
+  width:28px; height:28px; left:-18px; top:40px; background:#ffb703;
   clip-path: polygon(50% 0%,62% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,38% 35%);
 }
-.lp-deco--diamond { width:14px; height:14px; right:-10px; top:24px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
+.lp-deco--diamond { width:14px; height:14px; right:-10px; top:40px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
 .lp-deco--scribble {
   width:120px; height:22px; left:22%; bottom:-14px; opacity:.45;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 36c38-22 66-10 96 0s58 12 100-12' fill='none' stroke='%23121' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -220,12 +220,12 @@ html[dir="rtl"] .lp .bk-hero img { transform:none; }
     align-items:center;
     padding:0; z-index:auto; 
     pointer-events:auto;
-            margin-bottom: 400px;
+            margin-bottom: 310px;
   }
   .lp .bk-hero img {
     max-width:60%;
     transform: rotate(180deg) !important;
-    margin:30px 30px 460px 415px;
+    margin:0px 30px 470px 415px;
   }
   .lp-hero__copy { order:3; }
 }

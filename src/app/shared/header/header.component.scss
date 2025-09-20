@@ -286,10 +286,6 @@ img {
         margin: -16px;
         width: calc(100% + 32px);
     }
-.header-padding {
-        padding-top: 1.25rem !important;
-    padding-bottom: 1.25rem !important;
-}
 }
 .header-padding {
     padding-right: 6.25rem !important;
@@ -317,6 +313,8 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
     .header-padding {
     padding-right: 1.25rem !important;
     padding-left: 1.25rem !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
   }
   .header {
     min-height: 75px;          /* increased from 65px */
@@ -385,6 +383,12 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   }
 }
 
+@media (min-width: 992px) and (max-width: 1060.98px){
+      .header-padding {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+}
 /* Coursera-like header tweaks */
 .header {
   .header-search {
