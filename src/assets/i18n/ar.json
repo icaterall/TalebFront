@@ -91,5 +91,13 @@
     "copyright": "2025 انا طالب. جميع الحقوق محفوظة."
   },
   "topstrip": { "students": "للطلاب", "instructors": "للمعلّمين", "institutions": "للمؤسسات" },
-  "header": { "explore": "استكشف", "online_degrees": "درجات عبر الإنترنت", "careers": "الوظائف" }
+  "header": { "explore": "استكشف", "online_degrees": "درجات عبر الإنترنت", "careers": "الوظائف" },
+  "drawer": {
+  "browse_courses": "تصفح الدورات المجانية",
+  "for_businesses": "للأعمال",
+  "for_universities": "للجامعات",
+  "for_governments": "للحكومات",
+  "join_free": "انضم مجاناً",
+  "log_in": "تسجيل الدخول"
+}
 }

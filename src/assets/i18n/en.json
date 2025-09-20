@@ -91,5 +91,14 @@
     "copyright": "© 2025 ANATALEB. All rights reserved."
   },
   "topstrip": { "students": "For Students", "instructors": "For Instructors", "institutions": "For Institutions" },
-  "header": { "explore": "Explore", "online_degrees": "Online Degrees", "careers": "Careers" }
+  "header": { "explore": "Explore", "online_degrees": "Online Degrees", "careers": "Careers" },
+"drawer": {
+  "browse_courses": "Browse free courses",
+  "for_businesses": "For Businesses",
+  "for_universities": "For Universities", 
+  "for_governments": "For Governments",
+  "join_free": "Join for Free",
+  "log_in": "Log In"
+}
+
 }

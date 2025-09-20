@@ -16,10 +16,13 @@
     <div class="container-fluid header-padding d-flex align-items-center justify-content-between">
       <!-- Mobile: menu + logo -->
       <div class="d-flex align-items-center gap-2 d-lg-none">
-        <button class="btn btn-link icon-btn mobile-btn mobile-btn--menu"
-                (click)="toggleMobileMenu()" aria-label="Menu">
-          <i class="bi" [ngClass]="isMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
-        </button>
+      <button class="btn btn-link icon-btn mobile-btn mobile-btn--menu"
+              (click)="toggleMobileMenu()"
+              [class.invisible]="isMenuOpen"
+              aria-label="Menu">
+        <i class="bi bi-list"></i>
+      </button>
+
 <a href="/" class="c-mobile-logo">
   <img *ngIf="currentLang === 'ar'; else enLogo"
        src="assets/logo-a-ar.png" alt="أناطالب" class="brand-img" height="20" />
@@ -86,19 +89,51 @@
   </header>
 
   <!-- Mobile drawer -->
-  <aside class="mobile-drawer" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
-    <div class="mobile-drawer__head d-flex align-items-center justify-content-between">
-      <span class="navbar-brand fw-bold text-primary">{{ 'logo-title' | translate }}</span>
-      <button class="btn btn-link icon-btn" (click)="closeMobileMenu()" aria-label="Close">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item"><a class="drawer-link" href="/students" (click)="closeMobileMenu()">{{ 'topstrip.students' | translate }}</a></li>
-      <li class="list-group-item"><a class="drawer-link" href="/instructors" (click)="closeMobileMenu()">{{ 'topstrip.instructors' | translate }}</a></li>
-      <li class="list-group-item"><a class="drawer-link" href="/institutions" (click)="closeMobileMenu()">{{ 'topstrip.institutions' | translate }}</a></li>
-      <li class="list-group-item"><a class="drawer-link" href="#features" (click)="closeMobileMenu()">{{ 'nav.features' | translate }}</a></li>
-    </ul>
-  </aside>
+<!-- Mobile drawer -->
+<aside class="mobile-drawer" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
+<!-- Drawer top bar -->
+<!-- KEEP -->
+<div class="mobile-drawer__top">
+  <div class="mobile-drawer__brand">
+    <img *ngIf="currentLang === 'ar'; else enDrawerLogo"
+         src="assets/logo-a-ar.png" alt="أناطالب" height="28" />
+    <ng-template #enDrawerLogo>
+      <img src="assets/logo-a.png" alt="ANATALEB" height="28" />
+    </ng-template>
+  </div>
+  <button class="icon-btn mobile-drawer__close" type="button"
+          aria-label="Close menu" (click)="closeMobileMenu()">
+    <i class="bi bi-x-lg close-menu-btn"></i>
+  </button>
+</div>
+
+
+
+  <!-- Navigation links -->
+  <nav class="mobile-drawer__nav">
+    <a class="drawer-nav-item" href="/courses" (click)="closeMobileMenu()">
+      {{ 'drawer.browse_courses' | translate }}
+    </a>
+    <a class="drawer-nav-item" href="/businesses" (click)="closeMobileMenu()">
+      {{ 'drawer.for_businesses' | translate }}
+    </a>
+    <a class="drawer-nav-item" href="/universities" (click)="closeMobileMenu()">
+      {{ 'drawer.for_universities' | translate }}
+    </a>
+    <a class="drawer-nav-item" href="/governments" (click)="closeMobileMenu()">
+      {{ 'drawer.for_governments' | translate }}
+    </a>
+  </nav>
+
+  <!-- Bottom action buttons -->
+  <div class="mobile-drawer__actions">
+    <button class="drawer-btn drawer-btn--primary" (click)="onJoinFree()">
+      {{ 'drawer.join_free' | translate }}
+    </button>
+    <button class="drawer-btn drawer-btn--secondary" (click)="onLogin()">
+      {{ 'drawer.log_in' | translate }}
+    </button>
+  </div>
+</aside>
   <div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>
 </div>

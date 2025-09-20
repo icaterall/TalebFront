@@ -66,7 +66,14 @@ export class HeaderComponent {
       this.document.body.classList.remove('no-scroll');
     }
   }
-
+  onLogin() {
+    // Implement your login logic here
+    console.log('Log In clicked');
+  }
+  onJoinFree() {
+    // Implement your login logic here
+    console.log('Log In clicked');
+  }
   @HostListener('document:keydown.escape')
   onEsc() { 
     this.closeMobileMenu(); 
