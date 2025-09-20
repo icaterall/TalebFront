@@ -202,7 +202,8 @@
 .lp-btn:hover { border-color:#fff; transform:translateY(-1px); box-shadow:0 6px 18px rgba(26,115,232,.25); }
 .lp-btn:focus-visible { outline:none; border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.7); }
 .lp-btn:active { transform:translateY(1px); }
-.lp-btn--primary { background:#2563EB; color:#fff; }
+.lp-btn--primary { background:#2563EB; color:#fff; cursor:pointer; 
+}
 
 /* ===============================
    bk-hero layer
