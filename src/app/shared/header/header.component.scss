@@ -325,7 +325,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
     gap: 1rem !important;          /* increase gap from menu to logo */
   }
   .brand-img {
-    height: 34px !important;       /* Coursera uses ~24px logo height */
+    height: 40px !important;       /* Coursera uses ~24px logo height */
   }
   /* Menu button styling */
   .mobile-btn--menu {
