@@ -305,6 +305,17 @@ html[dir="rtl"] .header nav { flex-direction: row-reverse; }
 
 html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clarity */
 
+:host-context(html[dir="rtl"]) {
+ .brand-img {
+    height: 35px!important;
+}
+    @media (max-width: 1060px){
+.brand-img {
+    height: 55px!important;
+}
+}
+  }
+
 
 
 /* header.component.scss additions */
@@ -327,6 +338,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   .brand-img {
     height: 40px !important;       /* Coursera uses ~24px logo height */
   }
+
   /* Menu button styling */
   .mobile-btn--menu {
     width: 40px;                   

@@ -70,6 +70,7 @@
 }
 /* Fix header → hero gap only in RTL */
 :host-context(html[dir="rtl"]) {
+  @media (max-width: 992px) {
   .lp-hero {
     margin-block-start: 0 !important;
     padding-block-start: 5rem;   /* same feel as LTR; tweak if needed */
@@ -84,7 +85,7 @@
   .lp-hero__copy {
     margin-block-start: 0 !important;
   }
-
+  }
 }
 
 
