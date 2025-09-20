@@ -112,14 +112,7 @@ ease-in-out;
     gap: .75rem;
   }
 }
-/* ===== Header baseline ===== */
-.header {
 
-  background: #fff;
-  position: sticky; top: 0; z-index: 1030;
-  border-bottom: 1px solid var(--gray-200);
-
-}
 
 /* Icon-only buttons */
 .icon-btn{ width:32px; height:45px; border-radius:8px; padding:0; }
@@ -288,14 +281,15 @@ img {
 }
 
 @media (min-width: 1061px) {
+
     .header {
         margin: -16px;
         width: calc(100% + 32px);
     }
 }
 .header-padding {
-    padding-right: 2.25rem !important;
-    padding-left: 2.25rem !important;
+    padding-right: 6.25rem !important;
+    padding-left: 6.25rem !important;
 padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
 }
@@ -316,6 +310,10 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 /* header.component.scss additions */
 
 @media (max-width: 1060px) {
+    .header-padding {
+    padding-right: 1.25rem !important;
+    padding-left: 1.25rem !important;
+  }
   .header {
     min-height: 75px;          /* increased from 65px */
     padding-block: 1rem;        /* increased from 0.5rem */
@@ -383,3 +381,50 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   }
 }
 
+/* Coursera-like header tweaks */
+.header {
+  .header-search {
+    flex: 0 0 auto;
+    max-width: 32rem;   /* ≈ 512px */
+    min-width: 20rem;   /* ≈ 320px */
+    margin-inline-end: 10rem;
+  }
+
+  background: #fff;
+  position: sticky; top: 0; z-index: 1030;
+  border-bottom: 1px solid var(--gray-200);
+  .brand-desktop { margin-right: .5rem; }
+
+  .header-search__group {
+    border-radius: 999px;
+  }
+  .search-btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+
+  .nav-link-degrees {
+    color: var(--bs-gray-800, #343a40);
+    text-decoration: none;
+    transition: color .15s ease;
+    &:hover,
+    &:focus { color: var(--bs-primary, #0d6efd); }
+  }
+
+
+  .nav-link-login {
+    color: var(--bs-primary, #0d6efd) !important;
+    font-weight: 600;
+    text-decoration: none;
+    &:hover,
+    &:focus { text-decoration: underline; }
+  }
+}
+
+@media (max-width: 1200px) {
+  .header .header-search { 
+    max-width: 26rem; min-width: 22rem; 
+      margin-inline-end: 1.5rem;
+  }
+}

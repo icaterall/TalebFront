@@ -40,23 +40,32 @@
 </a>
 
       <!-- Desktop search -->
-      <form class="flex-grow-1 header-search d-none d-lg-block mx-lg-4" role="search">
-        <div class="input-group header-search__group rounded-pill shadow-sm">
-          <input class="form-control ps-3" type="search"
-                 [placeholder]="'hero.search_placeholder' | translate" aria-label="Search"/>
-          <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
-            <i class="bi bi-search"></i>
-          </button>
-        </div>
-      </form>
+<form class="flex-grow-1 header-search d-none d-lg-block ms-lg-2 me-lg-3" role="search">
+  <div class="input-group header-search__group rounded-pill shadow-sm">
+    <input class="form-control ps-3" type="search"
+           [placeholder]="'hero.search_placeholder' | translate" aria-label="Search"/>
+    <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
+      <i class="bi bi-search"></i>
+    </button>
+  </div>
+</form>
 
       <!-- Right cluster -->
       <div class="d-flex align-items-center gap-3">
-        <nav class="d-none d-lg-flex align-items-center gap-3">
-          <a class="link-secondary text-decoration-none" href="/degrees">{{ 'header.online_degrees' | translate }}</a>
-          <a class="link-secondary text-decoration-none" href="/login">{{ 'nav.signin' | translate }}</a>
-          <a class="btn btn-outline-primary rounded-1" href="/signup">{{ 'nav.get_started' | translate }}</a>
-        </nav>
+          <nav class="d-none d-lg-flex align-items-center gap-3">
+            <a class="nav-link-degrees" href="/degrees">
+              {{ 'header.online_degrees' | translate }}
+            </a>
+
+            <a class="nav-link-login" href="/login">
+              {{ 'nav.signin' | translate }}
+            </a>
+
+            <a class="btn btn-outline-primary rounded-1" href="/signup">
+              {{ 'nav.get_started' | translate }}
+            </a>
+          </nav>
+
 
         <!-- Mobile search -->
         <button class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
