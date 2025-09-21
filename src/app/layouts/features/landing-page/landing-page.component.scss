@@ -639,8 +639,7 @@ html[dir="rtl"] {
 }
 
 // RTL support
-html[dir="rtl"] {
-  .lp-teachers {
+html[dir="rtl"] .lp-teachers{
     &__container {
       flex-direction: row-reverse;
       
@@ -665,7 +664,7 @@ html[dir="rtl"] {
       transform: scaleX(-1);
     }
   }
-}
+
 
 // Mobile adjustments
 @media (max-width: 576px) {
