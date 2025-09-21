@@ -7,7 +7,7 @@
 
       <div class="lp-hero__media">
         <div class="lp-photo">
-          <img src="assets/hero-media.jpg" alt="Smiling students sitting on classroom mats" />
+          <img src="assets/landing/hero-media.jpg" alt="Smiling students sitting on classroom mats" />
         </div>
         <span class="lp-deco lp-deco--star" aria-hidden="true"></span>
         <span class="lp-deco lp-deco--diamond" aria-hidden="true"></span>
@@ -43,15 +43,15 @@
   <div class="lp-teachers__container">
 
     <div class="lp-teachers__content">
-      <span class="lp-teachers__label">{{ 'teachers.label' | translate }}</span>
+      <span class="lp-hero__lead">{{ 'teachers.label' | translate }}</span>
       <h2 class="lp-teachers__title">
         {{ 'teachers.title' | translate }}
       </h2>
-      <p class="lp-teachers__text">
+      <p class="lp-hero__lead">
         {{ 'teachers.description' | translate }}
       </p>
       <div class="lp-teachers__cta">
-        <a href="/signup?isteacher=1" class="lp-teachers__btn">
+        <a href="/signup?isteacher=1" class="lp-btn lp-btn--primary">
           <span>{{ 'teachers.button' | translate }}</span>
         </a>
       </div>
@@ -86,17 +86,15 @@
       </div>
       
       <div class="lp-outcomes__content-col">
-        <h2 class="lp-outcomes__title">
+        <h2 class="lp-hero__title">
           {{ 'outcomes.title' | translate }}
         </h2>
-        <p class="lp-outcomes__text">
+        <p class="lp-hero__lead">
           <strong>{{ 'outcomes.percentage' | translate }}</strong>
           {{ 'outcomes.description' | translate }}
-          <a href="/report" target="_blank" class="lp-outcomes__link">
-            {{ 'outcomes.report_link' | translate }}
-          </a>
+        
         </p>
-        <button class="lp-outcomes__btn" (click)="onJoinFree()">
+        <button class="lp-btn lp-btn--primary" (click)="onJoinFree()">
           {{ 'outcomes.join_button' | translate }}
         </button>
       </div>
