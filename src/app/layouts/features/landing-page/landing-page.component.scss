@@ -258,3 +258,431 @@ html[dir="rtl"] .lp .bk-hero img { transform:none; }
 
 /* Layer ordering */
 .lp-grid > :not(.bk-hero){ position:relative; z-index:1; }
+
+
+   /* ===============================
+   Learner Outcomes Section
+   =============================== */
+
+.lp-outcomes {
+  background-color: #f0f6ff;
+  padding: 0px 0;
+    margin: 40px 0px 0px 0px;
+  position: relative;
+  
+  &__wrapper {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+  
+  &__container {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -16px;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  // Image column
+  &__image-col {
+    flex: 0 0 50%;
+    max-width: 50%;
+        padding: 0px 0px 40px 0px;
+    @media (max-width: 1023px) {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }
+  
+  &__image-wrapper {
+    position: relative;
+    margin: -32px 52px -32px 0;
+    max-width: 606px;
+    width: 100%;
+    
+    @media (max-width: 1023px) {
+      margin: 0 auto;
+    }
+  }
+  
+  &__image {
+    width: 100%;
+    height: auto;
+    max-width: 606px;
+    display: block;
+  }
+  
+  // Content column
+  &__content-col {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 16px 20px;
+    
+    @media (max-width: 1023px) {
+      flex: 0 0 100%;
+      max-width: 100%;
+      text-align: center;
+      padding: 32px 20px;
+    }
+  }
+  
+  &__title {
+    margin: 45px 0 20px;
+    font-size: 48px;
+    line-height: 56px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #0f1114;
+    
+    @media (max-width: 768px) {
+      font-size: 36px;
+      line-height: 44px;
+      margin-top: 20px;
+    }
+  }
+  
+  &__text {
+    font-size: 20px;
+    line-height: 28px;
+    margin: 0 0 32px;
+    max-width: 463px;
+    width: 100%;
+    color: #1f1f1f;
+    
+    @media (max-width: 1023px) {
+      margin: 0 auto 32px;
+    }
+    
+    strong {
+      font-weight: 600;
+      color: #0f1114;
+    }
+  }
+  
+  &__link {
+    text-decoration: underline;
+    word-wrap: break-word;
+    color: #0056d2;
+    
+    &:hover {
+      color: #003d94;
+    }
+  }
+  
+  &__btn {
+    display: inline-block;
+    border-radius: 4px;
+    text-transform: none;
+    max-width: 320px;
+    min-width: unset;
+    box-sizing: border-box;
+    color: #ffffff;
+    background-color: #0056d2;
+    box-shadow: inset 0 0 0 1px #0056d2;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 12px 24px;
+    margin-right: 24px;
+    margin-bottom: 24px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    
+    &:hover {
+      background-color: #003d94;
+      box-shadow: inset 0 0 0 1px #003d94;
+    }
+    
+    &:focus {
+      outline: 2px solid #0056d2;
+      outline-offset: 2px;
+    }
+    
+    @media (max-width: 1023px) {
+      margin: 0 auto;
+      display: block;
+    }
+  }
+}
+
+// RTL support
+html[dir="rtl"] {
+  .lp-outcomes {
+    &__container {
+      direction: rtl;
+    }
+    
+    &__image-wrapper {
+      margin: -32px 0 -32px 52px;
+      
+      @media (max-width: 1023px) {
+        margin: 0 auto;
+      }
+    }
+    
+    &__btn {
+      margin-right: 0;
+      margin-left: 24px;
+      
+      @media (max-width: 1023px) {
+        margin: 0 auto;
+      }
+    }
+  }
+}
+
+// Media queries for responsive padding
+@media (min-width: 1440px) {
+  .lp-outcomes__wrapper {
+    max-width: 1440px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .lp-outcomes__wrapper {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 599px) {
+  .lp-outcomes {
+    padding: 32px 0;
+  }
+  
+  .lp-outcomes__container {
+    margin: -8px;
+  }
+  
+  .lp-outcomes__image-col,
+  .lp-outcomes__content-col {
+    padding: 8px;
+  }
+}
+
+/* ===============================
+   Utility classes
+   =============================== */
+   /* ===============================
+   Teachers Section - Khan Academy Style
+   =============================== */
+.lp-teachers {
+  padding: 80px 0;
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+  
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    gap: 80px;
+    
+    @media (max-width: 992px) {
+      flex-direction: column;
+      gap: 40px;
+      padding: 0 20px;
+    }
+  }
+  
+  // Images section
+  &__images {
+    flex: 0 0 45%;
+    position: relative;
+    
+    @media (max-width: 992px) {
+      flex: none;
+      width: 100%;
+      max-width: 400px;
+    }
+  }
+  
+  &__collage {
+    width: 100%;
+    height: auto;
+    position: relative;
+    z-index: 2;
+  }
+  
+  // Decorative elements
+  &__decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+  
+  &__star {
+    position: absolute;
+    top: 10%;
+    right: 5%;
+    width: 40px;
+    height: 40px;
+    
+    &::before {
+      content: '*';
+      font-size: 48px;
+      color: #ff6b6b;
+      font-family: serif;
+      display: block;
+      transform: rotate(15deg);
+    }
+  }
+  
+  &__circle {
+    position: absolute;
+    top: 40%;
+    right: -5%;
+    width: 60px;
+    height: 60px;
+    border: 3px solid #ffc0cb;
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+  
+  &__squiggle {
+    position: absolute;
+    bottom: 10%;
+    left: -20px;
+    width: 120px;
+    height: 80px;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg width='120' height='80' viewBox='0 0 120 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 40 Q30 20 50 40 T90 40 T110 40' stroke='%23333' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
+    }
+  }
+  
+  // Content section
+  &__content {
+    flex: 1;
+    max-width: 500px;
+    
+    @media (max-width: 992px) {
+      text-align: center;
+      max-width: 100%;
+    }
+  }
+  
+  &__label {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  &__title {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1f1f1f;
+    margin: 0 0 24px;
+    
+    @media (max-width: 768px) {
+      font-size: 36px;
+    }
+  }
+  
+  &__text {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #5e5e5e;
+    margin: 0 0 32px;
+    
+    @media (max-width: 768px) {
+      font-size: 16px;
+    }
+  }
+  
+  &__cta {
+    margin-top: 32px;
+  }
+  
+  &__btn {
+    display: inline-block;
+    background: #1865f2;
+    color: white;
+    padding: 16px 32px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    &:hover {
+      background: #0b47a9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      text-decoration: none;
+    }
+    
+    span {
+      display: inline-block;
+    }
+  }
+}
+
+// RTL support
+html[dir="rtl"] {
+  .lp-teachers {
+    &__container {
+      flex-direction: row-reverse;
+      
+      @media (max-width: 992px) {
+        flex-direction: column;
+      }
+    }
+    
+    &__star {
+      right: auto;
+      left: 5%;
+    }
+    
+    &__circle {
+      right: auto;
+      left: -5%;
+    }
+    
+    &__squiggle {
+      left: auto;
+      right: -20px;
+      transform: scaleX(-1);
+    }
+  }
+}
+
+// Mobile adjustments
+@media (max-width: 576px) {
+  .lp-teachers {
+    padding: 60px 0;
+    
+    &__container {
+      padding: 0 16px;
+    }
+    
+    &__title {
+      font-size: 28px;
+    }
+    
+    &__btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}

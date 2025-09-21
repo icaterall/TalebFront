@@ -99,6 +99,19 @@
   "for_governments": "For Governments",
   "join_free": "Join for Free",
   "log_in": "Log In"
+},
+"outcomes": {
+  "title": "Learner outcomes on ANATALEB",
+  "percentage": "77% of learners report career benefits,",
+  "description": "such as new skills, increased pay, and new job opportunities.",
+  "report_link": "2023 ANATALEB Learner Outcomes Report",
+  "join_button": "Join for Free"
+},
+"teachers": {
+  "label": "TEACHERS",
+  "title": "Differentiate your classroom and engage every student.",
+  "description": "We empower teachers to support their entire classroom. 90% of teachers who have used ANATALEB have found us effective.",
+  "button": "Teachers, start here"
 }
 
 }

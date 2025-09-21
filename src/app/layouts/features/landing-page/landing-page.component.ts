@@ -68,7 +68,12 @@ export class LandingPageComponent implements OnInit {
   onEsc(){ this.closeMobileMenu(); }
 
 
-
+onJoinFree() {
+  // Navigate to signup
+  if (isPlatformBrowser(this.platformId)) {
+    window.location.href = '/signup';
+  }
+}
   setLang(lang: Lang) {
     this.currentLang = lang;
     this.translate.use(lang);
