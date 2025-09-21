@@ -1,0 +1,94 @@
+ <!-- start contact -->
+ <section class="layout-wrapper landing section intro-section pb-0" id="contact">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="text-center mb-5">
+            <h3 class="mb-3 fw-semibold">{{ 'contactForm.getInTouch' | translate }}</h3>
+            <p class="text-muted mb-2 ff-secondary">
+              {{ 'contactForm.contactUsMaster.contactUsSub1' | translate }}
+            </p>
+            <p class="text-muted mb-4 ff-secondary">
+              {{ 'contactForm.contactUsMaster.contactUsSub2' | translate }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- end row -->
+  
+      <div class="row gy-4">
+        <div class="col-lg-12">
+          <div>
+            <form #contactForm="ngForm" (ngSubmit)="onSubmit(contactForm)">
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="mb-4">
+                    <label for="name" class="form-label fs-18">
+                      {{ 'contactForm.name' | translate }}
+                    </label>
+                    <input name="name" id="name" type="text"
+                      class="form-control bg-light border-light"
+                      placeholder="{{ 'contactForm.yourName' | translate }}*"
+                      ngModel required>
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="mb-4">
+                    <label for="email" class="form-label fs-18">
+                      {{ 'contactForm.email' | translate }}
+                    </label>
+                    <input name="email" id="email" type="email"
+                      class="form-control bg-light border-light"
+                      placeholder="{{ 'contactForm.yourEmail' | translate }}*"
+                      ngModel required>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="mb-4">
+                    <label for="subject" class="form-label fs-18">
+                      {{ 'contactForm.subject' | translate }}
+                    </label>
+                    <input type="text" class="form-control bg-light border-light" id="subject"
+                      name="subject" placeholder="{{ 'contactForm.yourSubject' | translate }}.." ngModel required>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="mb-3">
+                    <label for="comments" class="form-label fs-18">
+                      {{ 'contactForm.message' | translate }}
+                    </label>
+                    <textarea name="comments" id="comments" rows="3"
+                      class="form-control bg-light border-light"
+                      placeholder="{{ 'contactForm.yourMessage' | translate }}..."
+                      ngModel required></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-12 text-end">
+                    <input 
+                    type="submit" 
+                    id="submit" 
+                    name="send" 
+                    class="submitBnt btn btn-primary"
+                    [disabled]="loadingSubmit"
+                    [value]="loadingSubmit ? ('general.pleasewait' | translate) : ('contactForm.sendMessage' | translate)">
+            
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- end row -->
+    </div>
+    <!-- end container -->
+    <br>
+    <br>
+  </section>
+  
+<!-- end contact -->

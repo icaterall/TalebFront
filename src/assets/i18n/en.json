@@ -112,6 +112,26 @@
   "title": "Differentiate your classroom and engage every student.",
   "description": "We empower teachers to support their entire classroom. 90% of teachers who have used ANATALEB have found us effective.",
   "button": "Teachers, start here"
+},
+"contactForm": {
+  "contactUs": "Contact Us",
+  "name": "Name",
+  "yourName": "Your Name",
+  "yourSubject": "Your Subject",
+  "yourMessage": "Your Message",
+  "yourEmail": "Your Email",
+  "email": "Email",
+  "subject": "Subject",
+  "message": "Message",
+  "send": "Send",
+  "sendMessage": "Send Message",
+  "messageSent": "Message Sent",
+  "contactUsMaster": {
+    "contactUs": "Contact Us",
+    "contactUsSub1": "We value your feedback and suggestions!",
+    "contactUsSub2": "Please fill out the form below and we will respond to you as soon as possible."
+  },
+"getInTouch": "Stay in Touch"
 }
 
 }

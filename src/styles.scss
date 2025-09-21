@@ -3,6 +3,7 @@
 // File size: ~15KB (vs ~300KB with full Bootstrap)
 // ============================================
 @use 'assets/fonts/fonts' as *;
+@import 'ngx-toastr/toastr';
 
 // 1. Critical CSS Variables (minimal for performance)
 :root {
@@ -380,7 +381,7 @@ button, input, optgroup, select, textarea {
 // Buttons
 .btn {
   display: inline-block;
-  font-weight: 400;
+  font-weight: 600;
   line-height: 1.5;
   color: var(--gray-900);
   text-align: center;

@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser, DOCUMENT, DecimalPipe, CurrencyPipe, N
 import { TranslateService, TranslatePipe, TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/header/header.component';
 import { FooterComponent } from '../../../shared/footer/footer.component';
+import { ContactComponent } from '../contact/contact.component';
 
 
 type Lang = 'ar' | 'en';
@@ -12,6 +13,7 @@ type Lang = 'ar' | 'en';
   standalone: true,
  imports: [
   CommonModule,
+  ContactComponent,
   TranslateModule
 ],
   templateUrl: './landing-page.component.html',
