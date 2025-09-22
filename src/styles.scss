@@ -98,6 +98,13 @@ h3, .h3 { font-size: 1.75rem; }
 h4, .h4 { font-size: 1.5rem; }
 h5, .h5 { font-size: 1.25rem; }
 h6, .h6 { font-size: 1rem; }
+.text-muted {
+    --vz-text-opacity: 1;
+    color: #878a99 !important;
+}
+.mb-2 {
+    margin-bottom: .5rem !important;
+}
 
 p { margin-top: 0; margin-bottom: 1rem; }
 a { color: var(--primary); text-decoration: none; }
@@ -334,7 +341,7 @@ button, input, optgroup, select, textarea {
   .container { max-width: 540px; }
 }
 @media (min-width: 768px) {
-  .container { max-width: 720px; }
+  .container { max-width: 860px; }
 }
 @media (min-width: 992px) {
   .container { max-width: 960px; }
