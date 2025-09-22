@@ -274,7 +274,7 @@ html[dir="rtl"] {
 }
 
 :host-context([dir="rtl"]) .mobile-drawer__brand img { 
-  height: 70px!important;
+  height: 80px!important;
 }
 
 
@@ -368,7 +368,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 }
     @media (max-width: 1060px){
 .brand-img {
-    height: 70px!important;
+    height: 80px!important;
 }
 }
   }
@@ -414,7 +414,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
     gap: 1rem !important;          /* increase gap from menu to logo */
   }
   .brand-img {
-    height: 70px !important;       /* Coursera uses ~24px logo height */
+    height: 80px !important;       /* Coursera uses ~24px logo height */
   }
 
   /* Menu button styling */
@@ -608,7 +608,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
 .mobile-drawer__brand img {
   display: block;
-  height: 70px;                    /* matches your template */
+  height: 80px;                    /* matches your template */
 }
 
 .mobile-drawer__close {
