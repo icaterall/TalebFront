@@ -1,138 +1,85 @@
-<div class="css-header">
-  <!-- Superbar (full width) -->
-  <div class="superbar">
-    <div class="container-fluid px-1 d-flex align-items-center justify-content-between superbar__content">
-      <ul class="list-unstyled d-flex gap-4 mb-0 superbar__links" role="list">
-        <li><a class="super-link active" href="/students">{{ 'topstrip.students' | translate }}</a></li>
-        <li><a class="super-link" href="/instructors">{{ 'topstrip.instructors' | translate }}</a></li>
-        <li><a class="super-link" href="/institutions">{{ 'topstrip.institutions' | translate }}</a></li>
-      </ul>
-      <div class="d-none d-md-flex align-items-center gap-3"></div>
-    </div>
-  </div>
-
-  <!-- Main header (full width) -->
-  <header class="header border-bottom bg-white sticky-top">
-    <div class="container-fluid header-padding d-flex align-items-center justify-content-between">
-      <!-- Mobile: menu + logo -->
-      <div class="d-flex align-items-center gap-2 d-lg-none">
-      <button class="btn btn-link icon-btn mobile-btn mobile-btn--menu"
-              (click)="toggleMobileMenu()"
-              [class.invisible]="isMenuOpen"
-              aria-label="Menu">
-        <i class="bi bi-list"></i>
-      </button>
-
-<a href="/" class="c-mobile-logo">
-  <img *ngIf="currentLang === 'ar'; else enLogo"
-       src="assets/logo-dark-t.png" alt="أناطالب" class="brand-img" height="20" />
-  <ng-template #enLogo>
-    <img src="assets/logo-dark-t.png" alt="ANATALEB" class="brand-img" height="20" />
-  </ng-template>
-</a>
-
-      </div>
-
-      <!-- Desktop brand -->
-<a class="navbar-brand d-none d-lg-inline brand-desktop" href="/">
-  <img *ngIf="currentLang === 'ar'; else enDeskLogo"
-       src="assets/logo-dark-t.png" alt="أناطالب" class="brand-img" height="20" />
-  <ng-template #enDeskLogo>
-    <img src="assets/logo-dark-t.png" alt="ANATALEB" class="brand-img" height="20" />
-  </ng-template>
-</a>
-      <!-- Desktop search -->
-<form class="flex-grow-1 header-search d-none d-lg-block ms-lg-2 me-lg-3" role="search">
-  <div class="input-group header-search__group rounded-pill shadow-sm">
-    <input class="form-control ps-3" type="search"
-           [placeholder]="'hero.search_placeholder' | translate" aria-label="Search"/>
-    <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
-      <i class="bi bi-search"></i>
-    </button>
-  </div>
-</form>
-
-      <!-- Right cluster -->
-      <div class="d-flex align-items-center gap-3">
-          <nav class="d-none d-lg-flex align-items-center gap-3">
-            <a class="nav-link-degrees" href="/degrees">
-              {{ 'header.online_degrees' | translate }}
-            </a>
-
-            <a class="nav-link-login" href="/login">
-              {{ 'nav.signin' | translate }}
-            </a>
-
-            <a class="btn btn-outline-primary rounded-1" href="/signup">
-              {{ 'nav.get_started' | translate }}
-            </a>
-          </nav>
-
-
-        <!-- Mobile search -->
-        <button class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
-                type="button" aria-label="Search">
-          <i class="bi bi-search"></i>
-        </button>
-
-        <!-- Lang pill -->
-<button class="btn btn-light border lang-btn"
-        (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
-        [class.is-ar-label]="currentLang !== 'ar'"
-        aria-label="Toggle language">
-  <span class="lang-text">{{ currentLang === 'ar' ? 'EN' : 'ع' }}</span>
-</button>
-
-      </div>
-    </div>
-  </header>
-
-  <!-- Mobile drawer -->
-<!-- Mobile drawer -->
-<aside class="mobile-drawer" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
-<!-- Drawer top bar -->
-<!-- KEEP -->
-<div class="mobile-drawer__top">
-  <div class="mobile-drawer__brand">
-    <img *ngIf="currentLang === 'ar'; else enDrawerLogo"
-         src="assets/logo-dark-t.png" alt="أناطالب" height="28" />
-    <ng-template #enDrawerLogo>
-      <img src="assets/logo-dark-t.png" alt="ANATALEB" height="28" />
-    </ng-template>
-  </div>
-  <button class="icon-btn mobile-drawer__close" type="button"
-          aria-label="Close menu" (click)="closeMobileMenu()">
-    <i class="bi bi-x-lg close-menu-btn"></i>
-  </button>
-</div>
-
-
-
-  <!-- Navigation links -->
-  <nav class="mobile-drawer__nav">
-    <a class="drawer-nav-item" href="/courses" (click)="closeMobileMenu()">
-      {{ 'drawer.browse_courses' | translate }}
-    </a>
-    <a class="drawer-nav-item" href="/businesses" (click)="closeMobileMenu()">
-      {{ 'drawer.for_businesses' | translate }}
-    </a>
-    <a class="drawer-nav-item" href="/universities" (click)="closeMobileMenu()">
-      {{ 'drawer.for_universities' | translate }}
-    </a>
-    <a class="drawer-nav-item" href="/governments" (click)="closeMobileMenu()">
-      {{ 'drawer.for_governments' | translate }}
-    </a>
-  </nav>
-
-  <!-- Bottom action buttons -->
-  <div class="mobile-drawer__actions">
-    <button class="drawer-btn drawer-btn--primary" (click)="onJoinFree()">
-      {{ 'drawer.join_free' | translate }}
-    </button>
-    <button class="drawer-btn drawer-btn--secondary" (click)="onLogin()">
-      {{ 'drawer.log_in' | translate }}
-    </button>
-  </div>
-</aside>
-  <div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>
-</div>
+   <header class="header-area">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <!-- Navbar Brand --><a class="navbar-brand" href="index.html"><img src="img/core-img/logo-white.png" alt=""></a>
+          <!-- Navbar Toggler -->
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#saasboxNav" aria-controls="saasboxNav" aria-expanded="false" aria-label="Toggle navigation"><i class="bi bi-grid"></i></button>
+          <!-- Navbar Nav -->
+          <div class="collapse navbar-collapse" id="saasboxNav">
+            <ul class="navbar-nav navbar-nav-scroll">
+              <li class="sb-dropdown"><a href="#">Home</a>
+                <ul class="sb-dropdown-menu">
+                  <li><a href="creative-agency.html">Creative Agency</a></li>
+                  <li><a href="business-studio.html">Business Studio</a></li>
+                  <li><a href="saas-landing.html">Saas Landing</a></li>
+                  <li><a href="seo-business.html">SEO &amp; Business</a></li>
+                  <li><a href="portfolio.html">Personal Portfolio</a></li>
+                  <li><a href="shop.html">eCommerce Landing</a></li>
+                </ul>
+              </li>
+              <li class="sb-dropdown"><a href="#">Portfolio</a>
+                <ul class="sb-dropdown-menu">
+                  <li><a href="portfolio-standard.html">Portfolio 1</a></li>
+                  <li><a href="portfolio-creative.html">Portfolio 2</a></li>
+                  <li><a href="portfolio-full-width.html">Portfolio 3</a></li>
+                  <li><a href="portfolio-details-one.html">Portfolio Details 1</a></li>
+                  <li><a href="portfolio-details-two.html">Portfolio Details 2</a></li>
+                  <li><a href="portfolio-details-three.html">Portfolio Details 3</a></li>
+                </ul>
+              </li>
+              <li class="sb-dropdown"><a href="#">Shop</a>
+                <ul class="sb-dropdown-menu">
+                  <li><a href="shop-fullwidth.html">Shop Fullwidth</a></li>
+                  <li><a href="shop-sidebar.html">Shop Sidebar</a></li>
+                  <li><a href="single-product.html">Product Details</a></li>
+                  <li><a href="cart.html">Cart</a></li>
+                  <li><a href="checkout.html">Checkout</a></li>
+                </ul>
+              </li>
+              <li class="sb-dropdown"><a href="#">Blog</a>
+                <ul class="sb-dropdown-menu">
+                  <li><a href="blog-1.html">Blog 1</a></li>
+                  <li><a href="blog-2.html">Blog 2</a></li>
+                  <li><a href="blog-3.html">Blog 3</a></li>
+                  <li><a href="blog-details-1.html">Blog Details 1</a></li>
+                  <li><a href="blog-details-2.html">Blog Details 2</a></li>
+                  <li><a href="blog-details-3.html">Blog Details 3</a></li>
+                </ul>
+              </li>
+              <li class="sb-dropdown"><a href="#">Pages</a>
+                <ul class="sb-dropdown-menu">
+                  <li class="sb-dropdown"><a href="#">About Us</a>
+                    <ul class="sb-dropdown-menu">
+                      <li><a href="about-standard.html">About Standard</a></li>
+                      <li><a href="about-creative.html">About Creative</a></li>
+                    </ul>
+                  </li>
+                  <li class="sb-dropdown"><a href="#">Service</a>
+                    <ul class="sb-dropdown-menu">
+                      <li><a href="service-standard.html">Service Standard</a></li>
+                      <li><a href="service-creative.html">Service Creative</a></li>
+                    </ul>
+                  </li>
+                  <li class="sb-dropdown"><a href="#">Authentification</a>
+                    <ul class="sb-dropdown-menu">
+                      <li><a href="register.html">Register</a></li>
+                      <li><a href="login.html">Login</a></li>
+                      <li><a href="forget-password.html">Forget Password</a></li>
+                    </ul>
+                  </li>
+                  <li><a href="pricing-plan.html">Pricing Plan</a></li>
+                  <li><a href="faq.html">FAQ</a></li>
+                  <li><a href="team.html">Team</a></li>
+                  <li><a href="contact.html">Contact</a></li>
+                  <li><a href="reviews.html">Reviews</a></li>
+                  <li><a href="newsletter.html">Newsletter</a></li>
+                  <li><a href="404.html">404 - Error</a></li>
+                </ul>
+              </li>
+            </ul>
+            <!-- Login Button -->
+            <div class="ms-auto mb-3 mb-lg-0"><a class="btn btn-warning btn-sm" href="#">Log In</a></div>
+          </div>
+        </div>
+      </nav>
+    </header>

@@ -1,117 +1,39 @@
-<main class="lp">
-  <section class="lp-hero" id="hero">
-    <div class="lp-container lp-grid lp-grid--2">
-      <div class="bk-hero">
-        <img class="hero-img" src="assets/bk-hero.png" />
+<div class="welcome-area bg-gradient">
+      <!-- Background Shape -->
+      <div class="background-shape">
+        <div class="circle1 wow fadeInRightBig" data-wow-duration="4000ms"></div>
+        <div class="circle2 wow fadeInRightBig" data-wow-duration="4000ms"></div>
+        <div class="circle3 wow fadeInRightBig" data-wow-duration="4000ms"></div>
+        <div class="circle4 wow fadeInRightBig" data-wow-duration="4000ms"></div>
       </div>
-
-      <div class="lp-hero__media">
-        <div class="lp-photo">
-          <img src="assets/landing/hero-media.jpg" alt="Smiling students sitting on classroom mats" />
-        </div>
-        <span class="lp-deco lp-deco--star" aria-hidden="true"></span>
-        <span class="lp-deco lp-deco--diamond" aria-hidden="true"></span>
+      <!-- Background Animation -->
+      <div class="background-animation">
+        <div class="item1"></div>
+        <div class="item2"></div>
+        <div class="item3"></div>
+        <div class="item4"></div>
+        <div class="item5"></div>
       </div>
-
-      <div class="lp-hero__copy">
-        <h1 class="lp-hero__title">
-          {{ 'hero.headline_l1' | translate }}<br />
-          {{ 'hero.headline_l2' | translate }}<br />
-          {{ 'hero.headline_l3' | translate }}
-        </h1>
-        <p class="lp-hero__lead">
-          {{ 'hero.subtitle' | translate }}
-        </p>
-        <nav class="lp-cta">
-          <a class="lp-btn lp-btn--primary" routerLink="/learners">{{
-            'cta.learners' | translate
-          }}</a>
-          <a class="lp-btn lp-btn--primary" routerLink="/teachers">{{
-            'cta.teachers' | translate
-          }}</a>
-          <a class="lp-btn lp-btn--primary" routerLink="/parents">{{
-            'cta.parents' | translate
-          }}</a>
-        </nav>
-      </div>
-    </div>
-  </section>
-
-  <!-- Learner Outcomes Section -->
-<!-- Teachers Section -->
-<section class="lp-teachers">
-  <div class="lp-teachers__container">
-
-    <div class="lp-teachers__content">
-      <span class="lp-hero__lead">{{ 'teachers.label' | translate }}</span>
-      <h2 class="lp-teachers__title">
-        {{ 'teachers.title' | translate }}
-      </h2>
-      <p class="lp-hero__lead">
-        {{ 'teachers.description' | translate }}
-      </p>
-      <div class="lp-teachers__cta">
-        <a href="/signup?isteacher=1" class="lp-btn lp-btn--primary">
-          <span>{{ 'teachers.button' | translate }}</span>
-        </a>
-      </div>
-    </div>
-        <div class="lp-teachers__images">
-      <img 
-        src="assets/landing/faces_success.png" 
-        alt="Teachers and students" 
-        class="lp-teachers__collage"
-      />
-      <div class="lp-teachers__decorations">
-        <span class="lp-teachers__star"></span>
-        <span class="lp-teachers__circle"></span>
-        <span class="lp-teachers__squiggle"></span>
-      </div>
-    </div>
-    
-  </div>
-</section>
-<!-- Learner Outcomes Section -->
-<section class="lp-outcomes">
-  <div class="lp-outcomes__wrapper">
-    <div class="lp-outcomes__container">
-      <div class="lp-outcomes__image-col">
-        <div class="lp-outcomes__image-wrapper">
-          <img 
-            src="assets/landing/outcomes.png" 
-            alt="Learner outcomes collage"
-            class="lp-outcomes__image"
-          />
+      <div class="container h-100">
+        <div class="row h-100 align-items-center justify-content-between">
+          <!-- Welcome Content -->
+          <div class="col-12 col-sm-10 col-md-6">
+            <div class="welcome-content">
+              <ul class="mb-0 ps-0 d-flex align-items-center wow fadeInUp" data-wow-duration="1s" data-wow-delay="200ms">
+                <li>Bootstrap 5</li>
+                <li>Vanilla JS</li>
+                <li>PUG &amp; SCSS</li>
+              </ul>
+              <h2 class="wow fadeInUp" data-wow-duration="1s" data-wow-delay="300ms">Build an awesome website with ease.</h2>
+              <p class="mb-4 wow fadeInUp" data-wow-duration="1s" data-wow-delay="400ms">It's crafted with the latest trend of design &amp; coded with all modern approaches.</p>
+              <div class="hero-btn-group wow fadeInUp" data-wow-duration="1s" data-wow-delay="500ms"><a class="btn btn-warning mt-3 me-3" href="https://themeforest.net/item/saasbox-multipurpose-html-template-for-saas/25607146" target="_blank">Buy Now</a><a class="btn btn-light btn-minimal mt-3" href="https://themeforest.net/item/saasbox-multipurpose-html-template-for-saas/reviews/25607146" target="_blank">Reviews (4.92/5.0)</a></div>
+            </div>
+          </div>
+          <!-- Welcome Thumb -->
+          <div class="col-12 col-sm-8 col-md-6">
+            <div class="welcome-thumb ms-lg-5 wow fadeInUp" data-wow-duration="1s" data-wow-delay="1s"><img src="img/illustrator/hero-3.png" alt=""></div>
+          </div>
         </div>
       </div>
-      
-      <div class="lp-outcomes__content-col">
-        <h2 class="lp-hero__title">
-          {{ 'outcomes.title' | translate }}
-        </h2>
-        <p class="lp-hero__lead padding-bottom">
-          <strong>{{ 'outcomes.percentage' | translate }}</strong>
-          {{ 'outcomes.description' | translate }}
-        
-        </p>
-        <button class="lp-btn lp-btn--primary" (click)="onJoinFree()">
-          {{ 'outcomes.join_button' | translate }}
-        </button>
-      </div>
     </div>
-  </div>
-</section>
-
-
-<section class="lp-outcomes contact-form-background">
-  <div class="layout-wrapper landing section intro-section pb-0">
-    <div class="teacher-page-container">
-      <!-- Hero Section -->
-      <section class="hero-section py-5">
-        <!-- Contact Form Section -->
-        <app-contact></app-contact>
-      </section>
-    </div>
-  </div>
-</section>
-</main>
+    <div class="mb-120 d-block"></div>
