@@ -1,0 +1,104 @@
+/* Breadcrumb CSS */
+
+@use 'responsive';
+@use 'variables'as var;
+
+.breadcrumb-wrapper {
+    position: relative;
+    z-index: 1;
+    height: 250px;
+    background-color: var.$gray;
+
+    @media #{responsive.$breakpoint-md} {
+        height: 310px;
+    }
+
+    @media #{responsive.$breakpoint-lg} {
+        height: 380px;
+    }
+
+    @media #{responsive.$breakpoint-xl} {
+        height: 450px;
+    }
+
+    .breadcrumb-content {
+        margin-top: 50px;
+
+        @media #{responsive.$breakpoint-lg} {
+            margin-top: 80px;
+        }
+    }
+
+    .breadcrumb-title {
+        font-size: 1.375rem;
+        color: var.$white;
+        text-align: center;
+        letter-spacing: -0.5px;
+
+        @media #{responsive.$breakpoint-md} {
+            font-size: 2rem;
+        }
+
+        @media #{responsive.$breakpoint-lg} {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    .breadcrumb {
+        padding: 0;
+        margin-bottom: 0;
+        background-color: transparent;
+
+        .breadcrumb-item {
+            line-height: 1;
+            font-weight: 700;
+            color: var.$text-gray;
+
+            a {
+                font-size: 1rem;
+                color: var.$white;
+                line-height: 1;
+
+                &:hover,
+                &:focus {
+                    color: var.$warning;
+                }
+            }
+        }
+
+        .breadcrumb-item+.breadcrumb-item::before {
+            color: var.$white;
+            content: "\f285";
+            font-family: bootstrap-icons !important;
+            font-size: 1rem;
+            position: relative;
+            top: 0;
+        }
+    }
+
+    &.breadcrumb-bg-light {
+        .breadcrumb-title {
+            color: var.$heading;
+        }
+
+        .breadcrumb {
+            .breadcrumb-item {
+                color: var.$text;
+
+                a {
+                    color: var.$heading;
+
+                    &:hover,
+                    &:focus {
+                        color: var.$primary;
+                    }
+                }
+            }
+
+            .breadcrumb-item+.breadcrumb-item::before {
+                color: var.$heading;
+            }
+        }
+    }
+}

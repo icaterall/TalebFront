@@ -1,0 +1,61 @@
+/* FAQ CSS */
+
+@use 'responsive';
+@use 'variables'as var;
+
+.faq--area {
+    position: relative;
+    z-index: 1;
+
+    .faq-content {
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+
+            @media #{responsive.$breakpoint-lg} {
+                font-size: 2.125rem;
+            }
+
+            @media #{responsive.$breakpoint-xl} {
+                font-size: 2.75rem;
+            }
+        }
+
+        p {
+            font-size: 1.25rem;
+        }
+    }
+}
+
+.faq--accordian {
+    .card-header {
+        border-bottom: 0;
+        padding: 0;
+        margin-bottom: 0.25rem !important;
+    }
+
+    .btn {
+        font-size: 1.25rem;
+        padding: 1rem 1.5rem;
+        text-align: left;
+        width: 100%;
+        background-color: var.$primary;
+        color: var.$white;
+
+        &.collapsed {
+            background-color: var.$gray;
+            color: var.$heading;
+        }
+    }
+
+    .card-body {
+        p {
+            font-size: 1rem;
+        }
+    }
+}
+
+.faq--thumbnail {
+    position: relative;
+    z-index: 1;
+}

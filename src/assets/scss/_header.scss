@@ -1,7 +1,7 @@
 /* Header CSS */
 
-@use '../../../assets/scss/responsive' as *;
-@use '../../../assets/scss/variables' as var;
+@use 'responsive';
+@use 'variables'as var;
 
 .header-area {
     transition: all 500ms ease;

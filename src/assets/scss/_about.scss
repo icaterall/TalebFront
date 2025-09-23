@@ -1,0 +1,152 @@
+/* About CSS */
+
+@use 'responsive';
+@use 'variables'as var;
+
+.about-card {
+    box-shadow: 0 12px 30px rgba(47, 91, 234, 0.05);
+
+    .card-body {
+        padding: 2rem;
+
+        p {
+            font-size: 1.125rem;
+        }
+    }
+
+    .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition-duration: 500ms;
+        width: 4rem;
+        height: 4rem;
+        background-color: var.$heading;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        color: var.$white;
+        border-radius: .75rem;
+    }
+}
+
+.about-content {
+    .col-12:nth-child(2) {
+        .about-card {
+            @media #{responsive.$breakpoint-lg} {
+                transform: translateY(48px);
+            }
+        }
+    }
+
+    .col-12:nth-child(4) {
+        .about-card {
+            @media #{responsive.$breakpoint-lg} {
+                transform: translateY(48px);
+            }
+        }
+    }
+}
+
+.single-about-item {
+    .icon {
+        img {
+            max-height: 3.5rem;
+        }
+    }
+}
+
+.aboutUs-thumbnail {
+    position: relative;
+    z-index: 1;
+    border-radius: .75rem;
+
+    &::before {
+        content: "";
+        position: absolute;
+        width: 60%;
+        height: 40px;
+        background-color: var.$warning;
+        top: 50px;
+        right: 70%;
+        z-index: 10;
+        border-radius: 4px;
+    }
+
+    img {
+        border-radius: .75rem;
+    }
+}
+
+.single-work-step {
+    >span {
+        width: 3rem;
+        height: 3rem;
+        text-align: center;
+        flex: 0 0 3rem;
+        min-width: 3rem;
+        margin-right: 1rem;
+        background-color: var.$primary;
+        border-radius: 50%;
+        color: var.$white;
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 3rem;
+        margin-top: 0.25rem;
+    }
+}
+
+.about4 {
+    .aboutUs-thumbnail {
+        &::before {
+            display: none;
+        }
+    }
+}
+
+.about3 {
+    background-color: var.$white;
+}
+
+.about-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: .75rem;
+    text-align: center;
+    background-color: var.$primary;
+    color: var.$white;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+}
+
+.hero-card {
+    background-color: var.$gray;
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    i {
+        color: var.$primary;
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 1rem;
+    }
+}
+
+.newsletter-card {
+    .card-body {
+        padding: 2rem;
+
+        @media #{responsive.$breakpoint-sm} {
+            padding: 3rem;
+        }
+    }
+
+    small {
+        font-size: 14px;
+        line-height: 1.2;
+    }
+}

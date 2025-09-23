@@ -1,0 +1,374 @@
+/* Shortcodes CSS */
+
+@use 'responsive';
+@use 'variables'as var;
+
+.fz-16 {
+    font-size: 16px !important;
+}
+
+.fz-14 {
+    font-size: 14px !important;
+}
+
+.fz-12 {
+    font-size: 12px !important;
+}
+
+ul,
+ol {
+    li {
+        line-height: 1.75;
+    }
+}
+
+.btn {
+    font-weight: 700;
+    padding: .5rem 1rem;
+    border: 0 !important;
+    font-size: 1rem;
+
+    @media #{responsive.$breakpoint-md} {
+        padding: .625rem 1.25rem;
+        border-radius: .375rem;
+    }
+
+    @media #{responsive.$breakpoint-lg} {
+        padding: .875rem 1.75rem;
+        font-size: 1rem;
+        border-radius: .5rem;
+    }
+}
+
+.btn-group-sm>.btn,
+.btn-sm {
+    padding: .375rem .75rem;
+    font-size: 1rem;
+
+    @media #{responsive.$breakpoint-md} {
+        padding: .437rem .875rem;
+    }
+
+    @media #{responsive.$breakpoint-lg} {
+        padding: .5rem 1.25rem;
+    }
+}
+
+.btn-link {
+
+    &:hover,
+    &:focus {
+        box-shadow: none;
+    }
+}
+
+.btn-minimal {
+    padding: 0 !important;
+    border-radius: 0;
+    background-color: transparent;
+    position: relative;
+    color: var.$text;
+
+    &::before {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        bottom: -0.125rem;
+        left: 0;
+        content: "";
+        border-radius: 4px;
+        background-color: var.$text-gray;
+    }
+
+    &::after {
+        transition-duration: 500ms;
+        position: absolute;
+        width: 0%;
+        height: 2px;
+        bottom: -0.125rem;
+        left: 0;
+        content: "";
+        border-radius: 4px;
+    }
+
+    i {
+        margin-left: 0.125rem;
+    }
+
+    &:hover,
+    &:focus {
+        box-shadow: none;
+        background-color: transparent;
+        border-color: transparent;
+    }
+
+    &.btn-primary {
+        color: var.$primary;
+
+        &:hover,
+        &:focus {
+            &::after {
+                width: 100%;
+                background-color: var.$primary;
+            }
+        }
+    }
+
+    &.btn-dark {
+        color: var.$dark;
+
+        &:hover,
+        &:focus {
+            &::after {
+                width: 100%;
+                background-color: var.$dark;
+            }
+        }
+    }
+
+    &.btn-success {
+        color: var.$success;
+
+        &:hover,
+        &:focus {
+            &::after {
+                width: 100%;
+                background-color: var.$success;
+            }
+        }
+    }
+
+    &.btn-warning {
+        color: var.$warning;
+
+        &:hover,
+        &:focus {
+            &::after {
+                width: 100%;
+                background-color: var.$warning;
+            }
+        }
+    }
+
+    &.btn-info {
+        color: var.$info;
+
+        &:hover,
+        &:focus {
+            &::after {
+                width: 100%;
+                background-color: var.$info;
+            }
+        }
+    }
+
+    &.btn-danger {
+        color: var.$danger;
+
+        &:hover,
+        &:focus {
+            &::after {
+                width: 100%;
+                background-color: var.$danger;
+            }
+        }
+    }
+
+    &.btn-light {
+        color: var.$white;
+
+        &:hover,
+        &:focus {
+            &::after {
+                width: 100%;
+                background-color: var.$white;
+            }
+        }
+    }
+}
+
+.bg-img {
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.bg-fixed {
+    background-attachment: fixed;
+}
+
+.bg-overlay {
+    position: relative;
+    z-index: 1;
+
+    &::after {
+        position: absolute;
+        content: "";
+        background-color: var.$dark;
+        opacity: 0.7;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        z-index: -1;
+    }
+}
+
+.bg-gray {
+    background-color: var.$gray !important;
+}
+
+.bg-text-gray {
+    background-color: var.$text-gray !important;
+}
+
+.curve-shape-top {
+    @media #{responsive.$breakpoint-lg} {
+        position: absolute !important;
+        width: 110%;
+        background-color: var.$white;
+        content: "";
+        height: 60px;
+        top: -42px;
+        left: -5%;
+        transform: rotate(-1deg);
+        z-index: 100 !important;
+    }
+}
+
+.curve-shape-bottom {
+    @media #{responsive.$breakpoint-lg} {
+        position: absolute !important;
+        width: 110%;
+        height: 60px;
+        background-color: var.$white;
+        content: "";
+        bottom: -42px;
+        left: -5%;
+        transform: rotate(-1deg);
+        z-index: 100 !important;
+    }
+}
+
+.section-heading {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 50px;
+
+    @media #{responsive.$breakpoint-lg} {
+        margin-bottom: 80px;
+    }
+
+    span {
+        color: var.$primary;
+    }
+
+    h6 {
+        color: var.$text;
+        text-transform: capitalize;
+
+        @media #{responsive.$breakpoint-lg} {
+            font-size: 1.25rem;
+        }
+    }
+
+    h2 {
+        margin-bottom: 1rem;
+        font-weight: 700;
+        font-size: 1.75rem;
+        letter-spacing: -0.5px;
+
+        @media #{responsive.$breakpoint-md} {
+            font-size: 2rem;
+        }
+
+        @media #{responsive.$breakpoint-lg} {
+            font-size: 2.25rem;
+        }
+
+        @media #{responsive.$breakpoint-xl} {
+            font-size: 3rem;
+        }
+    }
+
+    p {
+        margin-bottom: 0;
+
+        @media #{responsive.$breakpoint-lg} {
+            font-size: 18px;
+        }
+    }
+
+    &.white {
+        span {
+            color: var.$warning;
+        }
+
+        h6,
+        h2,
+        p {
+            color: var.$white;
+        }
+    }
+}
+
+.card {
+    border-color: var.$border;
+    border-radius: 10px;
+}
+
+.card-img-top {
+    border-top-left-radius: calc(10px - 1px);
+    border-top-right-radius: calc(10px - 1px);
+}
+
+.border,
+.border-left,
+.border-right,
+.border-bottom,
+.border-top {
+    border-color: var.$border !important;
+}
+
+.border-dashed {
+    border-top: 2px dashed var.$border !important;
+}
+
+#scrollTopButton {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    transition: all 500ms;
+    z-index: 9999;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: #000;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .25rem;
+    color: var.$white;
+    cursor: pointer;
+    transform: translateY(100px);
+
+    @media #{responsive.$breakpoint-lg} {
+        width: 2rem;
+        height: 2rem;
+        bottom: 2rem;
+        right: 2rem;
+        font-size: 1.375rem;
+    }
+
+    &.scrolltop-show {
+        transform: translateY(0);
+    }
+
+    &.scrolltop-hide {
+        transform: translateY(100px);
+    }
+}
+
+.text-dark {
+    color: var.$heading !important;
+}
