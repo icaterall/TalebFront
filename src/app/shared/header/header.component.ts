@@ -1,4 +1,8 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, ChangeDetectorRef } from '@angular/core';
+// header.component.ts
+import {
+  ChangeDetectionStrategy, Component, HostListener, HostBinding,
+  inject, ChangeDetectorRef, ElementRef
+} from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,37 +19,48 @@ type Lang = 'ar' | 'en';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent {
+  // === existing fields ===
   isMenuOpen = false;
-  isSwitchingLang = false; // To prevent multiple clicks during transition
-
+  isSwitchingLang = false;
+ isSticky = false;
   private readonly platformId = inject(PLATFORM_ID);
   private readonly i18n = inject(I18nService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly document = inject(DOCUMENT);
+  private readonly el = inject(ElementRef<HTMLElement>);
 
-  // Read-only snapshot of the current lang (service is the single source of truth)
-  get currentLang(): Lang { 
-    return this.i18n.current; 
+  // === STICKY: bind sticky-on to host ===
+  @HostBinding('class.sticky-on') sticky = false;
+
+  // run once to set the initial state (equivalent to window load)
+  ngAfterViewInit() {
+
   }
 
-  // Toggle language via the service (persists to sessionStorage + flips dir/lang)
+  @HostListener('window:scroll')
+  onScroll() {
+    this.isSticky = window.scrollY > 10;
+  }
+
+
+
+  // === optional: replicate the navbar toggler behavior from template ===
+  // template toggled .mobile-menu-open on the header when navbar-toggler clicked.
+  // If your toggler lives inside this component, just flip a HostBinding too:
+  @HostBinding('class.mobile-menu-open') get mobileMenuOpenClass() {
+    return this.isMenuOpen;
+  }
+
+  // === your existing API (unchanged) ===
+  get currentLang(): Lang { return this.i18n.current; }
+
   async setLang(next: Lang) {
-    if (this.isSwitchingLang) return; // Prevent multiple clicks
-    
+    if (this.isSwitchingLang) return;
     this.isSwitchingLang = true;
-    
     try {
-      // Call the async setLang method
       await this.i18n.setLang(next);
-      
-      // Force change detection to update the UI
       this.cdr.detectChanges();
-      
-      // Optional: Add a small delay for visual feedback
-      if (isPlatformBrowser(this.platformId)) {
-        // Force a layout recalculation to ensure RTL/LTR is applied
-        this.document.documentElement.offsetHeight;
-      }
+      if (isPlatformBrowser(this.platformId)) this.document.documentElement.offsetHeight;
     } finally {
       this.isSwitchingLang = false;
       this.cdr.detectChanges();
@@ -66,21 +81,12 @@ export class HeaderComponent {
       this.document.body.classList.remove('no-scroll');
     }
   }
-  onLogin() {
-    // Implement your login logic here
-    console.log('Log In clicked');
-  }
-  onJoinFree() {
-    // Implement your login logic here
-    console.log('Log In clicked');
-  }
-  @HostListener('document:keydown.escape')
-  onEsc() { 
-    this.closeMobileMenu(); 
-  }
 
-  @HostListener('window:resize')
-  onResize() {
+  onLogin() { console.log('Log In clicked'); }
+  onJoinFree() { console.log('Join Free clicked'); }
+
+  @HostListener('document:keydown.escape') onEsc() { this.closeMobileMenu(); }
+  @HostListener('window:resize') onResize() {
     if (isPlatformBrowser(this.platformId) && window.innerWidth > 1060) {
       this.closeMobileMenu();
     }

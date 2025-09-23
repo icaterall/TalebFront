@@ -1,102 +1,4 @@
-// ============================================
-// OPTIMIZED GLOBAL STYLES - ANATALEB
-// File size: ~15KB (vs ~300KB with full Bootstrap)
-// ============================================
-@use 'assets/fonts/fonts' as *;
-@use 'all-css-libraries' as *;
 
-// 1. Critical CSS Variables (minimal for performance)
-:root {
-  // Colors
-  --primary: #2563EB;
-  --secondary: #475569;
-  --success: #16A34A;
-  --danger: #EF4444;
-  --warning: #D97706;
-  --info: #0EA5E9;
-  --light: #F8FAFC;
-  --dark: #0F172A;
-  --white: #fff;
-  --gray-100: #F1F5F9;
-  --gray-200: #E2E8F0;
-  --gray-300: #CBD5E1;
-  --gray-400: #94A3B8;
-  --gray-500: #64748B;
-  --gray-600: #475569;
-  --gray-700: #334155;
-  --gray-800: #1E293B;
-  --gray-900: #0F172A;
-  
-  // Layout
-  --header-height: 64px;
-  --superbar-height: 56px;
-  --header-stack: calc(var(--superbar-height) + var(--header-height));
-  
-  // Spacing
-  --spacing-1: 0.25rem;
-  --spacing-2: 0.5rem;
-  --spacing-3: 1rem;
-  --spacing-4: 1.5rem;
-  --spacing-5: 3rem;
-  
-  // Typography
-  --font-ar: 'font-primary', 'Tajawal', 'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-latin: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-
-  // Shadows
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 6px 10px rgba(0,0,0,0.05);
-    --fs-xs:   clamp(12px,  0.75rem + 0.1vw, 13px);
-  --fs-sm:   clamp(13px,  0.80rem + 0.2vw, 15px);
-  --fs-base: clamp(16px,  0.95rem + 0.25vw, 18px);
-  --fs-lg:   clamp(18px,  1.05rem + 0.35vw, 20px);
-  --fs-xl:   clamp(20px,  1.25rem + 0.5vw,  24px);
-  --fs-2xl:  clamp(24px,  1.45rem + 0.8vw,  30px);
-  --fs-3xl:  clamp(28px,  1.65rem + 1.2vw, 36px);
-  --fs-4xl:  clamp(34px,  2.1rem  + 1.6vw, 44px);
-  --fs-5xl:  clamp(40px,  2.6rem  + 2.2vw, 56px);
-  --fs-6xl:  clamp(48px,  3.0rem  + 3.0vw, 72px);
-}
-
-
-// 2. Reset & Base (minimal, performance-focused)
-*, *::before, *::after { box-sizing: border-box; }
-html { 
-  font-size: 16px; 
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
-}
-body {
-  margin: 0;
-  font-family: var(--font-latin);
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--gray-900);
-  background-color: var(--white);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-// RTL Support
-html[dir="rtl"] {
-  direction: rtl;
-  
-  body {
-    font-family: var(--font-ar);
-    direction: rtl;
-    text-align: right;
-  }
-}
-html[dir="ltr"] body {
-  direction: ltr;
-  text-align: left;
-}
-
-
-// new css
 /*
 [Master Stylesheet]
 
@@ -1522,7 +1424,7 @@ ol li {
   top: 0;
   z-index: 2;
   content: "";
-
+  background-image: url("/src/assets/img/core-img/text-horn.png");
   width: 32px;
   height: 30px;
   -webkit-transform: rotate(15deg);
@@ -2390,7 +2292,7 @@ ol li {
 .saasbox-team-area .section-heading::after {
   width: 100px;
   height: 180px;
-
+  background-image: url('/src/assets/img/core-img/dot.png');
   background-repeat: repeat;
   content: "";
   position: absolute;
