@@ -7,7 +7,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { APP_INITIALIZER } from '@angular/core';
-import { I18nService } from './core/services/i18n.service';
+
 
 import { ToastrModule } from 'ngx-toastr';
 import { provideAnimations, provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -18,9 +18,6 @@ function getStartupLang(): 'ar' | 'en' {
   return (v === 'en' || v === 'ar') ? v : 'ar';
 }
 
-function initI18n(i18n: I18nService) {
-  return () => i18n.init();
-}
 
 const isServer = typeof window === 'undefined';
 
@@ -38,7 +35,7 @@ export const appConfig: ApplicationConfig = {
       lang: getStartupLang(),
       fallbackLang: 'en'
     }),
-    { provide: APP_INITIALIZER, useFactory: initI18n, deps: [I18nService], multi: true },
+   
 
     ...(isServer ? [provideNoopAnimations()] : [provideAnimations()]),
     importProvidersFrom(
