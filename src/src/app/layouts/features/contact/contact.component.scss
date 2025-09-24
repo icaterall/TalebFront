@@ -1,0 +1,41 @@
+/* ===== section background (blue iOS wallpaper vibe) ===== */
+.contact-glass {
+  position: relative;
+  isolation: isolate;
+
+  .contact-glass__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    /* layered blue gradients (no black) */
+    background:
+      /* soft cyan blob top-left */
+      radial-gradient(1200px 700px at 8% -10%, rgba(73, 196, 253, 0.52), transparent 60%),
+      /* rich blue blob top-right */
+      radial-gradient(1100px 650px at 92% -5%, rgba(0, 86, 210, 0.55), transparent 62%),
+      /* purple-blue sweep bottom-right */
+      radial-gradient(1300px 800px at 95% 115%, rgba(93, 63, 211, 0.40), transparent 60%),
+      /* aqua sweep bottom-left */
+      radial-gradient(1200px 900px at -10% 110%, rgba(0, 201, 255, 0.38), transparent 58%),
+      /* subtle overall blue tone */
+      linear-gradient(180deg, rgba(214, 238, 255, 0.65), rgba(173, 213, 255, 0.65));
+
+    background-attachment: fixed;
+    filter: saturate(110%);
+  }
+}
+
+/* Optional: soften for light/dark preference */
+@media (prefers-color-scheme: dark) {
+  .contact-glass .contact-glass__bg {
+    background:
+      radial-gradient(1200px 700px at 8% -10%, rgba(73, 196, 253, 0.44), transparent 60%),
+      radial-gradient(1100px 650px at 92% -5%, rgba(0, 86, 210, 0.48), transparent 62%),
+      radial-gradient(1300px 800px at 95% 115%, rgba(93, 63, 211, 0.36), transparent 60%),
+      radial-gradient(1200px 900px at -10% 110%, rgba(0, 201, 255, 0.34), transparent 58%),
+      linear-gradient(180deg, rgba(190, 224, 255, 0.55), rgba(160, 206, 255, 0.55));
+    filter: saturate(120%);
+  }
+}

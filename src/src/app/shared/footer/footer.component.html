@@ -1,0 +1,114 @@
+<!-- Start footer -->
+<footer class="custom-footer glass glass--footer py-1 position-relative">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mt-4">
+                <div>
+                    <div>
+                        <img src="assets/logo-light.png" alt="logo light" height="60" />
+                    </div>
+                    <div class="mt-4 fs-15">
+                
+                        <ul class="list-inline mb-0 footer-social-link">
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="avatar-xs d-block">
+                                    <div class="avatar-title rounded-circle">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </div>
+                                </a>
+                            </li>
+                          
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="avatar-xs d-block">
+                                    <div class="avatar-title rounded-circle">
+                                        <i class="fab fa-linkedin-in"></i>
+                                    </div>
+                                </a>
+                            </li>
+                          &nbsp;
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="avatar-xs d-block">
+                                    <div class="avatar-title rounded-circle">
+                                        <i class="fab fa-instagram"></i>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7 ms-lg-auto">
+                <div class="row">
+                    <div class="col-sm-4 mt-4">
+                        <h5 class="text-white mb-0">{{'footer.aboutPlatform'|translate}}</h5>
+                        <div class="text-muted mt-3">
+                            <ul class="list-unstyled ff-secondary footer-list">
+                              
+                                <li>
+                                    <a [routerLink]="['/terms-conditions']"
+                                    routerLinkActive="router-link-active"
+(click)="scrollToTop()">{{'footer.serviceConditions'|translate}}</a></li>
+                              
+                                
+                              
+                                <li><a [routerLink]="['/about-us']"
+                                    routerLinkActive="router-link-active"
+(click)="scrollToTop()">{{'footer.HowToLearn'|translate}}</a></li>
+                    
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 mt-4">
+                        <h5 class="text-white mb-0"> {{'footer.support'|translate}}</h5>
+                        <div class="text-muted mt-3">
+                            <ul class="list-unstyled ff-secondary footer-list">
+                                <li><a  [routerLink]="['/privacy-policy']"
+                                    routerLinkActive="router-link-active"
+(click)="scrollToTop()">{{'footer.dataProcessAgreement'|translate}}</a></li>
+                               
+                                    <li>
+                                        <a [routerLink]="['/contact-us']"
+                                    routerLinkActive="router-link-active"
+(click)="scrollToTop()">{{'footer.contactUs'|translate}}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row text-center text-sm-start align-items-center mt-5">
+            <div class="col-sm-6">
+                <div>
+                    <p class="copy-rights mb-0">
+                        {{'footer.anatalebPlatform'|translate}} &copy; {{year}} </p>
+                   
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="text-sm-end mt-3 mt-sm-0">
+                    <ul class="list-inline mb-0 footer-list gap-4 fs-16">
+                        <li class="list-inline-item">
+                            <a  [routerLink]="['/privacy-policy']"
+                            routerLinkActive="router-link-active"
+(click)="scrollToTop()">{{'footer.privacyPolicy'|translate}}</a>
+                        </li>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <li class="list-inline-item">
+                            <a 
+                            [routerLink]="['/terms-conditions']"
+                            routerLinkActive="router-link-active"
+(click)="scrollToTop()"
+                            >{{'footer.termsConditions'|translate}}</a>
+                        </li>
+                      
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<div class="app-bg"></div>
+<!-- end footer -->
