@@ -1,11 +1,3 @@
-/* ===============================
-   Vars (respect your header stack)
-   =============================== */
-:root {
-  --ana-superbar-h: 56px;   /* superbar */
-  --ana-header-h:   64px;   /* header (desktop), 65px on mobile in header CSS */
-  --ana-header-stack: calc(var(--ana-superbar-h) + var(--ana-header-h));
-}
 
 /* ===============================
    Base + container
@@ -25,7 +17,7 @@
   border-radius:16px;
   overflow:hidden;
 }
-@media (min-width: 576px) { .lp-container { max-width:600px; } }
+@media (min-width: 576px) { .lp-container { max-width:770px; } }
 @media (min-width: 768px) { .lp-container { max-width:1000px; } }
 @media (min-width: 1061px){ .lp-container { max-width:1050px; } }
 @media (min-width: 1200px){ .lp-container { max-width:1220px; } }
@@ -35,26 +27,21 @@
 /* ===============================
    Grid
    =============================== */
-.lp-grid { display:grid; align-items:center; gap: clamp(16px, 2.5vw, 28px); }
+.lp-grid { 
+  display:grid; 
+  align-items:center;
+}
 .lp-grid--2 { grid-template-columns: 1fr; }
 
 @media (min-width: 992px) {
   .lp-grid--2 { grid-template-columns: minmax(320px, 1.05fr) 1.15fr; }
+
 }
 @media (min-width: 1200px) {
   .lp-grid--2 { grid-template-columns: minmax(360px, 0.85fr) 1.2fr !important;
    }
 }
 
-/* ===============================
-   Hero section
-   =============================== */
-.lp-hero {
-  overflow-x: clip;
-  scroll-margin-top: var(--ana-header-stack);
-  padding-top: calc(var(--ana-header-stack) + clamp(0px, 2.5vw, 0px));
-  padding-bottom: clamp(10px, 6vw, 15px);
-}
 
 /* Portrait card */
 .lp-hero__media { position:relative; display:grid; place-items:center; }
@@ -71,6 +58,7 @@
 /* Fix header → hero gap only in RTL */
 :host-context(html[dir="rtl"]) {
   @media (max-width: 992px) {
+  .lp-container{margin-top: -50px;}
   .lp-hero {
     margin-block-start: 0 !important;
     padding-block-start: 5rem;   /* same feel as LTR; tweak if needed */
@@ -92,11 +80,11 @@
 
 
 @media (max-width: 992px) {
-   .lp-hero__lead { font-size: 40px!important; }
+   .lp-hero__lead { font-size: 18px!important; }
   /* add .lp to slightly increase specificity, and !important once to break ties */
   .lp .lp-photo {
-    width: clamp(260px, 64vw, 400px) !important;
-    margin-top: 90px;
+    width: clamp(260px, 64vw, 350px) !important;
+    margin-top: 110px;
   }
 }
 
@@ -106,7 +94,7 @@
 /* Doodles */
 .lp-deco { position:absolute; pointer-events:none; }
 .lp-deco--star {
-  width:28px; height:28px; left:-18px; top:40px; background:#ffb703;
+  width:28px; height:28px; left:-18px; top:10px; background:#ffb703;
   clip-path: polygon(50% 0%,62% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,38% 35%);
 }
 .lp-deco--diamond { width:14px; height:14px; right:-10px; top:40px; background:#ff6b6b; transform:rotate(45deg); border-radius:3px; }
@@ -124,11 +112,9 @@
 @media (min-width: 992px){ .lp-hero__copy, .lp-herocopy { text-align:start; } }
 
 .lp-hero__title, .lp-herotitle {
-  margin:0 0 .5rem;
-  font-weight:800;
-  line-height:1.15;
-  letter-spacing:-.01em;
-  font-size: clamp(26px, 3.4vw, 40px);
+    margin: 0px 20px 0.5rem;
+    font-weight: 700;
+    font-size: clamp(26px, 2.4vw, 40px);
 }
 @media (min-width: 1200px){
   .lp-hero__title, .lp-herotitle { font-size: clamp(14px, 1.65vw, 25px); }
@@ -136,17 +122,16 @@
 
 .lp-hero__lead {
   max-width:62ch;
-  font-size: clamp(14px, 1.45vw, 25px);
+  font-size: clamp(14px, 2.05vw, 20px);
 }
-@media (min-width: 992px){ .lp-hero__lead { margin:0; } }
+@media (min-width: 992px){ .lp-hero__lead { margin: 0px 40px 0px 40px; } }
 @media (max-width: 1060px){
   .lp-hero__lead { text-align:center; display:inline-block; font-size: 25px; }
   .lp-hero {
     scroll-margin-top: 75px;       
-    padding-top: 100px; /* header + breathing space */
   }
   .lp-hero__title{
-        font-size: 50px;
+        font-size: 24px;
   }
 }
 /* extra line spacing only when the page is RTL */
@@ -174,7 +159,7 @@
 @media (max-width: 1060px){
   .lp-btn {
     min-height: 52px;              /* taller buttons on mobile */
-    font-size: 2.45rem;            /* slightly larger text */
+    font-size: 1.0rem;            /* slightly larger text */
     padding: 1rem 1.5rem;          /* more padding */
   }
 }
@@ -190,11 +175,12 @@
 
 .lp-btn {
   display:inline-flex; align-items:center; justify-content:center;
-  width:100%; min-height:44px;
-  padding:0.85rem 1.25rem;
+  width:100%; 
+min-height: 18px;
+    padding: 0.6rem 1rem;
   border-radius:8px;
   background:#2563EB; color:#fff;
-  font-weight:700;
+  font-weight:600;
   border:2px solid transparent;
   text-decoration:none;
   transition: border-color .12s ease, transform .12s ease, box-shadow .12s ease;
@@ -237,23 +223,49 @@ html[dir="rtl"] .lp .bk-hero img { transform:none; }
   .lp-photo { width: clamp(240px, 22vw, 300px); }
 }
 
+/* Mobile/tablet bk-hero: fixed side stripe that doesn't drift */
+/* Mobile/tablet: bk-hero image always on the RIGHT (ignore RTL/LTR) */
 @media (max-width: 991.98px){
-  .bk-hero { position: static; justify-content:center; }
-  .bk-hero img { transform:none !important; max-width:60%; margin:30px; }
-  .lp-hero__media { order:1; }
-  .lp .bk-hero {
-    order:2; justify-content:center; 
-    align-items:center;
-    padding:0; z-index:auto; 
-    pointer-events:auto;
-            margin-bottom: 310px;
+  .lp .bk-hero{
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    padding: 0;
   }
-  .lp .bk-hero img {
-    max-width:60%;
+
+  .lp .bk-hero img{
+    position: absolute;
+    top: 5%;                 /* your preferred vertical anchor */
+    right: 0vw;            /* sit off the right edge a bit */
+    left: auto;              /* make sure left doesn't interfere */
     transform: rotate(180deg) !important;
-    margin:0px 30px 470px 415px;
+    inline-size: min(130vh, 115vw);
+    max-inline-size: 800px;
+    block-size: auto;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,.08));
+    opacity: .9;
   }
-  .lp-hero__copy { order:3; }
+
+  /* optional: stack order for content blocks */
+  .lp-hero__media { order: 1; }
+  .lp-hero__copy  { 
+    order: 2;
+            margin-top: 30px;
+   }
+}
+
+/* tiny-phone nudge so it doesn’t crowd text */
+@media (max-width: 420px){
+  .lp .bk-hero img{ right: -24vw; }
+}
+
+
+/* Tiny-phone nudge if it feels tight */
+@media (max-width: 420px){
+  html[dir="ltr"] .lp .bk-hero img{ inset-inline-end: -26vw; }
+  html[dir="rtl"] .lp .bk-hero img{ inset-inline-start: -26vw; }
 }
 
 @media (max-width: 575.98px){ .lp .bk-hero { padding:12px; } }

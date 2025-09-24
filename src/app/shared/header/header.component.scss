@@ -167,7 +167,7 @@ ease-in-out;
     overflow: hidden;
   }
   .form-control{
-    font-size: .95rem;
+    font-size: 1.0rem;
     height: var(--h); line-height: var(--h);
     border: 0; box-shadow: none; background: transparent;
 
@@ -268,7 +268,7 @@ html[dir="rtl"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     margin-bottom: 0px;
     font-weight: 400;
     padding: 1rem 1.0rem 1.0rem 1.0rem;
@@ -332,8 +332,7 @@ img {
 .header-padding {
     padding-right: 6.25rem !important;
     padding-left: 6.25rem !important;
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
+
 }
 /* Make the whole right cluster stick to the inline end (works LTR & RTL) */
 .right-cluster { margin-inline-start: auto; }
@@ -485,6 +484,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   .nav-link-degrees {
     color: var(--bs-gray-800, #343a40);
     text-decoration: none;
+    font-size: 1.2rem;
     transition: color .15s ease;
     &:hover,
     &:focus { color: var(--bs-primary, #0d6efd); }
@@ -493,7 +493,8 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
   .nav-link-login {
     color: var(--bs-primary, #0d6efd) !important;
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 1.2rem;
     text-decoration: none;
     &:hover,
     &:focus { text-decoration: underline; }
@@ -648,7 +649,7 @@ padding: 1.75rem;
        display: block;
     width: 100%;
     padding: .875rem 1.5rem;
-    font-size: 32px;
+    font-size: 18px;
     font-weight: 600;
     text-align: center;
     border-radius: 4px;
@@ -660,7 +661,7 @@ padding: 1.75rem;
   }
 .drawer-btn--secondary { 
   background: #fff; color: #0d6efd; border-color: #0d6efd;
-    font-size: 32px;
+    font-size: 18px;
  }
 
 /* Backdrop */
@@ -683,4 +684,13 @@ padding: 1.75rem;
 @media (min-width: 992px) {
   .mobile-drawer,
   .mobile-drawer__backdrop { display: none; }
+}
+
+.rounded-1{
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1.2rem!important;
+}
+.nav-link-login{
+    font-size: 1.2rem!important;
 }
