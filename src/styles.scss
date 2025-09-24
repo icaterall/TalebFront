@@ -47,11 +47,10 @@
   --font-ar: 'font-primary', 'Tajawal', 'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-latin: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 /* Fluid sizes (mobile -> desktop) — tuned for better mobile legibility */
-/* ✅ Tuned block (keep this) */
 --fs-2xs: clamp(0.80rem, 0.25vw + 0.72rem, 0.88rem);
 --fs-xs:  clamp(0.88rem, 0.35vw + 0.80rem, 0.94rem);
 --fs-sm:  clamp(0.98rem, 0.55vw + 0.86rem, 1.03rem);
---fs-base: clamp(1.0625rem, 1.25vw + 0.92rem, 1.125rem);
+--fs-base: clamp(1.0625rem, 1.25vw + 0.92rem, 1.125rem); /* ~17→18px */
 --fs-lg:  clamp(1.20rem, 1.60vw + 1.00rem, 1.3125rem);
 --fs-xl:  clamp(1.36rem, 1.90vw + 1.06rem, 1.60rem);
 --fs-2xl: clamp(1.60rem, 2.20vw + 1.10rem, 1.90rem);
@@ -59,6 +58,7 @@
 --fs-4xl: clamp(2.40rem, 3.20vw + 1.30rem, 3.00rem);
 --fs-5xl: clamp(3.10rem, 4.00vw + 1.40rem, 3.80rem);
 --fs-6xl: clamp(3.80rem, 5.00vw + 1.50rem, 4.60rem);
+
 
 /* …line-height… */
 
@@ -68,18 +68,6 @@
 --lh-normal: 1.5;
 --lh-relaxed: 1.7;
 
-  /* Fluid sizes (mobile -> desktop) */
-  --fs-2xs: clamp(0.75rem, 0.25vw + 0.68rem, 0.80rem);
-  --fs-xs:  clamp(0.82rem, 0.35vw + 0.74rem, 0.88rem);
-  --fs-sm:  clamp(0.90rem, 0.45vw + 0.82rem, 0.97rem);
-  --fs-base: clamp(1.00rem, 0.60vw + 0.90rem, 1.06rem);
-  --fs-lg:  clamp(1.12rem, 0.80vw + 0.98rem, 1.25rem);
-  --fs-xl:  clamp(1.28rem, 1.10vw + 1.05rem, 1.50rem);
-  --fs-2xl: clamp(1.50rem, 1.60vw + 1.10rem, 1.88rem);
-  --fs-3xl: clamp(1.88rem, 2.00vw + 1.20rem, 2.25rem);
-  --fs-4xl: clamp(2.25rem, 2.80vw + 1.30rem, 3.00rem);
-  --fs-5xl: clamp(3.00rem, 3.80vw + 1.40rem, 3.75rem);
-  --fs-6xl: clamp(3.75rem, 4.80vw + 1.50rem, 4.50rem);
 
   /* Line-height */
   --lh-tight: 1.2;
@@ -665,11 +653,3 @@ main.min-vh-100{ padding-top: var(--header-stack); }
 .toast-info{ background: color-mix(in srgb, var(--info), white 85%) }
 .toast-warning{ background: color-mix(in srgb, var(--warning), white 85%) }
 /* ===== Contact form mobile legibility fixes ===== */
-
-/* Contact form legibility overrides … (keep) */
-.form-label { font-size: inherit; }
-.ios-glass-input, .ios-glass-textarea { font-size: var(--fs-base); line-height: 1.5; }
-@media (max-width: 480px) {
-  .form-control { font-size: 1.125rem; min-height: 52px; }
-  .form-label  { font-size: 1.0625rem; }
-}
