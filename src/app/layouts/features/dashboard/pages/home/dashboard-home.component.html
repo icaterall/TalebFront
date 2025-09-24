@@ -1,0 +1,13 @@
+<div class="container-fluid">
+  <h2 class="h4 mb-4">Welcome back</h2>
+  <div class="row g-3">
+    <div class="col-12 col-md-4" *ngFor="let s of stats">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <div class="text-muted small">{{ s.label }}</div>
+          <div class="display-6 fw-bold">{{ s.value }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -34,16 +34,12 @@
               }
             ],
              "styles": [
+              "src/styles.scss",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css",
               "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "node_modules/ngx-toastr/toastr.css"
             ],
-             "scripts": [
-    "src/assets/js/all-js-libraries.js",
-    "src/assets/js/active.js",
-    "src/assets/js/cookiealert.js",
-    "src/assets/js/slideToggle.min.js"
-  ],
+
             "stylePreprocessorOptions": {
               "includePaths": ["src/styles"]
             }

@@ -3,7 +3,6 @@
 // File size: ~15KB (vs ~300KB with full Bootstrap)
 // ============================================
 @use 'assets/fonts/fonts' as *;
-@import 'ngx-toastr/toastr';
 
 // 1. Critical CSS Variables (minimal for performance)
 :root {

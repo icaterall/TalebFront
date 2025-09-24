@@ -79,16 +79,16 @@
     "roles": "الأدوار"
   },
   "footer": {
-    "mission": "منصّة ثنائية اللغة وأخلاقية مدعومة بالذكاء الاصطناعي تُبقي التعلّم مستمرًا في كل مكان.",
-    "about": "نبذة",
-    "privacy": "الخصوصية",
-    "terms": "الشروط",
-    "try": "جرّب النسخة الحيّة",
-    "links_title": "روابط",
-    "legal_title": "سياسات",
-    "try_title": "جرّب المنصّة",
-    "try_text": "ابدأ تجربة مباشرة وشاهد كيف يدعم الذكاء الاصطناعي التدريس والتعلّم.",
-    "copyright": "2025 انا طالب. جميع الحقوق محفوظة."
+    "aboutPlatform": "عن المنصّة",
+    "serviceConditions": "شروط الخدمة",
+    "howToLearn": "كيفية التعلّم",
+    "support": "الدعم",
+    "dataProcessAgreement": "اتفاقية معالجة البيانات",
+    "contactUs": "اتصل بنا",
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsConditions": "الشروط والأحكام",
+    "brand": "منصّة أنا طالب",
+    "copyright": "{{brand}} © {{year}}"
   },
   "topstrip": { "students": "للطلاب", "instructors": "للمعلّمين", "institutions": "للمؤسسات" },
   "header": { "explore": "استكشف", "online_degrees": "درجات عبر الإنترنت", "careers": "الوظائف" },
@@ -134,4 +134,5 @@
   },
 "getInTouch": "ابقى على تواصل"
 }
+
 }

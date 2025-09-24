@@ -1,0 +1,138 @@
+<div class="css-header">
+  <!-- Superbar (full width) -->
+  <div class="superbar">
+    <div class="container-fluid px-1 d-flex align-items-center justify-content-between superbar__content">
+      <ul class="list-unstyled d-flex gap-4 mb-0 superbar__links" role="list">
+        <li><a class="super-link active" href="/students">{{ 'topstrip.students' | translate }}</a></li>
+        <li><a class="super-link" href="/instructors">{{ 'topstrip.instructors' | translate }}</a></li>
+        <li><a class="super-link" href="/institutions">{{ 'topstrip.institutions' | translate }}</a></li>
+      </ul>
+      <div class="d-none d-md-flex align-items-center gap-3"></div>
+    </div>
+  </div>
+
+  <!-- Main header (full width) -->
+  <header class="header border-bottom bg-white sticky-top">
+    <div class="container-fluid header-padding d-flex align-items-center justify-content-between">
+      <!-- Mobile: menu + logo -->
+      <div class="d-flex align-items-center gap-2 d-lg-none">
+      <button class="btn btn-link icon-btn mobile-btn mobile-btn--menu"
+              (click)="toggleMobileMenu()"
+              [class.invisible]="isMenuOpen"
+              aria-label="Menu">
+        <i class="bi bi-list"></i>
+      </button>
+
+<a href="/" class="c-mobile-logo">
+  <img *ngIf="currentLang === 'ar'; else enLogo"
+       src="assets/logo-a-ar.png" alt="أناطالب" class="brand-img" height="20" />
+  <ng-template #enLogo>
+    <img src="assets/logo-a.png" alt="ANATALEB" class="brand-img" height="20" />
+  </ng-template>
+</a>
+
+      </div>
+
+      <!-- Desktop brand -->
+<a class="navbar-brand d-none d-lg-inline brand-desktop" href="/">
+  <img *ngIf="currentLang === 'ar'; else enDeskLogo"
+       src="assets/logo-ar.png" alt="أناطالب" class="brand-img" height="20" />
+  <ng-template #enDeskLogo>
+    <img src="assets/logo.png" alt="ANATALEB" class="brand-img" height="20" />
+  </ng-template>
+</a>
+      <!-- Desktop search -->
+<form class="flex-grow-1 header-search d-none d-lg-block ms-lg-2 me-lg-3" role="search">
+  <div class="input-group header-search__group rounded-pill shadow-sm">
+    <input class="form-control ps-3" type="search"
+           [placeholder]="'hero.search_placeholder' | translate" aria-label="Search"/>
+    <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
+      <i class="bi bi-search"></i>
+    </button>
+  </div>
+</form>
+
+      <!-- Right cluster -->
+      <div class="d-flex align-items-center gap-3">
+          <nav class="d-none d-lg-flex align-items-center gap-3">
+            <a class="nav-link-degrees" href="/degrees">
+              {{ 'header.online_degrees' | translate }}
+            </a>
+
+            <a class="nav-link-login" href="/login">
+              {{ 'nav.signin' | translate }}
+            </a>
+
+            <a class="btn btn-outline-primary rounded-1" href="/signup">
+              {{ 'nav.get_started' | translate }}
+            </a>
+          </nav>
+
+
+        <!-- Mobile search -->
+        <button class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
+                type="button" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+
+        <!-- Lang pill -->
+<button class="btn btn-light border lang-btn"
+        (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
+        [class.is-ar-label]="currentLang !== 'ar'"
+        aria-label="Toggle language">
+  <span class="lang-text">{{ currentLang === 'ar' ? 'EN' : 'ع' }}</span>
+</button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile drawer -->
+<!-- Mobile drawer -->
+<aside class="mobile-drawer" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
+<!-- Drawer top bar -->
+<!-- KEEP -->
+<div class="mobile-drawer__top">
+  <div class="mobile-drawer__brand">
+    <img *ngIf="currentLang === 'ar'; else enDrawerLogo"
+         src="assets/logo-a-ar.png" alt="أناطالب" height="28" />
+    <ng-template #enDrawerLogo>
+      <img src="assets/logo-a.png" alt="ANATALEB" height="28" />
+    </ng-template>
+  </div>
+  <button class="icon-btn mobile-drawer__close" type="button"
+          aria-label="Close menu" (click)="closeMobileMenu()">
+    <i class="bi bi-x-lg close-menu-btn"></i>
+  </button>
+</div>
+
+
+
+  <!-- Navigation links -->
+  <nav class="mobile-drawer__nav">
+    <a class="drawer-nav-item" href="/courses" (click)="closeMobileMenu()">
+      {{ 'drawer.browse_courses' | translate }}
+    </a>
+    <a class="drawer-nav-item" href="/businesses" (click)="closeMobileMenu()">
+      {{ 'drawer.for_businesses' | translate }}
+    </a>
+    <a class="drawer-nav-item" href="/universities" (click)="closeMobileMenu()">
+      {{ 'drawer.for_universities' | translate }}
+    </a>
+    <a class="drawer-nav-item" href="/governments" (click)="closeMobileMenu()">
+      {{ 'drawer.for_governments' | translate }}
+    </a>
+  </nav>
+
+  <!-- Bottom action buttons -->
+  <div class="mobile-drawer__actions">
+    <button class="drawer-btn drawer-btn--primary" (click)="onJoinFree()">
+      {{ 'drawer.join_free' | translate }}
+    </button>
+    <button class="drawer-btn drawer-btn--secondary" (click)="onLogin()">
+      {{ 'drawer.log_in' | translate }}
+    </button>
+  </div>
+</aside>
+  <div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>
+</div>
