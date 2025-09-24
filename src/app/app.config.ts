@@ -4,7 +4,7 @@ import { importProvidersFrom } from '@angular/core';
 import { PreloadAllModules, provideRouter, withInMemoryScrolling, withPreloading, withViewTransitions } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
-import { provideTranslateService } from '@ngx-translate/core';
+
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { APP_INITIALIZER } from '@angular/core';
 import { I18nService } from './core/services/i18n.service';
@@ -33,11 +33,7 @@ export const appConfig: ApplicationConfig = {
       withPreloading(PreloadAllModules)
     ),
     provideHttpClient(),
-    provideTranslateService({
-      loader: provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
-      lang: getStartupLang(),
-      fallbackLang: 'en'
-    }),
+ 
     { provide: APP_INITIALIZER, useFactory: initI18n, deps: [I18nService], multi: true },
 
     ...(isServer ? [provideNoopAnimations()] : [provideAnimations()]),
