@@ -96,7 +96,7 @@
   /* add .lp to slightly increase specificity, and !important once to break ties */
   .lp .lp-photo {
     width: clamp(260px, 64vw, 400px) !important;
-    margin-top: 75px;
+    margin-top: 90px;
   }
 }
 
@@ -738,3 +738,6 @@ html[dir="rtl"] .lp-teachers{
     object-fit: cover;
   }
 }
+   .contact-form-background {
+        background-color: #d7dce3;
+   }

@@ -79,16 +79,16 @@
     "roles": "User roles"
   },
   "footer": {
-    "mission": "A bilingual, ethical, AI-powered platform that keeps learning going anywhere.",
-    "about": "About",
-    "privacy": "Privacy",
-    "terms": "Terms",
-    "try": "Try the live demo",
-    "links_title": "Links",
-    "legal_title": "Policies",
-    "try_title": "Try the platform",
-    "try_text": "Start a live demo and see how AI supports teaching and learning.",
-    "copyright": "© 2025 ANATALEB. All rights reserved."
+    "aboutPlatform": "About the Platform",
+    "serviceConditions": "Service Conditions",
+    "howToLearn": "How to Learn",
+    "support": "Support",
+    "dataProcessAgreement": "Data Processing Agreement",
+    "contactUs": "Contact Us",
+    "privacyPolicy": "Privacy Policy",
+    "termsConditions": "Terms & Conditions",
+    "brand": "Anataleb Platform",
+    "copyright": "{{brand}} © {{year}}"
   },
   "topstrip": { "students": "For Students", "instructors": "For Instructors", "institutions": "For Institutions" },
   "header": { "explore": "Explore", "online_degrees": "Online Degrees", "careers": "Careers" },

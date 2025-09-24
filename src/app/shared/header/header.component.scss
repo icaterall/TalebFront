@@ -190,7 +190,7 @@ ease-in-out;
     padding: 0px 16px;
   }
   .header {
-      --header-h: 65px;
+      --header-h: 70px;
     padding: 5px 4px 5px 15px;
    
   }
@@ -274,7 +274,7 @@ html[dir="rtl"] {
 }
 
 :host-context([dir="rtl"]) .mobile-drawer__brand img { 
-  height: 65px!important;
+  height: 80px!important;
 }
 
 
@@ -319,7 +319,7 @@ img {
     vertical-align: middle;
     border: 0;
 }
-.brand-desktop .brand-img { display:block; height:20px; } /* match your design */
+.brand-desktop .brand-img { display:block; height:45px; } /* match your design */
 .c-mobile-logo img { display:block; height:20px; }        /* keep mobile the same */
 /* Full-bleed header without risking overflow */
 .css-header,
@@ -364,11 +364,11 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
 :host-context(html[dir="rtl"]) {
  .brand-img {
-    height: 35px!important;
+    height: 45px!important;
 }
     @media (max-width: 1060px){
 .brand-img {
-    height: 55px!important;
+    height: 80px!important;
 }
 }
   }
@@ -414,7 +414,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
     gap: 1rem !important;          /* increase gap from menu to logo */
   }
   .brand-img {
-    height: 40px !important;       /* Coursera uses ~24px logo height */
+    height: 80px !important;       /* Coursera uses ~24px logo height */
   }
 
   /* Menu button styling */
@@ -608,7 +608,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 
 .mobile-drawer__brand img {
   display: block;
-  height: 50px;                    /* matches your template */
+  height: 80px;                    /* matches your template */
 }
 
 .mobile-drawer__close {
