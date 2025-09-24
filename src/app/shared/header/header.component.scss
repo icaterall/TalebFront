@@ -116,7 +116,7 @@ ease-in-out;
 
 /* Icon-only buttons */
 .icon-btn{ width:32px; height:45px; border-radius:8px; padding:0; }
-.icon-btn .bi{ font-size:16px; }
+.icon-btn .bi{ font-size:20px; }
 .bi-list { font-size: 30px !important; }
 
 /* Brand */
@@ -183,21 +183,6 @@ ease-in-out;
   }
 }
 
-
-/* ===== Mobile layout adjustments ===== */
-@media (max-width: $mobile-bp) {
-  .header .container{
-    padding: 0px 16px;
-  }
-  .header {
-      --header-h: 70px;
-    padding: 5px 4px 5px 15px;
-   
-  }
-  
-  .container { min-height: var(--header-h); }
-}
-
 // Close button (X)
 .drawer-close-btn {
   width: 48px;
@@ -223,7 +208,7 @@ ease-in-out;
 
 
   .close-menu-btn{
-    font-size: 42px!important;
+    font-size: 20px!important;
     font-weight: 700;
   }
 // Bottom menu icon (hamburger)
@@ -274,7 +259,7 @@ html[dir="rtl"] {
 }
 
 :host-context([dir="rtl"]) .mobile-drawer__brand img { 
-  height: 80px!important;
+  height: 45px!important;
 }
 
 
@@ -283,10 +268,10 @@ html[dir="rtl"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+    font-size: 1.5rem;
+    margin-bottom: 0px;
     font-weight: 400;
-   padding: 1rem 2.2rem 1.6rem 2.2rem;
+    padding: 1rem 1.0rem 1.0rem 1.0rem;
   color: #111;
   border-bottom: 1px solid var(--bs-gray-200, #e9ecef);
 }
@@ -368,7 +353,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 }
     @media (max-width: 1060px){
 .brand-img {
-    height: 80px!important;
+    height: 45px!important;
 }
 }
   }
@@ -402,19 +387,14 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
     .header-padding {
     padding-right: 1.25rem !important;
     padding-left: 1.25rem !important;
-    padding-top: 1.25rem !important;
-    padding-bottom: 1.25rem !important;
   }
-  .header {
-    min-height: 75px;          /* increased from 65px */
-    padding-block: 1rem;        /* increased from 0.5rem */
-  }
+
     /* Add spacing between menu and logo */
   .d-flex.align-items-center.gap-2.d-lg-none {
     gap: 1rem !important;          /* increase gap from menu to logo */
   }
   .brand-img {
-    height: 80px !important;       /* Coursera uses ~24px logo height */
+    height: 45px !important;       /* Coursera uses ~24px logo height */
   }
 
   /* Menu button styling */
@@ -429,13 +409,13 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   }
   
   .mobile-btn--menu .bi-list {
-    font-size: 50px !important;    /* hamburger icon size */
+    font-size: 30px !important;    /* hamburger icon size */
     line-height: 1;
   }
   
    /* Search button */
   .mobile-btn--search {
-    width: 70px;
+    width: 10px;
     height: 70px;
     display: flex;
     align-items: center;
@@ -443,13 +423,13 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   }
   
   .mobile-btn--search .bi-search {
-    font-size: 30px !important;    
+    font-size: 15px !important;    
   }
   
   /* Language button */
   .lang-btn {
-    width: 60px;                   
-    height: 60px;
+    width: 30px;                   
+    height: 30px;
     font-size: 1.1rem;             
     font-weight: 600;
     border-radius: 8px;
@@ -457,7 +437,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   }
   
   .lang-btn .lang-text {
-    font-size: 35px;               
+    font-size: 15px;               
   }
   
   /* Container padding for proper edge spacing */
@@ -532,14 +512,14 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   width: 100%;
   padding-block: .85rem;
   border-radius: .5rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 .mobile-drawer__actions .drawer-btn + .drawer-btn { margin-top: .5rem; }
 
 /* Brand won't stretch */
 .mobile-drawer__brand {
   flex: 0 0 auto;
-   padding: 30px;
+   padding: 15px;
 }
 
 /* Close button floats on the far side without affecting centering */
@@ -601,14 +581,13 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   align-items: center;
   justify-content: space-between;
   gap: .5rem;
-  padding: .875rem 1rem;
   border-block-end: 1px solid #eee;
   background: #fff;
 }
 
 .mobile-drawer__brand img {
   display: block;
-  height: 80px;                    /* matches your template */
+  height: 45px;                    /* matches your template */
 }
 
 .mobile-drawer__close {
@@ -647,8 +626,8 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   margin-block-start: auto;        /* push to the bottom */
   position: sticky;
   inset-block-end: 0;
-  padding: .75rem;
-  padding-block-end: calc(env(safe-area-inset-bottom, 0px) + .75rem);
+padding: 1.75rem;
+    padding-block-end: calc(env(safe-area-inset-bottom, 0px) + 2.75rem);
   background: #fff;
   border-block-start: 1px solid #eee;
   
@@ -669,7 +648,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
        display: block;
     width: 100%;
     padding: .875rem 1.5rem;
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 600;
     text-align: center;
     border-radius: 4px;
@@ -681,7 +660,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
   }
 .drawer-btn--secondary { 
   background: #fff; color: #0d6efd; border-color: #0d6efd;
-    font-size: 36px;
+    font-size: 32px;
  }
 
 /* Backdrop */
