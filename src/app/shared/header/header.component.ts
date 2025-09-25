@@ -52,20 +52,22 @@ export class HeaderComponent {
     }
   }
 
-  toggleMobileMenu() {
-    this.isMenuOpen = !this.isMenuOpen;
-    if (isPlatformBrowser(this.platformId)) {
-      this.document.body.classList.toggle('no-scroll', this.isMenuOpen);
-    }
+toggleMobileMenu() {
+  this.isMenuOpen = !this.isMenuOpen;
+  if (isPlatformBrowser(this.platformId)) {
+    this.document.body.classList.toggle('no-scroll', this.isMenuOpen);
   }
+  this.cdr.markForCheck(); // <- ensure the [class.open] binding updates immediately
+}
+closeMobileMenu() {
+  if (!this.isMenuOpen) return;
+  this.isMenuOpen = false;
+  if (isPlatformBrowser(this.platformId)) {
+    this.document.body.classList.remove('no-scroll');
+  }
+  this.cdr.markForCheck();
+}
 
-  closeMobileMenu() {
-    if (!this.isMenuOpen) return;
-    this.isMenuOpen = false;
-    if (isPlatformBrowser(this.platformId)) {
-      this.document.body.classList.remove('no-scroll');
-    }
-  }
   onLogin() {
     // Implement your login logic here
     console.log('Log In clicked');

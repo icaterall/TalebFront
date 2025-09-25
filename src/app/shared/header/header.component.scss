@@ -263,59 +263,147 @@ color: #0056d2;
 
 
         /* Mobile Header */
-        .mobile-header {
-            display: none;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
 
-        .mobile-header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            height: 56px;
-        }
+/* === MOBILE ACTIVATION (<1060px) =================================== */
+/* =========================================
+   MOBILE HEADER + DRAWER  (<= 1060px)
+   ========================================= */
+@media (max-width:1060px){
+  /* Hide desktop bars; show mobile bar */
+  .top-nav,
+  .main-header { display:none !important; }
 
-        .mobile-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+  .mobile-header{
+    display:block !important;
+    position:sticky; top:0; z-index:1000;
+    background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.08);
+  }
 
-        .menu-button, .mobile-search-button {
-            background: none;
-            border: none;
-            padding: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+  /* Row layout: [menu + logo] .......... [search + lang] */
+  .mobile-header-container{
+    display:flex; align-items:center; gap:12px;
+    height:64px; padding:12px 16px;
+  }
 
-        .menu-button svg, .mobile-search-button svg {
-            width: 24px;
-            height: 24px;
-        }
+  /* Left cluster (cancel any cds grid sizing) */
+  .mobile-header-container > .cds-grid-item:first-child,
+  .mobile-header-container > .cds-52:first-child{
+    all:unset;
+    display:flex; align-items:center; gap:12px;
+  }
 
-   
+  /* Right cluster */
+  .mobile-header-container > .cds-grid-item:nth-child(2),
+  .mobile-header-container > .cds-48{
+    all:unset;
+    margin-inline-start:auto;
+    display:flex; align-items:center; gap:8px;
+  }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .top-nav {
-                display: none;
-            }
+  /* Hamburger */
+  .mobile-menu-hamburger{
+    width:44px; height:44px; padding:0;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid #e5e7eb; border-radius:8px; background:#f8f9fb;
+  }
 
-            .main-header {
-                display: none;
-            }
+  /* Search button (keep your SVGs) */
+  .css-bkju5j{
+    width:36px; height:36px; padding:0;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid #e5e7eb; border-radius:8px;
+    background:#f8f9fb; color:#0056d2;
+  }
 
-            .mobile-header {
-                display: block;
-            }
-        }
+  /* Language pill */
+  .lang-button, .lang-btn{
+    width:36px; height:36px; padding:0;
+    display:grid; place-items:center;
+    background:#f8f9fb; border:1px solid #e5e7eb; border-radius:8px;
+    font-weight:700;
+  }
+  .lang-button .lang-text, .lang-btn .lang-text{ font-size:14px; }
 
-        
+  /* Logo next to hamburger */
+  .mobile-logo img,
+  .c-mobile-logo .brand-img{ height:24px; display:block; }
+}
+
+/* Hover feedback (optional) */
+@media (hover:hover){
+  .mobile-menu-hamburger:hover,
+  .css-bkju5j:hover,
+  .lang-button:hover, .lang-btn:hover{
+    background:#f0f6ff; border-color:#d7e4ff;
+  }
+}
+
+/* =========================================
+   OFF-CANVAS DRAWER (RTL/LTR aware)
+   ========================================= */
+
+.mobile-drawer{
+  position:sticky; inset-block:0; inset-inline-start:0;
+  inline-size:var(--drawer-w); block-size:100dvh; max-block-size:100svh;
+  background:#fff; z-index:1050;
+  transform:translateX(-100%);
+  transition: transform .28s var(--drawer-ease), box-shadow .28s var(--drawer-ease);
+  display:flex; flex-direction:column; overflow:auto;
+  box-shadow:0 0 0 rgba(0,0,0,0);
+}
+[dir="rtl"] .mobile-drawer{
+  inset-inline-start:auto; inset-inline-end:0; transform:translateX(100%);
+}
+.mobile-drawer.open{
+  transform:translateX(0); box-shadow:0 10px 30px rgba(0,0,0,.22);
+}
+
+/* Drawer top row */
+.mobile-drawer__top{
+  position:sticky; inset-block-start:0; z-index:1;
+  display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+  padding:12px 16px; background:#fff; border-block-end:1px solid #eee;
+}
+.mobile-drawer__brand img{ display:block; height:45px; }
+.icon-btn.mobile-drawer__close{
+  inline-size:40px; block-size:40px; display:grid; place-items:center;
+  border:0; background:transparent; cursor:pointer;
+}
+
+/* Drawer list */
+.mobile-drawer__nav{ padding:.25rem 0; overflow:auto; }
+.drawer-nav-item{
+  display:block; padding:.875rem 1rem; font-size:1.125rem; font-weight:600;
+  color:#111; text-decoration:none; border-block-end:1px solid #f2f2f2;
+}
+.drawer-nav-item:hover{ background:#fafafa; }
+.drawer-nav-item:active{ background:#f3f6ff; }
+
+/* Drawer bottom actions */
+.mobile-drawer__actions{
+  position:sticky; inset-block-end:0; background:#fff; border-block-start:1px solid #eee;
+  padding:1.25rem 1.75rem calc(env(safe-area-inset-bottom,0px) + 1.75rem);
+}
+.drawer-btn{
+  display:block; inline-size:100%; padding:.875rem 1.5rem;
+  border-radius:.5rem; font-weight:700; border:1px solid transparent;
+}
+.drawer-btn + .drawer-btn{ margin-block-start:.5rem; }
+.drawer-btn--primary{ background:#0d6efd; color:#fff; }
+.drawer-btn--secondary{ background:#fff; color:#0d6efd; border-color:#0d6efd; }
+
+/* Backdrop */
+.mobile-drawer__backdrop{
+  position:fixed; inset:0; z-index:1040; background:rgba(0,0,0,.35);
+  opacity:0; pointer-events:none; transition:opacity .25s var(--drawer-ease);
+}
+.mobile-drawer__backdrop.show{ opacity:1; pointer-events:auto; }
+
+/* Page lock while open */
+.no-scroll{ overflow:hidden !important; }
+
+/* Hide drawer/backdrop on desktop */
+@media (min-width:1061px){
+  .mobile-header, .mobile-drawer, .mobile-drawer__backdrop{ display:none !important; }
+}
+
