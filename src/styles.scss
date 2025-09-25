@@ -33,9 +33,11 @@
 
   /* Layout */
   --header-height: 64px;
+  --header-20-height: 10px;
   --superbar-height: 56px;
+  --superbar-20-height: 20px;
   --header-stack: calc(var(--superbar-height) + var(--header-height));
-
+  --header-20-stack: calc(var(--superbar-20-height) + var(--header-20-height));
   /* Spacing */
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
@@ -271,7 +273,7 @@ button, input, optgroup, select, textarea {
 .w-100{width:100%!important}.w-auto{width:auto!important}
 .h-100{height:100%!important}.h-auto{height:auto!important}
 .min-vh-100{min-height:100vh!important}
-
+.min-vh-20{min-height:20vh!important}
 /* Position */
 .position-static{position:static!important}
 .position-relative{position:relative!important}
@@ -595,6 +597,8 @@ input[type="search"]{ -webkit-appearance: none }
 // --------------------------------------------
 /* Space for fixed header */
 main.min-vh-100{ padding-top: var(--header-stack); }
+
+main.min-vh-20{ padding-top: var(--header-20-stack); }
 
 /* Anchor scroll offset */
 :target{ scroll-margin-top: var(--header-stack); }

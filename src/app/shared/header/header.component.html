@@ -1,138 +1,76 @@
-<div class="css-header">
-  <!-- Superbar (full width) -->
-  <div class="superbar">
-    <div class="container-fluid px-1 d-flex align-items-center justify-content-between superbar__content">
-      <ul class="list-unstyled d-flex gap-4 mb-0 superbar__links" role="list">
-        <li><a class="super-link active" href="/students">{{ 'topstrip.students' | translate }}</a></li>
-        <li><a class="super-link" href="/instructors">{{ 'topstrip.instructors' | translate }}</a></li>
-        <li><a class="super-link" href="/institutions">{{ 'topstrip.institutions' | translate }}</a></li>
-      </ul>
-      <div class="d-none d-md-flex align-items-center gap-3"></div>
+
+
+    <!-- Desktop Header -->
+    <div class="top-nav">
+        <div class="top-nav-container">
+            <ul>
+                <li><a href="#"><span class="for-text">For</span> Individuals</a></li>
+                <li><a href="#"><span class="for-text">For</span> Businesses</a></li>
+                <li><a href="#"><span class="for-text">For</span> Universities</a></li>
+                <li><a href="#"><span class="for-text">For</span> Governments</a></li>
+            </ul>
+        </div>
     </div>
-  </div>
 
-  <!-- Main header (full width) -->
-  <header class="header border-bottom bg-white sticky-top">
-    <div class="container-fluid header-padding d-flex align-items-center justify-content-between">
-      <!-- Mobile: menu + logo -->
-      <div class="d-flex align-items-center gap-2 d-lg-none">
-      <button class="btn btn-link icon-btn mobile-btn mobile-btn--menu"
-              (click)="toggleMobileMenu()"
-              [class.invisible]="isMenuOpen"
-              aria-label="Menu">
-        <i class="bi bi-list"></i>
-      </button>
-
-<a href="/" class="c-mobile-logo">
-  <img *ngIf="currentLang === 'ar'; else enLogo"
-       src="assets/logo-dark-t.png" alt="أناطالب" class="brand-img" height="20" />
-  <ng-template #enLogo>
-    <img src="assets/logo-dark-t.png" alt="ANATALEB" class="brand-img" height="20" />
-  </ng-template>
-</a>
-
-      </div>
-
-      <!-- Desktop brand -->
-<a class="navbar-brand d-none d-lg-inline brand-desktop" href="/">
-  <img *ngIf="currentLang === 'ar'; else enDeskLogo"
-       src="assets/logo-dark-t.png" alt="أناطالب" class="brand-img" height="20" />
-  <ng-template #enDeskLogo>
-    <img src="assets/logo-dark-t.png" alt="ANATALEB" class="brand-img" height="20" />
-  </ng-template>
-</a>
-      <!-- Desktop search -->
-<form class="flex-grow-1 header-search d-none d-lg-block ms-lg-2 me-lg-3" role="search">
-  <div class="input-group header-search__group rounded-pill shadow-sm">
-    <input class="form-control ps-3" type="search"
-           [placeholder]="'hero.search_placeholder' | translate" aria-label="Search"/>
-    <button class="btn btn-primary search-btn" type="submit" aria-label="Search">
-      <i class="bi bi-search"></i>
-    </button>
-  </div>
-</form>
-
-      <!-- Right cluster -->
-      <div class="d-flex align-items-center gap-3">
-          <nav class="d-none d-lg-flex align-items-center gap-3">
-            <a class="nav-link-degrees" href="/degrees">
-              {{ 'header.online_degrees' | translate }}
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo" aria-label="Coursera">
+ <img src="assets/logo-dark-t.png" alt="ANATALEB" class="brand-img" height="20" />
             </a>
 
-            <a class="nav-link-login" href="/login">
-              {{ 'nav.signin' | translate }}
-            </a>
 
-            <a class="btn btn-outline-primary rounded-1" href="/signup">
-              {{ 'nav.get_started' | translate }}
-            </a>
-          </nav>
+            <div class="search-container">
+                <form class="search-form">
+                    <div class="search-wrapper">
+                 <button type="submit" class="search-button" aria-label="Submit Search">
+                        <i class="bi bi-search"></i>
+                        </button>
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            placeholder="{{ 'hero.search_placeholder' | translate }}"
+                            aria-label="{{ 'hero.search_aria_label' | translate }}"
+                        >
+                     
 
 
-        <!-- Mobile search -->
-        <button class="btn btn-link icon-btn d-lg-none mobile-btn mobile-btn--search"
-                type="button" aria-label="Search">
-          <i class="bi bi-search"></i>
-        </button>
+                    </div>
+                </form>
+            </div>
 
-        <!-- Lang pill -->
-<button class="btn btn-light border lang-btn"
+            <div class="right-nav">
+                <a href="#" class="login-button"> {{ 'nav.signin' | translate }}</a>
+                <a href="#" class="join-button"> {{ 'nav.get_started' | translate }}</a>
+<button class="lang-button"
         (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
         [class.is-ar-label]="currentLang !== 'ar'"
         aria-label="Toggle language">
   <span class="lang-text">{{ currentLang === 'ar' ? 'EN' : 'ع' }}</span>
 </button>
+            </div>
+        </div>
+    </header>
 
-      </div>
-    </div>
-  </header>
-
-  <!-- Mobile drawer -->
-<!-- Mobile drawer -->
-<aside class="mobile-drawer" [class.open]="isMenuOpen" role="dialog" aria-modal="true">
-<!-- Drawer top bar -->
-<!-- KEEP -->
-<div class="mobile-drawer__top">
-  <div class="mobile-drawer__brand">
-    <img *ngIf="currentLang === 'ar'; else enDrawerLogo"
-         src="assets/logo-dark-t.png" alt="أناطالب" height="28" />
-    <ng-template #enDrawerLogo>
-      <img src="assets/logo-dark-t.png" alt="ANATALEB" height="28" />
-    </ng-template>
-  </div>
-  <button class="icon-btn mobile-drawer__close" type="button"
-          aria-label="Close menu" (click)="closeMobileMenu()">
-    <i class="bi bi-x-lg close-menu-btn"></i>
-  </button>
-</div>
-
-
-
-  <!-- Navigation links -->
-  <nav class="mobile-drawer__nav">
-    <a class="drawer-nav-item" href="/courses" (click)="closeMobileMenu()">
-      {{ 'drawer.browse_courses' | translate }}
-    </a>
-    <a class="drawer-nav-item" href="/businesses" (click)="closeMobileMenu()">
-      {{ 'drawer.for_businesses' | translate }}
-    </a>
-    <a class="drawer-nav-item" href="/universities" (click)="closeMobileMenu()">
-      {{ 'drawer.for_universities' | translate }}
-    </a>
-    <a class="drawer-nav-item" href="/governments" (click)="closeMobileMenu()">
-      {{ 'drawer.for_governments' | translate }}
-    </a>
-  </nav>
-
-  <!-- Bottom action buttons -->
-  <div class="mobile-drawer__actions">
-    <button class="drawer-btn drawer-btn--primary" (click)="onJoinFree()">
-      {{ 'drawer.join_free' | translate }}
-    </button>
-    <button class="drawer-btn drawer-btn--secondary" (click)="onLogin()">
-      {{ 'drawer.log_in' | translate }}
-    </button>
-  </div>
-</aside>
-  <div class="mobile-drawer__backdrop" [class.show]="isMenuOpen" (click)="closeMobileMenu()"></div>
-</div>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <div class="mobile-header-container">
+            <div class="mobile-left">
+                <button class="menu-button" aria-label="Open Navigation Menu">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M3.75 14.5a.728.728 0 01-.534-.214.72.72 0 01-.216-.532c0-.21.072-.39.216-.535A.72.72 0 013.75 13h12.5c.212 0 .39.072.534.214a.72.72 0 01.216.532c0 .21-.072.39-.216.535a.72.72 0 01-.534.219H3.75zm0-3.75a.728.728 0 01-.534-.214.72.72 0 01-.216-.532c0-.21.072-.39.216-.535a.72.72 0 01.534-.219h12.5c.212 0 .39.071.534.214a.72.72 0 01.216.532c0 .21-.072.39-.216.535a.72.72 0 01-.534.219H3.75zm0-3.75a.728.728 0 01-.534-.214A.72.72 0 013 6.254c0-.21.072-.39.216-.535A.72.72 0 013.75 5.5h12.5c.212 0 .39.071.534.214a.72.72 0 01.216.532c0 .21-.072.39-.216.535A.72.72 0 0116.25 7H3.75z"/>
+                    </svg>
+                </button>
+                <a href="/" class="mobile-logo" aria-label="Coursera">
+                    <svg viewBox="0 0 1155 164" xmlns="http://www.w3.org/2000/svg">
+                        <path class="coursera-logo-path" d="M159.75 81.54c0-44.49 36.63-80.47 82.43-80.47 46.12 0 82.76 36 82.76 80.47 0 44.16-36.64 80.8-82.76 80.8-45.8 0-82.43-36.68-82.43-80.8zm125.61 0c0-22.24-19.3-41.87-43.18-41.87-23.55 0-42.85 19.63-42.85 41.87 0 22.57 19.3 42.2 42.85 42.2 23.92 0 43.18-19.63 43.18-42.2zm705.63 1.31c0-48.74 39.58-81.78 75.57-81.78 24.53 0 38.6 7.52 48.08 21.92l3.77-19h36.79v155.4h-36.79l-4.75-16c-10.79 11.78-24.21 19-47.1 19-35.33-.05-75.57-31.13-75.57-79.54zm125.61-.33c-.09-23.527-19.47-42.835-43-42.835-23.59 0-43 19.411-43 43v.165c0 21.59 19.3 40.89 42.86 40.89 23.85 0 43.14-19.3 43.14-41.22zM945.78 22V4h-40.23v155.39h40.23V75.66c0-25.19 12.44-38.27 34-38.27 1.43 0 2.79.1 4.12.23L991.36.11c-20.97.11-36.17 7.3-45.58 21.89zm-404.27.01v-18l-40.23.09.34 155.37 40.23-.09-.22-83.72c-.06-25.18 12.35-38.29 33.93-38.34 1.376.004 2.752.081 4.12.23L587.1 0c-21 .17-36.22 7.39-45.59 22.01zM338.88 99.2V4.01h40.22V94.3c0 19.95 11.12 31.73 30.42 31.73 21.59 0 34-13.09 34-38.28V4.01h40.24v155.38h-40.21v-18c-9.48 14.72-24.86 21.92-46.12 21.92-35.98.01-58.55-26.16-58.55-64.11zm391.74-17.48c.09-43.51 31.23-80.74 80.62-80.65 45.8.09 78.11 36.78 78 80 .01 4.273-.33 8.54-1 12.76l-118.41-.22c4.54 18.65 19.89 32.09 43.12 32.14 14.06 0 29.12-5.18 38.3-16.94l27.44 22c-14.11 19.93-39 31.66-65.48 31.61-46.75-.16-82.67-35.23-82.59-80.7zm118.12-16.14c-2.26-15.7-18.59-27.84-37.89-27.87-18.65 0-33.71 11.06-39.63 27.73l77.52.14zm-261.4 59.94l35.76-18.72c5.91 12.81 17.73 20.36 34.48 20.36 15.43 0 21.34-4.92 21.34-11.82 0-25-84.71-9.85-84.71-67 0-31.52 27.58-48.26 61.72-48.26 25.94 0 48.92 11.49 61.4 32.83l-35.44 18.75c-5.25-10.51-15.1-16.42-27.58-16.42-12.14 0-18.06 4.27-18.06 11.49 0 24.3 84.71 8.87 84.71 67 0 30.21-24.62 48.59-64.35 48.59-33.82-.03-57.46-11.19-69.27-36.8zM0 81.54C0 36.73 36.63.74 82.43.74c27.947-.196 54.182 13.737 69.67 37l-34.34 19.92a42.972 42.972 0 00-35.33-18.32c-23.55 0-42.85 19.63-42.85 42.2 0 22.57 19.3 42.2 42.85 42.2a42.502 42.502 0 0036.31-20l34 20.28c-15.307 23.955-41.902 38.431-70.33 38.28C36.63 162.34 0 125.66 0 81.54z"/>
+                    </svg>
+                </a>
+            </div>
+            <button class="mobile-search-button" aria-label="Search">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 13c-1.389 0-2.57-.486-3.542-1.458C3.486 10.569 3 9.389 3 8c0-1.389.486-2.57 1.458-3.542C5.431 3.486 6.611 3 8 3c1.389 0 2.57.486 3.542 1.458C12.514 5.431 13 6.611 13 8.001a4.78 4.78 0 01-.26 1.587 5.204 5.204 0 01-.72 1.37l4.46 4.459c.152.152.228.326.228.52a.718.718 0 01-.229.521.73.73 0 01-1.062 0l-4.459-4.437a5.204 5.204 0 01-1.37.719A4.78 4.78 0 018 13zm0-1.5c.972 0 1.799-.34 2.48-1.02.68-.681 1.02-1.508 1.02-2.48s-.34-1.799-1.02-2.48C9.798 4.84 8.971 4.5 8 4.5s-1.799.34-2.48 1.02C4.84 6.202 4.5 7.029 4.5 8s.34 1.799 1.02 2.48c.681.68 1.508 1.02 2.48 1.02z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+    
