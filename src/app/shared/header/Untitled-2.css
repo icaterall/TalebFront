@@ -572,6 +572,7 @@ html[dir="ltr"] .superbar__links { flex-direction: row; }  /* explicit, for clar
 .mobile-drawer.open {
   transform: translateX(0);
   box-shadow: 0 10px 30px rgba(0,0,0,.22);
+      position: sticky;
 }
 
 /* Top row: logo + close (kept in same row) */

@@ -29,28 +29,27 @@ export class HeaderComponent {
   }
 
   // Toggle language via the service (persists to sessionStorage + flips dir/lang)
-  async setLang(next: Lang) {
-    if (this.isSwitchingLang) return; // Prevent multiple clicks
-    
-    this.isSwitchingLang = true;
-    
-    try {
-      // Call the async setLang method
-      await this.i18n.setLang(next);
-      
-      // Force change detection to update the UI
-      this.cdr.detectChanges();
-      
-      // Optional: Add a small delay for visual feedback
-      if (isPlatformBrowser(this.platformId)) {
-        // Force a layout recalculation to ensure RTL/LTR is applied
-        this.document.documentElement.offsetHeight;
-      }
-    } finally {
-      this.isSwitchingLang = false;
-      this.cdr.detectChanges();
+async setLang(next: Lang) {
+  if (this.isSwitchingLang) return;
+  this.isSwitchingLang = true;
+
+  try {
+    // ensure the drawer isn't left open when dir flips
+    this.closeMobileMenu();
+
+    await this.i18n.setLang(next);
+    this.cdr.detectChanges();
+
+    if (isPlatformBrowser(this.platformId)) {
+      // force reflow so [dir] swap fully applies
+      void this.document.documentElement.offsetHeight;
     }
+  } finally {
+    this.isSwitchingLang = false;
+    this.cdr.markForCheck();
   }
+}
+
 
 toggleMobileMenu() {
   this.isMenuOpen = !this.isMenuOpen;
@@ -81,10 +80,20 @@ closeMobileMenu() {
     this.closeMobileMenu(); 
   }
 
-  @HostListener('window:resize')
-  onResize() {
-    if (isPlatformBrowser(this.platformId) && window.innerWidth > 1060) {
-      this.closeMobileMenu();
-    }
+@HostListener('window:resize')
+onResize() {
+  if (isPlatformBrowser(this.platformId) && window.innerWidth > 1060) {
+    this.closeMobileMenu();
   }
+}
+get isRtl(): boolean {
+  return this.document?.documentElement?.dir === 'rtl';
+}
+
+get drawerTransform(): string {
+  // closed position depends on writing-direction
+  return this.isMenuOpen ? 'translateX(0)'
+                         : (this.isRtl ? 'translateX(100%)' : 'translateX(-100%)');
+}
+
 }

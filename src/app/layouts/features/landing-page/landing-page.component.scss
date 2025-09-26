@@ -239,7 +239,7 @@ html[dir="rtl"] .lp .bk-hero img { transform:none; }
 
   .lp .bk-hero img{
     position: absolute;
-    top: 4%;                 /* your preferred vertical anchor */
+    top: 0%;                 /* your preferred vertical anchor */
     right: 0vw;            /* sit off the right edge a bit */
     left: auto;              /* make sure left doesn't interfere */
     transform: rotate(180deg) !important;

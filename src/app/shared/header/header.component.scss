@@ -239,8 +239,7 @@ color: #0056d2;
             border-color: #004399;
         }
 
-
-        .lang-button {
+  .lang-button {
     padding: 5px 10px;
     border-radius: 4px;
     font-size: 14px;
@@ -348,50 +347,13 @@ color: #0056d2;
    OFF-CANVAS DRAWER (RTL/LTR aware)
    ========================================= */
 
-.mobile-drawer{
-  position:sticky; inset-block:0; inset-inline-start:0;
-  inline-size:var(--drawer-w); block-size:100dvh; max-block-size:100svh;
-  background:#fff; z-index:1050;
-  transform:translateX(-100%);
-  transition: transform .28s var(--drawer-ease), box-shadow .28s var(--drawer-ease);
-  display:flex; flex-direction:column; overflow:auto;
-  box-shadow:0 0 0 rgba(0,0,0,0);
-}
-[dir="rtl"] .mobile-drawer{
-  inset-inline-start:auto; inset-inline-end:0; transform:translateX(100%);
-}
+
+
 .mobile-drawer.open{
   transform:translateX(0); box-shadow:0 10px 30px rgba(0,0,0,.22);
 }
 
-/* Drawer top row */
-.mobile-drawer__top{
-  position:sticky; inset-block-start:0; z-index:1;
-  display:flex; align-items:center; justify-content:space-between; gap:.5rem;
-  padding:12px 16px; background:#fff; border-block-end:1px solid #eee;
-}
-.mobile-drawer__brand img{ display:block; height:45px; }
-.icon-btn.mobile-drawer__close{
-  inline-size:40px; block-size:40px; display:grid; place-items:center;
-  border:0; background:transparent; cursor:pointer;
-}
 
-/* Drawer list */
-.mobile-drawer__nav{ padding:.25rem 0; overflow:auto; }
-.drawer-nav-item{
-  display:block; padding:.875rem 1rem; font-size:1.125rem; font-weight:600;
-  color:#111; text-decoration:none; border-block-end:1px solid #f2f2f2;
-}
-.drawer-nav-item:hover{ background:#fafafa; }
-.drawer-nav-item:active{ background:#f3f6ff; }
-
-/* Drawer bottom actions */
-.mobile-drawer__actions{
-  position:sticky; inset-block-end:0; 
-  font-size: large;
-  background:#fff; border-block-start:1px solid #eee;
-  padding:1.25rem 1.75rem calc(env(safe-area-inset-bottom,0px) + 1.75rem);
-}
 .drawer-btn{
   display:block; inline-size:100%; padding:.875rem 1.5rem;
   border-radius:.5rem; font-weight:700; border:1px solid transparent;
@@ -400,12 +362,7 @@ color: #0056d2;
 .drawer-btn--primary{ background:#0d6efd; color:#fff; }
 .drawer-btn--secondary{ background:#fff; color:#0d6efd; border-color:#0d6efd; }
 
-/* Backdrop */
-.mobile-drawer__backdrop{
-  position:fixed; inset:0; z-index:1040; background:rgba(0,0,0,.35);
-  opacity:0; pointer-events:none; transition:opacity .25s var(--drawer-ease);
-}
-.mobile-drawer__backdrop.show{ opacity:1; pointer-events:auto; }
+
 
 /* Page lock while open */
 .no-scroll{ overflow:hidden !important; }
@@ -415,3 +372,99 @@ color: #0056d2;
   .mobile-header, .mobile-drawer, .mobile-drawer__backdrop{ display:none !important; }
 }
 
+
+/* keep drawer/backdrop above header */
+.mobile-header{ z-index:1000; }
+
+
+
+/* when menu is open, hide the hamburger and ignore header clicks */
+.mobile-header.menu-open .mobile-menu-hamburger { visibility: hidden; }
+.mobile-header.menu-open { pointer-events: none; }
+.mobile-header.menu-open ~ .mobile-drawer,
+.mobile-header.menu-open ~ .mobile-drawer__backdrop { pointer-events: auto; }
+
+/* Full-screen sheet that slides from the start side (Angular sets transform) */
+.mobile-drawer{
+  position: fixed;
+  inset: 0;                       /* cover the whole viewport */
+  inline-size: 100vw;
+  block-size: 100dvh;             /* handles mobile browser chrome nicely */
+  background: #fff;
+  z-index: 1050;
+
+  /* Angular controls transform; we only animate it */
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s cubic-bezier(.2,.8,.2,1);
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+
+  /* optional soft shadow while open */
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+}
+
+/* You no longer need any [dir="rtl"] transform override or .mobile-drawer.open transform rule. */
+
+.mobile-drawer__brand img{ display:block; height:45px; }
+.icon-btn.mobile-drawer__close{
+  inline-size:40px; block-size:40px; display:grid; place-items:center;
+  border:0; background:transparent; cursor:pointer;
+}
+/* Top row sticks while scrolling */
+.mobile-drawer__top{
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: 12px 16px;
+  background: #fff;
+  border-block-end: 1px solid #eee;
+}
+
+/* List + buttons */
+.mobile-drawer__nav{
+  padding: .25rem 0 1rem;
+  overflow: auto;
+}
+.drawer-nav-item{
+  display: block;
+  padding: .875rem 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111;
+  text-decoration: none;
+  border-block-end: 1px solid #f2f2f2;
+}
+.drawer-nav-item:hover{ background:#fafafa; }
+.drawer-nav-item:active{ background:#f3f6ff; }
+
+.mobile-drawer__actions{
+  position: sticky;
+  inset-block-end: 0;
+  background:#fff;
+  border-block-start:1px solid #eee;
+  padding: 1.25rem 1.75rem calc(env(safe-area-inset-bottom,0px) + 1.25rem);
+}
+
+/* Backdrop still useful for click-to-close (sits under the sheet) */
+.mobile-drawer__backdrop{
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  background: rgba(0,0,0,.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s cubic-bezier(.2,.8,.2,1);
+}
+.mobile-drawer__backdrop.show{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Hide mobile UI on desktop */
+@media (min-width:1061px){
+  .mobile-header, .mobile-drawer, .mobile-drawer__backdrop{ display:none !important; }
+}
