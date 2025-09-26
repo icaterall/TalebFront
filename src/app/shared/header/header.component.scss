@@ -390,12 +390,6 @@ width: 44px;
 .drawer-btn + .drawer-btn{ margin-block-start:.5rem; }
 .drawer-btn--primary{ background:#0d6efd; color:#fff; }
 .drawer-btn--secondary{ background:#fff; color:#0d6efd; border-color:#0d6efd; }
-
-
-
-/* Page lock while open */
-.no-scroll{ overflow:hidden !important; }
-
 /* Hide drawer/backdrop on desktop */
 @media (min-width:1061px){
   .mobile-header, .mobile-drawer, .mobile-drawer__backdrop{ display:none !important; }
@@ -413,24 +407,6 @@ width: 44px;
 .mobile-header.menu-open ~ .mobile-drawer,
 .mobile-header.menu-open ~ .mobile-drawer__backdrop { pointer-events: auto; }
 
-/* Full-screen sheet that slides from the start side (Angular sets transform) */
-.mobile-drawer{
-  position: fixed;
-  inset: 0;                       /* cover the whole viewport */
-  inline-size: 100vw;
-  block-size: 100dvh;             /* handles mobile browser chrome nicely */
-  background: #fff;
-  z-index: 1050;
-
-  /* Angular controls transform; we only animate it */
-  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s cubic-bezier(.2,.8,.2,1);
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-
-  /* optional soft shadow while open */
-  box-shadow: 0 10px 30px rgba(0,0,0,.22);
-}
 
 /* You no longer need any [dir="rtl"] transform override or .mobile-drawer.open transform rule. */
 
@@ -439,38 +415,77 @@ width: 44px;
   inline-size:40px; block-size:40px; display:grid; place-items:center;
   border:0; background:transparent; cursor:pointer;
 }
+
+
+
+.drawer-nav-item{
+    display: block;
+    padding: 0.875rem 1rem;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: #111;
+    text-decoration: none;
+    border-block-end: 1px solid #f2f2f2;
+}
+.drawer-nav-item:hover{ background:#fafafa; }
+.drawer-nav-item:active{ background:#f3f6ff; }
+
+/* Hide mobile UI on desktop */
+@media (min-width:1061px){
+  .mobile-header, .mobile-drawer, .mobile-drawer__backdrop{ display:none !important; }
+}
+
+/* Lock page when menu is open (you already toggle this class in TS) */
+.no-scroll {
+  overflow: hidden !important;
+  height: 100dvh;        /* iOS/Android safe */
+}
+
+/* Full-screen mobile drawer that scrolls internally */
+.mobile-drawer{
+  position: fixed;
+  inset: 0;
+  inline-size: 100vw;
+  block-size: 100dvh;
+  background: #fff;
+  z-index: 1050;
+
+  display: flex;
+  flex-direction: column;
+
+  /* Slide animation only — transform set from Angular */
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s cubic-bezier(.2,.8,.2,1);
+
+  /* Scroll only inside the drawer; prevent rubber-banding bleed */
+  overflow: hidden;                 /* contain scroll to children */
+  overscroll-behavior: contain;
+}
+
+/* Make the list area the scrolling region */
+.mobile-drawer__nav{
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: .25rem 0 1rem;
+  -webkit-overflow-scrolling: touch;
+}
 /* Top row sticks while scrolling */
 .mobile-drawer__top{
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: .5rem;
   padding: 12px 16px;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
   background: #fff;
   border-block-end: 1px solid #eee;
 }
 
-/* List + buttons */
-.mobile-drawer__nav{
-  padding: .25rem 0 1rem;
-  overflow: auto;
-}
-.drawer-nav-item{
-  display: block;
-  padding: .875rem 1rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111;
-  text-decoration: none;
-  border-block-end: 1px solid #f2f2f2;
-}
-.drawer-nav-item:hover{ background:#fafafa; }
-.drawer-nav-item:active{ background:#f3f6ff; }
-
+/* Bottom actions: always at the very bottom, even if content is short,
+   and remain visible while scrolling */
 .mobile-drawer__actions{
+  margin-block-start: auto;     /* push to bottom if content is short */
   position: sticky;
   inset-block-end: 0;
   background:#fff;
@@ -478,7 +493,7 @@ width: 44px;
   padding: 1.25rem 1.75rem calc(env(safe-area-inset-bottom,0px) + 1.25rem);
 }
 
-/* Backdrop still useful for click-to-close (sits under the sheet) */
+/* Backdrop covers the page and blocks interactions (kept) */
 .mobile-drawer__backdrop{
   position: fixed;
   inset: 0;
@@ -491,9 +506,4 @@ width: 44px;
 .mobile-drawer__backdrop.show{
   opacity: 1;
   pointer-events: auto;
-}
-
-/* Hide mobile UI on desktop */
-@media (min-width:1061px){
-  .mobile-header, .mobile-drawer, .mobile-drawer__backdrop{ display:none !important; }
 }

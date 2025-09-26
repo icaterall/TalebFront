@@ -32,11 +32,7 @@
                             type="text" 
                             class="search-input" 
                             placeholder="{{ 'hero.search_placeholder' | translate }}"
-                            aria-label="{{ 'hero.search_aria_label' | translate }}"
-                        >
-                     
-
-
+                            aria-label="{{ 'hero.search_aria_label' | translate }}">
                     </div>
                 </form>
             </div>
@@ -57,7 +53,9 @@
     <div class="cds-9 css-0 cds-10 cds-11 cds-grid-item cds-18 cds-52 cds-64">
 
       <nav>
-        <button class="cds-149 mobile-menu-hamburger cds-iconButton-medium cds-iconButton-ghost cds-iconButton-medium cds-iconButton-ghost css-1iu90zl"
+        <button class="cds-149 
+        mobile-menu-hamburger 
+        cds-iconButton-medium cds-iconButton-ghost cds-iconButton-medium cds-iconButton-ghost css-1iu90zl"
           [attr.aria-expanded]="isMenuOpen"
   (click)="toggleMobileMenu()" type="button" aria-label="Open Navigation Menu" data-e2e="mobile-nav-icon">
     <svg aria-hidden="true" fill="none" focusable="false" height="24" viewBox="0 0 20 20" width="24" id="cds-react-aria4587452234-:r2:" class="css-1u8qly9">
@@ -119,8 +117,8 @@
 
   <!-- Bottom actions -->
   <div class="mobile-drawer__actions">
-    <button class="drawer-btn drawer-btn--primary"   (click)="onJoinFree()">{{ 'drawer.join_free' | translate }}</button>
-    <button class="drawer-btn drawer-btn--secondary" (click)="onLogin()">{{ 'drawer.log_in' | translate }}</button>
+    <button class="btn btn-primary"   (click)="onJoinFree()">{{ 'drawer.join_free' | translate }}</button>
+    <button class="btn btn-outline-primary" (click)="onLogin()">{{ 'drawer.log_in' | translate }}</button>
   </div>
 </aside>
 

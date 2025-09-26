@@ -23,13 +23,13 @@
           {{ 'hero.subtitle' | translate }}
         </p>
         <nav class="lp-cta">
-          <a class="lp-btn lp-btn--primary" routerLink="/learners">{{
+          <a class="btn btn-primary" routerLink="/learners">{{
             'cta.learners' | translate
           }}</a>
-          <a class="lp-btn lp-btn--primary" routerLink="/teachers">{{
+          <a class="btn btn--primary" routerLink="/teachers">{{
             'cta.teachers' | translate
           }}</a>
-          <a class="lp-btn lp-btn--primary" routerLink="/parents">{{
+          <a class="btn btn--primary" routerLink="/parents">{{
             'cta.parents' | translate
           }}</a>
         </nav>
@@ -48,7 +48,7 @@
         {{ 'teachers.description' | translate }}
       </p>
       <div class="lp-teachers__cta">
-        <a href="/signup?isteacher=1" class="lp-btn lp-btn--primary">
+        <a href="/signup?isteacher=1" class="btn btn--primary">
           <span>{{ 'teachers.button' | translate }}</span>
         </a>
       </div>
@@ -87,7 +87,7 @@
           <strong>{{ 'outcomes.percentage' | translate }}</strong>
           {{ 'outcomes.description' | translate }}
         </p>
-        <button class="lp-btn lp-btn--primary" (click)="onJoinFree()">
+        <button class="btn btn--primary" (click)="onJoinFree()">
           {{ 'outcomes.join_button' | translate }}
         </button>
       </div>

@@ -154,7 +154,7 @@ h6, .h6 { font-size: var(--fs-lg); }
 
 p { margin: 0 0 1rem; }
 a { color: var(--primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
+
 
 img, svg { max-width: 100%; height: auto; }
 img { vertical-align: middle; border: 0; }
@@ -448,20 +448,30 @@ button, input, optgroup, select, textarea {
 // --------------------------------------------
 // 6) Components (Buttons, Cards, Tables, etc.)
 // --------------------------------------------
-.btn{
-  display:inline-block;
-  font-weight:500;
-  line-height:1.5;
-  color:var(--gray-900);
-  text-align:center; text-decoration:none; vertical-align:middle;
-  cursor:pointer; user-select:none;
-  background-color:transparent; border:1px solid transparent;
-  padding: var(--control-pad-y) var(--control-pad-x);
-  font-size: 20px;
-  border-radius: var(--radius);
-  transition: color .15s, background-color .15s, border-color .15s, box-shadow .15s;
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 18px;
+    padding: .5rem 1rem;
+    border-radius: 5px;
+    background: #2563EB;
+    color: #fff;
+    font-weight: 500;
+    border: 2px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
 }
-.btn:hover{text-decoration:none}
+.btn-outline-primary{
+  background-color:transparent; border-color:var(--primary); color:var(--primary);
+}
+.btn:hover { border-color:#fff; 
+  transform:translateY(-1px); 
+  box-shadow:0 6px 18px rgba(26,115,232,.25); }
+.btn:focus-visible { outline:none; border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.7); }
+.btn:active { transform:translateY(1px); }
 .btn:disabled, .btn[disabled]{opacity:.6; cursor:not-allowed}
 
 .btn-primary{
@@ -475,9 +485,7 @@ button, input, optgroup, select, textarea {
   background-color:var(--secondary); border-color:var(--secondary);
 }
 
-.btn-outline-primary{
-  color:var(--primary); border-color:var(--primary);
-}
+
 .btn-outline-primary:hover{ color:var(--white); background-color:var(--primary); }
 
 .btn-outline-secondary{
@@ -497,7 +505,13 @@ button, input, optgroup, select, textarea {
 .btn-sm{ padding: .25rem .5rem; font-size: var(--fs-sm); }
 .btn-lg{ padding: .5rem 1rem; font-size: var(--fs-lg); }
 .btn-icon{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem }
-
+@media (max-width: 1060px){
+  .btn {
+        font-size: 1.2rem;
+        padding: 0.5rem 1rem;
+        margin-top: 10px;
+  }
+}
 /* Cards */
 .card{
   position:relative; display:flex; flex-direction:column; min-width:0; word-wrap:break-word;
