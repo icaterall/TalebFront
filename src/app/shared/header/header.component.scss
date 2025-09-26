@@ -441,26 +441,6 @@ width: 44px;
   height: 100dvh;        /* iOS/Android safe */
 }
 
-/* Full-screen mobile drawer that scrolls internally */
-.mobile-drawer{
-  position: fixed;
-  inset: 0;
-  inline-size: 100vw;
-  block-size: 100dvh;
-  background: #fff;
-  z-index: 1050;
-
-  display: flex;
-  flex-direction: column;
-
-  /* Slide animation only — transform set from Angular */
-  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s cubic-bezier(.2,.8,.2,1);
-
-  /* Scroll only inside the drawer; prevent rubber-banding bleed */
-  overflow: hidden;                 /* contain scroll to children */
-  overscroll-behavior: contain;
-}
-
 /* Make the list area the scrolling region */
 .mobile-drawer__nav{
   flex: 1 1 auto;
@@ -506,4 +486,22 @@ width: 44px;
 .mobile-drawer__backdrop.show{
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Make the sheet cover the viewport in all engines (vh → dvh → svh fallback) */
+.mobile-drawer{
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;     /* fallback */
+  height: 100dvh;    /* modern */
+  height: 100svh;    /* iOS Safari dynamic-chrome */
+  background:#fff;
+  z-index:1050;
+
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;               /* children decide scrolling */
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s cubic-bezier(.2,.8,.2,1);
+  overscroll-behavior: contain;  /* no scroll chaining to page */
 }
