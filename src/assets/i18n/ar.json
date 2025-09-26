@@ -81,7 +81,7 @@
   "footer": {
     "aboutPlatform": "عن المنصّة",
     "serviceConditions": "شروط الخدمة",
-    "howToLearn": "كيفية التعلّم",
+    "how-to-learn": "كيفية التعلّم",
     "support": "الدعم",
     "dataProcessAgreement": "اتفاقية معالجة البيانات",
     "contactUs": "اتصل بنا",
@@ -113,6 +113,11 @@
   "description": "نحن نمكّن المعلمين من دعم فصولهم الدراسية بالكامل. 90% من المعلمين الذين استخدموا أناطالب وجدونا فعالين.",
   "button": "المعلمون، ابدأوا من هنا"
 },
+"error": {
+  "fill-all-fields": "يرجى ملء جميع الحقول",
+  "form-incomplete": "النموذج غير مكتمل"
+},
+
   "contactForm": {
   "contactUs": "اتصل بنا",
   "name": "الاسم",

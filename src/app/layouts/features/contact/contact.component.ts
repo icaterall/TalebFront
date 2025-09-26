@@ -26,10 +26,12 @@ export class ContactComponent implements OnInit {
   ngOnInit(): void {}
 
   onSubmit(form: NgForm): void {
+    const isRtl = document.documentElement.dir === 'rtl';
     if (!form.valid) {
       this.toastr.error(
-        this.translate.instant('general.fillAllFields'),
-        this.translate.instant('general.formIncomplete')
+        this.translate.instant('error.fill-all-fields'),
+        this.translate.instant('error.form-incomplete'),
+        { positionClass: isRtl ? 'toast-top-left' : 'toast-top-right' }
       );
       return;
     }

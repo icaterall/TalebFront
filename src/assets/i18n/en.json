@@ -81,7 +81,7 @@
   "footer": {
     "aboutPlatform": "About the Platform",
     "serviceConditions": "Service Conditions",
-    "howToLearn": "How to Learn",
+    "how-to-learn": "How to Learn",
     "support": "Support",
     "dataProcessAgreement": "Data Processing Agreement",
     "contactUs": "Contact Us",
@@ -113,6 +113,13 @@
   "description": "We empower teachers to support their entire classroom. 90% of teachers who have used ANATALEB have found us effective.",
   "button": "Teachers, start here"
 },
+
+
+"error": {
+  "fill-all-fields": "Please fill all fields",
+  "form-incomplete": "Form Incomplete"
+},
+
 "contactForm": {
   "contactUs": "Contact Us",
   "name": "Name",
