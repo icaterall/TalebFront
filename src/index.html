@@ -32,9 +32,10 @@
   </head>
   <body>
     <!-- Tiny branded preloader -->
-    <div id="preloader">
-      <span>Please wait…</span>
-    </div>
+<div id="preloader" role="status" aria-live="polite" aria-label="Loading">
+  <span class="spinner" aria-hidden="true"></span>
+  <span class="sr-only"></span>
+</div>
 
     <app-root></app-root>
 
@@ -52,3 +53,44 @@
     </script>
   </body>
 </html>
+
+<style>
+  /* Keep background stable and app hidden until we’re truly ready */
+  html.preinit, html.preinit body { background:#fff; }
+  html.preinit app-root { visibility:hidden }
+
+  /* Preloader container */
+  #preloader{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background:#fff; z-index:9999;
+  }
+  #preloader.hide{ display:none }
+
+  /* Spinner */
+  .spinner{
+    inline-size:48px; block-size:48px;         /* 48x48 circle */
+    border-radius:50%;
+    border:3px solid #e9eef7;                  /* track */
+    border-top-color:#2563EB;                  /* brand blue */
+    animation:spin .8s linear infinite;
+  }
+
+  /* Accessible hidden text for screen readers */
+  .sr-only{
+    position:absolute !important;
+    width:1px !important; height:1px !important;
+    padding:0 !important; margin:-1px !important;
+    overflow:hidden !important; clip:rect(0,0,0,0) !important;
+    white-space:nowrap !important; border:0 !important;
+  }
+
+  @keyframes spin{
+    to { transform: rotate(360deg); }
+  }
+
+  /* Respect users who prefer reduced motion */
+  @media (prefers-reduced-motion:reduce){
+    .spinner{ animation: none; border-top-color:#2563EB }
+  }
+</style>
