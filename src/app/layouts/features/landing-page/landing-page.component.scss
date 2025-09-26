@@ -55,30 +55,20 @@
   transform: rotate(-5deg);
   box-shadow: 0 16px 36px rgba(0,0,0,.12);
 }
-/* Fix header → hero gap only in RTL */
-:host-context(html[dir="rtl"]) {
-  @media (max-width: 992px) {
-  .lp-container{
-    margin-top: -150px;
-  }
-  .lp-hero {
-    margin-block-start: 0 !important;
-    padding-block-start: 5rem;   /* same feel as LTR; tweak if needed */
-  }
-.lp-deco--star,
-.lp-deco--diamond,
-.lp-deco--scribble {
-    top: 70px;
+/* same space under the sticky header for both LTR & RTL */
+section.lp-hero > .lp-container {
+  margin-block-start: clamp(8px, 1.6vw, 16px);
 }
-  /* If media/copy had a top margin in mobile stack, reset it */
-  .lp-hero__media,
-  .lp-hero__copy {
-    margin-block-start: 0 !important;
-  }
+
+@media (max-width:1060.98px){
+  section.lp-hero > .lp-container {
+    /* clear the sticky mobile header cleanly */
+    margin-block-start: calc(-5px + -5px);
   }
 }
 
-
+/* keep anchor jumps sane */
+section.lp-hero { scroll-margin-top: var(--header-height); }
 
 
 @media (max-width: 992px) {
