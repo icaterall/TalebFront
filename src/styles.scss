@@ -190,7 +190,7 @@ button, input, optgroup, select, textarea {
 .fs-fluid-5xl { font-size: var(--fs-5xl) !important; }
 .fs-fluid-6xl { font-size: var(--fs-6xl) !important; }
 
-.lead { font-size: var(--fs-lg); color: var(--gray-700); }
+
 .tiny { font-size: var(--fs-2xs); color: var(--gray-500); }
 
 // --------------------------------------------
@@ -450,14 +450,14 @@ button, input, optgroup, select, textarea {
 // --------------------------------------------
 .btn{
   display:inline-block;
-  font-weight:600;
+  font-weight:500;
   line-height:1.5;
   color:var(--gray-900);
   text-align:center; text-decoration:none; vertical-align:middle;
   cursor:pointer; user-select:none;
   background-color:transparent; border:1px solid transparent;
   padding: var(--control-pad-y) var(--control-pad-x);
-  font-size: var(--fs-base);
+  font-size: 20px;
   border-radius: var(--radius);
   transition: color .15s, background-color .15s, border-color .15s, box-shadow .15s;
 }
@@ -657,3 +657,53 @@ main.min-vh-20{ padding-top: var(--header-20-stack); }
 .toast-info{ background: color-mix(in srgb, var(--info), white 85%) }
 .toast-warning{ background: color-mix(in srgb, var(--warning), white 85%) }
 /* ===== Contact form mobile legibility fixes ===== */
+
+/* ===============================
+   Universal section typography
+   =============================== */
+
+/* Section spacing (use anywhere) */
+.section { padding-block: clamp(20px, 5vw, 20px); }
+.section--tight { padding-block: clamp(16px, 3vw, 40px); }
+.section--loose { padding-block: clamp(40px, 7vw, 88px); }
+
+/* Optional eyebrow/label above titles */
+.eyebrow {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gray-600);
+  font-size: var(--fs-2xs);
+  margin-block-end: .75rem;
+}
+
+/* Titles (H1/H2/H3) */
+.title {
+  margin: 0 0 .75rem 0;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--gray-900);
+  font-size: clamp(1.6rem, 1.5vw, 2.25rem); /* default ~25→36px */
+}
+.title--hero { font-size: clamp(2rem, 3.2vw, 3rem); }      /* ~32→48px */
+.title--lg   { font-size: clamp(1.8rem, 2.6vw, 2.5rem); }  /* ~29→40px */
+.title--sm   { font-size: clamp(1.35rem, 1.6vw, 1.75rem);} /* ~22→28px */
+
+/* Descriptive paragraph under titles (shared) */
+.lead {
+  max-width: 62ch;
+  margin: 0 0 1rem 0;
+  color: var(--gray-700);
+  font-weight: 500;
+  font-size: 1.3rem;
+
+  line-height: 1.5;
+}
+
+/* Alignment helpers */
+.center { text-align: center; }
+@media (min-width: 992px){ .start-lg { text-align: start; } }
+
+/* RTL nicety: a touch more leading for Arabic headlines */
+html[dir="rtl"] .title { line-height: 1.35; }

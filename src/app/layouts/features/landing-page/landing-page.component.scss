@@ -120,7 +120,7 @@ section.lp-hero { scroll-margin-top: var(--header-height); }
 @media (max-width: 1060px){
   .lp-hero__lead { text-align:center; display:inline-block; font-size: 25px; }
   .lp-hero {
-    scroll-margin-top: 75px;       
+            padding-top: 0px;      
   }
   .lp-hero__title{
         font-size: 24px;

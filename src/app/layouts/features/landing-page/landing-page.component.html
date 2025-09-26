@@ -1,5 +1,5 @@
 <main class="lp">
-  <section class="lp-hero" id="hero">
+  <section class="lp-hero section" id="hero">
     <div class="lp-container lp-grid lp-grid--2">
       <div class="bk-hero">
         <img class="hero-img" src="assets/bk-hero.png" />
@@ -13,13 +13,13 @@
         <span class="lp-deco lp-deco--diamond" aria-hidden="true"></span>
       </div>
 
-      <div class="lp-hero__copy">
-        <h1 class="lp-hero__title">
+    <div class="lp-hero__copy center start-lg">
+      <h2>
           {{ 'hero.headline_l1' | translate }}<br />
           {{ 'hero.headline_l2' | translate }}<br />
           {{ 'hero.headline_l3' | translate }}
-        </h1>
-        <p class="lp-hero__lead">
+        </h2>
+       <p class="lead">
           {{ 'hero.subtitle' | translate }}
         </p>
         <nav class="lp-cta">
@@ -39,15 +39,12 @@
 
   <!-- Learner Outcomes Section -->
 <!-- Teachers Section -->
-<section class="lp-teachers">
+<section class="lp-teachers section">
   <div class="lp-teachers__container">
-
-    <div class="lp-teachers__content">
-      <span class="lp-hero__lead">{{ 'teachers.label' | translate }}</span>
-      <h2 class="lp-teachers__title">
-        {{ 'teachers.title' | translate }}
-      </h2>
-      <p class="lp-hero__lead">
+    <div class="lp-teachers__content center start-lg">
+      <span class="title">{{ 'teachers.label' | translate }}</span>
+      <h2> {{ 'teachers.title' | translate }}</h2>
+      <p class="lead">
         {{ 'teachers.description' | translate }}
       </p>
       <div class="lp-teachers__cta">
@@ -72,7 +69,7 @@
   </div>
 </section>
 <!-- Learner Outcomes Section -->
-<section class="lp-outcomes">
+<section class="lp-outcomes section">
   <div class="lp-outcomes__wrapper">
     <div class="lp-outcomes__container">
       <div class="lp-outcomes__image-col">
@@ -84,15 +81,11 @@
           />
         </div>
       </div>
-      
-      <div class="lp-outcomes__content-col">
-        <h2 class="lp-hero__title">
-          {{ 'outcomes.title' | translate }}
-        </h2>
-        <p class="lp-hero__lead padding-bottom">
+      <div class="lp-outcomes__content-col center start-lg">
+        <h2 class="title title--lg">{{ 'outcomes.title' | translate }}</h2>
+        <p class="lead padding-bottom">
           <strong>{{ 'outcomes.percentage' | translate }}</strong>
           {{ 'outcomes.description' | translate }}
-        
         </p>
         <button class="lp-btn lp-btn--primary" (click)="onJoinFree()">
           {{ 'outcomes.join_button' | translate }}
@@ -107,7 +100,7 @@
   <div class="layout-wrapper landing section intro-section pb-0">
     <div class="teacher-page-container">
       <!-- Hero Section -->
-      <section class="hero-section py-5">
+      <section class="hero-section py-1">
         <!-- Contact Form Section -->
         <app-contact></app-contact>
       </section>
