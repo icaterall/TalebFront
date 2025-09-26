@@ -17,7 +17,7 @@
         .top-nav ul {
             display: flex;
             list-style: none;
-            gap: 32px;
+            gap: 20px;
         }
 
 
@@ -26,10 +26,9 @@
     display: inline;
     font: inherit;
     letter-spacing: inherit;
-    margin: 0px 8px;
+    margin: -10px 8px;
     padding: 0px 8px;
     line-height: 15px;
-    height: 40px;
     font-size: 16px;
     -webkit-text-decoration: none!important;
     text-decoration: none !important;
@@ -47,13 +46,66 @@
         }
 
         .top-nav a:hover {
-            opacity: 0.8;
+            opacity: 1;
         }
 
         .top-nav .for-text {
             color: #999;
             font-size: 12px;
         }
+
+
+
+.top-nav a.super-link{
+--pad-x: 20px;
+    display: inline-flex;
+    align-items: center;
+    height: 50px;
+    margin-top: -10px;
+    padding: 0 var(--pad-x);
+    border-radius: 0px;
+}
+.top-nav a.super-link:focus-visible{
+  box-shadow: 0 0 0 2px #fff;
+  border-radius: 6px;
+}
+
+/* Hover: turn the chip/pill white */
+.top-nav a.super-link:hover{
+  background: #ffffff!important;
+  color: #0f1114;
+}
+
+/* Active: bold + white underline bar (tab) */
+.top-nav a.super-link.active{
+  font-weight: 700;
+  border-bottom: 10px solid #ffffff;
+}
+
+/* The underline indicator */
+.top-nav a.super-link::after{
+  content: "";
+  position: absolute;
+  left: var(--pad-x);
+  right: var(--pad-x);
+  bottom: -6px;              /* sits just below the bar */
+  height: 4px;
+  border-radius: 2px;
+  background: transparent;   /* hidden by default */
+  transition: background-color .18s ease;
+}
+
+/* Show the bar only on the active item */
+.top-nav a.super-link.active::after{
+  background: #fff;
+}
+
+/* Optional: keep text white when active but not hovered */
+.top-nav a.super-link.active:not(:hover){
+  color: #fff;
+}
+
+
 
         /* Main Header */
         .main-header {
@@ -435,11 +487,6 @@ width: 44px;
   .mobile-header, .mobile-drawer, .mobile-drawer__backdrop{ display:none !important; }
 }
 
-/* Lock page when menu is open (you already toggle this class in TS) */
-.no-scroll {
-  overflow: hidden !important;
-  height: 100dvh;        /* iOS/Android safe */
-}
 
 /* Make the list area the scrolling region */
 .mobile-drawer__nav{
@@ -505,3 +552,13 @@ width: 44px;
   transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s cubic-bezier(.2,.8,.2,1);
   overscroll-behavior: contain;  /* no scroll chaining to page */
 }
+/* Real body freeze (prevents rubber-banding) */
+.no-scroll{
+  position: fixed;
+  overflow: hidden !important;
+  width: 100%;
+  /* keep height implicit; top is set inline in TS */
+}
+
+/* Optional: extra safety while locked */
+html.no-scroll, body.no-scroll { overscroll-behavior: none; }

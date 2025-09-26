@@ -95,5 +95,4 @@ get drawerTransform(): string {
   return this.isMenuOpen ? 'translateX(0)'
                          : (this.isRtl ? 'translateX(100%)' : 'translateX(-100%)');
 }
-
 }
