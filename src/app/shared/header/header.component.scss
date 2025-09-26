@@ -309,10 +309,16 @@ color: #0056d2;
 
   /* Search button (keep your SVGs) */
   .css-bkju5j{
-    width:36px; height:36px; padding:0;
-    display:flex; align-items:center; justify-content:center;
-    border:1px solid #e5e7eb; border-radius:8px;
-    background:#f8f9fb; color:#0056d2;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #fcfdff;
+        border-radius: 8px;
+        background: #f8f9fb00;
+        color: #5c6879;
   }
 
   /* Language pill */
@@ -326,7 +332,7 @@ color: #0056d2;
 
   /* Logo next to hamburger */
   .mobile-logo img,
-  .c-mobile-logo .brand-img{ height:24px; display:block; }
+  .c-mobile-logo .brand-img{ height:40px; display:block; }
 }
 
 /* Hover feedback (optional) */
@@ -381,7 +387,9 @@ color: #0056d2;
 
 /* Drawer bottom actions */
 .mobile-drawer__actions{
-  position:sticky; inset-block-end:0; background:#fff; border-block-start:1px solid #eee;
+  position:sticky; inset-block-end:0; 
+  font-size: large;
+  background:#fff; border-block-start:1px solid #eee;
   padding:1.25rem 1.75rem calc(env(safe-area-inset-bottom,0px) + 1.75rem);
 }
 .drawer-btn{
