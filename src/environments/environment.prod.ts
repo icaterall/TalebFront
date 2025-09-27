@@ -6,6 +6,7 @@ export const environment = {
   apiSocketUrl:"https://backtest.anataleb.com/",
   apiDirectUrl:"https://backtest.anataleb.com/",
   apiUploadUrl:"https://anataleb.s3.us-east-2.amazonaws.com/",
+  recaptchaSiteKey: '6Le_ytYrAAAAAPtWAIltkJkF4ijMK3jpGVQUEtQ-',
   enableServiceWorker: false,
   enableAnalytics: false,
     cacheTimeout: 300000, // 5 minutes in milliseconds

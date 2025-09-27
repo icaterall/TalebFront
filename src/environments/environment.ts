@@ -5,7 +5,8 @@ export const environment = {
   apiUrl:"http://127.0.0.1:3000/api/v1",
   apiDirectUrl:"http://127.0.0.1:3000/",
   apiUploadUrl:"https://pickpickgo.s3.ap-southeast-1.amazonaws.com",
-   apiSocketUrl:"http://127.0.0.1:3000/",
+  apiSocketUrl:"http://127.0.0.1:3000/",
+  recaptchaSiteKey: '6Le_ytYrAAAAAPtWAIltkJkF4ijMK3jpGVQUEtQ-',
   enableServiceWorker: false,
   enableAnalytics: false,
     cacheTimeout: 300000, // 5 minutes in milliseconds

@@ -1,80 +1,125 @@
-// contact.component.ts
-import { Component, OnInit, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+// src/app/contact/contact.component.ts
+import {
+  Component, OnInit, Inject, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef
+} from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
-import { ContactMessage, ContactService } from './contact.service';
+import { RecaptchaV3Module, ReCaptchaV3Service } from 'ng-recaptcha-2';
+import { ContactService } from './contact.service';
 
 @Component({
   selector: 'app-contact',
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],
-  standalone: true,                          // ✅ make it standalone
-  imports: [CommonModule, FormsModule, TranslateModule], // ✅ translate pipe + ngModel
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, FormsModule, TranslateModule, RecaptchaV3Module],
 })
 export class ContactComponent implements OnInit {
   loadingSubmit = false;
+  private lastSubmitAt = 0;
+  private readonly minSubmitIntervalMs = 4000; // client-side throttle
+  private readonly action = 'contact_form';
+
+  // simple honeypot model (bind it in template)
+  botField = '';
 
   constructor(
-    // If you previously got DI token errors, keeping @Inject is bullet-proof:
+    private recaptchaV3: ReCaptchaV3Service,
+    @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(ToastrService) private toastr: ToastrService,
     public translate: TranslateService,
-    private contactService: ContactService
+    private contactService: ContactService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {}
 
   onSubmit(form: NgForm): void {
     const isRtl = document.documentElement.dir === 'rtl';
-    if (!form.valid) {
-      this.toastr.error(
-        this.translate.instant('error.fill-all-fields'),
-        this.translate.instant('error.form-incomplete'),
-        { positionClass: isRtl ? 'toast-top-left' : 'toast-top-right' }
-      );
+
+    // 1) Basic client validations (trim + length limits mirror DB)
+    const name    = String(form.value.name ?? '').trim();
+    const email   = String(form.value.email ?? '').trim();
+    const subject = String(form.value.subject ?? '').trim();
+    const message = String(form.value.comments ?? '').trim();
+
+    if (!name || !email || !subject || !message) {
+      this.toastErr('forms.fill-all-fields', 'forms.form-incomplete', isRtl);
+      return;
+    }
+    if (name.length > 200 || subject.length > 255 || message.length > 1000) {
+      this.toastErr('general.error', 'forms.form-incomplete', isRtl,
+        this.translate.instant('contactForm.tooLong') || 'Input too long');
+      return;
+    }
+    // light email check (don’t overdo it client-side)
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      this.toastErr('general.error', 'forms.form-incomplete', isRtl,
+        this.translate.instant('contactForm.badEmail') || 'Invalid email');
       return;
     }
 
-    const lastTimestampStr = localStorage.getItem('lastMessageTimestamp');
-    const now = Date.now();
-    if (lastTimestampStr) {
-      const lastTimestamp = parseInt(lastTimestampStr, 10);
-      if (now - lastTimestamp < 120000) {
-        this.toastr.error(
-          this.translate.instant('general.pleaseWaitAtLeast2minutes'),
-          this.translate.instant('general.tooSoon')
-        );
-        return;
-      }
+    // 2) Honeypot (bots tend to fill hidden fields)
+    if (this.botField) {
+      // Pretend success to not help bots probe the form
+      form.resetForm();
+      this.toastOk(isRtl);
+      return;
     }
 
-    this.loadingSubmit = true;
+    // 3) Throttle rapid submissions
+    const now = Date.now();
+    if (now - this.lastSubmitAt < this.minSubmitIntervalMs) return;
+    this.lastSubmitAt = now;
 
-    const contactMessage: ContactMessage = {
-      name: form.value.name,
-      email: form.value.email,
-      subject: form.value.subject,
-      message: form.value.comments
-    };
+    // 4) SSR safety
+    if (!isPlatformBrowser(this.platformId)) return;
 
-    this.contactService.sendMessage(contactMessage).subscribe({
-      next: () => {
-        localStorage.setItem('lastMessageTimestamp', now.toString());
-        this.toastr.success(
-          this.translate.instant('general.messageSent'),
-          this.translate.instant('general.success')
-        );
-        this.loadingSubmit = false;
-        form.resetForm();
+    // 5) Execute v3 and submit
+    this.loadingSubmit = true; this.cdr.markForCheck();
+    this.recaptchaV3.execute(this.action).subscribe({
+      next: (token: string) => {
+        this.contactService.sendMessage({
+          name, email, subject, message,
+          recaptchaToken: token,
+          recaptchaAction: this.action
+        }).subscribe({
+          next: (res) => {
+            this.loadingSubmit = false; this.cdr.markForCheck();
+            form.resetForm();
+            this.toastOk(isRtl);
+          },
+          error: (err) => {
+            console.log(err);
+            this.loadingSubmit = false; this.cdr.markForCheck();
+            const key = err?.message ? err.message : 'general.error';
+            this.toastErr(key, 'general.error', isRtl);
+          }
+        });
       },
       error: () => {
-        this.toastr.error(
-          this.translate.instant('general.errorSendingMessage'),
-          this.translate.instant('general.error')
-        );
-        this.loadingSubmit = false;
+        this.loadingSubmit = false; this.cdr.markForCheck();
+        this.toastErr('contactForm.recaptchaFail', 'general.error', isRtl);
       }
     });
+  }
+
+  private toastOk(isRtl: boolean) {
+    this.toastr.success(
+      this.translate.instant('contactForm.sentOk', { default: 'Message sent. Thank you!' }),
+      this.translate.instant('general.success', { default: 'Success' }),
+      { positionClass: isRtl ? 'toast-top-left' : 'toast-top-right' }
+    );
+  }
+
+  private toastErr(msgKey: string, titleKey: string, isRtl: boolean, msgOverride?: string) {
+    this.toastr.error(
+      msgOverride ?? this.translate.instant(msgKey),
+      this.translate.instant(titleKey),
+      { positionClass: isRtl ? 'toast-top-left' : 'toast-top-right' }
+    );
   }
 }
