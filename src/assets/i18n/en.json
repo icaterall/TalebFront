@@ -843,6 +843,72 @@
     "teacher": "Teacher",
     "student": "Student"
   },
+  "dateOfBirth": {
+    "title": "Enter your date of birth",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "select": "Select...",
+    "continue": "Continue",
+    "back": "Back"
+  },
+  "teacherDashboard": {
+    "back": "Back",
+    "welcome": "Welcome back, Teacher!",
+    "subtitle": "You have 2 quizzes due today",
+    "createClass": "Create Class",
+    "inviteStudents": "Invite Students",
+    "newQuiz": "New Quiz",
+    "newLesson": "New Lesson",
+    "goLive": "Go Live",
+    "myClasses": "My Classes",
+    "createFirstClass": "Create your first class",
+    "createFirstClassDesc": "Start a new learning space and invite your students",
+    "todayGlance": "Today at a glance",
+    "upcoming": "Upcoming",
+    "alerts": "Alerts",
+    "achievements": "Achievements",
+    "nav": {
+      "home": "Home",
+      "discover": "Discover",
+      "library": "Library",
+      "reports": "Reports",
+      "groups": "Groups",
+      "language": "Language Learning",
+      "marketplace": "Marketplace",
+      "premium": "Premium",
+      "kahootopia": "Kahootopia!",
+      "channels": "Channels",
+      "help": "Help"
+    },
+    "passes": {
+      "title": "Student passes",
+      "tryOut": "Try out",
+      "upgrade": "Upgrade to use this feature. Get up to 250 passes!"
+    },
+    "profile": {
+      "verified": "Apply for your verified profile today!",
+      "apply": "Go to application"
+    },
+    "getStarted": {
+      "title": "Let's get started",
+      "subtitle": "Practice and host our top choices to boost student engagement.",
+      "createNew": "Create a new kahoot"
+    },
+    "activities": {
+      "elephants": "All About Elephants",
+      "climate": "What is climate change?",
+      "space": "Earth, Sun, and Moon Trivia",
+      "world": "World G Famous",
+      "practice": "Practice"
+    },
+    "explore": {
+      "title": "Explore more recommended resources for teachers",
+      "discover": "Discover ready-made kahoots",
+      "templates": "Start creating with templates",
+      "gameModes": "Learn about new game modes"
+    }
+  },
   "logo-title": "AnaTaleb Platform",
   "topbar": {
     "text": "Designed for schools in low-resource and conflict-affected areas",

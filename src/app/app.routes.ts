@@ -9,6 +9,7 @@ const Landing = () => import('./layouts/features/landing-page/landing-page.compo
 const NotFound = () => import('./layouts/features/error-page/error-page.component').then(m => m.ErrorPageComponent);
 const DashboardHome = () => import('./layouts/features/dashboard/pages/home/dashboard-home.component').then(m => m.DashboardHomeComponent);
 const AccountTypePage = () => import('./features/account-type-page/account-type-page.component').then(m => m.AccountTypePageComponent);
+const TeacherDashboard = () => import('./features/teacher-dashboard/teacher-dashboard.component').then(m => m.TeacherDashboardComponent);
 
 export const routes: Routes = [
   {
@@ -17,7 +18,8 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: Landing, title: 'ANATALEB' },
       { path: 'about', loadComponent: Landing, data: { simple: true } }, // example stub
-      { path: 'choose-account-type', loadComponent: AccountTypePage, title: 'Choose Account Type - ANATALEB' }
+        { path: 'choose-account-type', loadComponent: AccountTypePage, title: 'Choose Account Type - ANATALEB' },
+        { path: 'teacher-dashboard', loadComponent: TeacherDashboard, title: 'Teacher Dashboard - ANATALEB' }
     ]
   },
   {
