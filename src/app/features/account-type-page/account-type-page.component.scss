@@ -1,0 +1,255 @@
+.account-type-page {
+  min-height: 10vh;
+  background: 
+    url('/assets/shape1.png') no-repeat center center,
+    linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background-size: contain, contain;
+  position: relative;
+  overflow: hidden;
+}
+
+.account-type-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(ellipse 400px 200px at 5% 10%, rgba(255, 255, 255, 0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 300px 150px at 95% 90%, rgba(255, 255, 255, 0.25) 0%, transparent 60%),
+    linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.2) 15%, transparent 35%),
+    linear-gradient(-45deg, transparent 65%, rgba(255, 255, 255, 0.15) 85%, transparent 100%),
+    radial-gradient(ellipse 200px 100px at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 70%),
+    linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 40%, transparent 70%),
+    /* Teacher card patterns applied to page */
+    radial-gradient(ellipse 200px 60px at 12% 17%, rgba(255, 255, 255, 0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 100px 110px at 56% 50%, rgba(255, 255, 253, 0.25) 8%, transparent 17%),
+    linear-gradient(123deg, transparent 0%, rgba(255, 255, 255, 0.2) 69%, transparent 29%),
+    linear-gradient(14deg, transparent 42%, rgba(255, 255, 255, 0.15) 67%, transparent 28%);
+  pointer-events: none;
+}
+
+.account-type-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(ellipse 150px 75px at 20% 80%, rgba(255, 255, 255, 0.2) 0%, transparent 60%),
+    linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%),
+    radial-gradient(ellipse 100px 50px at 10% 90%, rgba(255, 255, 255, 0.15) 0%, transparent 70%),
+    /* Student card patterns applied to page */
+    radial-gradient(ellipse 226px 214px at 14% 17%, rgba(255, 255, 255, 0.3) 80%, transparent 23%),
+    radial-gradient(ellipse 0px 0px at 56% 42%, rgba(255, 255, 255, 0.25) 14%, transparent 23%),
+    linear-gradient(28deg, transparent 0%, rgba(255, 255, 255, 0.2) 25%, transparent 25%),
+    linear-gradient(-15deg, transparent 50%, rgba(255, 255, 255, 0.15) 67%, transparent 43%);
+  pointer-events: none;
+}
+
+.main-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  padding: 40px 32px;
+}
+
+.content-container {
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 48px;
+  font-weight: 800;
+  color: #2d3748;
+  margin: 0 0 64px 0;
+  line-height: 1.1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.account-card {
+  border: none;
+  border-radius: 7px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  position: relative;
+}
+
+.account-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  position: relative;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.teacher-card .card-header {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  position: relative;
+
+    margin: 0px -6px 0px -6px;
+}
+
+.teacher-card .card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(ellipse 102px 31px at 12% 17%, rgba(255, 255, 255, 0.3) 0%, transparent -1%), radial-gradient(ellipse 53px 57px at 56% 50%, rgba(255, 255, 253, 0.25) 8%, transparent 17%), linear-gradient(123deg, transparent 0%, rgba(255, 255, 255, 0.2) 69%, transparent 29%), linear-gradient(14deg, transparent 42%, rgba(255, 255, 255, 0.15) 67%, transparent 28%);}
+
+.student-card .card-header {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  position: relative;
+  position: relative;
+  margin: 0px -6px 0px -6px;
+
+}
+.OLKcE {
+    display: flex
+;
+    align-items: center;
+    justify-content: center;
+    margin: 0px auto;
+    padding: 8px;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    z-index: 10;
+    transition: width 0.15s, height 0.15s;
+    background: rgb(171, 0, 24);
+}
+.exxNNM {
+    flex: 0 0 auto;
+    z-index: 90;
+    height: 44px;
+    width: 44px;
+}
+.exxNNM svg {
+    display: block;
+    margin: 0px auto;
+}
+.FEety {
+    position: absolute;
+    top: 0px;
+    z-index: 0;
+}
+@media (hover: hover) {
+    @media (min-width: 600px) {
+        .hEcdez:hover div:nth-child(1) div:nth-child(1) {
+            width: 104px;
+            height: 104px;
+        }
+    }
+}
+.feLttt {
+    pointer-events: none;
+}
+
+
+.student-card .card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(ellipse 113px 107px at 14% 17%, rgba(255, 255, 255, 0.3) 80%, transparent 23%), radial-gradient(ellipse 53px 64px at 56% 42%, rgba(255, 255, 255, 0.25) 14%, transparent 23%), linear-gradient(28deg, transparent 0%, rgba(255, 255, 255, 0.2) 25%, transparent 25%), linear-gradient(-15deg, transparent 50%, rgba(255, 255, 255, 0.15) 67%, transparent 43%);
+}
+
+.icon-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgb(136 84 25 / 20%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+}
+
+.card-body {
+  padding: 24px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  background: white;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 0 4px 4px;
+}
+
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 36px;
+    margin-bottom: 48px;
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    max-width: 400px;
+  }
+  
+  .main-content {
+    padding: 60px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 28px;
+    margin-bottom: 32px;
+  }
+  
+  .account-card {
+    min-height: 280px;
+  }
+  
+  .card-header {
+    height: 160px;
+  }
+  
+  .icon-circle {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .card-body {
+    font-size: 20px;
+    padding: 24px 20px;
+  }
+}

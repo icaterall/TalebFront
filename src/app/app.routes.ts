@@ -8,6 +8,7 @@ import { DashboardLayoutComponent } from './layouts/dashboard-layout/dashboard-l
 const Landing = () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent);
 const NotFound = () => import('./layouts/features/error-page/error-page.component').then(m => m.ErrorPageComponent);
 const DashboardHome = () => import('./layouts/features/dashboard/pages/home/dashboard-home.component').then(m => m.DashboardHomeComponent);
+const AccountTypePage = () => import('./features/account-type-page/account-type-page.component').then(m => m.AccountTypePageComponent);
 
 export const routes: Routes = [
   {
@@ -16,6 +17,7 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: Landing, title: 'ANATALEB' },
       { path: 'about', loadComponent: Landing, data: { simple: true } }, // example stub
+      { path: 'choose-account-type', loadComponent: AccountTypePage, title: 'Choose Account Type - ANATALEB' }
     ]
   },
   {

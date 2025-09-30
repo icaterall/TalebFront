@@ -38,8 +38,8 @@
             </div>
 
             <div class="right-nav">
-                <a href="#" class="login-button"> {{ 'nav.signin' | translate }}</a>
-                <a href="#" class="join-button"> {{ 'nav.get_started' | translate }}</a>
+                <button class="login-button" (click)="onLogin()"> {{ 'nav.signin' | translate }}</button>
+                <button class="join-button" (click)="onJoinFree()"> {{ 'nav.get_started' | translate }}</button>
                  <button href="#" class="language-button"
                   (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
                  >{{ currentLang === 'ar' ? 'EN' : 'ع' }}</button>
@@ -118,7 +118,7 @@
   <!-- Bottom actions -->
   <div class="mobile-drawer__actions">
     <button class="btn btn-primary"   (click)="onJoinFree()">{{ 'drawer.join_free' | translate }}</button>
-    <button class="btn btn-outline-primary" (click)="onLogin()">{{ 'drawer.log_in' | translate }}</button>
+    <button class="btn btn-outline-primary" (click)="onLogin(); closeMobileMenu()">{{ 'drawer.log_in' | translate }}</button>
   </div>
 </aside>
 
@@ -126,3 +126,12 @@
 <div class="mobile-drawer__backdrop"
      [class.show]="isMenuOpen"
      (click)="closeMobileMenu()"></div>
+
+<!-- Login Modal -->
+<app-login-modal 
+  *ngIf="showLoginModal"
+  (closeModal)="onCloseLoginModal()"
+  (switchToSignup)="onSwitchToSignup()"
+  (forgotPassword)="onForgotPassword()">
+</app-login-modal>
+

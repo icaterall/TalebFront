@@ -822,6 +822,27 @@
 
 "nothingSelected": "Nothing Selected"
 },
+  "loginModal": {
+    "title": "Welcome back",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@email.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "login": "Login",
+    "or": "or",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
+    "continueWithApple": "Continue with Apple",
+    "newTo": "New to AnaTaleb?",
+    "signUp": "Sign up",
+    "loginWithOrg": "Log in with your organization"
+  },
+  "accountType": {
+    "title": "Choose your account type",
+    "teacher": "Teacher",
+    "student": "Student"
+  },
   "logo-title": "AnaTaleb Platform",
   "topbar": {
     "text": "Designed for schools in low-resource and conflict-affected areas",

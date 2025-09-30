@@ -3,13 +3,15 @@ import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { I18nService } from '../../core/services/i18n.service';
+import { LoginModalComponent } from '../login-modal/login-modal.component';
+import { Router } from '@angular/router';
 
 type Lang = 'ar' | 'en';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, LoginModalComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -17,11 +19,13 @@ type Lang = 'ar' | 'en';
 export class HeaderComponent {
   isMenuOpen = false;
   isSwitchingLang = false; // To prevent multiple clicks during transition
+  showLoginModal = false;
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly i18n = inject(I18nService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly document = inject(DOCUMENT);
+  private readonly router = inject(Router);
 
   // Read-only snapshot of the current lang (service is the single source of truth)
   get currentLang(): Lang { 
@@ -68,12 +72,28 @@ closeMobileMenu() {
 }
 
   onLogin() {
-    // Implement your login logic here
-    console.log('Log In clicked');
+    this.showLoginModal = true;
+    this.cdr.markForCheck();
   }
+  
   onJoinFree() {
-    // Implement your login logic here
-    console.log('Log In clicked');
+    this.router.navigate(['/choose-account-type']);
+  }
+  
+  onCloseLoginModal() {
+    this.showLoginModal = false;
+    this.cdr.markForCheck();
+  }
+  
+  onSwitchToSignup() {
+    this.showLoginModal = false;
+    this.router.navigate(['/choose-account-type']);
+    this.cdr.markForCheck();
+  }
+  
+  onForgotPassword() {
+    // TODO: Implement forgot password modal or navigation
+    console.log('Forgot password');
   }
   @HostListener('document:keydown.escape')
   onEsc() { 
