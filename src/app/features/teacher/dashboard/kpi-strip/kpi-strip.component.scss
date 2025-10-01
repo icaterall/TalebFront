@@ -1,0 +1,31 @@
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.value {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.delta {
+  font-size: 12px;
+  color: var(--brandGreen);
+}

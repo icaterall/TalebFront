@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.shell {
+  display: flex;
+}
+
+.shell-content {
+  flex: 1;
+}
+
+.shell-content.full-width .content {
+  margin-left: 0;
+}
+
+.sidebar {
+  flex-shrink: 0;
+}
+
+.content {
+  flex: 1;
+  padding: 32px;
+  margin-left: var(--sidebar-w);
+  transition: margin-left 0.25s ease;
+}
+
+.shell:not(:has(app-teacher-sidebar)) .content {
+  margin-left: 0;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+@media (max-width: 992px) {
+  .shell {
+    position: relative;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+ 
+
+    z-index: 1000;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .content {
+    margin-left: 0;
+    padding: 24px 16px 48px;
+  }
+}

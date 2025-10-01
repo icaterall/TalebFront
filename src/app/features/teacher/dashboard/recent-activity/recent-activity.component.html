@@ -1,0 +1,9 @@
+<ul class="activity-list">
+  <li *ngFor="let item of items">
+    <div class="avatar">{{ item.actor[0] }}</div>
+    <div class="info">
+      <span class="line"><strong>{{ item.actor }}</strong> {{ item.action }}</span>
+      <span class="time">{{ item.time }}</span>
+    </div>
+  </li>
+</ul>

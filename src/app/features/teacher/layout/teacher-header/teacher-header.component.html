@@ -1,0 +1,29 @@
+<header class="app-header">
+  <div class="brand">
+    <button
+      class="hamburger"
+      type="button"
+      (click)="onToggle()"
+      aria-label="Toggle menu"
+      [attr.aria-expanded]="menuOpen"
+      [attr.aria-controls]="'teacher-sidebar'"
+    >
+      <svg height="24" viewBox="0 0 24 24" width="24" class="icon-size24">
+        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
+      </svg>
+    </button>
+ 
+    <img src="assets/logo-dark-t.png" alt="Ana Taleb" class="logo-img">
+    <span class="org" *ngIf="!isMobile">Ahmed El Sayed</span>
+    <span class="badge" *ngIf="!isMobile">Owner</span>
+    <button class="upgrade-btn" *ngIf="!isMobile">UPGRADE</button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <button class="language-btn" aria-label="Change language" (click)="toggleLanguage()">
+    <span>{{ currentLanguage }}</span>
+  </button>
+
+  <div class="avatar">AE</div>
+</header>

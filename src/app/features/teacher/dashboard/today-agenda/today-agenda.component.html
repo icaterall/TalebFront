@@ -1,0 +1,9 @@
+<ul class="agenda">
+  <li *ngFor="let item of items">
+    <span class="time">{{ item.time }}</span>
+    <div class="details">
+      <span class="title">{{ item.title }}</span>
+      <span class="status" [ngClass]="item.status">{{ item.status | titlecase }}</span>
+    </div>
+  </li>
+</ul>

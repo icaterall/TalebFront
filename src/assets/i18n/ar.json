@@ -875,6 +875,8 @@
     "back": "رجوع"
   },
   "teacherDashboard": {
+    "mobileTitle": "سلايداتي",
+    "mobileSubtitle": "أطلق الاستبيانات والأسئلة فوراً",
     "organization": "منظمة المعلم",
     "owner": "مالك",
     "upgrade": "ترقية",

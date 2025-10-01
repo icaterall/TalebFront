@@ -1,8 +1,7 @@
 // src/app/app.config.ts
-import { ApplicationConfig } from '@angular/core';
-import { importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { PreloadAllModules, provideRouter, withInMemoryScrolling, withPreloading, withViewTransitions } from '@angular/router';
-import { routes } from './app.routes';
+import { appRoutes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -28,7 +27,7 @@ const isServer = typeof window === 'undefined';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(
-      routes,
+      appRoutes,
       withViewTransitions(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withPreloading(PreloadAllModules)

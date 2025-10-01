@@ -1,0 +1,24 @@
+<app-teacher-header
+  [isMobile]="isMobile"
+  [menuOpen]="menuOpen"
+  (menuToggle)="toggleMenu()"
+></app-teacher-header>
+
+<div class="shell">
+  <app-teacher-sidebar
+    *ngIf="showSidebar"
+    class="sidebar"
+    [ngClass]="{ open: showBackdrop }"
+    [isMobile]="isMobile"
+    [menuOpen]="menuOpen"
+    (closeMenu)="closeMenu()"
+  ></app-teacher-sidebar>
+
+  <div class="shell-content" [class.full-width]="!showSidebar">
+    <main class="content" [ngClass]="{ 'drawer-open': showBackdrop }">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+
+<div class="backdrop" *ngIf="showBackdrop" (click)="closeMenu()"></div>

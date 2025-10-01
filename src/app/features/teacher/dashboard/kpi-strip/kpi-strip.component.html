@@ -1,0 +1,7 @@
+<section class="kpi-strip">
+  <div class="kpi" *ngFor="let kpi of kpis">
+    <span class="value">{{ kpi.value }}</span>
+    <span class="label">{{ kpi.label }}</span>
+    <span class="delta" *ngIf="kpi.delta">{{ kpi.delta }}</span>
+  </div>
+</section>

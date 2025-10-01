@@ -853,6 +853,8 @@
     "back": "Back"
   },
   "teacherDashboard": {
+    "mobileTitle": "My slides",
+    "mobileSubtitle": "Run polls & Q&A in seconds",
     "organization": "Teacher's Organization",
     "owner": "Owner",
     "upgrade": "UPGRADE",
