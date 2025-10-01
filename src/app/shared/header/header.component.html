@@ -17,16 +17,26 @@
 
     <header class="main-header">
         <div class="header-container">
-            <a href="/" class="logo" aria-label="Coursera">
- <img src="assets/logo-dark-t.png" alt="ANATALEB" class="brand-img" height="20" />
-            </a>
-
+            <div class="header-left">
+                <button class="hamburger-menu" (click)="toggleSidebar()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <a href="/" class="logo" aria-label="ANATALEB">
+                    <div class="logo-content">
+                        <span class="arabic-text">أنا طالب</span>
+                        <span class="english-text">ANATALEB</span>
+                    </div>
+                    <div class="logo-emblem">🏳️</div>
+                </a>
+            </div>
 
             <div class="search-container">
                 <form class="search-form">
                     <div class="search-wrapper">
-                 <button type="submit" class="search-button" aria-label="Submit Search">
-                        <i class="bi bi-search"></i>
+                        <button type="submit" class="search-button" aria-label="Submit Search">
+                            <i class="bi bi-search"></i>
                         </button>
                         <input 
                             type="text" 
@@ -38,11 +48,12 @@
             </div>
 
             <div class="right-nav">
-                <button class="login-button" (click)="onLogin()"> {{ 'nav.signin' | translate }}</button>
-                <button class="join-button" (click)="onJoinFree()"> {{ 'nav.get_started' | translate }}</button>
-                 <button href="#" class="language-button"
-                  (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
-                 >{{ currentLang === 'ar' ? 'EN' : 'ع' }}</button>
+                <button class="language-button"
+                    (click)="setLang(currentLang === 'ar' ? 'en' : 'ar')"
+                >{{ currentLang === 'ar' ? 'EN' : 'ع' }}</button>
+                <div class="profile-avatar">
+                    <img src="assets/profile-girl.png" alt="Profile" />
+                </div>
             </div>
         </div>
     </header>

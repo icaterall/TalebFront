@@ -853,6 +853,17 @@
     "back": "Back"
   },
   "teacherDashboard": {
+    "organization": "Teacher's Organization",
+    "owner": "Owner",
+    "upgrade": "UPGRADE",
+    "team": "Team",
+    "analytics": "Analytics",
+    "tutorials": "Tutorials",
+    "integrations": "Integrations",
+    "createClassSubtitle": "Start interactive learning sessions with your students.",
+    "setupIntegrations": "Set up integrations",
+    "setupIntegrationsSubtitle": "Connect with your favorite teaching tools.",
+    "seeHowItWorks": "See how Anataleb works",
     "back": "Back",
     "welcome": "Welcome back, Teacher!",
     "subtitle": "You have 2 quizzes due today",

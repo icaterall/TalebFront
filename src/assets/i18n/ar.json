@@ -875,6 +875,17 @@
     "back": "رجوع"
   },
   "teacherDashboard": {
+    "organization": "منظمة المعلم",
+    "owner": "مالك",
+    "upgrade": "ترقية",
+    "team": "الفريق",
+    "analytics": "التحليلات",
+    "tutorials": "الدروس التعليمية",
+    "integrations": "التكاملات",
+    "createClassSubtitle": "ابدأ جلسات تعلم تفاعلية مع طلابك.",
+    "setupIntegrations": "إعداد التكاملات",
+    "setupIntegrationsSubtitle": "اتصل بأدوات التدريس المفضلة لديك.",
+    "seeHowItWorks": "شاهد كيف يعمل أناطالب",
     "back": "رجوع",
     "welcome": "مرحبًا بعودتك، أستاذ/ة!",
     "subtitle": "لديك اختباران اليوم",
