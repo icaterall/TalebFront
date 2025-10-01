@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { I18nService } from '../../core/services/i18n.service';
 import { LoginModalComponent } from '../login-modal/login-modal.component';
 import { Router } from '@angular/router';
-import { SidebarService } from '../../core/services/sidebar.service';
 
 type Lang = 'ar' | 'en';
 
@@ -21,14 +20,12 @@ export class HeaderComponent {
   isMenuOpen = false;
   isSwitchingLang = false; // To prevent multiple clicks during transition
   showLoginModal = false;
-  isSidebarOpen = false;
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly i18n = inject(I18nService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
-  private readonly sidebarService = inject(SidebarService);
 
   // Read-only snapshot of the current lang (service is the single source of truth)
   get currentLang(): Lang { 
@@ -117,9 +114,5 @@ get drawerTransform(): string {
   // closed position depends on writing-direction
   return this.isMenuOpen ? 'translateX(0)'
                          : (this.isRtl ? 'translateX(100%)' : 'translateX(-100%)');
-}
-
-toggleSidebar() {
-  this.sidebarService.toggleSidebar();
 }
 }

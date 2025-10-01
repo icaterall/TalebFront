@@ -10,6 +10,12 @@
   grid-template-columns: 240px 1fr;
   grid-template-rows: 64px 1fr;
   font-family: var(--font-latin);
+  transition: grid-template-columns 0.3s ease;
+}
+
+/* Collapsed state - adjust grid layout */
+.teacher-dashboard-new.sidebar-collapsed {
+  grid-template-columns: 64px 1fr;
 }
 
 
@@ -188,6 +194,31 @@
   
   .nav-help {
     padding-top: 16px;
+    display: flex;
+    justify-content: center;
+    padding: 16px 8px 0 8px;
+    
+    .help-btn {
+      width: 32px;
+      height: 32px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      
+      svg {
+        color: #6b7280;
+        width: 16px;
+        height: 16px;
+      }
+      
+      &:hover {
+        background: #e5e7eb;
+        border-color: #d1d5db;
+        
+        svg {
+          color: #374151;
+        }
+      }
+    }
   }
 }
 
@@ -312,18 +343,21 @@
     height: 32px;
     border-radius: 50%;
     background: #f3f4f6;
-    border: none;
+    border: 1px solid #e5e7eb;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
 
     &:hover {
       background: #e5e7eb;
+      border-color: #d1d5db;
     }
 
     svg {
+      width: 16px;
+      height: 16px;
       color: #6b7280;
     }
   }
