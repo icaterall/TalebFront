@@ -1,27 +1,221 @@
 <section class="dashboard">
-  <app-kpi-strip></app-kpi-strip>
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="welcome-content">
+      <div class="welcome-text">
+        <h1 class="welcome-title">👋 Welcome back, Ahmed!</h1>
+        <p class="welcome-subtitle">Ready to inspire your students today?</p>
+      </div>
+      <div class="ai-tip">
+        <div class="tip-icon">💡</div>
+        <div class="tip-content">
+          <p class="tip-text">Did you know you can turn any quiz into a game with one click?</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <div class="grid">
-    <section class="panel agenda">
-      <header class="panel-head">
-        <h2>Today's agenda</h2>
-        <button type="button">View calendar</button>
-      </header>
-      <app-today-agenda></app-today-agenda>
-    </section>
-    <section class="panel activity">
-      <header class="panel-head">
-        <h2>Recent activity</h2>
-        <button type="button">See all</button>
-      </header>
-      <app-recent-activity></app-recent-activity>
-    </section>
+  <!-- Stats Overview -->
+  <div class="stats-grid">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">📚</div>
+      <div class="stat-content">
+        <div class="stat-number">12</div>
+        <div class="stat-label">Active Courses</div>
+        <a href="#" class="stat-link">View all courses</a>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-green">
+      <div class="stat-icon">👥</div>
+      <div class="stat-content">
+        <div class="stat-number">8</div>
+        <div class="stat-label">Active Sections</div>
+        <a href="#" class="stat-link">Manage sections</a>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-orange">
+      <div class="stat-icon">🧑‍🎓</div>
+      <div class="stat-content">
+        <div class="stat-number">328</div>
+        <div class="stat-label">Students Enrolled</div>
+        <a href="#" class="stat-link">View students</a>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-purple">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-content">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Pending Requests</div>
+        <a href="#" class="stat-link">Review requests</a>
+      </div>
+    </div>
+  </div>
 
-    <section class="panel quick-links">
-      <header class="panel-head">
-        <h2>Quick links</h2>
-      </header>
-      <app-quick-links></app-quick-links>
-    </section>
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="actions-grid">
+      <button class="action-card action-primary">
+        <div class="action-icon">➕</div>
+        <div class="action-content">
+          <h3>Create New Course</h3>
+          <p>Start building your next amazing course</p>
+        </div>
+      </button>
+      
+      <button class="action-card action-secondary">
+        <div class="action-icon">📝</div>
+        <div class="action-content">
+          <h3>Create Activity</h3>
+          <p>Design quizzes, polls, and games</p>
+        </div>
+      </button>
+      
+      <button class="action-card action-accent">
+        <div class="action-icon">📩</div>
+        <div class="action-content">
+          <h3>Invite Students</h3>
+          <p>Send invitations to your classes</p>
+        </div>
+      </button>
+      
+      <button class="action-card action-highlight">
+        <div class="action-icon">🎮</div>
+        <div class="action-content">
+          <h3>Host Live Game</h3>
+          <p>Start an interactive session now</p>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Today's Highlights -->
+  <div class="highlights-section">
+    <h2 class="section-title">Today's Highlights</h2>
+    <div class="highlights-grid">
+      <div class="highlight-card">
+        <div class="highlight-header">
+          <div class="highlight-icon">⏰</div>
+          <h3>Upcoming Sessions</h3>
+        </div>
+        <div class="highlight-list">
+          <div class="highlight-item">
+            <span class="time">10:00 AM</span>
+            <span class="title">Geometry Live Session</span>
+            <span class="status status-in-progress">In Progress</span>
+          </div>
+          <div class="highlight-item">
+            <span class="time">12:15 PM</span>
+            <span class="title">Assignment Review</span>
+            <span class="status status-upcoming">Upcoming</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="highlight-card">
+        <div class="highlight-header">
+          <div class="highlight-icon">✅</div>
+          <h3>Assignments Due</h3>
+        </div>
+        <div class="highlight-list">
+          <div class="highlight-item">
+            <span class="title">Math Quiz - Chapter 5</span>
+            <span class="count">24 students</span>
+          </div>
+          <div class="highlight-item">
+            <span class="title">Science Project</span>
+            <span class="count">18 students</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="highlight-card">
+        <div class="highlight-header">
+          <div class="highlight-icon">📥</div>
+          <h3>New Requests</h3>
+        </div>
+        <div class="highlight-list">
+          <div class="highlight-item">
+            <span class="title">Section B wants to join Physics 101</span>
+            <div class="request-actions">
+              <button class="btn-approve">✓</button>
+              <button class="btn-reject">✗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity Feed -->
+  <div class="activity-section">
+    <h2 class="section-title">Recent Activity</h2>
+    <div class="activity-feed">
+      <div class="activity-item">
+        <div class="activity-avatar">A</div>
+        <div class="activity-content">
+          <p><strong>Ali</strong> just completed <strong>Quiz 2</strong> (85%) 🎉</p>
+          <span class="activity-time">2 minutes ago</span>
+        </div>
+      </div>
+      
+      <div class="activity-item">
+        <div class="activity-avatar">S</div>
+        <div class="activity-content">
+          <p><strong>Section B</strong> requested to join <strong>Course 'Physics 101'</strong></p>
+          <span class="activity-time">15 minutes ago</span>
+        </div>
+      </div>
+      
+      <div class="activity-item">
+        <div class="activity-avatar">T</div>
+        <div class="activity-content">
+          <p>You published a new activity <strong>'IT Basics Quiz'</strong> yesterday</p>
+          <span class="activity-time">1 day ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discover Section -->
+  <div class="discover-section">
+    <h2 class="section-title">Discover & Inspire</h2>
+    <div class="discover-grid">
+      <div class="discover-card">
+        <div class="discover-image">
+          <div class="discover-placeholder">🎯</div>
+        </div>
+        <div class="discover-content">
+          <h3>Math Trivia Challenge</h3>
+          <p class="discover-stats">2.3k plays • 4.8★</p>
+          <button class="btn-use">Use in my course</button>
+        </div>
+      </div>
+      
+      <div class="discover-card">
+        <div class="discover-image">
+          <div class="discover-placeholder">🧪</div>
+        </div>
+        <div class="discover-content">
+          <h3>Chemistry Lab Quiz</h3>
+          <p class="discover-stats">1.8k plays • 4.6★</p>
+          <button class="btn-use">Use in my course</button>
+        </div>
+      </div>
+      
+      <div class="discover-card">
+        <div class="discover-image">
+          <div class="discover-placeholder">🌍</div>
+        </div>
+        <div class="discover-content">
+          <h3>World Geography Game</h3>
+          <p class="discover-stats">3.1k plays • 4.9★</p>
+          <button class="btn-use">Use in my course</button>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
