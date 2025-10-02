@@ -43,32 +43,26 @@ export class TeacherSidebarComponent implements OnInit, OnDestroy {
   }
 
   translations: Translations = {
-    'mySlidos': { en: 'My slidos', ar: 'سلايداتي' },
-    'team': { en: 'Team', ar: 'الفريق' },
-    'analytics': { en: 'Analytics', ar: 'التحليلات' },
-    'tutorials': { en: 'Tutorials', ar: 'الدروس' },
-    'integrations': { en: 'Integrations', ar: 'التكاملات' },
-    'powerpoint': { en: 'PowerPoint', ar: 'باوربوينت' },
-    'googleSlides': { en: 'Google Slides', ar: 'عروض جوجل' },
-    'microsoftTeams': { en: 'Microsoft Teams', ar: 'فريق مايكروسوفت' },
-    'webex': { en: 'Webex', ar: 'ويبكس' },
-    'zoom': { en: 'Zoom', ar: 'زوم' },
+    'dashboard': { en: 'Dashboard', ar: 'لوحة التحكم' },
+    'courses': { en: 'Courses', ar: 'الدورات' },
+    'sections': { en: 'Sections', ar: 'الأقسام' },
+    'activities': { en: 'Activities', ar: 'الأنشطة' },
+    'materials': { en: 'Materials', ar: 'المواد' },
+    'reports': { en: 'Reports', ar: 'التقارير' },
+    'library': { en: 'Library', ar: 'المكتبة' },
     'organization': { en: 'Ahmed El Sayed', ar: 'أحمد السيد' },
     'owner': { en: 'Teacher', ar: 'مدرس' },
     'upgrade': { en: 'UPGRADE', ar: 'ترقية' }
   };
 
   navItems = signal<NavItem[]>([
-    { section: 'mySlidos', label: 'mySlidos', icon: 'chart', active: true, route: '/teacher' },
-    { label: 'team', icon: 'team' },
-    { label: 'analytics', icon: 'analytics' },
-    { label: 'tutorials', icon: 'tutorials' },
-    { label: 'integrations', icon: 'integrations' },
-    { section: 'integrations', label: 'powerpoint', icon: 'ppt' },
-    { label: 'googleSlides', icon: 'gslides' },
-    { label: 'microsoftTeams', icon: 'teams' },
-    { label: 'webex', icon: 'webex' },
-    { label: 'zoom', icon: 'zoom' },
+    { label: 'dashboard', icon: 'dashboard', active: true, route: '/teacher' },
+    { label: 'courses', icon: 'courses', route: '/teacher/courses' },
+    { label: 'sections', icon: 'sections', route: '/teacher/sections' },
+    { label: 'activities', icon: 'activities', route: '/teacher/activities' },
+    { label: 'materials', icon: 'materials', route: '/teacher/materials' },
+    { label: 'reports', icon: 'reports', route: '/teacher/reports' },
+    { label: 'library', icon: 'library', route: '/teacher/library' },
   ]);
 
   sections = computed(() => {

@@ -167,12 +167,13 @@
 }
 
 .icon {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #6b7280;
+  font-size: 16px;
 }
 
 .item.active .icon {

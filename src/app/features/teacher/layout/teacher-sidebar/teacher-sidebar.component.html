@@ -37,89 +37,46 @@
     <ul class="items">
       <li>
         <a class="item active" routerLink="/teacher" (click)="onNavigate()">
-          <span class="icon">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M2 2h12v2H2V2zm0 3h12v2H2V5zm0 3h12v2H2V8zm0 3h12v2H2v-2z"/>
-            </svg>
-          </span>
-          <span class="label">{{ getTranslation('mySlidos') }}</span>
+          <span class="icon">🏠</span>
+          <span class="label">{{ getTranslation('dashboard') }}</span>
         </a>
       </li>
       <li>
-        <button class="item" type="button">
-          <span class="icon">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 1a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm-5 3a5 5 0 0 1 10 0v1H3v-1z"/>
-            </svg>
-          </span>
-          <span class="label">{{ getTranslation('team') }}</span>
-        </button>
+        <a class="item" routerLink="/teacher/courses" (click)="onNavigate()">
+          <span class="icon">📚</span>
+          <span class="label">{{ getTranslation('courses') }}</span>
+        </a>
       </li>
       <li>
-        <button class="item" type="button">
-          <span class="icon">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M1 1h14v2H1V1zm0 3h14v2H1V4zm0 3h14v2H1V7zm0 3h14v2H1v-2z"/>
-            </svg>
-          </span>
-          <span class="label">{{ getTranslation('analytics') }}</span>
-        </button>
+        <a class="item" routerLink="/teacher/sections" (click)="onNavigate()">
+          <span class="icon">👥</span>
+          <span class="label">{{ getTranslation('sections') }}</span>
+        </a>
       </li>
       <li>
-        <button class="item" type="button">
-          <span class="icon">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2z"/>
-            </svg>
-          </span>
-          <span class="label">{{ getTranslation('tutorials') }}</span>
-        </button>
+        <a class="item" routerLink="/teacher/activities" (click)="onNavigate()">
+          <span class="icon">🎮</span>
+          <span class="label">{{ getTranslation('activities') }}</span>
+        </a>
       </li>
       <li>
-        <button class="item" type="button">
-          <span class="icon">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M4 4h8v8H4V4zm1 1v6h6V5H5z"/>
-            </svg>
-          </span>
-          <span class="label">{{ getTranslation('integrations') }}</span>
-        </button>
+        <a class="item" routerLink="/teacher/materials" (click)="onNavigate()">
+          <span class="icon">📑</span>
+          <span class="label">{{ getTranslation('materials') }}</span>
+        </a>
+      </li>
+      <li>
+        <a class="item" routerLink="/teacher/reports" (click)="onNavigate()">
+          <span class="icon">📊</span>
+          <span class="label">{{ getTranslation('reports') }}</span>
+        </a>
+      </li>
+      <li>
+        <a class="item" routerLink="/teacher/library" (click)="onNavigate()">
+          <span class="icon">🌍</span>
+          <span class="label">{{ getTranslation('library') }}</span>
+        </a>
       </li>
     </ul>
-    
-    <div class="integrations-section">
-      <ul class="items">
-        <li>
-          <button class="item integration-item" type="button">
-            <span class="icon ppt-icon">P</span>
-            <span class="label">{{ getTranslation('powerpoint') }}</span>
-          </button>
-        </li>
-        <li>
-          <button class="item integration-item" type="button">
-            <span class="icon gslides-icon">G</span>
-            <span class="label">{{ getTranslation('googleSlides') }}</span>
-          </button>
-        </li>
-        <li>
-          <button class="item integration-item" type="button">
-            <span class="icon teams-icon">T</span>
-            <span class="label">{{ getTranslation('microsoftTeams') }}</span>
-          </button>
-        </li>
-        <li>
-          <button class="item integration-item" type="button">
-            <span class="icon webex-icon">W</span>
-            <span class="label">{{ getTranslation('webex') }}</span>
-          </button>
-        </li>
-        <li>
-          <button class="item integration-item" type="button">
-            <span class="icon zoom-icon">Z</span>
-            <span class="label">{{ getTranslation('zoom') }}</span>
-          </button>
-        </li>
-      </ul>
-    </div>
   </nav>
 </aside>
