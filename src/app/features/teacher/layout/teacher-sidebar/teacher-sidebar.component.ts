@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output, computed, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { I18nService } from '../../../../core/services/i18n.service';
 
 interface NavItem {
   label: string;
@@ -31,8 +32,15 @@ export class TeacherSidebarComponent implements OnInit, OnDestroy {
   @Input() menuOpen = false;
   @Output() closeMenu = new EventEmitter<void>();
 
-  isRTL = false;
-  currentLang = 'en';
+  private i18n = inject(I18nService);
+
+  get isRTL(): boolean {
+    return this.i18n.current === 'ar';
+  }
+
+  get currentLang(): string {
+    return this.i18n.current;
+  }
 
   translations: Translations = {
     'mySlidos': { en: 'My slidos', ar: 'سلايداتي' },
@@ -76,30 +84,11 @@ export class TeacherSidebarComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    this.updateLanguage();
-    this.observeLanguageChanges();
+    // Language detection is now handled by I18nService
   }
 
   ngOnDestroy(): void {
     // Cleanup if needed
-  }
-
-  private updateLanguage(): void {
-    const html = document.documentElement;
-    this.isRTL = html.getAttribute('dir') === 'rtl';
-    this.currentLang = this.isRTL ? 'ar' : 'en';
-  }
-
-  private observeLanguageChanges(): void {
-    // Watch for changes in document direction
-    const observer = new MutationObserver(() => {
-      this.updateLanguage();
-    });
-    
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['dir', 'lang']
-    });
   }
 
   getTranslation(key: string): string {

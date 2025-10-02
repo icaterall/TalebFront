@@ -8,10 +8,10 @@ export const appRoutes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'teacher',
+    loadComponent: () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent),
   },
   {
     path: '**',
-    redirectTo: 'teacher',
+    redirectTo: '',
   },
 ];

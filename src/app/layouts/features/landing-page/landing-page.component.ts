@@ -1,6 +1,7 @@
 import { Component, inject, Renderer2, OnInit, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT, DecimalPipe, CurrencyPipe, NgOptimizedImage } from '@angular/common';
 import { TranslateService, TranslatePipe, TranslateModule } from '@ngx-translate/core';
+import { RouterModule } from '@angular/router';
 import { HeaderComponent } from '../../../shared/header/header.component';
 import { FooterComponent } from '../../../shared/footer/footer.component';
 import { ContactComponent } from '../contact/contact.component';
@@ -14,7 +15,10 @@ type Lang = 'ar' | 'en';
  imports: [
   CommonModule,
   ContactComponent,
-  TranslateModule
+  TranslateModule,
+  RouterModule,
+  HeaderComponent,
+  FooterComponent
 ],
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.scss']

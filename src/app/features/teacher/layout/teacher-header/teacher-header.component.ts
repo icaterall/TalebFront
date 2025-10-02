@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, OnInit, inject } from '@angular/core';
+import { I18nService } from '../../../../core/services/i18n.service';
 
 @Component({
   selector: 'app-teacher-header',
@@ -11,11 +12,18 @@ export class TeacherHeaderComponent implements OnInit, OnChanges {
   @Input() menuOpen = false;
   @Output() menuToggle = new EventEmitter<void>();
 
-  currentLanguage = 'ع';
-  isRTL = false;
+  private i18n = inject(I18nService);
+
+  get currentLanguage(): string {
+    return this.i18n.current === 'ar' ? 'EN' : 'ع';
+  }
+
+  get isRTL(): boolean {
+    return this.i18n.current === 'ar';
+  }
 
   ngOnInit(): void {
-    this.updateLanguageDisplay();
+    // Language display is now reactive through getters
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -29,26 +37,8 @@ export class TeacherHeaderComponent implements OnInit, OnChanges {
     this.menuToggle.emit();
   }
 
-  toggleLanguage(): void {
-    this.isRTL = !this.isRTL;
-    this.updateLanguageDisplay();
-    this.updateDocumentDirection();
-  }
-
-  private updateLanguageDisplay(): void {
-    // If we're in RTL mode, show EN (to switch to English)
-    // If we're in LTR mode, show ع (to switch to Arabic)
-    this.currentLanguage = this.isRTL ? 'EN' : 'ع';
-  }
-
-  private updateDocumentDirection(): void {
-    const html = document.documentElement;
-    if (this.isRTL) {
-      html.setAttribute('dir', 'rtl');
-      html.setAttribute('lang', 'ar');
-    } else {
-      html.setAttribute('dir', 'ltr');
-      html.setAttribute('lang', 'en');
-    }
+  async toggleLanguage(): Promise<void> {
+    const newLang = this.i18n.current === 'ar' ? 'en' : 'ar';
+    await this.i18n.setLang(newLang);
   }
 }
