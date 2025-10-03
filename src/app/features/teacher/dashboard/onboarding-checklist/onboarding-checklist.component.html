@@ -1,0 +1,42 @@
+<!-- Onboarding checklist -->
+<section class="onboarding glass-card">
+  <div class="onb-header">
+    <div class="onb-title">
+      {{ 'onb.getStarted' | translate }}
+    </div>
+    <div class="onb-progress">
+      <div class="bar"><span [style.width.%]="progressPct"></span></div>
+      <small>{{ progressPct }}%</small>
+    </div>
+  </div>
+
+  <ul class="onb-list">
+    <li *ngFor="let s of steps; let i = index" 
+        class="onb-item" 
+        [class.locked]="!isStepUnlocked(i)"
+        [class.unlocked]="isStepUnlocked(i) && !s.done"
+        [class.completed]="s.done"
+        appAnimateOnIntersect>
+      <button class="onb-check" [class.done]="s.done" aria-label="step status">
+        <span *ngIf="s.done">✔</span>
+      </button>
+
+      <div class="onb-body">
+        <div class="onb-text">
+          <strong *ngIf="!s.done">{{ s.titleKey | translate }}</strong>
+          <strong *ngIf="s.done">{{ getStepTitle(s) | translate }}</strong>
+          <p *ngIf="!s.done">{{ s.descKey | translate }}</p>
+          <p *ngIf="s.done">{{ getStepDescription(s) | translate }}</p>
+        </div>
+
+        <button class="onb-action" 
+                [class.disabled]="!isStepUnlocked(i)"
+                appRipple 
+                (click)="isStepUnlocked(i) ? onStepAction(s) : null">
+          <span *ngIf="!s.done">{{ s.ctaKey | translate }}</span>
+          <span *ngIf="s.done">{{ getStepButtonText(s) | translate }}</span>
+        </button>
+      </div>
+    </li>
+  </ul>
+</section>

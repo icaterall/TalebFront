@@ -4,23 +4,14 @@ import { KpiStripComponent } from './kpi-strip/kpi-strip.component';
 import { TodayAgendaComponent } from './today-agenda/today-agenda.component';
 import { RecentActivityComponent } from './recent-activity/recent-activity.component';
 import { QuickLinksComponent } from './quick-links/quick-links.component';
+import { OnboardingChecklistComponent, OnbStep, StepKey } from './onboarding-checklist/onboarding-checklist.component';
 import { AnimateOnIntersectDirective } from './animate-on-intersect.directive';
 import { KpiNumberDirective } from './kpi-number.directive';
 import { RippleDirective } from './ripple.directive';
 import { ConfettiService } from './confetti.service';
 import { TranslateModule } from '@ngx-translate/core';
 
-// Onboarding types (course-centric)
-type StepKey = 'createCourse' | 'addSection' | 'inviteStudents' | 'addFirstItem';
-interface OnbStep {
-  key: StepKey;
-  titleKey: string;
-  descKey: string;
-  ctaKey: string;
-  required: boolean;
-  done: boolean;
-  action: () => void;
-}
+// Onboarding types are now imported from the component
 
 
 @Component({
@@ -33,6 +24,7 @@ interface OnbStep {
     TodayAgendaComponent,
     RecentActivityComponent,
     QuickLinksComponent,
+    OnboardingChecklistComponent,
     AnimateOnIntersectDirective,
     KpiNumberDirective,
     RippleDirective
@@ -72,6 +64,12 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   hasInvited = false;
   hasItem = false;
 
+  // Real data for dynamic display
+  courseData: { name: string; subject: string; grade: string; category: string } | null = null;
+  sectionsData: { name: string; id: string }[] = [];
+  studentsData: { count: number; sections: string[] } | null = null;
+  itemsData: { count: number; types: string[] } | null = null;
+
   steps: OnbStep[] = [
     { key: 'createCourse',   titleKey: 'onb.createCourse.title', descKey: 'onb.createCourse.desc', ctaKey: 'onb.createCourse.cta', required: true,  done: false, action: () => this.onCreateCourse() },
     { key: 'addSection',     titleKey: 'onb.addSection.title',   descKey: 'onb.addSection.desc',   ctaKey: 'onb.addSection.cta',   required: true,  done: false, action: () => this.onAddSection() },
@@ -88,6 +86,17 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
     const req = this.steps.filter(s => s.required);
     const done = req.filter(s => s.done).length;
     return Math.round((done / req.length) * 100);
+  }
+
+  // Event handlers for onboarding component
+  onStepCompleted(stepKey: StepKey): void {
+    console.log(`Step completed: ${stepKey}`);
+    // Handle step completion logic here
+  }
+
+  onStepAction(stepKey: StepKey): void {
+    console.log(`Step action triggered: ${stepKey}`);
+    // Handle step action logic here
   }
 
   private requiredDone(): boolean {
@@ -133,18 +142,38 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   }
 
   onCreateCourse(): void {
-    // Optional: trigger confetti like your script
-    if (this.isBrowser) this.confetti.burst(50);
+    // Simulate course creation with real data
+    this.courseData = {
+      name: 'Algebra Basics',
+      subject: 'Math',
+      grade: '9',
+      category: 'STEM'
+    };
+    
     this.setDone('createCourse', true);
     this.hasCourse = true;
+    
+    // Trigger confetti and visual feedback
+    if (this.isBrowser) this.confetti.burst(50);
+    
+    // Unlock next step with visual feedback
+    this.unlockNextStep(0);
     this.maybeFinishOnboarding();
   }
 
   // Onboarding example handlers (wire to real flows later)
   onInviteStudents(): void {
-    // TODO: open invite dialog / route
+    // Simulate student invitation with real data
+    this.studentsData = {
+      count: 25,
+      sections: ['Section A', 'Section B']
+    };
+    
     this.setDone('inviteStudents', true);
     this.hasInvited = true;
+    
+    // Unlock next step with visual feedback
+    this.unlockNextStep(2);
     this.maybeFinishOnboarding();
   }
 
@@ -161,24 +190,54 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   }
 
   onAddSection(): void {
-    // TODO: route to add section
+    // Simulate section creation with real data
+    this.sectionsData = [
+      { name: 'Section A', id: 'sec-a' },
+      { name: 'Section B', id: 'sec-b' }
+    ];
+    
     this.setDone('addSection', true);
     this.hasSection = true;
+    
+    // Unlock next step with visual feedback
+    this.unlockNextStep(1);
     this.maybeFinishOnboarding();
   }
 
   onAddItem(): void {
-    // TODO: open builder
+    // Simulate item creation with real data
+    this.itemsData = {
+      count: 3,
+      types: ['Quiz', 'Material', 'Activity']
+    };
+    
     this.setDone('addFirstItem', true);
     this.hasItem = true;
   }
 
+  private unlockNextStep(completedStepIndex: number): void {
+    // Add visual feedback for unlocking next step
+    const nextStepIndex = completedStepIndex + 1;
+    if (nextStepIndex < this.steps.length) {
+      // Add a subtle pulse animation to the next step
+      setTimeout(() => {
+        // This will be handled by CSS animations
+        console.log(`Step ${nextStepIndex + 1} unlocked!`);
+      }, 500);
+    }
+  }
+
   private maybeFinishOnboarding(): void {
     if (this.requiredDone()) {
-      this.confetti.burst(60);
+      // Big confetti celebration
+      this.confetti.burst(100);
+      
+      // Show completion message
       setTimeout(() => {
-        // TODO: persist finished flag and/or route
-      }, 700);
+        console.log('🎉 Onboarding completed! Switching to normal dashboard...');
+        // TODO: persist finished flag and/or route to normal dashboard
+        // For now, the *ngIf="!isFirstRun" will handle the switch
+      }, 1000);
     }
   }
 

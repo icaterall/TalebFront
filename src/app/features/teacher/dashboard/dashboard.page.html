@@ -43,36 +43,12 @@
   </section>
 
       <!-- Onboarding checklist -->
-      <section class="onboarding glass-card">
-        <div class="onb-header">
-          <div class="onb-title">
-            {{ 'onb.getStarted' | translate }}
-          </div>
-          <div class="onb-progress">
-            <div class="bar"><span [style.width.%]="progressPct"></span></div>
-            <small>{{ progressPct }}%</small>
-          </div>
-        </div>
-
-        <ul class="onb-list">
-          <li *ngFor="let s of steps; let i = index" class="onb-item" appAnimateOnIntersect>
-            <button class="onb-check" [class.done]="s.done" aria-label="step status">
-              <span *ngIf="s.done">✔</span>
-            </button>
-
-            <div class="onb-body">
-              <div class="onb-text">
-                <strong>{{ s.titleKey | translate }}</strong>
-                <p>{{ s.descKey | translate }}</p>
-              </div>
-
-              <button class="onb-action" appRipple (click)="s.action()">
-                {{ s.ctaKey | translate }}
-              </button>
-            </div>
-          </li>
-        </ul>
-      </section>
+      <app-onboarding-checklist 
+        [steps]="steps"
+        [progressPct]="progressPct"
+        (stepCompleted)="onStepCompleted($event)"
+        (stepAction)="onStepAction($event)">
+      </app-onboarding-checklist>
 
       <!-- Quick wins -->
       <section class="actions-section">

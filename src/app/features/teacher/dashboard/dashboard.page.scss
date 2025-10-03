@@ -262,7 +262,7 @@ body {
         .stat-badge {
             background: white;
             border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 20px;
+            border-radius: 5px;
             padding: 8px 16px;
             font-size: 14px;
             font-weight: 500;
@@ -318,7 +318,7 @@ body {
         .tip-action {
             background: white;
             border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 20px;
+            border-radius: 5px;
             padding: 8px 16px;
             font-size: 14px;
             font-weight: 500;
@@ -1120,8 +1120,49 @@ body {
     border: 1px solid rgb(255 255 255);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(0px);
+    transition: all 0.3s ease;
+    
+    // Locked state (disabled)
+    &.locked {
+        opacity: 0.5;
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.15);
+        
+        .onb-check {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .onb-action {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+    
+    // Unlocked state (ready to interact)
+    &.unlocked {
+        animation: unlockPulse 2s ease-in-out infinite;
+        border-color: var(--primary);
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+    }
+    
+    // Completed state
+    &.completed {
+        background: rgba(37, 99, 235, 0.1);
+        border-color: var(--primary);
+    }
+}
 
- }
+@keyframes unlockPulse {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
+        transform: scale(1.02);
+    }
+}
 .onb-check { 
     width: 32px;
     height: 32px;

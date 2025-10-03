@@ -1167,10 +1167,231 @@
     "tryTemplates": "Try templates"
   },
   "getStarted": "Get started",
-  "createCourse": { "title": "Create your first course", "desc": "Course name, subject, grade level.", "cta": "Create course" },
-  "addSection": { "title": "Add at least one section", "desc": "Groups inside a course (e.g., Section A, Section B).", "cta": "Add section" },
-  "invite": { "title": "Invite students to a section", "desc": "Share a join code/link or upload a list.", "cta": "Invite" },
-  "addItem": { "title": "Add your first item", "desc": "Activity, material, or quiz (you can skip for now).", "cta": "Add item" }
-}
-
+  "createCourse": { 
+    "title": "Create your first course", 
+    "desc": "Course name, subject, grade level.", 
+    "cta": "Create course",
+    "afterTitle": "Algebra Basics",
+    "afterDesc": "Subject: Math • Grade: 9 • Category: STEM",
+    "updateCta": "Update course"
+  },
+  "addSection": { 
+    "title": "Add at least one section", 
+    "desc": "Groups inside a course (e.g., Section A, Section B).", 
+    "cta": "Add section",
+    "afterTitle": "Sections: A, B",
+    "afterDesc": "2 sections created",
+    "manageCta": "Manage sections"
+  },
+  "invite": { 
+    "title": "Invite students to a section", 
+    "desc": "Share a join code/link or upload a list.", 
+    "cta": "Invite",
+    "afterTitle": "Students invited",
+    "afterDesc": "25 students enrolled across 2 sections",
+    "manageCta": "Manage students"
+  },
+  "addItem": { 
+    "title": "Add your first item", 
+    "desc": "Activity, material, or quiz (you can skip for now).", 
+    "cta": "Add item",
+    "afterTitle": "Activities added",
+    "afterDesc": "3 items: Quiz, Material, Activity",
+    "manageCta": "Manage activities"
+  },
+    "sections": {
+      "basics": {
+        "title": "Course Basics",
+        "description": "These details appear to teachers and students"
+      },
+      "schedule": {
+        "title": "Structure & Schedule"
+      },
+      "access": {
+        "title": "Access & Ownership"
+      },
+      "grading": {
+        "title": "Grading & Policies"
+      },
+      "description": {
+        "title": "Description & Tags"
+      },
+      "quickStart": {
+        "title": "Quick Start"
+      }
+    },
+    "fields": {
+      "courseName": {
+        "label": "Course Name",
+        "placeholder": "Algebra Basics",
+        "help": "3-60 characters"
+      },
+      "subject": {
+        "label": "Subject",
+        "placeholder": "Select subject"
+      },
+      "grade": {
+        "label": "Grade/Level",
+        "placeholder": "Select grade"
+      },
+      "category": {
+        "label": "Category",
+        "placeholder": "Select category (optional)"
+      },
+      "primaryLanguage": {
+        "label": "Primary Language",
+        "placeholder": "Select language"
+      },
+      "courseIcon": {
+        "label": "Course Icon"
+      },
+      "courseColor": {
+        "label": "Course Color"
+      },
+      "term": {
+        "label": "Term/Semester",
+        "placeholder": "Select term"
+      },
+      "timezone": {
+        "label": "Timezone"
+      },
+      "startDate": {
+        "label": "Start Date"
+      },
+      "endDate": {
+        "label": "End Date"
+      },
+      "visibility": {
+        "label": "Visibility"
+      },
+      "institution": {
+        "label": "Institution",
+        "placeholder": "Select institution"
+      },
+      "coTeachers": {
+        "label": "Co-teachers",
+        "placeholder": "Enter email address"
+      },
+      "gradingPolicy": {
+        "label": "Grading Policy",
+        "placeholder": "Select grading policy"
+      },
+      "passingThreshold": {
+        "label": "Passing Threshold",
+        "help": "Percentage to pass"
+      },
+      "lateSubmissionRule": {
+        "label": "Late Submission Rule",
+        "placeholder": "Select rule"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Brief course description"
+      },
+      "tags": {
+        "label": "Keywords/Tags",
+        "placeholder": "Add keyword and press Enter"
+      },
+      "createFirstSection": {
+        "label": "Create first section now",
+        "description": "Create a default section for the course"
+      },
+      "sectionName": {
+        "label": "Section Name",
+        "placeholder": "Section A"
+      },
+      "starterContent": {
+        "label": "Starter Content"
+      }
+    },
+    "options": {
+      "subjects": {
+        "math": "Mathematics",
+        "science": "Science",
+        "english": "English",
+        "it": "Information Technology",
+        "history": "History",
+        "geography": "Geography",
+        "art": "Art",
+        "music": "Music",
+        "physical": "Physical Education",
+        "other": "Other"
+      },
+      "grades": {
+        "grade5": "Grade 5",
+        "grade6": "Grade 6",
+        "grade7": "Grade 7",
+        "grade8": "Grade 8",
+        "grade9": "Grade 9",
+        "grade10": "Grade 10",
+        "grade11": "Grade 11",
+        "grade12": "Grade 12",
+        "university": "University",
+        "adult": "Adult"
+      },
+      "categories": {
+        "stem": "STEM",
+        "humanities": "Humanities",
+        "languages": "Languages",
+        "skills": "Skills",
+        "arts": "Arts",
+        "sports": "Sports"
+      },
+      "languages": {
+        "arabic": "Arabic",
+        "english": "English",
+        "both": "Both"
+      },
+      "terms": {
+        "current": "Current Term",
+        "spring2024": "Spring 2024",
+        "summer2024": "Summer 2024",
+        "fall2024": "Fall 2024",
+        "custom": "Custom"
+      },
+      "visibility": {
+        "private": "Private",
+        "privateDesc": "Course is private to you only",
+        "shareable": "Shareable Link",
+        "shareableDesc": "Can share link with other teachers",
+        "library": "Publish to Library",
+        "libraryDesc": "Other teachers can use it",
+        "institution": "Institution",
+        "institutionDesc": "Available to all institution teachers"
+      },
+      "institutions": {
+        "personal": "Personal",
+        "university1": "Eastern University",
+        "school1": "Al-Noor School"
+      },
+      "gradingPolicies": {
+        "points": "Points",
+        "percentage": "Percentage",
+        "passfail": "Pass/Fail"
+      },
+      "lateSubmissionRules": {
+        "accept": "Accept Late Submissions",
+        "penalty": "Accept with Penalty",
+        "close": "Close at Due Date"
+      },
+      "starterContent": {
+        "empty": "Empty Course",
+        "emptyDesc": "Start from scratch",
+        "template": "From Template",
+        "templateDesc": "Use a ready-made template"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save Course",
+      "saving": "Saving...",
+      "note": "You can edit all details later"
+    },
+    "validation": {
+      "required": "This field is required",
+      "minLength": "Must be at least 3 characters",
+      "maxLength": "Must be 60 characters or less",
+      "email": "Invalid email address"
+    }
+  }
 }
