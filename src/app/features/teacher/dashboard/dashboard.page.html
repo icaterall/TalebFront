@@ -1,295 +1,186 @@
-<section class="dashboard">
-  <!-- Welcome Banner -->
-  <div class="welcome-banner">
-    <div class="welcome-content">
-      <div class="welcome-text">
-        <h1 class="welcome-title">👋 Welcome back, Ahmed!</h1>
-        <p class="welcome-subtitle">Ready to inspire your students today?</p>
-        <div class="welcome-stats">
-          <span class="stat-badge">🎯 12 Active Courses</span>
-          <span class="stat-badge">👥 328 Students</span>
-          <span class="stat-badge">⭐ 4.9 Rating</span>
-        </div>
-      </div>
-      <div class="ai-tip">
-        <div class="tip-icon">💡</div>
-        <div class="tip-content">
-          <p class="tip-text">Did you know you can turn any quiz into a game with one click?</p>
-          <button class="tip-action">Try it now →</button>
-        </div>
-      </div>
-    </div>
-    <div class="welcome-decoration">
-      <div class="decoration-circle circle-1"></div>
-      <div class="decoration-circle circle-2"></div>
-      <div class="decoration-circle circle-3"></div>
-    </div>
+<section class="dashboard" *ngIf="isBrowser">
+  <!-- Floating Background Shapes -->
+  <div class="floating-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
   </div>
 
-  <!-- Stats Overview -->
-  <div class="stats-grid">
-    <div class="stat-card stat-blue">
-      <div class="stat-background">
-        <div class="stat-icon">📚</div>
-        <div class="stat-pulse"></div>
-      </div>
-      <div class="stat-content">
-        <div class="stat-number">12</div>
-        <div class="stat-label">Active Courses</div>
-        <div class="stat-trend">↗ +2 this week</div>
-        <a href="#" class="stat-link">View all courses →</a>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-green">
-      <div class="stat-background">
-        <div class="stat-icon">👥</div>
-        <div class="stat-pulse"></div>
-      </div>
-      <div class="stat-content">
-        <div class="stat-number">8</div>
-        <div class="stat-label">Active Sections</div>
-        <div class="stat-trend">↗ +1 this week</div>
-        <a href="#" class="stat-link">Manage sections →</a>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-orange">
-      <div class="stat-background">
-        <div class="stat-icon">🧑‍🎓</div>
-        <div class="stat-pulse"></div>
-      </div>
-      <div class="stat-content">
-        <div class="stat-number">328</div>
-        <div class="stat-label">Students Enrolled</div>
-        <div class="stat-trend">↗ +15 this week</div>
-        <a href="#" class="stat-link">View students →</a>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-purple">
-      <div class="stat-background">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-pulse"></div>
-      </div>
-      <div class="stat-content">
-        <div class="stat-number">4</div>
-        <div class="stat-label">Pending Requests</div>
-        <div class="stat-trend">⚠ Needs attention</div>
-        <a href="#" class="stat-link">Review requests →</a>
-      </div>
-    </div>
-  </div>
+  <div class="dashboard-container">
+    <!-- Hero Welcome Section -->
+    <section class="hero-section glass-strong" #hero>
+      <div class="progress-tracker">{{ 'dashboardPage.hero.step' | translate }}</div>
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1><span class="wave-emoji">👋</span> {{ 'dashboardPage.hero.title' | translate }}</h1>
+          <p>{{ 'dashboardPage.hero.subtitle' | translate }}</p>
+        </div>
 
-  <!-- Quick Actions -->
-  <div class="quick-actions">
-    <h2 class="section-title">⚡ Quick Actions</h2>
-    <div class="actions-grid">
-      <button class="action-card action-primary">
-        <div class="action-gradient"></div>
-        <div class="action-icon">➕</div>
-        <div class="action-content">
-          <h3>Create New Course</h3>
-          <p>Start building your next amazing course</p>
-          <div class="action-badge">Popular</div>
+        <!-- AI tip card (optional but referenced by your script) -->
+        <div class="ai-tip" *ngIf="aiTipEnabled">
+          <div class="ai-tip-header">
+            <div class="ai-tip-icon">🤖</div>
+            <strong>{{ 'dashboardPage.hero.ai_tip' | translate }}</strong>
+          </div>
+          <div class="ai-tip-text">{{ currentTip }}</div>
         </div>
-        <div class="action-arrow">→</div>
-      </button>
-      
-      <button class="action-card action-secondary">
-        <div class="action-gradient"></div>
-        <div class="action-icon">📝</div>
-        <div class="action-content">
-          <h3>Create Activity</h3>
-          <p>Design quizzes, polls, and games</p>
-          <div class="action-badge">Quick</div>
-        </div>
-        <div class="action-arrow">→</div>
-      </button>
-      
-      <button class="action-card action-accent">
-        <div class="action-gradient"></div>
-        <div class="action-icon">📩</div>
-        <div class="action-content">
-          <h3>Invite Students</h3>
-          <p>Send invitations to your classes</p>
-          <div class="action-badge">Easy</div>
-        </div>
-        <div class="action-arrow">→</div>
-      </button>
-      
-      <button class="action-card action-highlight">
-        <div class="action-gradient"></div>
-        <div class="action-icon">🎮</div>
-        <div class="action-content">
-          <h3>Host Live Game</h3>
-          <p>Start an interactive session now</p>
-          <div class="action-badge">Fun</div>
-        </div>
-        <div class="action-arrow">→</div>
-      </button>
-    </div>
-  </div>
+      </div>
+    </section>
 
-  <!-- Today's Highlights -->
-  <div class="highlights-section">
-    <h2 class="section-title">🗓️ Today's Timeline</h2>
-    <div class="timeline-container">
-      <div class="timeline">
-        <div class="timeline-item timeline-urgent">
-          <div class="timeline-icon">⏰</div>
-          <div class="timeline-content">
-            <h4>Physics Quiz 1 is due today</h4>
-            <p>12 students not finished • Due in 2 hours</p>
-            <div class="timeline-actions">
-              <button class="btn-remind">Send Reminder</button>
-              <button class="btn-extend">Extend Deadline</button>
+    <!-- KPI Cards Section -->
+    <section class="kpi-section">
+      <div class="kpi-card" appAnimateOnIntersect>
+        <div class="kpi-icon kpi-icon-1">📚</div>
+        <div class="kpi-number" appKpiNumber="12">12</div>
+        <div class="kpi-label">{{ 'dashboardPage.kpi.activeCourses' | translate }}</div>
+        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.viewAllCourses' | translate }}</a>
+      </div>
+      <div class="kpi-card" appAnimateOnIntersect>
+        <div class="kpi-icon kpi-icon-2">👥</div>
+        <div class="kpi-number" appKpiNumber="248">248</div>
+        <div class="kpi-label">{{ 'dashboardPage.kpi.totalStudents' | translate }}</div>
+        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.manageStudents' | translate }}</a>
+      </div>
+      <div class="kpi-card" appAnimateOnIntersect>
+        <div class="kpi-icon kpi-icon-3">🎮</div>
+        <div class="kpi-number" appKpiNumber="37">37</div>
+        <div class="kpi-label">{{ 'dashboardPage.kpi.gamesCreated' | translate }}</div>
+        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.browseGames' | translate }}</a>
+      </div>
+      <div class="kpi-card" appAnimateOnIntersect>
+        <div class="kpi-icon kpi-icon-4">📊</div>
+        <div class="kpi-number" appKpiNumber="89" [percent]="true">89%</div>
+        <div class="kpi-label">{{ 'dashboardPage.kpi.avgScore' | translate }}</div>
+        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.viewAnalytics' | translate }}</a>
+      </div>
+    </section>
+
+    <!-- Quick Actions Section -->
+    <section class="actions-section">
+      <div class="action-card action-1 glass-card" appRipple (click)="onCreateCourse()">
+        <span class="action-step">{{ 'dashboardPage.actions.quickAction' | translate }}</span>
+        <div class="action-icon">🚀</div>
+        <div class="action-title">{{ 'dashboardPage.actions.createCourse' | translate }}</div>
+        <div class="action-subtitle">{{ 'dashboardPage.actions.createCourseSub' | translate }}</div>
+      </div>
+      <div class="action-card action-2 glass-card" appRipple>
+        <div class="action-icon">✨</div>
+        <div class="action-title">{{ 'dashboardPage.actions.newActivity' | translate }}</div>
+        <div class="action-subtitle">{{ 'dashboardPage.actions.newActivitySub' | translate }}</div>
+      </div>
+      <div class="action-card action-3 glass-card" appRipple>
+        <div class="action-icon">📧</div>
+        <div class="action-title">{{ 'dashboardPage.actions.inviteStudents' | translate }}</div>
+        <div class="action-subtitle">{{ 'dashboardPage.actions.inviteStudentsSub' | translate }}</div>
+      </div>
+      <div class="action-card action-4 glass-card" appRipple>
+        <div class="action-icon">🎯</div>
+        <div class="action-title">{{ 'dashboardPage.actions.hostLive' | translate }}</div>
+        <div class="action-subtitle">{{ 'dashboardPage.actions.hostLiveSub' | translate }}</div>
+      </div>
+    </section>
+
+    <!-- Today's Highlights -->
+    <section class="highlights-section glass-card">
+      <h2 class="section-title">{{ 'dashboardPage.highlights.title' | translate }}</h2>
+      <div class="highlight-item" appAnimateOnIntersect>
+        <div class="highlight-icon">⏰</div>
+        <div class="highlight-content">
+          <h4>{{ 'dashboardPage.highlights.item1Title' | translate }}</h4>
+          <span class="highlight-time">{{ 'dashboardPage.highlights.item1Time' | translate }}</span>
+        </div>
+        <button class="action-button">{{ 'dashboardPage.highlights.start' | translate }}</button>
+      </div>
+      <div class="highlight-item" appAnimateOnIntersect>
+        <div class="highlight-icon">📚</div>
+        <div class="highlight-content">
+          <h4>{{ 'dashboardPage.highlights.item2Title' | translate }}</h4>
+          <span class="highlight-time">{{ 'dashboardPage.highlights.item2Time' | translate }}</span>
+        </div>
+        <button class="action-button">{{ 'dashboardPage.highlights.prepare' | translate }}</button>
+      </div>
+      <div class="highlight-item" appAnimateOnIntersect>
+        <div class="highlight-icon">🎨</div>
+        <div class="highlight-content">
+          <h4>{{ 'dashboardPage.highlights.item3Title' | translate }}</h4>
+          <span class="highlight-time">{{ 'dashboardPage.highlights.item3Time' | translate }}</span>
+        </div>
+        <button class="action-button">{{ 'dashboardPage.highlights.details' | translate }}</button>
+      </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="activity-section glass-card">
+      <h2 class="section-title">{{ 'dashboardPage.activity.title' | translate }}</h2>
+
+      <div class="activity-item" appAnimateOnIntersect>
+        <div class="activity-avatar">JD</div>
+        <div class="activity-content">
+          <div class="activity-text">
+            <strong>John Davis</strong> completed "World History Quiz" with
+            <span class="activity-score">95%</span> 🎉
+          </div>
+          <div class="activity-time">{{ 'dashboardPage.activity.time2min' | translate }}</div>
+        </div>
+      </div>
+
+      <!-- … repeat the rest of your items … -->
+    </section>
+
+    <!-- Library -->
+    <section class="library-section">
+      <h2 class="section-title">{{ 'dashboardPage.library.title' | translate }}</h2>
+      <div class="library-carousel">
+        <div class="library-card glass-card" appAnimateOnIntersect>
+          <div class="library-image">
+            <div class="library-plays">{{ 'dashboardPage.library.plays' | translate:{count:'2.3k'} }}</div>
+          </div>
+          <div class="library-content">
+            <h3 class="library-title">{{ 'dashboardPage.library.card1Title' | translate }}</h3>
+            <p class="library-description">{{ 'dashboardPage.library.card1Desc' | translate }}</p>
+            <button class="library-button">{{ 'dashboardPage.library.useInCourse' | translate }}</button>
+          </div>
+        </div>
+                <div class="library-card glass-card">
+                    <div class="library-image library-image-2">
+                        <div class="library-plays">{{ 'dashboardPage.library.plays' | translate:{count:'1.8k'} }}</div>
+                    </div>
+                    <div class="library-content">
+                        <h3 class="library-title">{{ 'dashboardPage.library.card2Title' | translate }}</h3>
+                        <p class="library-description">{{ 'dashboardPage.library.card2Desc' | translate }}</p>
+                        <button class="library-button">{{ 'dashboardPage.library.useInCourse' | translate }}</button>
+                    </div>
+                </div>
+                <div class="library-card glass-card">
+                    <div class="library-image library-image-3">
+                        <div class="library-plays">{{ 'dashboardPage.library.plays' | translate:{count:'3.1k'} }}</div>
+                    </div>
+                    <div class="library-content">
+                        <h3 class="library-title">{{ 'dashboardPage.library.card3Title' | translate }}</h3>
+                        <p class="library-description">{{ 'dashboardPage.library.card3Desc' | translate }}</p>
+                        <button class="library-button">{{ 'dashboardPage.library.useInCourse' | translate }}</button>
+                    </div>
+                </div>
+                <div class="library-card glass-card">
+                    <div class="library-image library-image-4">
+                        <div class="library-plays">{{ 'dashboardPage.library.plays' | translate:{count:'2.7k'} }}</div>
+                    </div>
+                    <div class="library-content">
+                        <h3 class="library-title">{{ 'dashboardPage.library.card4Title' | translate }}</h3>
+                        <p class="library-description">{{ 'dashboardPage.library.card4Desc' | translate }}</p>
+                        <button class="library-button">{{ 'dashboardPage.library.useInCourse' | translate }}</button>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-        
-        <div class="timeline-item timeline-live">
-          <div class="timeline-icon">🎮</div>
-          <div class="timeline-content">
-            <h4>Live Game scheduled at 3:00 PM</h4>
-            <p>Section A • Math Trivia Challenge</p>
-            <div class="timeline-actions">
-              <button class="btn-start">Start Early</button>
-              <button class="btn-prepare">Prepare</button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="timeline-item timeline-request">
-          <div class="timeline-icon">📥</div>
-          <div class="timeline-content">
-            <h4>4 new students requested to join</h4>
-            <p>Physics 101 • Chemistry Lab • Math Basics</p>
-            <div class="timeline-actions">
-              <button class="btn-approve-all">Approve All</button>
-              <button class="btn-review">Review</button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="timeline-item timeline-completed">
-          <div class="timeline-icon">✅</div>
-          <div class="timeline-content">
-            <h4>Homeroom check-in completed 08:30 AM</h4>
-            <p>All 24 students present • Great attendance!</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+        </section>
 
-  <!-- Recent Activity Feed -->
-  <div class="activity-section">
-    <h2 class="section-title">📰 Live Activity Feed</h2>
-    <div class="activity-feed">
-      <div class="activity-item activity-success">
-        <div class="activity-avatar activity-avatar-green">A</div>
-        <div class="activity-content">
-          <div class="activity-header">
-            <span class="activity-name">Ali Ahmed</span>
-            <span class="activity-badge">Student</span>
-            <span class="activity-time">2 min ago</span>
-          </div>
-          <p>just completed <strong>Quiz 2</strong> with <strong>85%</strong> 🎉</p>
-          <div class="activity-reactions">
-            <button class="reaction-btn">👏</button>
-            <button class="reaction-btn">🎉</button>
-            <button class="reaction-btn">💪</button>
-          </div>
+        <!-- Empty State Examples (Hidden by default, shown when no data) -->
+        <div style="display: none;">
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <div class="empty-state-text">{{ 'dashboardPage.empty.noCourses' | translate }}</div>
+                <div class="empty-state-subtext">{{ 'dashboardPage.empty.createFirst' | translate }}</div>
+            </div>
         </div>
-      </div>
-      
-      <div class="activity-item activity-info">
-        <div class="activity-avatar activity-avatar-blue">S</div>
-        <div class="activity-content">
-          <div class="activity-header">
-            <span class="activity-name">Section B</span>
-            <span class="activity-badge">Group</span>
-            <span class="activity-time">15 min ago</span>
-          </div>
-          <p>requested to join <strong>Course 'Physics 101'</strong></p>
-          <div class="activity-actions">
-            <button class="btn-approve-small">✓ Approve</button>
-            <button class="btn-reject-small">✗ Decline</button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="activity-item activity-teacher">
-        <div class="activity-avatar activity-avatar-purple">T</div>
-        <div class="activity-content">
-          <div class="activity-header">
-            <span class="activity-name">You</span>
-            <span class="activity-badge">Teacher</span>
-            <span class="activity-time">1 day ago</span>
-          </div>
-          <p>published a new activity <strong>'IT Basics Quiz'</strong></p>
-          <div class="activity-stats">
-            <span class="stat">👥 24 students</span>
-            <span class="stat">⭐ 4.8 rating</span>
-            <span class="stat">🎯 89% completion</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="activity-item activity-achievement">
-        <div class="activity-avatar activity-avatar-gold">🏆</div>
-        <div class="activity-content">
-          <div class="activity-header">
-            <span class="activity-name">Sarah Mohamed</span>
-            <span class="activity-badge">Student</span>
-            <span class="activity-time">3 hours ago</span>
-          </div>
-          <p>earned the <strong>Math Master</strong> badge! 🏆</p>
-          <div class="activity-celebration">
-            <span class="celebration-text">🎊 Congratulations! 🎊</span>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-
-  <!-- Discover Section -->
-  <div class="discover-section">
-    <h2 class="section-title">Discover & Inspire</h2>
-    <div class="discover-grid">
-      <div class="discover-card">
-        <div class="discover-image">
-          <div class="discover-placeholder">🎯</div>
-        </div>
-        <div class="discover-content">
-          <h3>Math Trivia Challenge</h3>
-          <p class="discover-stats">2.3k plays • 4.8★</p>
-          <button class="btn-use">Use in my course</button>
-        </div>
-      </div>
-      
-      <div class="discover-card">
-        <div class="discover-image">
-          <div class="discover-placeholder">🧪</div>
-        </div>
-        <div class="discover-content">
-          <h3>Chemistry Lab Quiz</h3>
-          <p class="discover-stats">1.8k plays • 4.6★</p>
-          <button class="btn-use">Use in my course</button>
-        </div>
-      </div>
-      
-      <div class="discover-card">
-        <div class="discover-image">
-          <div class="discover-placeholder">🌍</div>
-        </div>
-        <div class="discover-content">
-          <h3>World Geography Game</h3>
-          <p class="discover-stats">3.1k plays • 4.9★</p>
-          <button class="btn-use">Use in my course</button>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>

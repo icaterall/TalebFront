@@ -1065,4 +1065,67 @@
 "getInTouch": "Stay in Touch"
 }
 
+,"dashboardPage": {
+  "hero": {
+    "step": "Step 1 of 3",
+    "title": "Welcome back, Teacher!",
+    "subtitle": "Ready to inspire your students today? You have classes scheduled.",
+    "ai_tip": "AI Tip"
+  },
+  "kpi": {
+    "activeCourses": "Active Courses",
+    "viewAllCourses": "View all courses →",
+    "totalStudents": "Total Students",
+    "manageStudents": "Manage students →",
+    "gamesCreated": "Games Created",
+    "browseGames": "Browse games →",
+    "avgScore": "Avg. Score",
+    "viewAnalytics": "View analytics →"
+  },
+  "actions": {
+    "quickAction": "Quick Action",
+    "createCourse": "Create Course",
+    "createCourseSub": "Design your next amazing learning journey",
+    "newActivity": "New Activity",
+    "newActivitySub": "Build interactive quizzes and games",
+    "inviteStudents": "Invite Students",
+    "inviteStudentsSub": "Share your class code or invitation link",
+    "hostLive": "Host Live",
+    "hostLiveSub": "Start an interactive session right now"
+  },
+  "highlights": {
+    "title": "📅 Today's Schedule",
+    "item1Title": "Math Quiz - Algebra Basics",
+    "item1Time": "Starting in 30 minutes • Room 5A",
+    "item2Title": "Science Lab - Chemistry 101",
+    "item2Time": "2:00 PM • Virtual Classroom",
+    "item3Title": "Creative Writing Workshop",
+    "item3Time": "4:30 PM • Library",
+    "start": "Start Session",
+    "prepare": "Prepare",
+    "details": "View Details"
+  },
+  "activity": {
+    "title": "🎯 Recent Activity",
+    "time2min": "2 minutes ago"
+  },
+  "library": {
+    "title": "🎮 Popular Learning Games",
+    "plays": "{{count}} plays",
+    "card1Title": "Math Adventure Quest",
+    "card1Desc": "An exciting journey through algebra and geometry concepts",
+    "card2Title": "Science Lab Simulator",
+    "card2Desc": "Virtual experiments in chemistry and physics",
+    "card3Title": "History Time Machine",
+    "card3Desc": "Travel through time and test your historical knowledge",
+    "card4Title": "Language Master",
+    "card4Desc": "Fun vocabulary and grammar challenges",
+    "useInCourse": "Use in My Course"
+  },
+  "empty": {
+    "noCourses": "No courses yet",
+    "createFirst": "Create your first course to get started!"
+  }
+}
+
 }
