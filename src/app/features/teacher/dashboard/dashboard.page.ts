@@ -5,6 +5,7 @@ import { TodayAgendaComponent } from './today-agenda/today-agenda.component';
 import { RecentActivityComponent } from './recent-activity/recent-activity.component';
 import { QuickLinksComponent } from './quick-links/quick-links.component';
 import { OnboardingChecklistComponent, OnbStep, StepKey } from './onboarding-checklist/onboarding-checklist.component';
+import { CreateCourseFormComponent, CourseFormData } from './create-course-form/create-course-form.component';
 import { AnimateOnIntersectDirective } from './animate-on-intersect.directive';
 import { KpiNumberDirective } from './kpi-number.directive';
 import { RippleDirective } from './ripple.directive';
@@ -25,6 +26,7 @@ import { TranslateModule } from '@ngx-translate/core';
     RecentActivityComponent,
     QuickLinksComponent,
     OnboardingChecklistComponent,
+    CreateCourseFormComponent,
     AnimateOnIntersectDirective,
     KpiNumberDirective,
     RippleDirective
@@ -50,9 +52,9 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   ];
 
   constructor(
-    @Inject(PLATFORM_ID) platformId: Object,
+    @Inject(PLATFORM_ID) private platformId: Object,
     private zone: NgZone,
-    private confetti: ConfettiService
+    private confettiService: ConfettiService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -69,6 +71,9 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   sectionsData: { name: string; id: string }[] = [];
   studentsData: { count: number; sections: string[] } | null = null;
   itemsData: { count: number; types: string[] } | null = null;
+
+  // Create Course Form
+  showCreateCourseForm = false;
 
   steps: OnbStep[] = [
     { key: 'createCourse',   titleKey: 'onb.createCourse.title', descKey: 'onb.createCourse.desc', ctaKey: 'onb.createCourse.cta', required: true,  done: false, action: () => this.onCreateCourse() },
@@ -97,6 +102,47 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   onStepAction(stepKey: StepKey): void {
     console.log(`Step action triggered: ${stepKey}`);
     // Handle step action logic here
+  }
+
+  // Create Course Form handlers
+  onCourseCreated(courseData: CourseFormData): void {
+    console.log('Course created:', courseData);
+    
+    // Update onboarding state
+    this.hasCourse = true;
+    this.courseData = {
+      name: courseData.courseName,
+      subject: courseData.subject,
+      grade: courseData.grade,
+      category: courseData.category || ''
+    };
+    
+    // Update the step
+    const courseStep = this.steps.find(s => s.key === 'createCourse');
+    if (courseStep) {
+      courseStep.done = true;
+    }
+    
+    // Close the form
+    this.showCreateCourseForm = false;
+    
+    // Show success message
+    this.showSuccessToast('Course created successfully!');
+    
+    // Trigger confetti if in browser
+    if (this.isBrowser) {
+      this.confettiService.burst(50);
+    }
+  }
+
+  onCourseFormCancelled(): void {
+    this.showCreateCourseForm = false;
+  }
+
+  private showSuccessToast(message: string): void {
+    // Simple toast implementation - in a real app, you'd use a proper toast service
+    console.log('Success:', message);
+    // TODO: Implement proper toast notification
   }
 
   private requiredDone(): boolean {
@@ -142,23 +188,8 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   }
 
   onCreateCourse(): void {
-    // Simulate course creation with real data
-    this.courseData = {
-      name: 'Algebra Basics',
-      subject: 'Math',
-      grade: '9',
-      category: 'STEM'
-    };
-    
-    this.setDone('createCourse', true);
-    this.hasCourse = true;
-    
-    // Trigger confetti and visual feedback
-    if (this.isBrowser) this.confetti.burst(50);
-    
-    // Unlock next step with visual feedback
-    this.unlockNextStep(0);
-    this.maybeFinishOnboarding();
+    // Show the Create Course form
+    this.showCreateCourseForm = true;
   }
 
   // Onboarding example handlers (wire to real flows later)
@@ -230,7 +261,7 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   private maybeFinishOnboarding(): void {
     if (this.requiredDone()) {
       // Big confetti celebration
-      this.confetti.burst(100);
+      this.confettiService.burst(100);
       
       // Show completion message
       setTimeout(() => {

@@ -1194,7 +1194,248 @@
     "cta": "إنشاء مساق",
     "afterTitle": "أساسيات الجبر",
     "afterDesc": "المادة: الرياضيات • الصف: 9 • الفئة: STEM",
-    "updateCta": "تحديث المساق"
+    "updateCta": "تحديث المساق",
+    "form": {
+      "title": "إنشاء مساق جديد",
+      "subtitle": "أكمل التفاصيل أدناه لإنشاء مساقك الأول"
+    },
+    "sections": {
+      "basics": {
+        "title": "أساسيات المساق",
+        "description": "هذه التفاصيل تظهر للمعلمين والطلاب"
+      },
+      "schedule": {
+        "title": "الهيكل والجدولة"
+      },
+      "access": {
+        "title": "الوصول والملكية"
+      },
+      "grading": {
+        "title": "التقييم والسياسات"
+      },
+      "description": {
+        "title": "الوصف والعلامات"
+      },
+      "quickStart": {
+        "title": "البدء السريع"
+      }
+    },
+    "fields": {
+      "courseName": {
+        "label": "اسم المساق",
+        "placeholder": "أساسيات الجبر",
+        "help": "3-60 حرف"
+      },
+      "subject": {
+        "label": "المادة",
+        "placeholder": "اختر المادة"
+      },
+      "grade": {
+        "label": "الصف/المستوى",
+        "placeholder": "اختر الصف"
+      },
+      "category": {
+        "label": "الفئة",
+        "placeholder": "اختر الفئة (اختياري)"
+      },
+      "primaryLanguage": {
+        "label": "اللغة الأساسية",
+        "placeholder": "اختر اللغة"
+      },
+      "courseIcon": {
+        "label": "أيقونة المساق"
+      },
+      "term": {
+        "label": "الفصل الدراسي",
+        "placeholder": "اختر الفصل"
+      },
+      "timezone": {
+        "label": "المنطقة الزمنية"
+      },
+      "startDate": {
+        "label": "تاريخ البداية"
+      },
+      "endDate": {
+        "label": "تاريخ النهاية"
+      },
+      "visibility": {
+        "label": "الرؤية"
+      },
+      "institution": {
+        "label": "المؤسسة",
+        "placeholder": "اختر المؤسسة"
+      },
+      "coTeachers": {
+        "label": "المعلمون المشاركون",
+        "placeholder": "أدخل البريد الإلكتروني"
+      },
+      "gradingPolicy": {
+        "label": "سياسة التقييم",
+        "placeholder": "اختر سياسة التقييم"
+      },
+      "passingThreshold": {
+        "label": "حد النجاح",
+        "help": "النسبة المئوية للنجاح"
+      },
+      "lateSubmissionRule": {
+        "label": "قاعدة التسليم المتأخر",
+        "placeholder": "اختر القاعدة"
+      },
+      "description": {
+        "label": "الوصف",
+        "placeholder": "وصف مختصر للمساق"
+      },
+      "tags": {
+        "label": "الكلمات المفتاحية",
+        "placeholder": "أضف كلمة مفتاحية واضغط Enter"
+      },
+      "createFirstSection": {
+        "label": "إنشاء الشعبة الأولى الآن",
+        "description": "إنشاء شعبة افتراضية للمساق"
+      },
+      "sectionName": {
+        "label": "اسم الشعبة",
+        "placeholder": "الشعبة أ"
+      },
+      "starterContent": {
+        "label": "المحتوى الابتدائي"
+      }
+    },
+    "options": {
+      "subjects": {
+        "math": "الرياضيات",
+        "science": "العلوم",
+        "english": "اللغة الإنجليزية",
+        "it": "تقنية المعلومات",
+        "history": "التاريخ",
+        "geography": "الجغرافيا",
+        "art": "الفنون",
+        "physical": "التربية البدنية",
+        "other": "أخرى"
+      },
+      "grades": {
+        "grade5": "الصف الخامس",
+        "grade6": "الصف السادس",
+        "grade7": "الصف السابع",
+        "grade8": "الصف الثامن",
+        "grade9": "الصف التاسع",
+        "grade10": "الصف العاشر",
+        "grade11": "الصف الحادي عشر",
+        "grade12": "الصف الثاني عشر",
+        "university": "الجامعة",
+        "adult": "البالغين"
+      },
+      "categories": {
+        "stem": "العلوم والتكنولوجيا",
+        "humanities": "العلوم الإنسانية",
+        "languages": "اللغات",
+        "skills": "المهارات",
+        "arts": "الفنون",
+        "sports": "الرياضة"
+      },
+      "languages": {
+        "arabic": "العربية",
+        "english": "الإنجليزية",
+        "french": "الفرنسية",
+        "spanish": "الإسبانية",
+        "german": "الألمانية",
+        "italian": "الإيطالية",
+        "portuguese": "البرتغالية",
+        "russian": "الروسية",
+        "chinese": "الصينية",
+        "japanese": "اليابانية",
+        "korean": "الكورية",
+        "hindi": "الهندية",
+        "urdu": "الأردية",
+        "turkish": "التركية",
+        "persian": "الفارسية",
+        "both": "العربية والإنجليزية",
+        "multilingual": "متعدد اللغات",
+        "arabicClassical": "العربية الكلاسيكية",
+        "arabicModern": "العربية الفصحى الحديثة",
+        "arabicDialect": "اللهجة العربية",
+        "englishUS": "الإنجليزية (أمريكا)",
+        "englishUK": "الإنجليزية (بريطانيا)",
+        "englishAU": "الإنجليزية (أستراليا)",
+        "spanishES": "الإسبانية (إسبانيا)",
+        "spanishMX": "الإسبانية (المكسيك)",
+        "frenchFR": "الفرنسية (فرنسا)",
+        "frenchCA": "الفرنسية (كندا)",
+        "portugueseBR": "البرتغالية (البرازيل)",
+        "portuguesePT": "البرتغالية (البرتغال)",
+        "chineseSimplified": "الصينية (المبسطة)",
+        "chineseTraditional": "الصينية (التقليدية)"
+      },
+      "languageProficiency": {
+        "beginner": "مبتدئ",
+        "intermediate": "متوسط",
+        "advanced": "متقدم",
+        "native": "متحدث أصلي",
+        "fluent": "طلاقة"
+      },
+      "teachingLanguages": {
+        "primary": "لغة التدريس الأساسية",
+        "secondary": "لغة التدريس الثانوية",
+        "support": "لغة الدعم",
+        "assessment": "لغة التقييم"
+      },
+      "terms": {
+        "current": "الفصل الحالي",
+        "spring2024": "ربيع 2024",
+        "summer2024": "صيف 2024",
+        "fall2024": "خريف 2024",
+        "custom": "مخصص"
+      },
+      "visibility": {
+        "private": "خاص",
+        "privateDesc": "المساق خاص بك فقط",
+        "shareable": "رابط قابل للمشاركة",
+        "shareableDesc": "يمكن مشاركة الرابط مع معلمين آخرين",
+        "library": "نشر في المكتبة",
+        "libraryDesc": "يمكن للمعلمين الآخرين استخدامه",
+        "institution": "المؤسسة",
+        "institutionDesc": "متاح لجميع معلمي المؤسسة"
+      },
+      "institutions": {
+        "personal": "شخصي",
+        "university1": "جامعة الشرقية",
+        "school1": "مدرسة النور"
+      },
+      "gradingPolicies": {
+        "points": "النقاط",
+        "percentage": "النسبة المئوية",
+        "passfail": "نجح/راسب"
+      },
+      "lateSubmissionRules": {
+        "accept": "قبول التسليم المتأخر",
+        "penalty": "قبول مع خصم",
+        "close": "إغلاق عند انتهاء الموعد"
+      },
+      "starterContent": {
+        "empty": "مساق فارغ",
+        "emptyDesc": "ابدأ من الصفر",
+        "template": "من قالب",
+        "templateDesc": "استخدم قالب جاهز"
+      }
+    },
+    "actions": {
+      "cancel": "إلغاء",
+      "save": "حفظ المساق",
+      "saving": "جاري الحفظ...",
+      "note": "يمكنك تعديل جميع التفاصيل لاحقاً"
+    },
+    "validation": {
+      "required": "هذا الحقل مطلوب",
+      "minLength": "يجب أن يكون 3 أحرف على الأقل",
+      "maxLength": "يجب أن يكون 60 حرف أو أقل",
+      "email": "البريد الإلكتروني غير صالح"
+    },
+    "warning": {
+      "title": "تغييرات غير محفوظة",
+      "message": "لديك تغييرات غير محفوظة. هل أنت متأكد من أنك تريد الإغلاق دون حفظ؟",
+      "cancel": "متابعة التحرير",
+      "discard": "تجاهل التغييرات"
+    }
   },
   "addSection": { 
     "title": "أضف قسمًا واحدًا على الأقل", 
@@ -1266,9 +1507,6 @@
       "courseIcon": {
         "label": "أيقونة المساق"
       },
-      "courseColor": {
-        "label": "لون المساق"
-      },
       "term": {
         "label": "الفصل الدراسي",
         "placeholder": "اختر الفصل"
@@ -1334,7 +1572,6 @@
         "history": "التاريخ",
         "geography": "الجغرافيا",
         "art": "الفنون",
-        "music": "الموسيقى",
         "physical": "التربية البدنية",
         "other": "أخرى"
       },
@@ -1361,7 +1598,48 @@
       "languages": {
         "arabic": "العربية",
         "english": "الإنجليزية",
-        "both": "كلاهما"
+        "french": "الفرنسية",
+        "spanish": "الإسبانية",
+        "german": "الألمانية",
+        "italian": "الإيطالية",
+        "portuguese": "البرتغالية",
+        "russian": "الروسية",
+        "chinese": "الصينية",
+        "japanese": "اليابانية",
+        "korean": "الكورية",
+        "hindi": "الهندية",
+        "urdu": "الأردية",
+        "turkish": "التركية",
+        "persian": "الفارسية",
+        "both": "العربية والإنجليزية",
+        "multilingual": "متعدد اللغات",
+        "arabicClassical": "العربية الكلاسيكية",
+        "arabicModern": "العربية الفصحى الحديثة",
+        "arabicDialect": "اللهجة العربية",
+        "englishUS": "الإنجليزية (أمريكا)",
+        "englishUK": "الإنجليزية (بريطانيا)",
+        "englishAU": "الإنجليزية (أستراليا)",
+        "spanishES": "الإسبانية (إسبانيا)",
+        "spanishMX": "الإسبانية (المكسيك)",
+        "frenchFR": "الفرنسية (فرنسا)",
+        "frenchCA": "الفرنسية (كندا)",
+        "portugueseBR": "البرتغالية (البرازيل)",
+        "portuguesePT": "البرتغالية (البرتغال)",
+        "chineseSimplified": "الصينية (المبسطة)",
+        "chineseTraditional": "الصينية (التقليدية)"
+      },
+      "languageProficiency": {
+        "beginner": "مبتدئ",
+        "intermediate": "متوسط",
+        "advanced": "متقدم",
+        "native": "متحدث أصلي",
+        "fluent": "طلاقة"
+      },
+      "teachingLanguages": {
+        "primary": "لغة التدريس الأساسية",
+        "secondary": "لغة التدريس الثانوية",
+        "support": "لغة الدعم",
+        "assessment": "لغة التقييم"
       },
       "terms": {
         "current": "الفصل الحالي",

@@ -1173,32 +1173,11 @@
     "cta": "Create course",
     "afterTitle": "Algebra Basics",
     "afterDesc": "Subject: Math • Grade: 9 • Category: STEM",
-    "updateCta": "Update course"
-  },
-  "addSection": { 
-    "title": "Add at least one section", 
-    "desc": "Groups inside a course (e.g., Section A, Section B).", 
-    "cta": "Add section",
-    "afterTitle": "Sections: A, B",
-    "afterDesc": "2 sections created",
-    "manageCta": "Manage sections"
-  },
-  "invite": { 
-    "title": "Invite students to a section", 
-    "desc": "Share a join code/link or upload a list.", 
-    "cta": "Invite",
-    "afterTitle": "Students invited",
-    "afterDesc": "25 students enrolled across 2 sections",
-    "manageCta": "Manage students"
-  },
-  "addItem": { 
-    "title": "Add your first item", 
-    "desc": "Activity, material, or quiz (you can skip for now).", 
-    "cta": "Add item",
-    "afterTitle": "Activities added",
-    "afterDesc": "3 items: Quiz, Material, Activity",
-    "manageCta": "Manage activities"
-  },
+    "updateCta": "Update course",
+    "form": {
+      "title": "Create New Course",
+      "subtitle": "Complete the details below to create your first course"
+    },
     "sections": {
       "basics": {
         "title": "Course Basics",
@@ -1244,9 +1223,6 @@
       },
       "courseIcon": {
         "label": "Course Icon"
-      },
-      "courseColor": {
-        "label": "Course Color"
       },
       "term": {
         "label": "Term/Semester",
@@ -1313,7 +1289,6 @@
         "history": "History",
         "geography": "Geography",
         "art": "Art",
-        "music": "Music",
         "physical": "Physical Education",
         "other": "Other"
       },
@@ -1340,7 +1315,311 @@
       "languages": {
         "arabic": "Arabic",
         "english": "English",
-        "both": "Both"
+        "french": "French",
+        "spanish": "Spanish",
+        "german": "German",
+        "italian": "Italian",
+        "portuguese": "Portuguese",
+        "russian": "Russian",
+        "chinese": "Chinese",
+        "japanese": "Japanese",
+        "korean": "Korean",
+        "hindi": "Hindi",
+        "urdu": "Urdu",
+        "turkish": "Turkish",
+        "persian": "Persian",
+        "both": "Both Arabic & English",
+        "multilingual": "Multilingual",
+        "arabicClassical": "Classical Arabic",
+        "arabicModern": "Modern Standard Arabic",
+        "arabicDialect": "Arabic Dialect",
+        "englishUS": "English (US)",
+        "englishUK": "English (UK)",
+        "englishAU": "English (Australia)",
+        "spanishES": "Spanish (Spain)",
+        "spanishMX": "Spanish (Mexico)",
+        "frenchFR": "French (France)",
+        "frenchCA": "French (Canada)",
+        "portugueseBR": "Portuguese (Brazil)",
+        "portuguesePT": "Portuguese (Portugal)",
+        "chineseSimplified": "Chinese (Simplified)",
+        "chineseTraditional": "Chinese (Traditional)"
+      },
+      "languageProficiency": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate", 
+        "advanced": "Advanced",
+        "native": "Native Speaker",
+        "fluent": "Fluent"
+      },
+      "teachingLanguages": {
+        "primary": "Primary Teaching Language",
+        "secondary": "Secondary Teaching Language",
+        "support": "Support Language",
+        "assessment": "Assessment Language"
+      },
+      "terms": {
+        "current": "Current Term",
+        "spring2024": "Spring 2024",
+        "summer2024": "Summer 2024",
+        "fall2024": "Fall 2024",
+        "custom": "Custom"
+      },
+      "visibility": {
+        "private": "Private",
+        "privateDesc": "Course is private to you only",
+        "shareable": "Shareable Link",
+        "shareableDesc": "Can share link with other teachers",
+        "library": "Publish to Library",
+        "libraryDesc": "Other teachers can use it",
+        "institution": "Institution",
+        "institutionDesc": "Available to all institution teachers"
+      },
+      "institutions": {
+        "personal": "Personal",
+        "university1": "Eastern University",
+        "school1": "Al-Noor School"
+      },
+      "gradingPolicies": {
+        "points": "Points",
+        "percentage": "Percentage",
+        "passfail": "Pass/Fail"
+      },
+      "lateSubmissionRules": {
+        "accept": "Accept Late Submissions",
+        "penalty": "Accept with Penalty",
+        "close": "Close at Due Date"
+      },
+      "starterContent": {
+        "empty": "Empty Course",
+        "emptyDesc": "Start from scratch",
+        "template": "From Template",
+        "templateDesc": "Use a ready-made template"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save Course",
+      "saving": "Saving...",
+      "note": "You can edit all details later"
+    },
+    "validation": {
+      "required": "This field is required",
+      "minLength": "Must be at least 3 characters",
+      "maxLength": "Must be 60 characters or less",
+      "email": "Invalid email address"
+    },
+    "warning": {
+      "title": "Unsaved Changes",
+      "message": "You have unsaved changes. Are you sure you want to close without saving?",
+      "cancel": "Keep Editing",
+      "discard": "Discard Changes"
+    }
+  },
+  "addSection": { 
+    "title": "Add at least one section", 
+    "desc": "Groups inside a course (e.g., Section A, Section B).", 
+    "cta": "Add section",
+    "afterTitle": "Sections: A, B",
+    "afterDesc": "2 sections created",
+    "manageCta": "Manage sections"
+  },
+  "invite": { 
+    "title": "Invite students to a section", 
+    "desc": "Share a join code/link or upload a list.", 
+    "cta": "Invite",
+    "afterTitle": "Students invited",
+    "afterDesc": "25 students enrolled across 2 sections",
+    "manageCta": "Manage students"
+  },
+  "addItem": { 
+    "title": "Add your first item", 
+    "desc": "Activity, material, or quiz (you can skip for now).", 
+    "cta": "Add item",
+    "afterTitle": "Activities added",
+    "afterDesc": "3 items: Quiz, Material, Activity",
+    "manageCta": "Manage activities"
+  },
+  "addSection": { 
+    "title": "Add at least one section", 
+    "desc": "Groups inside a course (e.g., Section A, Section B).", 
+    "cta": "Add section",
+    "afterTitle": "Sections: A, B",
+    "afterDesc": "2 sections created",
+    "manageCta": "Manage sections"
+  },
+  "invite": { 
+    "title": "Invite students to a section", 
+    "desc": "Share a join code/link or upload a list.", 
+    "cta": "Invite",
+    "afterTitle": "Students invited",
+    "afterDesc": "25 students enrolled across 2 sections",
+    "manageCta": "Manage students"
+  },
+  "addItem": { 
+    "title": "Add your first item", 
+    "desc": "Activity, material, or quiz (you can skip for now).", 
+    "cta": "Add item",
+    "afterTitle": "Activities added",
+    "afterDesc": "3 items: Quiz, Material, Activity",
+    "manageCta": "Manage activities"
+  }
+}
+        "placeholder": "Algebra Basics",
+        "help": "3-60 characters"
+      },
+      "subject": {
+        "label": "Subject",
+        "placeholder": "Select subject"
+      },
+      "grade": {
+        "label": "Grade/Level",
+        "placeholder": "Select grade"
+      },
+      "category": {
+        "label": "Category",
+        "placeholder": "Select category (optional)"
+      },
+      "primaryLanguage": {
+        "label": "Primary Language",
+        "placeholder": "Select language"
+      },
+      "courseIcon": {
+        "label": "Course Icon"
+      },
+      "term": {
+        "label": "Term/Semester",
+        "placeholder": "Select term"
+      },
+      "timezone": {
+        "label": "Timezone"
+      },
+      "startDate": {
+        "label": "Start Date"
+      },
+      "endDate": {
+        "label": "End Date"
+      },
+      "visibility": {
+        "label": "Visibility"
+      },
+      "institution": {
+        "label": "Institution",
+        "placeholder": "Select institution"
+      },
+      "coTeachers": {
+        "label": "Co-teachers",
+        "placeholder": "Enter email address"
+      },
+      "gradingPolicy": {
+        "label": "Grading Policy",
+        "placeholder": "Select grading policy"
+      },
+      "passingThreshold": {
+        "label": "Passing Threshold",
+        "help": "Percentage to pass"
+      },
+      "lateSubmissionRule": {
+        "label": "Late Submission Rule",
+        "placeholder": "Select rule"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Brief course description"
+      },
+      "tags": {
+        "label": "Keywords/Tags",
+        "placeholder": "Add keyword and press Enter"
+      },
+      "createFirstSection": {
+        "label": "Create first section now",
+        "description": "Create a default section for the course"
+      },
+      "sectionName": {
+        "label": "Section Name",
+        "placeholder": "Section A"
+      },
+      "starterContent": {
+        "label": "Starter Content"
+      }
+    },
+    "options": {
+      "subjects": {
+        "math": "Mathematics",
+        "science": "Science",
+        "english": "English",
+        "it": "Information Technology",
+        "history": "History",
+        "geography": "Geography",
+        "art": "Art",
+        "physical": "Physical Education",
+        "other": "Other"
+      },
+      "grades": {
+        "grade5": "Grade 5",
+        "grade6": "Grade 6",
+        "grade7": "Grade 7",
+        "grade8": "Grade 8",
+        "grade9": "Grade 9",
+        "grade10": "Grade 10",
+        "grade11": "Grade 11",
+        "grade12": "Grade 12",
+        "university": "University",
+        "adult": "Adult"
+      },
+      "categories": {
+        "stem": "STEM",
+        "humanities": "Humanities",
+        "languages": "Languages",
+        "skills": "Skills",
+        "arts": "Arts",
+        "sports": "Sports"
+      },
+      "languages": {
+        "arabic": "Arabic",
+        "english": "English",
+        "french": "French",
+        "spanish": "Spanish",
+        "german": "German",
+        "italian": "Italian",
+        "portuguese": "Portuguese",
+        "russian": "Russian",
+        "chinese": "Chinese",
+        "japanese": "Japanese",
+        "korean": "Korean",
+        "hindi": "Hindi",
+        "urdu": "Urdu",
+        "turkish": "Turkish",
+        "persian": "Persian",
+        "both": "Both Arabic & English",
+        "multilingual": "Multilingual",
+        "arabicClassical": "Classical Arabic",
+        "arabicModern": "Modern Standard Arabic",
+        "arabicDialect": "Arabic Dialect",
+        "englishUS": "English (US)",
+        "englishUK": "English (UK)",
+        "englishAU": "English (Australia)",
+        "spanishES": "Spanish (Spain)",
+        "spanishMX": "Spanish (Mexico)",
+        "frenchFR": "French (France)",
+        "frenchCA": "French (Canada)",
+        "portugueseBR": "Portuguese (Brazil)",
+        "portuguesePT": "Portuguese (Portugal)",
+        "chineseSimplified": "Chinese (Simplified)",
+        "chineseTraditional": "Chinese (Traditional)"
+      },
+      "languageProficiency": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate", 
+        "advanced": "Advanced",
+        "native": "Native Speaker",
+        "fluent": "Fluent"
+      },
+      "teachingLanguages": {
+        "primary": "Primary Teaching Language",
+        "secondary": "Secondary Teaching Language",
+        "support": "Support Language",
+        "assessment": "Assessment Language"
       },
       "terms": {
         "current": "Current Term",

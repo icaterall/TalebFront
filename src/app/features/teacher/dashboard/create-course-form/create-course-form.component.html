@@ -1,383 +1,341 @@
-<!-- Create Course Form -->
-<div class="create-course-form">
-  <div class="form-header">
-    <h2 class="form-title">{{ 'createCourse.form.title' | translate }}</h2>
-    <p class="form-subtitle">{{ 'createCourse.form.subtitle' | translate }}</p>
-  </div>
+<!-- Create Course Form Modal -->
+<div class="create-course-modal" (keydown.escape)="onEscapeKey($event)">
+  <div class="modal-backdrop"></div>
+  
+  <div class="modal-content">
+    <!-- Header -->
+    <div class="modal-header">
+      <h1>{{ 'onb.createCourse.form.title' | translate }}</h1>
+      <p>{{ 'onb.createCourse.form.subtitle' | translate }}</p>
+      <button class="close-btn" (click)="onCloseClick()" aria-label="Close">
+        <span>×</span>
+      </button>
+    </div>
 
-  <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" class="course-form">
-    
-    <!-- A) Course basics (required) -->
-    <section class="form-section">
-      <h3 class="section-title">{{ 'createCourse.sections.basics.title' | translate }}</h3>
-      <p class="section-description">{{ 'createCourse.sections.basics.description' | translate }}</p>
+    <!-- Form -->
+    <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" class="course-form">
       
-      <div class="form-group">
-        <label for="courseName" class="form-label required">
-          {{ 'createCourse.fields.courseName.label' | translate }}
-        </label>
-        <input 
-          type="text" 
-          id="courseName"
-          formControlName="courseName"
-          class="form-input"
-          [class.error]="courseForm.get('courseName')?.invalid && courseForm.get('courseName')?.touched"
-          [placeholder]="'createCourse.fields.courseName.placeholder' | translate">
-        <div class="field-help">{{ 'createCourse.fields.courseName.help' | translate }}</div>
-        <div class="field-error" *ngIf="courseForm.get('courseName')?.invalid && courseForm.get('courseName')?.touched">
-          {{ getFieldError('courseName') | translate }}
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="subject" class="form-label required">
-            {{ 'createCourse.fields.subject.label' | translate }}
-          </label>
-          <select 
-            id="subject"
-            formControlName="subject"
-            class="form-select"
-            [class.error]="courseForm.get('subject')?.invalid && courseForm.get('subject')?.touched">
-            <option value="">{{ 'createCourse.fields.subject.placeholder' | translate }}</option>
-            <option *ngFor="let subject of subjects" [value]="subject.value">{{ subject.label | translate }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="grade" class="form-label required">
-            {{ 'createCourse.fields.grade.label' | translate }}
-          </label>
-          <select 
-            id="grade"
-            formControlName="grade"
-            class="form-select"
-            [class.error]="courseForm.get('grade')?.invalid && courseForm.get('grade')?.touched">
-            <option value="">{{ 'createCourse.fields.grade.placeholder' | translate }}</option>
-            <option *ngFor="let grade of grades" [value]="grade.value">{{ grade.label | translate }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="category" class="form-label">
-            {{ 'createCourse.fields.category.label' | translate }}
-          </label>
-          <select 
-            id="category"
-            formControlName="category"
-            class="form-select">
-            <option value="">{{ 'createCourse.fields.category.placeholder' | translate }}</option>
-            <option *ngFor="let category of categories" [value]="category.value">{{ category.label | translate }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="primaryLanguage" class="form-label required">
-            {{ 'createCourse.fields.primaryLanguage.label' | translate }}
-          </label>
-          <select 
-            id="primaryLanguage"
-            formControlName="primaryLanguage"
-            class="form-select"
-            [class.error]="courseForm.get('primaryLanguage')?.invalid && courseForm.get('primaryLanguage')?.touched">
-            <option value="">{{ 'createCourse.fields.primaryLanguage.placeholder' | translate }}</option>
-            <option *ngFor="let lang of languages" [value]="lang.value">{{ lang.label | translate }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">{{ 'createCourse.fields.courseIcon.label' | translate }}</label>
-        <div class="icon-picker">
-          <div class="icon-options">
-            <button 
-              type="button" 
-              *ngFor="let icon of courseIcons" 
-              class="icon-option"
-              [class.selected]="courseForm.get('courseIcon')?.value === icon"
-              (click)="selectIcon(icon)">
-              {{ icon }}
-            </button>
+      <!-- A) Course basics -->
+      <div class="form-section">
+        <h2>{{ 'onb.createCourse.sections.basics.title' | translate }}</h2>
+        <p class="section-description">{{ 'onb.createCourse.sections.basics.description' | translate }}</p>
+        
+        <div class="form-row">
+          <div class="form-field full-width">
+            <label for="courseName">{{ 'onb.createCourse.fields.courseName.label' | translate }}*</label>
+            <input 
+              id="courseName" 
+              type="text" 
+              formControlName="courseName"
+              [placeholder]="'onb.createCourse.fields.courseName.placeholder' | translate"
+              [class.invalid]="isFieldInvalid('courseName')">
+            <small *ngIf="getFieldError('courseName')" class="error-message">
+              {{ getFieldError('courseName') | translate }}
+            </small>
+            <small *ngIf="!getFieldError('courseName')" class="help-text">
+              {{ 'onb.createCourse.fields.courseName.help' | translate }}
+            </small>
           </div>
-          <div class="color-picker">
-            <label class="color-label">{{ 'createCourse.fields.courseColor.label' | translate }}</label>
-            <div class="color-options">
-              <button 
-                type="button" 
-                *ngFor="let color of courseColors" 
-                class="color-option"
-                [class.selected]="courseForm.get('courseColor')?.value === color"
-                [style.background-color]="color"
-                (click)="selectColor(color)">
-              </button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="subject">{{ 'onb.createCourse.fields.subject.label' | translate }}*</label>
+            <select id="subject" formControlName="subject" [class.invalid]="isFieldInvalid('subject')">
+              <option value="">{{ 'onb.createCourse.fields.subject.placeholder' | translate }}</option>
+              <option *ngFor="let subject of subjects" [value]="subject.value">
+                {{ subject.label | translate }}
+              </option>
+            </select>
+            <small *ngIf="getFieldError('subject')" class="error-message">
+              {{ getFieldError('subject') | translate }}
+            </small>
+          </div>
+
+          <div class="form-field">
+            <label for="grade">{{ 'onb.createCourse.fields.grade.label' | translate }}*</label>
+            <select id="grade" formControlName="grade" [class.invalid]="isFieldInvalid('grade')">
+              <option value="">{{ 'onb.createCourse.fields.grade.placeholder' | translate }}</option>
+              <option *ngFor="let grade of grades" [value]="grade.value">
+                {{ grade.label | translate }}
+              </option>
+            </select>
+            <small *ngIf="getFieldError('grade')" class="error-message">
+              {{ getFieldError('grade') | translate }}
+            </small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="category">{{ 'onb.createCourse.fields.category.label' | translate }}</label>
+            <select id="category" formControlName="category">
+              <option value="">{{ 'onb.createCourse.fields.category.placeholder' | translate }}</option>
+              <option *ngFor="let category of categories" [value]="category.value">
+                {{ category.label | translate }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="primaryLanguage">{{ 'onb.createCourse.fields.primaryLanguage.label' | translate }}*</label>
+            <select id="primaryLanguage" formControlName="primaryLanguage" [class.invalid]="isFieldInvalid('primaryLanguage')">
+              <option value="">{{ 'onb.createCourse.fields.primaryLanguage.placeholder' | translate }}</option>
+              <option *ngFor="let language of languages" [value]="language.value">
+                {{ language.label | translate }}
+              </option>
+            </select>
+            <small *ngIf="getFieldError('primaryLanguage')" class="error-message">
+              {{ getFieldError('primaryLanguage') | translate }}
+            </small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field full-width">
+            <label>{{ 'onb.createCourse.fields.courseIcon.label' | translate }}</label>
+            <div class="icon-picker">
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '📚'" (click)="selectIcon('📚')">📚</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🧮'" (click)="selectIcon('🧮')">🧮</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🔬'" (click)="selectIcon('🔬')">🔬</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🎨'" (click)="selectIcon('🎨')">🎨</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🌍'" (click)="selectIcon('🌍')">🌍</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '💻'" (click)="selectIcon('💻')">💻</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '⚗️'" (click)="selectIcon('⚗️')">⚗️</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '📖'" (click)="selectIcon('📖')">📖</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '✏️'" (click)="selectIcon('✏️')">✏️</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🏃'" (click)="selectIcon('🏃')">🏃</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🎭'" (click)="selectIcon('🎭')">🎭</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🔢'" (click)="selectIcon('🔢')">🔢</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🌱'" (click)="selectIcon('🌱')">🌱</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🚀'" (click)="selectIcon('🚀')">🚀</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🎯'" (click)="selectIcon('🎯')">🎯</button>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- B) Structure & schedule -->
-    <section class="form-section">
-      <h3 class="section-title">{{ 'createCourse.sections.schedule.title' | translate }}</h3>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label for="term" class="form-label">
-            {{ 'createCourse.fields.term.label' | translate }}
-          </label>
-          <select 
-            id="term"
-            formControlName="term"
-            class="form-select">
-            <option value="">{{ 'createCourse.fields.term.placeholder' | translate }}</option>
-            <option *ngFor="let term of terms" [value]="term.value">{{ term.label | translate }}</option>
-          </select>
+      <!-- B) Structure & schedule -->
+      <div class="form-section">
+        <h2>{{ 'onb.createCourse.sections.schedule.title' | translate }}</h2>
+        
+        <div class="form-row">
+          <div class="form-field">
+            <label for="term">{{ 'onb.createCourse.fields.term.label' | translate }}</label>
+            <select id="term" formControlName="term">
+              <option value="">{{ 'onb.createCourse.fields.term.placeholder' | translate }}</option>
+              <option *ngFor="let term of terms" [value]="term.value">
+                {{ term.label | translate }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="timezone">{{ 'onb.createCourse.fields.timezone.label' | translate }}</label>
+            <input id="timezone" type="text" formControlName="timezone" readonly>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="timezone" class="form-label">
-            {{ 'createCourse.fields.timezone.label' | translate }}
-          </label>
-          <select 
-            id="timezone"
-            formControlName="timezone"
-            class="form-select">
-            <option *ngFor="let tz of timezones" [value]="tz.value">{{ tz.label }}</option>
-          </select>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="startDate">{{ 'onb.createCourse.fields.startDate.label' | translate }}</label>
+            <input id="startDate" type="date" formControlName="startDate">
+          </div>
+
+          <div class="form-field">
+            <label for="endDate">{{ 'onb.createCourse.fields.endDate.label' | translate }}</label>
+            <input id="endDate" type="date" formControlName="endDate">
+          </div>
+        </div>
+      </div>
+
+      <!-- C) Access & ownership -->
+      <div class="form-section">
+        <h2>{{ 'onb.createCourse.sections.access.title' | translate }}</h2>
+        
+        <div class="form-field">
+          <label>{{ 'onb.createCourse.fields.visibility.label' | translate }}*</label>
+          <div class="radio-group">
+            <label *ngFor="let option of visibilityOptions" class="radio-option">
+              <input type="radio" [value]="option.value" formControlName="visibility">
+              <div class="radio-content">
+                <strong>{{ option.label | translate }}</strong>
+                <small>{{ option.desc | translate }}</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="institution">{{ 'onb.createCourse.fields.institution.label' | translate }}</label>
+            <select id="institution" formControlName="institution">
+              <option *ngFor="let institution of institutions" [value]="institution.value">
+                {{ institution.label | translate }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>{{ 'onb.createCourse.fields.coTeachers.label' | translate }}</label>
+          <div class="co-teachers-list">
+            <div *ngFor="let coTeacher of coTeachersArray.controls; let i = index" class="co-teacher-item">
+              <input 
+                type="email" 
+                [formControl]="coTeacher"
+                [placeholder]="'onb.createCourse.fields.coTeachers.placeholder' | translate"
+                [class.invalid]="coTeacher.invalid && coTeacher.touched">
+              <button type="button" (click)="removeCoTeacher(i)" class="remove-btn">×</button>
+            </div>
+            <button type="button" (click)="addCoTeacher()" class="add-btn">
+              + {{ 'onb.createCourse.fields.coTeachers.placeholder' | translate }}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="startDate" class="form-label">
-            {{ 'createCourse.fields.startDate.label' | translate }}
-          </label>
-          <input 
-            type="date" 
-            id="startDate"
-            formControlName="startDate"
-            class="form-input">
-        </div>
+      <!-- D) Grading & policies -->
+      <div class="form-section">
+        <h2>{{ 'onb.createCourse.sections.grading.title' | translate }}</h2>
+        
+        <div class="form-row">
+          <div class="form-field">
+            <label for="gradingPolicy">{{ 'onb.createCourse.fields.gradingPolicy.label' | translate }}</label>
+            <select id="gradingPolicy" formControlName="gradingPolicy">
+              <option value="">{{ 'onb.createCourse.fields.gradingPolicy.placeholder' | translate }}</option>
+              <option *ngFor="let policy of gradingPolicies" [value]="policy.value">
+                {{ policy.label | translate }}
+              </option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label for="endDate" class="form-label">
-            {{ 'createCourse.fields.endDate.label' | translate }}
-          </label>
-          <input 
-            type="date" 
-            id="endDate"
-            formControlName="endDate"
-            class="form-input">
-        </div>
-      </div>
-    </section>
-
-    <!-- C) Access & ownership -->
-    <section class="form-section">
-      <h3 class="section-title">{{ 'createCourse.sections.access.title' | translate }}</h3>
-      
-      <div class="form-group">
-        <label class="form-label required">{{ 'createCourse.fields.visibility.label' | translate }}</label>
-        <div class="radio-group">
-          <label class="radio-option" *ngFor="let option of visibilityOptions">
+          <div class="form-field" *ngIf="courseForm.get('gradingPolicy')?.value === 'percentage'">
+            <label for="passingThreshold">{{ 'onb.createCourse.fields.passingThreshold.label' | translate }}</label>
             <input 
-              type="radio" 
-              [value]="option.value"
-              formControlName="visibility"
-              class="radio-input">
-            <span class="radio-label">
-              <strong>{{ option.label | translate }}</strong>
-              <small>{{ option.description | translate }}</small>
-            </span>
+              id="passingThreshold" 
+              type="number" 
+              formControlName="passingThreshold"
+              min="0" 
+              max="100">
+            <small>{{ 'onb.createCourse.fields.passingThreshold.help' | translate }}</small>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="lateSubmissionRule">{{ 'onb.createCourse.fields.lateSubmissionRule.label' | translate }}</label>
+          <select id="lateSubmissionRule" formControlName="lateSubmissionRule">
+            <option value="">{{ 'onb.createCourse.fields.lateSubmissionRule.placeholder' | translate }}</option>
+            <option *ngFor="let rule of lateSubmissionRules" [value]="rule.value">
+              {{ rule.label | translate }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- E) Description & tags -->
+      <div class="form-section">
+        <h2>{{ 'onb.createCourse.sections.description.title' | translate }}</h2>
+        
+        <div class="form-field">
+          <label for="description">{{ 'onb.createCourse.fields.description.label' | translate }}</label>
+          <textarea 
+            id="description" 
+            formControlName="description"
+            [placeholder]="'onb.createCourse.fields.description.placeholder' | translate"
+            rows="3"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="tags">{{ 'onb.createCourse.fields.tags.label' | translate }}</label>
+          <div class="tags-input">
+            <input 
+              type="text" 
+              [placeholder]="'onb.createCourse.fields.tags.placeholder' | translate"
+              (keypress)="onKeyPress($event)">
+            <div class="tags-list">
+              <span *ngFor="let tag of tagsArray.controls; let i = index" class="tag">
+                {{ tag.value }}
+                <button type="button" (click)="removeTag(i)" class="tag-remove">×</button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- F) Quick start -->
+      <div class="form-section">
+        <h2>{{ 'onb.createCourse.sections.quickStart.title' | translate }}</h2>
+        
+        <div class="form-field">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="createFirstSection">
+            <span class="checkmark"></span>
+            <div class="checkbox-content">
+              <strong>{{ 'onb.createCourse.fields.createFirstSection.label' | translate }}</strong>
+              <small>{{ 'onb.createCourse.fields.createFirstSection.description' | translate }}</small>
+            </div>
           </label>
         </div>
-      </div>
 
-      <div class="form-group" *ngIf="courseForm.get('visibility')?.value === 'institution'">
-        <label for="institution" class="form-label">
-          {{ 'createCourse.fields.institution.label' | translate }}
-        </label>
-        <select 
-          id="institution"
-          formControlName="institution"
-          class="form-select">
-          <option value="">{{ 'createCourse.fields.institution.placeholder' | translate }}</option>
-          <option *ngFor="let inst of institutions" [value]="inst.value">{{ inst.label | translate }}</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="coTeachers" class="form-label">
-          {{ 'createCourse.fields.coTeachers.label' | translate }}
-        </label>
-        <div class="chip-input">
-          <div class="chips-container">
-            <span *ngFor="let email of coTeachers" class="chip">
-              {{ email }}
-              <button type="button" (click)="removeCoTeacher(email)" class="chip-remove">×</button>
-            </span>
-          </div>
+        <div class="form-field" *ngIf="courseForm.get('createFirstSection')?.value">
+          <label for="sectionName">{{ 'onb.createCourse.fields.sectionName.label' | translate }}</label>
           <input 
-            type="email" 
-            id="coTeachers"
-            class="form-input"
-            [placeholder]="'createCourse.fields.coTeachers.placeholder' | translate"
-            (keyup.enter)="addCoTeacher($event)"
-            (blur)="addCoTeacher($event)">
-        </div>
-      </div>
-    </section>
-
-    <!-- D) Grading & policies -->
-    <section class="form-section">
-      <h3 class="section-title">{{ 'createCourse.sections.grading.title' | translate }}</h3>
-      
-      <div class="form-group">
-        <label for="gradingPolicy" class="form-label">
-          {{ 'createCourse.fields.gradingPolicy.label' | translate }}
-        </label>
-        <select 
-          id="gradingPolicy"
-          formControlName="gradingPolicy"
-          class="form-select">
-          <option value="">{{ 'createCourse.fields.gradingPolicy.placeholder' | translate }}</option>
-          <option *ngFor="let policy of gradingPolicies" [value]="policy.value">{{ policy.label | translate }}</option>
-        </select>
-      </div>
-
-      <div class="form-group" *ngIf="courseForm.get('gradingPolicy')?.value === 'percentage'">
-        <label for="passingThreshold" class="form-label">
-          {{ 'createCourse.fields.passingThreshold.label' | translate }}
-        </label>
-        <input 
-          type="number" 
-          id="passingThreshold"
-          formControlName="passingThreshold"
-          class="form-input"
-          min="0"
-          max="100">
-        <div class="field-help">{{ 'createCourse.fields.passingThreshold.help' | translate }}</div>
-      </div>
-
-      <div class="form-group">
-        <label for="lateSubmissionRule" class="form-label">
-          {{ 'createCourse.fields.lateSubmissionRule.label' | translate }}
-        </label>
-        <select 
-          id="lateSubmissionRule"
-          formControlName="lateSubmissionRule"
-          class="form-select">
-          <option value="">{{ 'createCourse.fields.lateSubmissionRule.placeholder' | translate }}</option>
-          <option *ngFor="let rule of lateSubmissionRules" [value]="rule.value">{{ rule.label | translate }}</option>
-        </select>
-      </div>
-    </section>
-
-    <!-- E) Description & tags -->
-    <section class="form-section">
-      <h3 class="section-title">{{ 'createCourse.sections.description.title' | translate }}</h3>
-      
-      <div class="form-group">
-        <label for="description" class="form-label">
-          {{ 'createCourse.fields.description.label' | translate }}
-        </label>
-        <textarea 
-          id="description"
-          formControlName="description"
-          class="form-textarea"
-          rows="3"
-          [placeholder]="'createCourse.fields.description.placeholder' | translate"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="tags" class="form-label">
-          {{ 'createCourse.fields.tags.label' | translate }}
-        </label>
-        <div class="chip-input">
-          <div class="chips-container">
-            <span *ngFor="let tag of tags" class="chip">
-              {{ tag }}
-              <button type="button" (click)="removeTag(tag)" class="chip-remove">×</button>
-            </span>
-          </div>
-          <input 
+            id="sectionName" 
             type="text" 
-            id="tags"
-            class="form-input"
-            [placeholder]="'createCourse.fields.tags.placeholder' | translate"
-            (keyup.enter)="addTag($event)"
-            (blur)="addTag($event)">
+            formControlName="sectionName"
+            [placeholder]="'onb.createCourse.fields.sectionName.placeholder' | translate">
+        </div>
+
+        <div class="form-field">
+          <label>{{ 'onb.createCourse.fields.starterContent.label' | translate }}</label>
+          <div class="radio-group">
+            <label *ngFor="let option of starterContentOptions" class="radio-option">
+              <input type="radio" [value]="option.value" formControlName="starterContent">
+              <div class="radio-content">
+                <strong>{{ option.label | translate }}</strong>
+                <small>{{ option.desc | translate }}</small>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- F) Quick start -->
-    <section class="form-section">
-      <h3 class="section-title">{{ 'createCourse.sections.quickStart.title' | translate }}</h3>
-      
-      <div class="form-group">
-        <label class="checkbox-option">
-          <input 
-            type="checkbox" 
-            formControlName="createFirstSection"
-            class="checkbox-input">
-          <span class="checkbox-label">
-            <strong>{{ 'createCourse.fields.createFirstSection.label' | translate }}</strong>
-            <small>{{ 'createCourse.fields.createFirstSection.description' | translate }}</small>
-          </span>
-        </label>
-      </div>
-
-      <div class="form-group" *ngIf="courseForm.get('createFirstSection')?.value">
-        <label for="sectionName" class="form-label">
-          {{ 'createCourse.fields.sectionName.label' | translate }}
-        </label>
-        <input 
-          type="text" 
-          id="sectionName"
-          formControlName="sectionName"
-          class="form-input"
-          [placeholder]="'createCourse.fields.sectionName.placeholder' | translate">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">{{ 'createCourse.fields.starterContent.label' | translate }}</label>
-        <div class="radio-group">
-          <label class="radio-option" *ngFor="let option of starterContentOptions">
-            <input 
-              type="radio" 
-              [value]="option.value"
-              formControlName="starterContent"
-              class="radio-input">
-            <span class="radio-label">
-              <strong>{{ option.label | translate }}</strong>
-              <small>{{ option.description | translate }}</small>
-            </span>
-          </label>
-        </div>
-      </div>
-    </section>
-
-    <!-- G) Footer actions -->
-    <section class="form-footer">
-      <div class="footer-actions">
-        <button 
-          type="button" 
-          class="btn btn-secondary"
-          (click)="onCancel()">
-          {{ 'createCourse.actions.cancel' | translate }}
+      <!-- Footer actions -->
+      <div class="form-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancel()">
+          {{ 'onb.createCourse.actions.cancel' | translate }}
         </button>
         <button 
           type="submit" 
-          class="btn btn-primary"
-          [disabled]="!courseForm.valid || isSubmitting">
-          <span *ngIf="!isSubmitting">{{ 'createCourse.actions.save' | translate }}</span>
-          <span *ngIf="isSubmitting">{{ 'createCourse.actions.saving' | translate }}</span>
+          class="btn btn-primary" 
+          [disabled]="courseForm.invalid || isSubmitting">
+          <span *ngIf="!isSubmitting">{{ 'onb.createCourse.actions.save' | translate }}</span>
+          <span *ngIf="isSubmitting">{{ 'onb.createCourse.actions.saving' | translate }}</span>
         </button>
+        <small>{{ 'onb.createCourse.actions.note' | translate }}</small>
       </div>
-      <p class="footer-note">{{ 'createCourse.actions.note' | translate }}</p>
-    </section>
-  </form>
+    </form>
+  </div>
+</div>
+
+<!-- Unsaved Changes Warning Modal -->
+<div class="warning-modal" *ngIf="showUnsavedWarning">
+  <div class="warning-backdrop" (click)="hideUnsavedWarning()"></div>
+  <div class="warning-content">
+    <div class="warning-header">
+      <h3>{{ 'onb.createCourse.warning.title' | translate }}</h3>
+    </div>
+    <div class="warning-body">
+      <p>{{ 'onb.createCourse.warning.message' | translate }}</p>
+    </div>
+    <div class="warning-footer">
+      <button type="button" class="btn btn-secondary" (click)="hideUnsavedWarning()">
+        {{ 'onb.createCourse.warning.cancel' | translate }}
+      </button>
+      <button type="button" class="btn btn-danger" (click)="confirmClose()">
+        {{ 'onb.createCourse.warning.discard' | translate }}
+      </button>
+    </div>
+  </div>
 </div>

@@ -278,3 +278,10 @@
     </section>
     </div>
 </section>
+
+<!-- Create Course Form Modal -->
+<app-create-course-form 
+  *ngIf="showCreateCourseForm"
+  (courseCreated)="onCourseCreated($event)"
+  (cancelled)="onCourseFormCancelled()">
+</app-create-course-form>

@@ -1,7 +1,6 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 
 export interface CourseFormData {
@@ -9,45 +8,41 @@ export interface CourseFormData {
   courseName: string;
   subject: string;
   grade: string;
-  category: string;
+  category?: string;
   primaryLanguage: string;
-  courseIcon: string;
-  courseColor: string;
+  courseIcon?: string;
   
   // B) Structure & schedule
-  term: string;
-  startDate: string;
-  endDate: string;
-  timezone: string;
+  term?: string;
+  startDate?: string;
+  endDate?: string;
+  timezone?: string;
   
   // C) Access & ownership
   visibility: string;
-  institution: string;
+  institution?: string;
   coTeachers: string[];
   
   // D) Grading & policies
-  gradingPolicy: string;
-  passingThreshold: number;
-  lateSubmissionRule: string;
+  gradingPolicy?: string;
+  passingThreshold?: number;
+  lateSubmissionRule?: string;
   
   // E) Description & tags
-  description: string;
+  description?: string;
   tags: string[];
   
   // F) Quick start
   createFirstSection: boolean;
-  sectionName: string;
+  sectionName?: string;
+  meetingPattern?: string;
   starterContent: string;
 }
 
 @Component({
   selector: 'app-create-course-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    TranslateModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './create-course-form.component.html',
   styleUrls: ['./create-course-form.component.scss']
 })
@@ -57,308 +52,274 @@ export class CreateCourseFormComponent implements OnInit {
 
   courseForm!: FormGroup;
   isSubmitting = false;
+  selectedIcon = '';
+  showUnsavedWarning = false;
+  private initialFormValue: any;
 
-  // Form options
+  // Options for dropdowns
   subjects = [
-    { value: 'math', label: 'createCourse.options.subjects.math' },
-    { value: 'science', label: 'createCourse.options.subjects.science' },
-    { value: 'english', label: 'createCourse.options.subjects.english' },
-    { value: 'it', label: 'createCourse.options.subjects.it' },
-    { value: 'history', label: 'createCourse.options.subjects.history' },
-    { value: 'geography', label: 'createCourse.options.subjects.geography' },
-    { value: 'art', label: 'createCourse.options.subjects.art' },
-    { value: 'music', label: 'createCourse.options.subjects.music' },
-    { value: 'physical', label: 'createCourse.options.subjects.physical' },
-    { value: 'other', label: 'createCourse.options.subjects.other' }
+    { value: 'math', label: 'onb.createCourse.options.subjects.math' },
+    { value: 'science', label: 'onb.createCourse.options.subjects.science' },
+    { value: 'english', label: 'onb.createCourse.options.subjects.english' },
+    { value: 'it', label: 'onb.createCourse.options.subjects.it' },
+    { value: 'history', label: 'onb.createCourse.options.subjects.history' },
+    { value: 'geography', label: 'onb.createCourse.options.subjects.geography' },
+    { value: 'art', label: 'onb.createCourse.options.subjects.art' },
+    { value: 'music', label: 'onb.createCourse.options.subjects.music' },
+    { value: 'physical', label: 'onb.createCourse.options.subjects.physical' },
+    { value: 'other', label: 'onb.createCourse.options.subjects.other' }
   ];
 
   grades = [
-    { value: 'grade5', label: 'createCourse.options.grades.grade5' },
-    { value: 'grade6', label: 'createCourse.options.grades.grade6' },
-    { value: 'grade7', label: 'createCourse.options.grades.grade7' },
-    { value: 'grade8', label: 'createCourse.options.grades.grade8' },
-    { value: 'grade9', label: 'createCourse.options.grades.grade9' },
-    { value: 'grade10', label: 'createCourse.options.grades.grade10' },
-    { value: 'grade11', label: 'createCourse.options.grades.grade11' },
-    { value: 'grade12', label: 'createCourse.options.grades.grade12' },
-    { value: 'university', label: 'createCourse.options.grades.university' },
-    { value: 'adult', label: 'createCourse.options.grades.adult' }
+    { value: 'grade5', label: 'onb.createCourse.options.grades.grade5' },
+    { value: 'grade6', label: 'onb.createCourse.options.grades.grade6' },
+    { value: 'grade7', label: 'onb.createCourse.options.grades.grade7' },
+    { value: 'grade8', label: 'onb.createCourse.options.grades.grade8' },
+    { value: 'grade9', label: 'onb.createCourse.options.grades.grade9' },
+    { value: 'grade10', label: 'onb.createCourse.options.grades.grade10' },
+    { value: 'grade11', label: 'onb.createCourse.options.grades.grade11' },
+    { value: 'grade12', label: 'onb.createCourse.options.grades.grade12' },
+    { value: 'university', label: 'onb.createCourse.options.grades.university' },
+    { value: 'adult', label: 'onb.createCourse.options.grades.adult' }
   ];
 
   categories = [
-    { value: 'stem', label: 'createCourse.options.categories.stem' },
-    { value: 'humanities', label: 'createCourse.options.categories.humanities' },
-    { value: 'languages', label: 'createCourse.options.categories.languages' },
-    { value: 'skills', label: 'createCourse.options.categories.skills' },
-    { value: 'arts', label: 'createCourse.options.categories.arts' },
-    { value: 'sports', label: 'createCourse.options.categories.sports' }
+    { value: 'stem', label: 'onb.createCourse.options.categories.stem' },
+    { value: 'humanities', label: 'onb.createCourse.options.categories.humanities' },
+    { value: 'languages', label: 'onb.createCourse.options.categories.languages' },
+    { value: 'skills', label: 'onb.createCourse.options.categories.skills' },
+    { value: 'arts', label: 'onb.createCourse.options.categories.arts' },
+    { value: 'sports', label: 'onb.createCourse.options.categories.sports' }
   ];
 
   languages = [
-    { value: 'arabic', label: 'createCourse.options.languages.arabic' },
-    { value: 'english', label: 'createCourse.options.languages.english' },
-    { value: 'both', label: 'createCourse.options.languages.both' }
+    { value: 'arabic', label: 'onb.createCourse.options.languages.arabic' },
+    { value: 'english', label: 'onb.createCourse.options.languages.english' },
+    { value: 'french', label: 'onb.createCourse.options.languages.french' },
+    { value: 'spanish', label: 'onb.createCourse.options.languages.spanish' },
+    { value: 'german', label: 'onb.createCourse.options.languages.german' },
+    { value: 'italian', label: 'onb.createCourse.options.languages.italian' },
+    { value: 'portuguese', label: 'onb.createCourse.options.languages.portuguese' },
+    { value: 'russian', label: 'onb.createCourse.options.languages.russian' },
+    { value: 'chinese', label: 'onb.createCourse.options.languages.chinese' },
+    { value: 'japanese', label: 'onb.createCourse.options.languages.japanese' },
+    { value: 'korean', label: 'onb.createCourse.options.languages.korean' },
+    { value: 'hindi', label: 'onb.createCourse.options.languages.hindi' },
+    { value: 'urdu', label: 'onb.createCourse.options.languages.urdu' },
+    { value: 'turkish', label: 'onb.createCourse.options.languages.turkish' },
+    { value: 'persian', label: 'onb.createCourse.options.languages.persian' },
+    { value: 'both', label: 'onb.createCourse.options.languages.both' },
+    { value: 'multilingual', label: 'onb.createCourse.options.languages.multilingual' },
+    { value: 'arabicClassical', label: 'onb.createCourse.options.languages.arabicClassical' },
+    { value: 'arabicModern', label: 'onb.createCourse.options.languages.arabicModern' },
+    { value: 'arabicDialect', label: 'onb.createCourse.options.languages.arabicDialect' },
+    { value: 'englishUS', label: 'onb.createCourse.options.languages.englishUS' },
+    { value: 'englishUK', label: 'onb.createCourse.options.languages.englishUK' },
+    { value: 'englishAU', label: 'onb.createCourse.options.languages.englishAU' },
+    { value: 'spanishES', label: 'onb.createCourse.options.languages.spanishES' },
+    { value: 'spanishMX', label: 'onb.createCourse.options.languages.spanishMX' },
+    { value: 'frenchFR', label: 'onb.createCourse.options.languages.frenchFR' },
+    { value: 'frenchCA', label: 'onb.createCourse.options.languages.frenchCA' },
+    { value: 'portugueseBR', label: 'onb.createCourse.options.languages.portugueseBR' },
+    { value: 'portuguesePT', label: 'onb.createCourse.options.languages.portuguesePT' },
+    { value: 'chineseSimplified', label: 'onb.createCourse.options.languages.chineseSimplified' },
+    { value: 'chineseTraditional', label: 'onb.createCourse.options.languages.chineseTraditional' }
   ];
-
-  courseIcons = ['📚', '🧮', '🔬', '🌍', '🎨', '💻', '📖', '🎵', '🏃', '🔬', '📊', '🎯'];
-  courseColors = ['#4f46e5', '#7c3aed', '#059669', '#dc2626', '#ea580c', '#0891b2', '#7c2d12', '#be185d'];
 
   terms = [
-    { value: 'current', label: 'createCourse.options.terms.current' },
-    { value: 'spring2024', label: 'createCourse.options.terms.spring2024' },
-    { value: 'summer2024', label: 'createCourse.options.terms.summer2024' },
-    { value: 'fall2024', label: 'createCourse.options.terms.fall2024' },
-    { value: 'custom', label: 'createCourse.options.terms.custom' }
-  ];
-
-  timezones = [
-    { value: 'UTC+4', label: 'UTC+4 (Gulf Standard Time)' },
-    { value: 'UTC+3', label: 'UTC+3 (Eastern European Time)' },
-    { value: 'UTC+0', label: 'UTC+0 (Greenwich Mean Time)' },
-    { value: 'UTC-5', label: 'UTC-5 (Eastern Standard Time)' },
-    { value: 'UTC-8', label: 'UTC-8 (Pacific Standard Time)' }
+    { value: 'current', label: 'onb.createCourse.options.terms.current' },
+    { value: 'spring2024', label: 'onb.createCourse.options.terms.spring2024' },
+    { value: 'summer2024', label: 'onb.createCourse.options.terms.summer2024' },
+    { value: 'fall2024', label: 'onb.createCourse.options.terms.fall2024' },
+    { value: 'custom', label: 'onb.createCourse.options.terms.custom' }
   ];
 
   visibilityOptions = [
-    { 
-      value: 'private', 
-      label: 'createCourse.options.visibility.private',
-      description: 'createCourse.options.visibility.privateDesc'
-    },
-    { 
-      value: 'shareable', 
-      label: 'createCourse.options.visibility.shareable',
-      description: 'createCourse.options.visibility.shareableDesc'
-    },
-    { 
-      value: 'library', 
-      label: 'createCourse.options.visibility.library',
-      description: 'createCourse.options.visibility.libraryDesc'
-    },
-    { 
-      value: 'institution', 
-      label: 'createCourse.options.visibility.institution',
-      description: 'createCourse.options.visibility.institutionDesc'
-    }
+    { value: 'private', label: 'onb.createCourse.options.visibility.private', desc: 'onb.createCourse.options.visibility.privateDesc' },
+    { value: 'shareable', label: 'onb.createCourse.options.visibility.shareable', desc: 'onb.createCourse.options.visibility.shareableDesc' },
+    { value: 'library', label: 'onb.createCourse.options.visibility.library', desc: 'onb.createCourse.options.visibility.libraryDesc' },
+    { value: 'institution', label: 'onb.createCourse.options.visibility.institution', desc: 'onb.createCourse.options.visibility.institutionDesc' }
   ];
 
   institutions = [
-    { value: 'personal', label: 'createCourse.options.institutions.personal' },
-    { value: 'university1', label: 'createCourse.options.institutions.university1' },
-    { value: 'school1', label: 'createCourse.options.institutions.school1' }
+    { value: 'personal', label: 'onb.createCourse.options.institutions.personal' },
+    { value: 'university1', label: 'onb.createCourse.options.institutions.university1' },
+    { value: 'school1', label: 'onb.createCourse.options.institutions.school1' }
   ];
 
   gradingPolicies = [
-    { value: 'points', label: 'createCourse.options.gradingPolicies.points' },
-    { value: 'percentage', label: 'createCourse.options.gradingPolicies.percentage' },
-    { value: 'passfail', label: 'createCourse.options.gradingPolicies.passfail' }
+    { value: 'points', label: 'onb.createCourse.options.gradingPolicies.points' },
+    { value: 'percentage', label: 'onb.createCourse.options.gradingPolicies.percentage' },
+    { value: 'passfail', label: 'onb.createCourse.options.gradingPolicies.passfail' }
   ];
 
   lateSubmissionRules = [
-    { value: 'accept', label: 'createCourse.options.lateSubmissionRules.accept' },
-    { value: 'penalty', label: 'createCourse.options.lateSubmissionRules.penalty' },
-    { value: 'close', label: 'createCourse.options.lateSubmissionRules.close' }
+    { value: 'accept', label: 'onb.createCourse.options.lateSubmissionRules.accept' },
+    { value: 'penalty', label: 'onb.createCourse.options.lateSubmissionRules.penalty' },
+    { value: 'close', label: 'onb.createCourse.options.lateSubmissionRules.close' }
   ];
 
   starterContentOptions = [
-    { 
-      value: 'empty', 
-      label: 'createCourse.options.starterContent.empty',
-      description: 'createCourse.options.starterContent.emptyDesc'
-    },
-    { 
-      value: 'template', 
-      label: 'createCourse.options.starterContent.template',
-      description: 'createCourse.options.starterContent.templateDesc'
-    }
+    { value: 'empty', label: 'onb.createCourse.options.starterContent.empty', desc: 'onb.createCourse.options.starterContent.emptyDesc' },
+    { value: 'template', label: 'onb.createCourse.options.starterContent.template', desc: 'onb.createCourse.options.starterContent.templateDesc' }
   ];
-
-  // Dynamic arrays for chips
-  coTeachers: string[] = [];
-  tags: string[] = [];
-
-  constructor(private fb: FormBuilder) {}
 
   ngOnInit(): void {
     this.initializeForm();
-    this.setDefaultValues();
+    // Store initial form value to detect changes
+    this.initialFormValue = this.courseForm.value;
   }
 
   private initializeForm(): void {
-    this.courseForm = this.fb.group({
-      // A) Course basics
-      courseName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(60)]],
-      subject: ['', Validators.required],
-      grade: ['', Validators.required],
-      category: [''],
-      primaryLanguage: ['', Validators.required],
-      courseIcon: ['📚'],
-      courseColor: ['#4f46e5'],
-      
-      // B) Structure & schedule
-      term: [''],
-      startDate: [''],
-      endDate: [''],
-      timezone: ['UTC+4'],
-      
-      // C) Access & ownership
-      visibility: ['private', Validators.required],
-      institution: [''],
-      
-      // D) Grading & policies
-      gradingPolicy: [''],
-      passingThreshold: [60],
-      lateSubmissionRule: [''],
-      
-      // E) Description & tags
-      description: [''],
-      
-      // F) Quick start
-      createFirstSection: [true],
-      sectionName: ['Section A'],
-      starterContent: ['empty']
-    });
-
-    // Add conditional validators
-    this.courseForm.get('institution')?.setValidators([
-      this.conditionalRequiredValidator('visibility', 'institution')
-    ]);
-
-    this.courseForm.get('passingThreshold')?.setValidators([
-      this.conditionalRequiredValidator('gradingPolicy', 'percentage')
-    ]);
-  }
-
-  private setDefaultValues(): void {
     const today = new Date();
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + 84); // +12 weeks
+    const endDate = new Date(today.getTime() + 12 * 7 * 24 * 60 * 60 * 1000); // +12 weeks
 
-    this.courseForm.patchValue({
-      startDate: today.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-      visibility: 'private',
-      createFirstSection: true,
-      sectionName: 'Section A',
-      starterContent: 'empty'
+    this.courseForm = new FormGroup({
+      // A) Course basics
+      courseName: new FormControl('', [Validators.required, Validators.minLength(3), Validators.maxLength(60)]),
+      subject: new FormControl('', Validators.required),
+      grade: new FormControl('', Validators.required),
+      category: new FormControl(''),
+      primaryLanguage: new FormControl('', Validators.required),
+      courseIcon: new FormControl(''),
+
+      // B) Structure & schedule
+      term: new FormControl(''),
+      startDate: new FormControl(today.toISOString().split('T')[0]),
+      endDate: new FormControl(endDate.toISOString().split('T')[0]),
+      timezone: new FormControl(''), // Will be set from user profile
+
+      // C) Access & ownership
+      visibility: new FormControl('private', Validators.required),
+      institution: new FormControl('personal'),
+      coTeachers: new FormArray([]),
+
+      // D) Grading & policies
+      gradingPolicy: new FormControl(''),
+      passingThreshold: new FormControl(60, [Validators.min(0), Validators.max(100)]),
+      lateSubmissionRule: new FormControl(''),
+
+      // E) Description & tags
+      description: new FormControl(''),
+      tags: new FormArray([]),
+
+      // F) Quick start
+      createFirstSection: new FormControl(true),
+      sectionName: new FormControl('Section A'),
+      meetingPattern: new FormControl(''),
+      starterContent: new FormControl('empty')
     });
   }
 
-  private conditionalRequiredValidator(controlName: string, requiredValue: string) {
-    return (control: AbstractControl) => {
-      const parent = control.parent;
-      if (parent && parent.get(controlName)?.value === requiredValue) {
-        return Validators.required(control);
-      }
-      return null;
-    };
+  get coTeachersArray(): FormArray {
+    return this.courseForm.get('coTeachers') as FormArray;
   }
 
-  getFieldError(fieldName: string): string {
-    const field = this.courseForm.get(fieldName);
-    if (field?.errors && field.touched) {
-      if (field.errors['required']) {
-        return 'createCourse.validation.required';
-      }
-      if (field.errors['minlength']) {
-        return 'createCourse.validation.minLength';
-      }
-      if (field.errors['maxlength']) {
-        return 'createCourse.validation.maxLength';
-      }
-      if (field.errors['email']) {
-        return 'createCourse.validation.email';
-      }
+  get tagsArray(): FormArray {
+    return this.courseForm.get('tags') as FormArray;
+  }
+
+  addCoTeacher(): void {
+    this.coTeachersArray.push(new FormControl('', [Validators.email]));
+  }
+
+  removeCoTeacher(index: number): void {
+    this.coTeachersArray.removeAt(index);
+  }
+
+  addTag(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.trim();
+    if (value && !this.tagsArray.value.includes(value)) {
+      this.tagsArray.push(new FormControl(value));
+      input.value = '';
     }
-    return '';
+  }
+
+  removeTag(index: number): void {
+    this.tagsArray.removeAt(index);
+  }
+
+  onKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.addTag(event);
+    }
+  }
+
+  onEscapeKey(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.cancel();
+    }
   }
 
   selectIcon(icon: string): void {
+    this.selectedIcon = icon;
     this.courseForm.patchValue({ courseIcon: icon });
   }
 
-  selectColor(color: string): void {
-    this.courseForm.patchValue({ courseColor: color });
-  }
-
-  addCoTeacher(event: any): void {
-    const input = event.target as HTMLInputElement;
-    const email = input.value.trim();
-    
-    if (email && this.isValidEmail(email) && !this.coTeachers.includes(email)) {
-      this.coTeachers.push(email);
-      input.value = '';
+  onCloseClick(): void {
+    if (this.hasUnsavedChanges()) {
+      this.showUnsavedWarning = true;
+    } else {
+      this.cancel();
     }
   }
 
-  removeCoTeacher(email: string): void {
-    this.coTeachers = this.coTeachers.filter(e => e !== email);
+  hideUnsavedWarning(): void {
+    this.showUnsavedWarning = false;
   }
 
-  addTag(event: any): void {
-    const input = event.target as HTMLInputElement;
-    const tag = input.value.trim();
-    
-    if (tag && !this.tags.includes(tag)) {
-      this.tags.push(tag);
-      input.value = '';
-    }
+  confirmClose(): void {
+    this.showUnsavedWarning = false;
+    this.cancel();
   }
 
-  removeTag(tag: string): void {
-    this.tags = this.tags.filter(t => t !== tag);
-  }
-
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  private hasUnsavedChanges(): boolean {
+    const currentValue = this.courseForm.value;
+    return JSON.stringify(currentValue) !== JSON.stringify(this.initialFormValue);
   }
 
   onSubmit(): void {
     if (this.courseForm.valid && !this.isSubmitting) {
       this.isSubmitting = true;
       
-      const formData: CourseFormData = {
-        ...this.courseForm.value,
-        coTeachers: this.coTeachers,
-        tags: this.tags
-      };
-
       // Simulate API call
       setTimeout(() => {
-        this.isSubmitting = false;
+        const formData: CourseFormData = this.courseForm.value;
         this.courseCreated.emit(formData);
+        this.isSubmitting = false;
       }, 1500);
     } else {
-      // Mark all fields as touched to show validation errors
-      Object.keys(this.courseForm.controls).forEach(key => {
-        this.courseForm.get(key)?.markAsTouched();
-      });
+      this.courseForm.markAllAsTouched();
     }
   }
 
-  onCancel(): void {
+  cancel(): void {
     this.cancelled.emit();
   }
 
-  // AI helper methods (for future implementation)
-  suggestCourseName(): void {
-    const subject = this.courseForm.get('subject')?.value;
-    const grade = this.courseForm.get('grade')?.value;
-    
-    if (subject && grade) {
-      // AI suggestion logic would go here
-      const suggestions = this.generateAISuggestions(subject, grade);
-      // Show suggestions to user
+  getFieldError(fieldName: string): string {
+    const field = this.courseForm.get(fieldName);
+    if (field?.errors && field.touched) {
+      if (field.errors['required']) {
+        return 'onb.createCourse.validation.required';
+      }
+      if (field.errors['minlength']) {
+        return 'onb.createCourse.validation.minLength';
+      }
+      if (field.errors['maxlength']) {
+        return 'onb.createCourse.validation.maxLength';
+      }
+      if (field.errors['email']) {
+        return 'onb.createCourse.validation.email';
+      }
     }
+    return '';
   }
 
-  private generateAISuggestions(subject: string, grade: string): string[] {
-    // This would integrate with an AI service
-    return [
-      `${subject} Fundamentals - ${grade}`,
-      `Advanced ${subject} - ${grade}`,
-      `${subject} Mastery Course - ${grade}`
-    ];
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.courseForm.get(fieldName);
+    return !!(field?.invalid && field?.touched);
   }
 }
