@@ -822,21 +822,33 @@
 
 "nothingSelected": "Nothing Selected"
 },
-  "loginModal": {
-    "title": "Welcome back",
+  "authModal": {
+    "title": "Log in or create account",
+    "subtitle": "Learn on your own time from top universities and businesses.",
     "emailLabel": "Email",
     "emailPlaceholder": "name@email.com",
+    "fullNameLabel": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
     "passwordLabel": "Password",
-    "passwordPlaceholder": "Enter your password",
-    "forgotPassword": "Forgot password?",
-    "login": "Login",
+    "passwordPlaceholder": "Create password",
+    "passwordHelper": "Between 8 and 72 characters",
+    "continue": "Continue",
+    "joinForFree": "Join for Free",
     "or": "or",
     "continueWithGoogle": "Continue with Google",
-    "continueWithFacebook": "Continue with Facebook",
     "continueWithApple": "Continue with Apple",
-    "newTo": "New to AnaTaleb?",
-    "signUp": "Sign up",
-    "loginWithOrg": "Log in with your organization"
+    "alreadyOn": "Already on AnaTaleb?",
+    "logIn": "Log in",
+    "loginWithOrg": "Sign up with your organization",
+    "acceptTerms": "I accept AnaTaleb's",
+    "termsOfUse": "Terms of Use",
+    "and": "and",
+    "privacyNotice": "Privacy Notice",
+    "helpCenter": "Having trouble logging in? Learner help center",
+    "securityNotice": "This site is protected by reCAPTCHA Enterprise and the Google",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "apply": "apply"
   },
   "accountType": {
     "title": "Choose your account type",

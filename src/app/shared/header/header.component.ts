@@ -89,7 +89,8 @@ closeMobileMenu() {
   }
   
   onJoinFree() {
-    this.router.navigate(['/choose-account-type']);
+    this.showLoginModal = true;
+    this.cdr.markForCheck();
   }
   
   onCloseLoginModal() {
@@ -98,8 +99,7 @@ closeMobileMenu() {
   }
   
   onSwitchToSignup() {
-    this.showLoginModal = false;
-    this.router.navigate(['/choose-account-type']);
+    // No longer needed since modal handles both cases
     this.cdr.markForCheck();
   }
   
