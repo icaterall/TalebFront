@@ -1129,11 +1129,10 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: rgba(255, 255, 255, 0.18);
     color: #ebeff6;
-    display: grid
-;
+    display: grid;
     place-items: center;
-    cursor: pointer;
 }
+.onb-check span { font-weight: 700; }
 .onb-check.done { background: var(--primary); color: white; border-color: transparent; }
 .onb-body { display: flex; align-items: center; gap: 12px; }
 .onb-text { color: var(--text-dark); flex: 1 1 auto; }

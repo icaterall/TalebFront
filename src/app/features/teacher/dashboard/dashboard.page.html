@@ -56,8 +56,8 @@
 
         <ul class="onb-list">
           <li *ngFor="let s of steps; let i = index" class="onb-item" appAnimateOnIntersect>
-            <button class="onb-check" [class.done]="s.done" (click)="s.done = !s.done" aria-label="toggle step">
-              <span *ngIf="!s.done">○</span><span *ngIf="s.done">✔</span>
+            <button class="onb-check" [class.done]="s.done" aria-label="step status">
+              <span *ngIf="s.done">✔</span>
             </button>
 
             <div class="onb-body">
