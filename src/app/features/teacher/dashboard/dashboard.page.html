@@ -8,21 +8,33 @@
 
   <div class="dashboard-container">
     <!-- Hero Welcome Section -->
-    <section class="hero-section glass-strong" #hero>
-      <div class="progress-tracker">{{ 'dashboardPage.hero.step' | translate }}</div>
-      <div class="hero-content">
-        <div class="hero-text">
-          <h1><span class="wave-emoji">👋</span> {{ 'dashboardPage.hero.title' | translate }}</h1>
-          <p>{{ 'dashboardPage.hero.subtitle' | translate }}</p>
-        </div>
-
-        <!-- AI tip card (optional but referenced by your script) -->
-        <div class="ai-tip" *ngIf="aiTipEnabled">
-          <div class="ai-tip-header">
-            <div class="ai-tip-icon">🤖</div>
-            <strong>{{ 'dashboardPage.hero.ai_tip' | translate }}</strong>
+    <section class="hero-section" #hero>
+      <div class="welcome-banner">
+        <div class="welcome-content">
+          <div class="welcome-text">
+            <h1 class="welcome-title">👋 {{ 'dashboardPage.hero.title' | translate:{name: ('dashboardPage.hero.Ahmed' | translate)} }}</h1>
+            <p class="welcome-subtitle">{{ 'dashboardPage.hero.subtitle' | translate }}</p>
+            <div class="welcome-stats">
+              <span class="stat-badge">🎯 {{ 'dashboardPage.hero.badges.activeCourses' | translate:{count: '12'} }}</span>
+              <span class="stat-badge">👥 {{ 'dashboardPage.hero.badges.students' | translate:{count: '328'} }}</span>
+              <span class="stat-badge">⭐ {{ 'dashboardPage.hero.badges.rating' | translate:{count: '4.9'} }}</span>
+            </div>
           </div>
-          <div class="ai-tip-text">{{ currentTip }}</div>
+          <div class="ai-tip glass-card">
+            <div class="tip-content">
+              <div class="tip-line">
+                <span class="tip-icon">💡</span>
+                <p class="tip-text">{{ 'dashboardPage.hero.tipText' | translate }}</p>
+              </div>
+              <button class="tip-action">{{ 'dashboardPage.hero.tryNow' | translate }} →</button>
+            </div>
+          </div>
+          
+        </div>
+        <div class="welcome-decoration">
+          <div class="decoration-circle circle-1"></div>
+          <div class="decoration-circle circle-2"></div>
+          <div class="decoration-circle circle-3"></div>
         </div>
       </div>
     </section>
@@ -30,28 +42,43 @@
     <!-- KPI Cards Section -->
     <section class="kpi-section">
       <div class="kpi-card" appAnimateOnIntersect>
-        <div class="kpi-icon kpi-icon-1">📚</div>
-        <div class="kpi-number" appKpiNumber="12">12</div>
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-1">📚</div>
+          <div class="kpi-number" appKpiNumber="12">12</div>
+        </div>
         <div class="kpi-label">{{ 'dashboardPage.kpi.activeCourses' | translate }}</div>
-        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.viewAllCourses' | translate }}</a>
-      </div>
+
+            <button class="kpi-btn">
+                {{ 'dashboardPage.kpi.viewAllCourses' | translate }}</button>
+    </div>
+
+      
       <div class="kpi-card" appAnimateOnIntersect>
-        <div class="kpi-icon kpi-icon-2">👥</div>
-        <div class="kpi-number" appKpiNumber="248">248</div>
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-2">👥</div>
+          <div class="kpi-number" appKpiNumber="248">248</div>
+        </div>
         <div class="kpi-label">{{ 'dashboardPage.kpi.totalStudents' | translate }}</div>
-        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.manageStudents' | translate }}</a>
+        <button class="kpi-btn">
+            {{ 'dashboardPage.kpi.manageStudents' | translate }}</button>
       </div>
       <div class="kpi-card" appAnimateOnIntersect>
-        <div class="kpi-icon kpi-icon-3">🎮</div>
-        <div class="kpi-number" appKpiNumber="37">37</div>
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-3">🎮</div>
+          <div class="kpi-number" appKpiNumber="37">37</div>
+        </div>
         <div class="kpi-label">{{ 'dashboardPage.kpi.gamesCreated' | translate }}</div>
-        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.browseGames' | translate }}</a>
+        <button class="kpi-btn">
+            {{ 'dashboardPage.kpi.browseGames' | translate }}</button>
       </div>
       <div class="kpi-card" appAnimateOnIntersect>
-        <div class="kpi-icon kpi-icon-4">📊</div>
-        <div class="kpi-number" appKpiNumber="89" [percent]="true">89%</div>
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-4">📊</div>
+          <div class="kpi-number" appKpiNumber="89" [percent]="true">89%</div>
+        </div>
         <div class="kpi-label">{{ 'dashboardPage.kpi.avgScore' | translate }}</div>
-        <a href="#" class="kpi-link">{{ 'dashboardPage.kpi.viewAnalytics' | translate }}</a>
+        <button class="kpi-btn">
+            {{ 'dashboardPage.kpi.viewAnalytics' | translate }}</button>
       </div>
     </section>
 

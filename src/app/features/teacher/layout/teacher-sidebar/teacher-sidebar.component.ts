@@ -50,7 +50,7 @@ export class TeacherSidebarComponent implements OnInit, OnDestroy {
     'materials': { en: 'Materials', ar: 'المواد' },
     'reports': { en: 'Reports', ar: 'التقارير' },
     'library': { en: 'Library', ar: 'المكتبة' },
-    'organization': { en: 'Ahmed El Sayed', ar: 'أحمد السيد' },
+    'teacherName': { en: 'Ahmed El Sayed', ar: 'أحمد السيد' },
     'owner': { en: 'Teacher', ar: 'مدرس' },
     'upgrade': { en: 'UPGRADE', ar: 'ترقية' }
   };

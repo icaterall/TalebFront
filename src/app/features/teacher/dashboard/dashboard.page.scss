@@ -207,62 +207,207 @@ body {
 
         /* Hero Welcome Section */
         .hero-section {
-            background: #25076B;
-            background: -webkit-gradient(linear, left top, right top, from(#25076B), to(#46178F));
-            background: -webkit-linear-gradient(left, #25076B, #46178F);
-            background: linear-gradient(to right, #25076B, #46178F);
-                        background-size: 200% 200%;
-            animation: rainbow 15s ease infinite;
+            background-color: #145dc7;
+            background: -webkit-gradient(linear, left top, right top, from(#0542B9), to(#1368CE));
+            background: -webkit-linear-gradient(left, #0542B9 0%, #1368CE 100%);
+            background: linear-gradient(90deg, #0542B9 0%, #1368CE 100%);
             border-radius: 5px;
             padding: 20px;
             margin-bottom: 20px;
             position: relative;
             overflow: hidden;
-            box-shadow: var(--shadow-xl);
+            box-shadow: 0 20px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .hero-section::before {
-            content: "";
-            position: absolute;
-            top: -46%;
-            right: -50%;
-            width: 195%;
-            height: 200%;
-            background: radial-gradient(circle, rgb(243 243 243 / 10%) 1px, #0618334a 1px);
-            background-size: 50px 50px;
-            transform: rotate(302deg);
-            pointer-events: none;
-        }
-
-        .hero-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .welcome-banner {
             position: relative;
             z-index: 2;
         }
 
-        .hero-text h1 {
+        .welcome-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+        }
+
+        .welcome-text {
+            flex: 1;
+        }
+
+        .welcome-title {
             font-size: 48px;
             font-weight: 800;
             color: white;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             gap: 15px;
         }
 
-        .wave-emoji {
-            display: inline-block;
-            animation: wave 2s ease-in-out infinite;
-            transform-origin: 70% 70%;
-        }
-
-        .hero-text p {
+        .welcome-subtitle {
             font-size: 20px;
             color: rgba(255,255,255,0.95);
             font-weight: 400;
+            margin-bottom: 24px;
+        }
+
+        .welcome-stats {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: white;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-tip {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 14px 16px;
+            max-width: 300px;
+            position: relative;
+        }
+
+        .tip-icon {
+            font-size: 24px;
+            margin-bottom: 0px;
+            font-size: 20px;           /* keep compact */
+            line-height: 1;
+            margin-top: 2px;           /* nudge to align with text cap height */
+            flex: 0 0 auto;
+        }
+
+        .tip-content {
+              display: flex;
+                flex-direction: column;   /* button stays below */
+                align-items: flex-start;   /* prevents auto-stretch */
+                gap: 10px;
+            color: white;
+        }
+
+        .tip-text {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.5;
+            white-space: normal;       /* allow wrapping */
+            overflow: visible;
+            text-overflow: clip;
+            flex: 1 1 auto;            /* take remaining width and wrap */
+            word-break: break-word;    /* safe wrap for long words */
+            hyphens: auto;
+        }
+        .tip-line {
+            display: flex;
+            align-items: flex-start;   /* top-align icon with first line of text */
+            gap: 10px;
+            min-width: 0;              /* enables proper wrapping in flex rows */
+          }
+        .tip-action {
+            background: white;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            align-self: flex-start;    /* keeps intrinsic width */
+            width: auto !important;  
+        }
+
+        .tip-action:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-1px);
+        }
+
+        .welcome-decoration {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            pointer-events: none;
+        }
+
+        .decoration-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .circle-1 {
+            width: 80px;
+            height: 80px;
+            top: 20px;
+            right: 20px;
+        }
+
+        .circle-2 {
+            width: 60px;
+            height: 60px;
+            top: 60px;
+            right: 60px;
+        }
+
+        .circle-3 {
+            width: 40px;
+            height: 40px;
+            top: 100px;
+            right: 100px;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 24px;
+                margin-bottom: 24px;
+            }
+
+            .welcome-content {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .welcome-title {
+                font-size: 32px;
+            }
+
+            .welcome-subtitle {
+                font-size: 18px;
+            }
+
+            .welcome-stats {
+                gap: 12px;
+            }
+
+            .stat-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
+            .ai-tip {
+                max-width: 100%;
+                padding: 20px;
+            }
+
+            .welcome-decoration {
+                display: none;
+            }
         }
 
         .progress-tracker {
@@ -286,14 +431,15 @@ body {
         }
 
         .ai-tip {
-            background: rgba(255,255,255,0.95);
+            background: #fff3;
+            border-radius: 20px;
+            padding: 24px;
+            -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
-            border-radius: 5px;
-            padding: 20px;
-            max-width: 320px;
-            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, .3);
+            max-width: 400px;
             position: relative;
-            animation: slideInUp 0.6s ease-out;
+            overflow: hidden;
         }
 
         .ai-tip::before {
@@ -346,6 +492,8 @@ body {
             box-shadow: var(--shadow-md);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
         }
         .kpi-card:hover {
             transform: translateY(-5px) scale(1.02);
@@ -364,6 +512,13 @@ body {
             animation: rainbow 5s linear infinite;
         }
 
+        .kpi-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            margin-bottom: 12px; 
+        }
+
         .kpi-icon {
             width: 60px;
             height: 60px;
@@ -372,7 +527,6 @@ body {
             align-items: center;
             justify-content: center;
             font-size: 30px;
-            margin-bottom: 15px;
             position: relative;
         }
 
@@ -381,16 +535,45 @@ body {
             background: -webkit-linear-gradient(left, #421B9A 0%, #6E02FE 100%);
             background: linear-gradient(90deg, #421B9A 0%, #6E02FE 100%);
         }
-        .kpi-icon-2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
-        .kpi-icon-3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .kpi-icon-4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-
+        .kpi-icon-2 {     
+            background: linear-gradient(359deg, #fb7d50 0%, #6a4248 100%);
+             }
+        .kpi-icon-3 { background: linear-gradient(207deg, #0a67ff, #91e5e5);}
+        .kpi-icon-4 { background: linear-gradient(239deg, #2a1232, #8b28ff);}
+        .kpi-btn {
+            margin: 0px;
+            border: 0px;
+            margin-bottom: -10px;
+            cursor: pointer;
+            display: inline-block;
+            vertical-align: bottom;
+            box-shadow: rgba(0, 0, 0, 0.25) 0px -4px inset;
+            border-radius: 4px;
+            font-family: Montserrat, "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, "Bai Jamjuree", sans-serif;
+            text-align: center;
+            text-decoration: none;
+            font-size: 0.75rem;
+            line-height: 1rem;
+            font-weight: 700;
+            color: rgb(255, 255, 255);
+            width: 100%;
+            padding: 0px 8px 4px;
+            background: rgb(19, 104, 206);
+            min-height: 32px;
+            z-index: 91;
+        }
+        .kpi-btn:hover {
+            padding-bottom: 2px;
+            box-shadow: rgba(0, 0, 0, 0.25) 0px -2px inset;
+            background: rgb(19, 104, 206);
+            margin-top: 0px;
+        }
         .kpi-number {
             font-size: 42px;
             font-weight: 800;
             color: var(--text-dark);
             line-height: 1;
-            margin-bottom: 5px;
+            margin: 0;
         }
 
         .kpi-label {

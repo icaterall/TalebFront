@@ -1067,20 +1067,28 @@
 
 ,"dashboardPage": {
   "hero": {
+    "Ahmed": "Ahmed El Sayed",
     "step": "Step 1 of 3",
-    "title": "Welcome back, Teacher!",
-    "subtitle": "Ready to inspire your students today? You have classes scheduled.",
-    "ai_tip": "AI Tip"
+    "title": "Welcome back, {{name}}!",
+    "subtitle": "Ready to inspire your students today?",
+    "ai_tip": "AI Tip",
+    "badges": {
+      "activeCourses": "{{count}} Active Courses",
+      "students": "{{count}} Students",
+      "rating": "{{count}} Rating"
+    },
+    "tipText": "Did you know you can turn any quiz into a game with one click?",
+    "tryNow": "Try it now"
   },
   "kpi": {
     "activeCourses": "Active Courses",
-    "viewAllCourses": "View all courses →",
+    "viewAllCourses": "View all courses ",
     "totalStudents": "Total Students",
-    "manageStudents": "Manage students →",
+    "manageStudents": "Manage students ",
     "gamesCreated": "Games Created",
-    "browseGames": "Browse games →",
+    "browseGames": "Browse games ",
     "avgScore": "Avg. Score",
-    "viewAnalytics": "View analytics →"
+    "viewAnalytics": "View analytics "
   },
   "actions": {
     "quickAction": "Quick Action",

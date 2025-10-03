@@ -1088,20 +1088,28 @@
 
 ,"dashboardPage": {
   "hero": {
+    "Ahmed": "أحمد السيد",
     "step": "الخطوة 1 من 3",
-    "title": "مرحبًا بعودتك، معلم/ة!",
-    "subtitle": "جاهز/ة لإلهام طلابك اليوم؟ لديك حصص مجدولة.",
-    "ai_tip": "نصيحة بالذكاء الاصطناعي"
+    "title": "مرحبًا بعودتك، {{name}}!",
+    "subtitle": "جاهز/ة لإلهام طلابك اليوم؟",
+    "ai_tip": "نصيحة بالذكاء الاصطناعي",
+    "badges": {
+      "activeCourses": "{{count}} مساق نشط",
+      "students": "{{count}} طالب",
+      "rating": "تقييم {{count}}"
+    },
+    "tipText": "هل تعلم أنه يمكنك تحويل أي اختبار إلى لعبة بنقرة واحدة؟",
+    "tryNow": "جرّبه الآن"
   },
   "kpi": {
     "activeCourses": "مساقات نشطة",
-    "viewAllCourses": "عرض جميع المساقات →",
+    "viewAllCourses": "عرض جميع المساقات",
     "totalStudents": "إجمالي الطلاب",
-    "manageStudents": "إدارة الطلاب →",
+    "manageStudents": "إدارة الطلاب",
     "gamesCreated": "ألعاب منشأة",
-    "browseGames": "تصفح الألعاب →",
+    "browseGames": "تصفح الألعاب",
     "avgScore": "المعدل",
-    "viewAnalytics": "عرض التحليلات →"
+    "viewAnalytics": "عرض التحليلات "
   },
   "actions": {
     "quickAction": "إجراء سريع",
