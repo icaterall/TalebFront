@@ -236,7 +236,7 @@ body {
         }
 
         .welcome-title {
-            font-size: 48px;
+            font-size: 40px;
             font-weight: 800;
             color: white;
             margin-bottom: 16px;
@@ -283,7 +283,6 @@ body {
         }
 
         .tip-icon {
-            font-size: 24px;
             margin-bottom: 0px;
             font-size: 20px;           /* keep compact */
             line-height: 1;
@@ -374,7 +373,7 @@ body {
         /* Responsive styles */
         @media (max-width: 768px) {
             .hero-section {
-                padding: 24px;
+                padding: 10px;
                 margin-bottom: 24px;
             }
 
@@ -384,7 +383,7 @@ body {
             }
 
             .welcome-title {
-                font-size: 32px;
+                font-size: 24px;
             }
 
             .welcome-subtitle {
@@ -392,7 +391,7 @@ body {
             }
 
             .welcome-stats {
-                gap: 12px;
+                gap: 5px;
             }
 
             .stat-badge {
@@ -479,7 +478,7 @@ body {
         .kpi-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
+            gap: 15px;
             margin-bottom: 40px;
         }
 
@@ -515,7 +514,7 @@ body {
         .kpi-header { 
             display: flex; 
             align-items: center; 
-            gap: 16px; 
+            gap: 5px; 
             margin-bottom: 12px; 
         }
 
@@ -999,7 +998,7 @@ body {
 
         @media (max-width: 768px) {
             .dashboard-container {
-                padding: 20px;
+                padding: 10px;
             }
 
             .hero-text h1 {
