@@ -65,32 +65,6 @@
             </small>
           </div>
         </div>
-
-        <div class="form-row">
-          <div class="form-field">
-            <label for="category">{{ 'onb.createCourse.fields.category.label' | translate }}</label>
-            <select id="category" formControlName="category">
-              <option value="">{{ 'onb.createCourse.fields.category.placeholder' | translate }}</option>
-              <option *ngFor="let category of categories" [value]="category.value">
-                {{ category.label | translate }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label for="primaryLanguage">{{ 'onb.createCourse.fields.primaryLanguage.label' | translate }}*</label>
-            <select id="primaryLanguage" formControlName="primaryLanguage" [class.invalid]="isFieldInvalid('primaryLanguage')">
-              <option value="">{{ 'onb.createCourse.fields.primaryLanguage.placeholder' | translate }}</option>
-              <option *ngFor="let language of languages" [value]="language.value">
-                {{ language.label | translate }}
-              </option>
-            </select>
-            <small *ngIf="getFieldError('primaryLanguage')" class="error-message">
-              {{ getFieldError('primaryLanguage') | translate }}
-            </small>
-          </div>
-        </div>
-
         <div class="form-row">
           <div class="form-field full-width">
             <label>{{ 'onb.createCourse.fields.courseIcon.label' | translate }}</label>
@@ -115,39 +89,6 @@
         </div>
       </div>
 
-      <!-- B) Structure & schedule -->
-      <div class="form-section">
-        <h2>{{ 'onb.createCourse.sections.schedule.title' | translate }}</h2>
-        
-        <div class="form-row">
-          <div class="form-field">
-            <label for="term">{{ 'onb.createCourse.fields.term.label' | translate }}</label>
-            <select id="term" formControlName="term">
-              <option value="">{{ 'onb.createCourse.fields.term.placeholder' | translate }}</option>
-              <option *ngFor="let term of terms" [value]="term.value">
-                {{ term.label | translate }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label for="timezone">{{ 'onb.createCourse.fields.timezone.label' | translate }}</label>
-            <input id="timezone" type="text" formControlName="timezone" readonly>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-field">
-            <label for="startDate">{{ 'onb.createCourse.fields.startDate.label' | translate }}</label>
-            <input id="startDate" type="date" formControlName="startDate">
-          </div>
-
-          <div class="form-field">
-            <label for="endDate">{{ 'onb.createCourse.fields.endDate.label' | translate }}</label>
-            <input id="endDate" type="date" formControlName="endDate">
-          </div>
-        </div>
-      </div>
 
       <!-- C) Access & ownership -->
       <div class="form-section">
@@ -166,106 +107,13 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-field">
-            <label for="institution">{{ 'onb.createCourse.fields.institution.label' | translate }}</label>
-            <select id="institution" formControlName="institution">
-              <option *ngFor="let institution of institutions" [value]="institution.value">
-                {{ institution.label | translate }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-field">
-          <label>{{ 'onb.createCourse.fields.coTeachers.label' | translate }}</label>
-          <div class="co-teachers-list">
-            <div *ngFor="let coTeacher of coTeachersArray.controls; let i = index" class="co-teacher-item">
-              <input 
-                type="email" 
-                [formControl]="coTeacher"
-                [placeholder]="'onb.createCourse.fields.coTeachers.placeholder' | translate"
-                [class.invalid]="coTeacher.invalid && coTeacher.touched">
-              <button type="button" (click)="removeCoTeacher(i)" class="remove-btn">×</button>
-            </div>
-            <button type="button" (click)="addCoTeacher()" class="add-btn">
-              + {{ 'onb.createCourse.fields.coTeachers.placeholder' | translate }}
-            </button>
-          </div>
-        </div>
       </div>
 
-      <!-- D) Grading & policies -->
+
+
+      <!-- F) Quick section -->
       <div class="form-section">
-        <h2>{{ 'onb.createCourse.sections.grading.title' | translate }}</h2>
-        
-        <div class="form-row">
-          <div class="form-field">
-            <label for="gradingPolicy">{{ 'onb.createCourse.fields.gradingPolicy.label' | translate }}</label>
-            <select id="gradingPolicy" formControlName="gradingPolicy">
-              <option value="">{{ 'onb.createCourse.fields.gradingPolicy.placeholder' | translate }}</option>
-              <option *ngFor="let policy of gradingPolicies" [value]="policy.value">
-                {{ policy.label | translate }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field" *ngIf="courseForm.get('gradingPolicy')?.value === 'percentage'">
-            <label for="passingThreshold">{{ 'onb.createCourse.fields.passingThreshold.label' | translate }}</label>
-            <input 
-              id="passingThreshold" 
-              type="number" 
-              formControlName="passingThreshold"
-              min="0" 
-              max="100">
-            <small>{{ 'onb.createCourse.fields.passingThreshold.help' | translate }}</small>
-          </div>
-        </div>
-
-        <div class="form-field">
-          <label for="lateSubmissionRule">{{ 'onb.createCourse.fields.lateSubmissionRule.label' | translate }}</label>
-          <select id="lateSubmissionRule" formControlName="lateSubmissionRule">
-            <option value="">{{ 'onb.createCourse.fields.lateSubmissionRule.placeholder' | translate }}</option>
-            <option *ngFor="let rule of lateSubmissionRules" [value]="rule.value">
-              {{ rule.label | translate }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <!-- E) Description & tags -->
-      <div class="form-section">
-        <h2>{{ 'onb.createCourse.sections.description.title' | translate }}</h2>
-        
-        <div class="form-field">
-          <label for="description">{{ 'onb.createCourse.fields.description.label' | translate }}</label>
-          <textarea 
-            id="description" 
-            formControlName="description"
-            [placeholder]="'onb.createCourse.fields.description.placeholder' | translate"
-            rows="3"></textarea>
-        </div>
-
-        <div class="form-field">
-          <label for="tags">{{ 'onb.createCourse.fields.tags.label' | translate }}</label>
-          <div class="tags-input">
-            <input 
-              type="text" 
-              [placeholder]="'onb.createCourse.fields.tags.placeholder' | translate"
-              (keypress)="onKeyPress($event)">
-            <div class="tags-list">
-              <span *ngFor="let tag of tagsArray.controls; let i = index" class="tag">
-                {{ tag.value }}
-                <button type="button" (click)="removeTag(i)" class="tag-remove">×</button>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- F) Quick start -->
-      <div class="form-section">
-        <h2>{{ 'onb.createCourse.sections.quickStart.title' | translate }}</h2>
+        <h2>{{ 'onb.createCourse.sections.quickSection.title' | translate }}</h2>
         
         <div class="form-field">
           <label class="checkbox-label">
@@ -286,34 +134,23 @@
             formControlName="sectionName"
             [placeholder]="'onb.createCourse.fields.sectionName.placeholder' | translate">
         </div>
-
-        <div class="form-field">
-          <label>{{ 'onb.createCourse.fields.starterContent.label' | translate }}</label>
-          <div class="radio-group">
-            <label *ngFor="let option of starterContentOptions" class="radio-option">
-              <input type="radio" [value]="option.value" formControlName="starterContent">
-              <div class="radio-content">
-                <strong>{{ option.label | translate }}</strong>
-                <small>{{ option.desc | translate }}</small>
-              </div>
-            </label>
-          </div>
-        </div>
       </div>
 
       <!-- Footer actions -->
       <div class="form-footer">
-        <button type="button" class="btn btn-secondary" (click)="cancel()">
-          {{ 'onb.createCourse.actions.cancel' | translate }}
-        </button>
-        <button 
-          type="submit" 
-          class="btn btn-primary" 
-          [disabled]="courseForm.invalid || isSubmitting">
-          <span *ngIf="!isSubmitting">{{ 'onb.createCourse.actions.save' | translate }}</span>
-          <span *ngIf="isSubmitting">{{ 'onb.createCourse.actions.saving' | translate }}</span>
-        </button>
-        <small>{{ 'onb.createCourse.actions.note' | translate }}</small>
+        <div class="footer-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">
+            {{ 'onb.createCourse.actions.cancel' | translate }}
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="courseForm.invalid || isSubmitting">
+            <span *ngIf="!isSubmitting">{{ 'onb.createCourse.actions.save' | translate }}</span>
+            <span *ngIf="isSubmitting">{{ 'onb.createCourse.actions.saving' | translate }}</span>
+          </button>
+        </div>
+        <small class="footer-note">{{ 'onb.createCourse.actions.note' | translate }}</small>
       </div>
     </form>
   </div>

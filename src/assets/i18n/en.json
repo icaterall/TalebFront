@@ -1183,20 +1183,11 @@
         "title": "Course Basics",
         "description": "These details appear to teachers and students"
       },
-      "schedule": {
-        "title": "Structure & Schedule"
-      },
       "access": {
         "title": "Access & Ownership"
       },
-      "grading": {
-        "title": "Grading & Policies"
-      },
-      "description": {
-        "title": "Description & Tags"
-      },
-      "quickStart": {
-        "title": "Quick Start"
+      "quickSection": {
+        "title": "Quick Section"
       }
     },
     "fields": {
@@ -1368,12 +1359,10 @@
       "visibility": {
         "private": "Private",
         "privateDesc": "Course is private to you only",
-        "shareable": "Shareable Link",
-        "shareableDesc": "Can share link with other teachers",
-        "library": "Publish to Library",
-        "libraryDesc": "Other teachers can use it",
+        "public": "Public",
+        "publicDesc": "Anyone can view and join this course",
         "institution": "Institution",
-        "institutionDesc": "Available to all institution teachers"
+        "institutionDesc": "Available to all verified teachers in your organization"
       },
       "institutions": {
         "personal": "Personal",

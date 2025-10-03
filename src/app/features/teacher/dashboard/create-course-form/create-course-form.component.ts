@@ -12,31 +12,12 @@ export interface CourseFormData {
   primaryLanguage: string;
   courseIcon?: string;
   
-  // B) Structure & schedule
-  term?: string;
-  startDate?: string;
-  endDate?: string;
-  timezone?: string;
-  
   // C) Access & ownership
   visibility: string;
-  institution?: string;
-  coTeachers: string[];
   
-  // D) Grading & policies
-  gradingPolicy?: string;
-  passingThreshold?: number;
-  lateSubmissionRule?: string;
-  
-  // E) Description & tags
-  description?: string;
-  tags: string[];
-  
-  // F) Quick start
+  // F) Quick section
   createFirstSection: boolean;
   sectionName?: string;
-  meetingPattern?: string;
-  starterContent: string;
 }
 
 @Component({
@@ -125,43 +106,13 @@ export class CreateCourseFormComponent implements OnInit {
     { value: 'chineseTraditional', label: 'onb.createCourse.options.languages.chineseTraditional' }
   ];
 
-  terms = [
-    { value: 'current', label: 'onb.createCourse.options.terms.current' },
-    { value: 'spring2024', label: 'onb.createCourse.options.terms.spring2024' },
-    { value: 'summer2024', label: 'onb.createCourse.options.terms.summer2024' },
-    { value: 'fall2024', label: 'onb.createCourse.options.terms.fall2024' },
-    { value: 'custom', label: 'onb.createCourse.options.terms.custom' }
-  ];
 
   visibilityOptions = [
     { value: 'private', label: 'onb.createCourse.options.visibility.private', desc: 'onb.createCourse.options.visibility.privateDesc' },
-    { value: 'shareable', label: 'onb.createCourse.options.visibility.shareable', desc: 'onb.createCourse.options.visibility.shareableDesc' },
-    { value: 'library', label: 'onb.createCourse.options.visibility.library', desc: 'onb.createCourse.options.visibility.libraryDesc' },
+    { value: 'public', label: 'onb.createCourse.options.visibility.public', desc: 'onb.createCourse.options.visibility.publicDesc' },
     { value: 'institution', label: 'onb.createCourse.options.visibility.institution', desc: 'onb.createCourse.options.visibility.institutionDesc' }
   ];
 
-  institutions = [
-    { value: 'personal', label: 'onb.createCourse.options.institutions.personal' },
-    { value: 'university1', label: 'onb.createCourse.options.institutions.university1' },
-    { value: 'school1', label: 'onb.createCourse.options.institutions.school1' }
-  ];
-
-  gradingPolicies = [
-    { value: 'points', label: 'onb.createCourse.options.gradingPolicies.points' },
-    { value: 'percentage', label: 'onb.createCourse.options.gradingPolicies.percentage' },
-    { value: 'passfail', label: 'onb.createCourse.options.gradingPolicies.passfail' }
-  ];
-
-  lateSubmissionRules = [
-    { value: 'accept', label: 'onb.createCourse.options.lateSubmissionRules.accept' },
-    { value: 'penalty', label: 'onb.createCourse.options.lateSubmissionRules.penalty' },
-    { value: 'close', label: 'onb.createCourse.options.lateSubmissionRules.close' }
-  ];
-
-  starterContentOptions = [
-    { value: 'empty', label: 'onb.createCourse.options.starterContent.empty', desc: 'onb.createCourse.options.starterContent.emptyDesc' },
-    { value: 'template', label: 'onb.createCourse.options.starterContent.template', desc: 'onb.createCourse.options.starterContent.templateDesc' }
-  ];
 
   ngOnInit(): void {
     this.initializeForm();
@@ -182,69 +133,16 @@ export class CreateCourseFormComponent implements OnInit {
       primaryLanguage: new FormControl('', Validators.required),
       courseIcon: new FormControl(''),
 
-      // B) Structure & schedule
-      term: new FormControl(''),
-      startDate: new FormControl(today.toISOString().split('T')[0]),
-      endDate: new FormControl(endDate.toISOString().split('T')[0]),
-      timezone: new FormControl(''), // Will be set from user profile
-
       // C) Access & ownership
       visibility: new FormControl('private', Validators.required),
-      institution: new FormControl('personal'),
-      coTeachers: new FormArray([]),
 
-      // D) Grading & policies
-      gradingPolicy: new FormControl(''),
-      passingThreshold: new FormControl(60, [Validators.min(0), Validators.max(100)]),
-      lateSubmissionRule: new FormControl(''),
-
-      // E) Description & tags
-      description: new FormControl(''),
-      tags: new FormArray([]),
-
-      // F) Quick start
+      // F) Quick section
       createFirstSection: new FormControl(true),
-      sectionName: new FormControl('Section A'),
-      meetingPattern: new FormControl(''),
-      starterContent: new FormControl('empty')
+      sectionName: new FormControl('Section A')
     });
   }
 
-  get coTeachersArray(): FormArray {
-    return this.courseForm.get('coTeachers') as FormArray;
-  }
 
-  get tagsArray(): FormArray {
-    return this.courseForm.get('tags') as FormArray;
-  }
-
-  addCoTeacher(): void {
-    this.coTeachersArray.push(new FormControl('', [Validators.email]));
-  }
-
-  removeCoTeacher(index: number): void {
-    this.coTeachersArray.removeAt(index);
-  }
-
-  addTag(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const value = input.value.trim();
-    if (value && !this.tagsArray.value.includes(value)) {
-      this.tagsArray.push(new FormControl(value));
-      input.value = '';
-    }
-  }
-
-  removeTag(index: number): void {
-    this.tagsArray.removeAt(index);
-  }
-
-  onKeyPress(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      this.addTag(event);
-    }
-  }
 
   onEscapeKey(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
