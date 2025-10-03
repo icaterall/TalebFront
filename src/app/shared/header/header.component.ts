@@ -54,6 +54,18 @@ async setLang(next: Lang) {
   }
 }
 
+// Force reset to English (for debugging)
+async forceResetToEnglish() {
+  await this.i18n.forceResetToEnglish();
+  this.cdr.detectChanges();
+}
+
+// Reload translations (for debugging)
+async reloadTranslations() {
+  await this.i18n.reloadTranslations();
+  this.cdr.detectChanges();
+}
+
 
 toggleMobileMenu() {
   this.isMenuOpen = !this.isMenuOpen;

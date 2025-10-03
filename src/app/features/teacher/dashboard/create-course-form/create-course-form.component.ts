@@ -65,7 +65,6 @@ export class CreateCourseFormComponent implements OnInit {
     { value: 'history', label: 'onb.createCourse.options.subjects.history' },
     { value: 'geography', label: 'onb.createCourse.options.subjects.geography' },
     { value: 'art', label: 'onb.createCourse.options.subjects.art' },
-    { value: 'music', label: 'onb.createCourse.options.subjects.music' },
     { value: 'physical', label: 'onb.createCourse.options.subjects.physical' },
     { value: 'other', label: 'onb.createCourse.options.subjects.other' }
   ];

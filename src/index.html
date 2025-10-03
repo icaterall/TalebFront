@@ -41,15 +41,28 @@
 
     <!-- Reveal app when Angular + i18n + fonts are ready -->
     <script>
+      var hasRevealed = false;
+      var reveal = function () {
+        if (hasRevealed) return;
+        hasRevealed = true;
+        document.documentElement.classList.remove('preinit');
+        var p = document.getElementById('preloader'); if (p) p.classList.add('hide');
+      };
+      
+      // Listen for the ready event
       window.addEventListener('AnatalebReady', function(){
-        var reveal = function () {
-          document.documentElement.classList.remove('preinit');
-          var p = document.getElementById('preloader'); if (p) p.classList.add('hide');
-        };
         if (document.fonts && document.fonts.ready) {
           document.fonts.ready.then(reveal).catch(reveal);
         } else { reveal(); }
       });
+      
+      // Fallback timeout to prevent infinite loading
+      setTimeout(function() {
+        if (!hasRevealed) {
+          console.warn('App ready timeout - revealing anyway');
+          reveal();
+        }
+      }, 5000); // 5 second timeout
     </script>
   </body>
 </html>

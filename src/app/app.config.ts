@@ -18,7 +18,7 @@ import { langInterceptor } from './core/interceptors/lang.interceptor';
 function getStartupLang(): 'ar' | 'en' {
   const w = typeof window !== 'undefined' ? (window as any) : undefined;
   const v = w?.__ANATALEB_STARTUP_LANG__;
-  return (v === 'en' || v === 'ar') ? v : 'ar';
+  return (v === 'en' || v === 'ar') ? v : 'en'; // Default to English instead of Arabic
 }
 function initI18n(i18n: I18nService) { return () => i18n.init(); }
 
