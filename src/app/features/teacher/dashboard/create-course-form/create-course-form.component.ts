@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,6 +11,7 @@ export interface CourseFormData {
   category?: string;
   primaryLanguage: string;
   courseIcon?: string;
+  coverImage?: string;
   
   // C) Access & ownership
   visibility: string;
@@ -27,7 +28,7 @@ export interface CourseFormData {
   templateUrl: './create-course-form.component.html',
   styleUrls: ['./create-course-form.component.scss']
 })
-export class CreateCourseFormComponent implements OnInit {
+export class CreateCourseFormComponent implements OnInit, OnDestroy {
   @Output() courseCreated = new EventEmitter<CourseFormData>();
   @Output() cancelled = new EventEmitter<void>();
 
@@ -36,6 +37,11 @@ export class CreateCourseFormComponent implements OnInit {
   selectedIcon = '';
   showUnsavedWarning = false;
   private initialFormValue: any;
+  
+  // Cover image properties
+  coverImagePreview: string | null = null;
+  coverImageFile: File | null = null;
+  defaultCoverImage = '/assets/default-course-cover.svg'; // Default placeholder image
 
   // Options for dropdowns
   subjects = [
@@ -118,6 +124,21 @@ export class CreateCourseFormComponent implements OnInit {
     this.initializeForm();
     // Store initial form value to detect changes
     this.initialFormValue = this.courseForm.value;
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+    
+    // Watch for checkbox changes to update validation
+    this.courseForm.get('createFirstSection')?.valueChanges.subscribe(checked => {
+      this.updateSectionNameValidation(checked);
+    });
+    
+    // Set initial validation based on checkbox state
+    this.updateSectionNameValidation(this.courseForm.get('createFirstSection')?.value);
+  }
+
+  ngOnDestroy(): void {
+    // Restore body scroll when component is destroyed
+    document.body.style.overflow = '';
   }
 
   private initializeForm(): void {
@@ -132,14 +153,25 @@ export class CreateCourseFormComponent implements OnInit {
       category: new FormControl(''),
       primaryLanguage: new FormControl('', Validators.required),
       courseIcon: new FormControl(''),
+      coverImage: new FormControl(''),
 
       // C) Access & ownership
       visibility: new FormControl('private', Validators.required),
 
       // F) Quick section
       createFirstSection: new FormControl(true),
-      sectionName: new FormControl('Section A')
+      sectionName: new FormControl('')
     });
+  }
+
+  private updateSectionNameValidation(checked: boolean): void {
+    const sectionNameControl = this.courseForm.get('sectionName');
+    if (checked) {
+      sectionNameControl?.setValidators([Validators.required, Validators.minLength(1)]);
+    } else {
+      sectionNameControl?.clearValidators();
+    }
+    sectionNameControl?.updateValueAndValidity();
   }
 
 
@@ -193,7 +225,65 @@ export class CreateCourseFormComponent implements OnInit {
   }
 
   cancel(): void {
+    // Restore body scroll when modal is closed
+    document.body.style.overflow = '';
     this.cancelled.emit();
+  }
+
+  // Cover image methods
+  onCoverImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      
+      // Validate file type (only images)
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file only.');
+        input.value = '';
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should not exceed 5MB.');
+        input.value = '';
+        return;
+      }
+      
+      this.coverImageFile = file;
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.coverImagePreview = e.target?.result as string;
+        this.courseForm.patchValue({ coverImage: this.coverImagePreview });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeCoverImage(): void {
+    this.coverImagePreview = null;
+    this.coverImageFile = null;
+    this.courseForm.patchValue({ coverImage: '' });
+    
+    // Reset file input
+    const fileInput = document.getElementById('coverImageInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  resetCoverImage(): void {
+    this.coverImagePreview = null;
+    this.coverImageFile = null;
+    this.courseForm.patchValue({ coverImage: this.defaultCoverImage });
+    
+    // Reset file input
+    const fileInput = document.getElementById('coverImageInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   getFieldError(fieldName: string): string {

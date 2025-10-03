@@ -1,0 +1,7 @@
+<svg width="300" height="200" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="300" height="200" fill="#F3F4F6"/>
+<rect x="10" y="10" width="280" height="180" rx="8" fill="#E5E7EB"/>
+<circle cx="150" cy="90" r="30" fill="#D1D5DB"/>
+<path d="M130 110L140 100L160 120L170 110L180 120" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="150" y="150" text-anchor="middle" fill="#6B7280" font-family="system-ui, -apple-system, sans-serif" font-size="14">Course Cover</text>
+</svg>

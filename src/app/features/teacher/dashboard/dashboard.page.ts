@@ -64,13 +64,11 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   hasCourse = false;
   hasSection = false;
   hasInvited = false;
-  hasItem = false;
 
   // Real data for dynamic display
   courseData: { name: string; subject: string; grade: string; category: string } | null = null;
   sectionsData: { name: string; id: string }[] = [];
   studentsData: { count: number; sections: string[] } | null = null;
-  itemsData: { count: number; types: string[] } | null = null;
 
   // Create Course Form
   showCreateCourseForm = false;
@@ -79,7 +77,6 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
     { key: 'createCourse',   titleKey: 'onb.createCourse.title', descKey: 'onb.createCourse.desc', ctaKey: 'onb.createCourse.cta', required: true,  done: false, action: () => this.onCreateCourse() },
     { key: 'addSection',     titleKey: 'onb.addSection.title',   descKey: 'onb.addSection.desc',   ctaKey: 'onb.addSection.cta',   required: true,  done: false, action: () => this.onAddSection() },
     { key: 'inviteStudents', titleKey: 'onb.invite.title',       descKey: 'onb.invite.desc',       ctaKey: 'onb.invite.cta',       required: true,  done: false, action: () => this.onInviteStudents() },
-    { key: 'addFirstItem',   titleKey: 'onb.addItem.title',      descKey: 'onb.addItem.desc',      ctaKey: 'onb.addItem.cta',      required: false, done: false, action: () => this.onAddItem() },
   ];
 
   get isFirstRun(): boolean {
@@ -149,18 +146,16 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
     return this.steps.filter(s => s.required).every(s => s.done);
   }
 
-  hydrateOnboardingFromServer(snapshot: { courseCount: number; sectionCount: number; invitedCount: number; itemCount: number; }): void {
+  hydrateOnboardingFromServer(snapshot: { courseCount: number; sectionCount: number; invitedCount: number; }): void {
     this.hasCourse = snapshot.courseCount > 0;
     this.hasSection = snapshot.sectionCount > 0;
     this.hasInvited = snapshot.invitedCount > 0;
-    this.hasItem = snapshot.itemCount > 0;
     this.setDone('createCourse', this.hasCourse);
     this.setDone('addSection', this.hasSection);
     this.setDone('inviteStudents', this.hasInvited);
-    this.setDone('addFirstItem', this.hasItem);
   }
 
-  private setDone(key: 'createCourse' | 'addSection' | 'inviteStudents' | 'addFirstItem', v: boolean): void {
+  private setDone(key: 'createCourse' | 'addSection' | 'inviteStudents', v: boolean): void {
     const s = this.steps.find(x => x.key === key);
     if (s) s.done = v;
   }
@@ -235,16 +230,6 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
     this.maybeFinishOnboarding();
   }
 
-  onAddItem(): void {
-    // Simulate item creation with real data
-    this.itemsData = {
-      count: 3,
-      types: ['Quiz', 'Material', 'Activity']
-    };
-    
-    this.setDone('addFirstItem', true);
-    this.hasItem = true;
-  }
 
   private unlockNextStep(completedStepIndex: number): void {
     // Add visual feedback for unlocking next step

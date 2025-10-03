@@ -5,7 +5,7 @@ import { AnimateOnIntersectDirective } from '../animate-on-intersect.directive';
 import { RippleDirective } from '../ripple.directive';
 
 // Onboarding types (course-centric)
-export type StepKey = 'createCourse' | 'addSection' | 'inviteStudents' | 'addFirstItem';
+export type StepKey = 'createCourse' | 'addSection' | 'inviteStudents';
 export interface OnbStep {
   key: StepKey;
   titleKey: string;
@@ -62,8 +62,6 @@ export class OnboardingChecklistComponent {
         return 'onb.addSection.afterTitle';
       case 'inviteStudents':
         return 'onb.invite.afterTitle';
-      case 'addFirstItem':
-        return 'onb.addItem.afterTitle';
       default:
         return step.titleKey;
     }
@@ -83,8 +81,6 @@ export class OnboardingChecklistComponent {
         return 'onb.addSection.afterDesc';
       case 'inviteStudents':
         return 'onb.invite.afterDesc';
-      case 'addFirstItem':
-        return 'onb.addItem.afterDesc';
       default:
         return step.descKey;
     }
@@ -104,8 +100,6 @@ export class OnboardingChecklistComponent {
         return 'onb.addSection.manageCta';
       case 'inviteStudents':
         return 'onb.invite.manageCta';
-      case 'addFirstItem':
-        return 'onb.addItem.manageCta';
       default:
         return step.ctaKey;
     }

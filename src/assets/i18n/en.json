@@ -1140,21 +1140,21 @@
   "welcomeTitle": "Welcome, {{name}}",
   "welcomeSub": "Let’s set up your classroom. Complete the steps below to start teaching in minutes.",
   "progress": "Setup progress: {{pct}}%",
-  "tip": "Start fast: pick a template and customize it in seconds.",
-  "tryTemplates": "Try templates",
+  "tip": "Get started quickly: use AI-powered tools to create engaging content.",
+  "tryTemplates": "Explore AI Features",
   "getStarted": "Get started",
   "quick": {
     "invite": "Invite students",
     "inviteSub": "Share a join link or class code",
-    "templates": "Explore templates",
-    "templatesSub": "Ready-made games, quizzes, and lessons"
+    "templates": "Explore AI Tools",
+    "templatesSub": "Smart content creation and analytics"
   },
   "steps": {
     "createClass":     { "title": "Create your first class", "desc": "Name, subject, and grade level.", "cta": "Create class" },
     "inviteStudents":  { "title": "Invite your students",     "desc": "Share the code or send email invites.", "cta": "Invite" },
     "newActivity":     { "title": "Create an activity/game",  "desc": "True/False, MCQ, drag-drop, and more.", "cta": "New activity" },
     "hostLive":        { "title": "Host a live session",      "desc": "Run your first interactive session.", "cta": "Go live" },
-    "exploreLibrary":  { "title": "Use a template",           "desc": "Pick a popular game and tweak it.", "cta": "Browse" }
+    "exploreLibrary":  { "title": "Explore AI Features",      "desc": "Discover smart tools and analytics.", "cta": "Explore" }
   }
 }
 
@@ -1163,8 +1163,8 @@
     "title": "Welcome, {{name}}",
     "subtitle": "Let’s set up your first course. Complete the steps below and you’ll be ready to teach.",
     "progress": "Setup progress: {{pct}}%",
-    "tip": "You can start from a template: activities, materials and quizzes ready to tweak.",
-    "tryTemplates": "Try templates"
+    "tip": "Leverage AI-powered features: smart content creation and personalized learning paths.",
+    "tryTemplates": "Explore AI Tools"
   },
   "getStarted": "Get started",
   "createCourse": { 
@@ -1214,6 +1214,13 @@
       },
       "courseIcon": {
         "label": "Course Icon"
+      },
+      "coverImage": {
+        "label": "Course Cover Image",
+        "alt": "Course cover image",
+        "uploadText": "Upload Cover Image",
+        "uploadSubtext": "Click to select an image file",
+        "help": "Upload a cover image for your course (optional). Supported formats: JPG, PNG, GIF. Max size: 5MB."
       },
       "term": {
         "label": "Term/Semester",
@@ -1265,7 +1272,7 @@
       },
       "sectionName": {
         "label": "Section Name",
-        "placeholder": "Section A"
+        "placeholder": ""
       },
       "starterContent": {
         "label": "Starter Content"
@@ -1382,8 +1389,8 @@
       "starterContent": {
         "empty": "Empty Course",
         "emptyDesc": "Start from scratch",
-        "template": "From Template",
-        "templateDesc": "Use a ready-made template"
+        "template": "AI-Powered Setup",
+        "templateDesc": "Use smart AI tools to get started"
       }
     },
     "actions": {

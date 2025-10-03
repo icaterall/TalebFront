@@ -84,7 +84,60 @@
               <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🌱'" (click)="selectIcon('🌱')">🌱</button>
               <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🚀'" (click)="selectIcon('🚀')">🚀</button>
               <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🎯'" (click)="selectIcon('🎯')">🎯</button>
+              
+              <!-- Additional educational icons -->
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🎵'" (click)="selectIcon('🎵')">🎵</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🏛️'" (click)="selectIcon('🏛️')">🏛️</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🧪'" (click)="selectIcon('🧪')">🧪</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '📊'" (click)="selectIcon('📊')">📊</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🌐'" (click)="selectIcon('🌐')">🌐</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🎪'" (click)="selectIcon('🎪')">🎪</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🔍'" (click)="selectIcon('🔍')">🔍</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '⚖️'" (click)="selectIcon('⚖️')">⚖️</button>
+              <button type="button" class="icon-btn" [class.selected]="selectedIcon === '🏗️'" (click)="selectIcon('🏗️')">🏗️</button>
             </div>
+          </div>
+        </div>
+
+        <!-- Cover Image Uploader -->
+        <div class="form-row">
+          <div class="form-field full-width">
+            <label>{{ 'onb.createCourse.fields.coverImage.label' | translate }}</label>
+            <div class="cover-image-uploader">
+              <!-- Image Preview -->
+              <div class="image-preview" *ngIf="coverImagePreview || defaultCoverImage">
+                <img 
+                  [src]="coverImagePreview || defaultCoverImage" 
+                  [alt]="'onb.createCourse.fields.coverImage.alt' | translate"
+                  class="preview-image">
+                <div class="image-overlay">
+                  <button type="button" class="btn-remove" (click)="removeCoverImage()" title="Remove image">
+                    <span>×</span>
+                  </button>
+                  <button type="button" class="btn-reset" (click)="resetCoverImage()" title="Reset to default">
+                    <span>↺</span>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Upload Area -->
+              <div class="upload-area" [class.has-image]="coverImagePreview || defaultCoverImage">
+                <input 
+                  type="file" 
+                  id="coverImageInput"
+                  accept="image/*"
+                  (change)="onCoverImageSelected($event)"
+                  class="file-input">
+                <label for="coverImageInput" class="upload-label">
+                  <div class="upload-icon">📷</div>
+                  <div class="upload-text">
+                    <strong>{{ 'onb.createCourse.fields.coverImage.uploadText' | translate }}</strong>
+                    <small>{{ 'onb.createCourse.fields.coverImage.uploadSubtext' | translate }}</small>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <small class="help-text">{{ 'onb.createCourse.fields.coverImage.help' | translate }}</small>
           </div>
         </div>
       </div>
@@ -127,12 +180,16 @@
         </div>
 
         <div class="form-field" *ngIf="courseForm.get('createFirstSection')?.value">
-          <label for="sectionName">{{ 'onb.createCourse.fields.sectionName.label' | translate }}</label>
+          <label for="sectionName">{{ 'onb.createCourse.fields.sectionName.label' | translate }}*</label>
           <input 
             id="sectionName" 
             type="text" 
             formControlName="sectionName"
-            [placeholder]="'onb.createCourse.fields.sectionName.placeholder' | translate">
+            [placeholder]="'onb.createCourse.fields.sectionName.placeholder' | translate"
+            [class.invalid]="isFieldInvalid('sectionName')">
+          <small *ngIf="getFieldError('sectionName')" class="error-message">
+            {{ getFieldError('sectionName') | translate }}
+          </small>
         </div>
       </div>
 
