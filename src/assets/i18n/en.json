@@ -1136,4 +1136,41 @@
   }
 }
 
+,"dashboardOnboarding": {
+  "welcomeTitle": "Welcome, {{name}}",
+  "welcomeSub": "Let’s set up your classroom. Complete the steps below to start teaching in minutes.",
+  "progress": "Setup progress: {{pct}}%",
+  "tip": "Start fast: pick a template and customize it in seconds.",
+  "tryTemplates": "Try templates",
+  "getStarted": "Get started",
+  "quick": {
+    "invite": "Invite students",
+    "inviteSub": "Share a join link or class code",
+    "templates": "Explore templates",
+    "templatesSub": "Ready-made games, quizzes, and lessons"
+  },
+  "steps": {
+    "createClass":     { "title": "Create your first class", "desc": "Name, subject, and grade level.", "cta": "Create class" },
+    "inviteStudents":  { "title": "Invite your students",     "desc": "Share the code or send email invites.", "cta": "Invite" },
+    "newActivity":     { "title": "Create an activity/game",  "desc": "True/False, MCQ, drag-drop, and more.", "cta": "New activity" },
+    "hostLive":        { "title": "Host a live session",      "desc": "Run your first interactive session.", "cta": "Go live" },
+    "exploreLibrary":  { "title": "Use a template",           "desc": "Pick a popular game and tweak it.", "cta": "Browse" }
+  }
+}
+
+,"onb": {
+  "hero": {
+    "title": "Welcome, {{name}}",
+    "subtitle": "Let’s set up your first course. Complete the steps below and you’ll be ready to teach.",
+    "progress": "Setup progress: {{pct}}%",
+    "tip": "You can start from a template: activities, materials and quizzes ready to tweak.",
+    "tryTemplates": "Try templates"
+  },
+  "getStarted": "Get started",
+  "createCourse": { "title": "Create your first course", "desc": "Course name, subject, grade level.", "cta": "Create course" },
+  "addSection": { "title": "Add at least one section", "desc": "Groups inside a course (e.g., Section A, Section B).", "cta": "Add section" },
+  "invite": { "title": "Invite students to a section", "desc": "Share a join code/link or upload a list.", "cta": "Invite" },
+  "addItem": { "title": "Add your first item", "desc": "Activity, material, or quiz (you can skip for now).", "cta": "Add item" }
+}
+
 }

@@ -7,6 +7,96 @@
   </div>
 
   <div class="dashboard-container">
+    <!-- FIRST-RUN SURFACE -->
+    <section *ngIf="isFirstRun" class="first-run">
+      <section class="hero-section glass-strong" #hero>
+        <div class="welcome-banner">
+          <div class="welcome-content">
+            <div class="welcome-text">
+              <h1 class="welcome-title">👋 {{ 'onb.hero.title' | translate:{name: ('dashboardPage.hero.Ahmed' | translate)} }}</h1>
+              <p class="welcome-subtitle">{{ 'onb.hero.subtitle' | translate }}</p>
+
+              <div class="welcome-stats">
+                <span class="stat-badge">🧭 {{ 'onb.hero.progress' | translate:{pct: progressPct} }}</span>
+              </div>
+            </div>
+
+            <div class="ai-tip glass-card">
+              <div class="tip-content">
+                <div class="tip-line">
+                  <span class="tip-icon">💡</span>
+                  <p class="tip-text">{{ 'onb.hero.tip' | translate }}</p>
+                </div>
+                <button class="tip-action" (click)="onAddItem()">
+                  {{ 'onb.hero.tryTemplates' | translate }} →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="welcome-decoration">
+            <div class="decoration-circle circle-1"></div>
+            <div class="decoration-circle circle-2"></div>
+            <div class="decoration-circle circle-3"></div>
+          </div>
+    </div>
+  </section>
+
+      <!-- Onboarding checklist -->
+      <section class="onboarding glass-card">
+        <div class="onb-header">
+          <div class="onb-title">
+            {{ 'onb.getStarted' | translate }}
+          </div>
+          <div class="onb-progress">
+            <div class="bar"><span [style.width.%]="progressPct"></span></div>
+            <small>{{ progressPct }}%</small>
+          </div>
+        </div>
+
+        <ul class="onb-list">
+          <li *ngFor="let s of steps; let i = index" class="onb-item" appAnimateOnIntersect>
+            <button class="onb-check" [class.done]="s.done" (click)="s.done = !s.done" aria-label="toggle step">
+              <span *ngIf="!s.done">○</span><span *ngIf="s.done">✔</span>
+            </button>
+
+            <div class="onb-body">
+              <div class="onb-text">
+                <strong>{{ s.titleKey | translate }}</strong>
+                <p>{{ s.descKey | translate }}</p>
+              </div>
+
+              <button class="onb-action" appRipple (click)="s.action()">
+                {{ s.ctaKey | translate }}
+              </button>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Quick wins -->
+      <section class="actions-section">
+        <div class="action-card action-1 glass-card" appRipple (click)="onCreateCourse()">
+          <span class="action-step">{{ 'dashboardPage.actions.quickAction' | translate }}</span>
+          <div class="action-icon">🚀</div>
+          <div class="action-title">{{ 'dashboardPage.actions.createCourse' | translate }}</div>
+          <div class="action-subtitle">{{ 'dashboardPage.actions.createCourseSub' | translate }}</div>
+        </div>
+        <div class="action-card action-2 glass-card" appRipple (click)="onInviteStudents()">
+          <div class="action-icon">📧</div>
+          <div class="action-title">{{ 'dashboardOnboarding.quick.invite' | translate }}</div>
+          <div class="action-subtitle">{{ 'dashboardOnboarding.quick.inviteSub' | translate }}</div>
+        </div>
+        <div class="action-card action-3 glass-card" appRipple (click)="onExploreLibrary()">
+          <div class="action-icon">🎮</div>
+          <div class="action-title">{{ 'dashboardOnboarding.quick.templates' | translate }}</div>
+          <div class="action-subtitle">{{ 'dashboardOnboarding.quick.templatesSub' | translate }}</div>
+        </div>
+      </section>
+    </section>
+
+    <!-- NORMAL DASHBOARD -->
+    <section *ngIf="!isFirstRun">
     <!-- Hero Welcome Section -->
     <section class="hero-section" #hero>
       <div class="welcome-banner">
@@ -209,5 +299,6 @@
                 <div class="empty-state-subtext">{{ 'dashboardPage.empty.createFirst' | translate }}</div>
             </div>
         </div>
+    </section>
     </div>
 </section>

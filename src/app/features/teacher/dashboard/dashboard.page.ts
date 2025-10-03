@@ -10,6 +10,18 @@ import { RippleDirective } from './ripple.directive';
 import { ConfettiService } from './confetti.service';
 import { TranslateModule } from '@ngx-translate/core';
 
+// Onboarding types (course-centric)
+type StepKey = 'createCourse' | 'addSection' | 'inviteStudents' | 'addFirstItem';
+interface OnbStep {
+  key: StepKey;
+  titleKey: string;
+  descKey: string;
+  ctaKey: string;
+  required: boolean;
+  done: boolean;
+  action: () => void;
+}
+
 
 @Component({
   selector: 'app-teacher-dashboard-page',
@@ -53,6 +65,51 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
+  // -------- Onboarding (course-centric)
+
+  hasCourse = false;
+  hasSection = false;
+  hasInvited = false;
+  hasItem = false;
+
+  steps: OnbStep[] = [
+    { key: 'createCourse',   titleKey: 'onb.createCourse.title', descKey: 'onb.createCourse.desc', ctaKey: 'onb.createCourse.cta', required: true,  done: false, action: () => this.onCreateCourse() },
+    { key: 'addSection',     titleKey: 'onb.addSection.title',   descKey: 'onb.addSection.desc',   ctaKey: 'onb.addSection.cta',   required: true,  done: false, action: () => this.onAddSection() },
+    { key: 'inviteStudents', titleKey: 'onb.invite.title',       descKey: 'onb.invite.desc',       ctaKey: 'onb.invite.cta',       required: true,  done: false, action: () => this.onInviteStudents() },
+    { key: 'addFirstItem',   titleKey: 'onb.addItem.title',      descKey: 'onb.addItem.desc',      ctaKey: 'onb.addItem.cta',      required: false, done: false, action: () => this.onAddItem() },
+  ];
+
+  get isFirstRun(): boolean {
+    // first-run until there is a course and required steps are done
+    return !this.hasCourse || !this.requiredDone();
+  }
+
+  get progressPct(): number {
+    const req = this.steps.filter(s => s.required);
+    const done = req.filter(s => s.done).length;
+    return Math.round((done / req.length) * 100);
+  }
+
+  private requiredDone(): boolean {
+    return this.steps.filter(s => s.required).every(s => s.done);
+  }
+
+  hydrateOnboardingFromServer(snapshot: { courseCount: number; sectionCount: number; invitedCount: number; itemCount: number; }): void {
+    this.hasCourse = snapshot.courseCount > 0;
+    this.hasSection = snapshot.sectionCount > 0;
+    this.hasInvited = snapshot.invitedCount > 0;
+    this.hasItem = snapshot.itemCount > 0;
+    this.setDone('createCourse', this.hasCourse);
+    this.setDone('addSection', this.hasSection);
+    this.setDone('inviteStudents', this.hasInvited);
+    this.setDone('addFirstItem', this.hasItem);
+  }
+
+  private setDone(key: 'createCourse' | 'addSection' | 'inviteStudents' | 'addFirstItem', v: boolean): void {
+    const s = this.steps.find(x => x.key === key);
+    if (s) s.done = v;
+  }
+
   ngAfterViewInit(): void {
     if (!this.isBrowser) return;
 
@@ -78,6 +135,51 @@ export class DashboardPage implements AfterViewInit, OnDestroy {
   onCreateCourse(): void {
     // Optional: trigger confetti like your script
     if (this.isBrowser) this.confetti.burst(50);
+    this.setDone('createCourse', true);
+    this.hasCourse = true;
+    this.maybeFinishOnboarding();
+  }
+
+  // Onboarding example handlers (wire to real flows later)
+  onInviteStudents(): void {
+    // TODO: open invite dialog / route
+    this.setDone('inviteStudents', true);
+    this.hasInvited = true;
+    this.maybeFinishOnboarding();
+  }
+
+  onNewActivity(): void {
+    // TODO: route to activity builder
+  }
+
+  onHostLive(): void {
+    // TODO: open live session setup
+  }
+
+  onExploreLibrary(): void {
+    // TODO: route to templates/library
+  }
+
+  onAddSection(): void {
+    // TODO: route to add section
+    this.setDone('addSection', true);
+    this.hasSection = true;
+    this.maybeFinishOnboarding();
+  }
+
+  onAddItem(): void {
+    // TODO: open builder
+    this.setDone('addFirstItem', true);
+    this.hasItem = true;
+  }
+
+  private maybeFinishOnboarding(): void {
+    if (this.requiredDone()) {
+      this.confetti.burst(60);
+      setTimeout(() => {
+        // TODO: persist finished flag and/or route
+      }, 700);
+    }
   }
 
   ngOnDestroy(): void {
