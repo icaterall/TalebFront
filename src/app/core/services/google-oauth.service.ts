@@ -78,22 +78,39 @@ export class GoogleOAuthService {
       // Get current language for Google Identity Services
       const currentLang = this.getCurrentLanguage();
 
+      // Initialize GIS for One Tap (auto-prompt)
       window.google.accounts.id.initialize({
         client_id: this.GOOGLE_CLIENT_ID,
-        callback: this.handleCredentialResponse.bind(this),
+        callback: this.handleOneTapResponse.bind(this),
         auto_select: false,
         cancel_on_tap_outside: false,
-        use_fedcm_for_prompt: false, // Disable FedCM for localhost compatibility
-        ux_mode: 'popup', // Use popup instead of redirect
+        use_fedcm_for_prompt: false,
+        ux_mode: 'popup',
         context: 'signin',
-        locale: currentLang // Set the language for Google OAuth UI
+        locale: currentLang
       });
+
+      // Initialize OAuth 2.0 Code Client for manual sign-in
+      this.initializeCodeClient();
     } catch (error) {
       console.error('Error initializing Google Auth:', error);
       this.toastr.error(
         this.translate.instant('authModal.googleNotInitialized'),
         this.translate.instant('authModal.error')
       );
+    }
+  }
+
+  private initializeCodeClient(): void {
+    try {
+      window.google.accounts.oauth2.initCodeClient({
+        client_id: this.GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        ux_mode: 'popup',
+        callback: this.handleCodeResponse.bind(this)
+      });
+    } catch (error) {
+      console.error('Error initializing OAuth Code Client:', error);
     }
   }
 
@@ -113,12 +130,43 @@ export class GoogleOAuthService {
   }
 
   /**
-   * Handle Google OAuth credential response
+   * Handle One Tap response (auto-prompt)
    */
-  private handleCredentialResponse(response: any): void {
+  private handleOneTapResponse(response: any): void {
     if (response.credential) {
       this.sendTokenToBackend(response.credential);
     }
+  }
+
+  /**
+   * Handle OAuth Code response (manual sign-in)
+   */
+  private handleCodeResponse(response: any): void {
+    if (response.code) {
+      // Exchange code for token
+      this.exchangeCodeForToken(response.code);
+    }
+  }
+
+  /**
+   * Exchange authorization code for ID token
+   */
+  private exchangeCodeForToken(code: string): void {
+    this.http.post<any>(`${this.baseUrl}/auth/google-code-exchange`, { code })
+      .subscribe({
+        next: (response) => {
+          if (response.idToken) {
+            this.sendTokenToBackend(response.idToken);
+          }
+        },
+        error: (error) => {
+          console.error('Code exchange failed:', error);
+          this.toastr.error(
+            this.translate.instant('authModal.genericError'),
+            this.translate.instant('authModal.error')
+          );
+        }
+      });
   }
 
   /**
@@ -146,6 +194,83 @@ export class GoogleOAuthService {
           );
         }
       });
+  }
+
+  /**
+   * Initialize One Tap auto-prompt (called once on modal open)
+   */
+  initOneTapAutoPrompt(): void {
+    if (!this.isReady()) {
+      console.warn('Google Identity Services not ready');
+      return;
+    }
+
+    try {
+      window.google.accounts.id.prompt((notification: any) => {
+        // Handle One Tap dismissal - do not retry
+        if (notification.isNotDisplayed() || 
+            notification.isSkippedMoment() || 
+            notification.getMomentType() === 'dismissed') {
+          console.log('One Tap dismissed by user');
+          // Emit event to reset loading state
+          window.dispatchEvent(new CustomEvent('google-login-error'));
+          return;
+        }
+      });
+    } catch (error) {
+      console.error('One Tap initialization failed:', error);
+      window.dispatchEvent(new CustomEvent('google-login-error'));
+    }
+  }
+
+  /**
+   * Get Google ID token for manual sign-in
+   */
+  getGoogleIdToken(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (!this.isReady()) {
+        reject(new Error('Google Identity Services not ready'));
+        return;
+      }
+
+      try {
+        // Use the rendered Google button or manual popup
+        if (this.googleBtn?.nativeElement) {
+          // If we have a rendered button, trigger it
+          this.googleBtn.nativeElement.click();
+        } else {
+          // Fallback to manual popup
+          window.google.accounts.id.prompt((notification: any) => {
+            if (notification.isNotDisplayed() || 
+                notification.isSkippedMoment() || 
+                notification.getMomentType() === 'dismissed') {
+              reject(new Error('Google sign-in cancelled'));
+              return;
+            }
+          });
+        }
+
+        // Set up callback for credential response
+        const originalCallback = window.google.accounts.id.initialize;
+        
+        window.google.accounts.id.initialize({
+          client_id: this.GOOGLE_CLIENT_ID,
+          callback: (response: any) => {
+            if (response.credential) {
+              resolve(response.credential);
+            } else {
+              reject(new Error('No credential received'));
+            }
+          },
+          ux_mode: 'popup',
+          context: 'signin',
+          locale: this.getCurrentLanguage()
+        });
+
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   /**

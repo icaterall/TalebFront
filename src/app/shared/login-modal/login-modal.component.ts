@@ -6,6 +6,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 import { GoogleOAuthService } from '../../core/services/google-oauth.service';
 import { AppleOAuthService } from '../../core/services/apple-oauth.service';
+import { AuthService } from '../../core/services/auth.service';
 import { environment } from 'src/environments/environment';
 import { ToastrService } from 'ngx-toastr';
 
@@ -52,6 +53,7 @@ export class LoginModalComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly googleOAuth = inject(GoogleOAuthService);
   private readonly appleOAuth = inject(AppleOAuthService);
+  private readonly authService = inject(AuthService);
   private readonly baseUrl = environment.apiUrl;
   private readonly toastr = inject(ToastrService);
   private readonly translate = inject(TranslateService);
@@ -90,32 +92,25 @@ export class LoginModalComponent implements OnInit {
       }
       
       try {
-        // Get current language for Google Identity Services
-        const currentLang = this.getCurrentLanguage();
-        
-        // Initialize Google Identity Services
-        window.google.accounts.id.initialize({
-          client_id: environment.googleClientId,
-          callback: (response: any) => this.handleGoogleResponse(response),
-          ux_mode: 'popup',
-          context: 'signin',
-          locale: currentLang // Set the language for Google OAuth UI
+        // Initialize Google OAuth service
+        this.googleOAuth.initializeGoogle().then(() => {
+          this.googleOAuthAvailable = true;
+          console.log('Google OAuth initialized successfully');
+          
+          // Initialize One Tap auto-prompt (only once)
+          this.googleOAuth.initOneTapAutoPrompt();
+          
+          // Render Google button if element exists
+          if (this.googleBtn?.nativeElement) {
+            this.googleOAuth.renderGoogleButton(this.googleBtn.nativeElement);
+          }
+        }).catch(error => {
+          console.error('Failed to initialize Google OAuth:', error);
+          this.googleOAuthAvailable = false;
         });
-        
-        this.googleOAuthAvailable = true;
-        console.log('Google OAuth initialized successfully');
-        
-        // Render Google button if element exists
-        if (this.googleBtn?.nativeElement) {
-          this.googleOAuth.renderGoogleButton(this.googleBtn.nativeElement);
-        }
       } catch (error) {
-        console.error('Error initializing Google OAuth:', error);
+        console.error('Failed to initialize Google OAuth:', error);
         this.googleOAuthAvailable = false;
-        this.toastr.error(
-          this.translate.instant('authModal.googleNotInitialized'),
-          this.translate.instant('authModal.error')
-        );
       }
     };
     
@@ -234,13 +229,17 @@ export class LoginModalComponent implements OnInit {
     this.loading = 'email';
     try {
       if (this.mode === 'login-password') {
-        await this.http.post(`${this.baseUrl}/auth/login`, {
-          email: this.email, password: this.password
-        }).toPromise();
+        const response = await this.authService.login(this.email, this.password).toPromise();
+        this.authService.postLoginNavigate(response.user);
+        this.toastr.success(this.translate.instant('authModal.loginSuccess'));
       } else if (this.mode === 'register') {
-        await this.http.post(`${this.baseUrl}/auth/register`, {
-          email: this.email, fullName: this.fullName, password: this.password
+        const response = await this.authService.register({
+          name: this.fullName,
+          email: this.email,
+          password: this.password
         }).toPromise();
+        this.authService.postLoginNavigate(response.user);
+        this.toastr.success(this.translate.instant('authModal.registrationSuccess'));
       }
       this.close();
     } catch (e) {
@@ -322,9 +321,16 @@ export class LoginModalComponent implements OnInit {
     this.loading = 'google';
     
     try {
-      const idToken = await this.gisGetIdToken(); // must reject on cancel/not-displayed
-      await this.http.post(`${this.baseUrl}/auth/google`, { idToken }).toPromise();
+      // Get Google ID token for manual sign-in
+      const idToken = await this.googleOAuth.getGoogleIdToken();
+      
+      // Call backend with ID token
+      const response = await this.authService.googleLogin(idToken).toPromise();
+      
+      // Handle successful login
+      this.authService.postLoginNavigate(response.user);
       this.close();
+      
     } catch (e) {
       const errorMessage = this.getGoogleErrorMessage(e);
       this.toastr.error(errorMessage);
@@ -349,32 +355,6 @@ export class LoginModalComponent implements OnInit {
     }
   }
 
-  private gisGetIdToken(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      try {
-        window.google.accounts.id.prompt((notification: any) => {
-          // Handle all cancellation cases - these must reject so finally runs
-          if (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.getMomentType() === 'dismissed') {
-            return reject(new Error('Google sign-in cancelled'));
-          }
-        });
-        
-        // Set up callback for credential response
-        window.google.accounts.id.initialize({
-          client_id: environment.googleClientId,
-          callback: (res: any) => {
-            const token = res?.credential;
-            token ? resolve(token) : reject(new Error('No credential'));
-          },
-          ux_mode: 'popup',
-          context: 'signin',
-          locale: this.getCurrentLanguage()
-        });
-      } catch (e) { 
-        reject(e); 
-      }
-    });
-  }
 
   private appleGetIdentityToken(): Promise<string> {
     // TODO: integrate Sign in with Apple JS; return identity token

@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { I18nService } from '../../core/services/i18n.service';
+import { AuthService } from '../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 type Lang = 'ar' | 'en';
 
@@ -17,6 +19,8 @@ type Lang = 'ar' | 'en';
 export class AccountTypePageComponent {
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
+  private readonly authService = inject(AuthService);
+  private readonly toastr = inject(ToastrService);
 
   showDateOfBirth = false;
   showTeacherDashboard = false;
@@ -32,12 +36,26 @@ export class AccountTypePageComponent {
     await this.i18n.setLang(next);
   }
 
-  choose(type: 'Teacher' | 'Student') {
+  async choose(type: 'Teacher' | 'Student') {
     console.log('Selected account type:', type);
-    if (type === 'Student') {
-      this.showDateOfBirth = true;
-    } else if (type === 'Teacher') {
-      this.router.navigate(['/teacher-dashboard']);
+    
+    try {
+      // Update user role in backend
+      const response = await this.authService.updateRole(type).toPromise();
+      
+      // Update local user state
+      this.authService.storeAuthData(response.user, this.authService.getToken()!, this.authService.getRefreshToken()!);
+      
+      // Navigate based on role
+      if (type === 'Student') {
+        this.showDateOfBirth = true;
+      } else if (type === 'Teacher') {
+        this.router.navigate(['/teacher/setup']);
+      }
+      
+    } catch (error) {
+      console.error('Error updating role:', error);
+      this.toastr.error('Failed to update role. Please try again.');
     }
   }
 
