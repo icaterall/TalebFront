@@ -342,7 +342,16 @@ export class LoginModalComponent implements OnInit {
       this.close();
       
     } catch (e) {
-      const errorMessage = this.getGoogleErrorMessage(e);
+      console.error('Google login error:', e);
+      let errorMessage = this.getGoogleErrorMessage(e);
+      
+      // Handle specific network errors
+      if (e.status === 0) {
+        errorMessage = this.translate.instant('authModal.networkError');
+      } else if (e.status === 404) {
+        errorMessage = this.translate.instant('authModal.googleUnavailable');
+      }
+      
       this.toastr.error(errorMessage);
     } finally {
       this.resetLoading(); // <-- always stop

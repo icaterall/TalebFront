@@ -84,7 +84,7 @@ export class GoogleOAuthService {
         callback: this.handleOneTapResponse.bind(this),
         auto_select: false,
         cancel_on_tap_outside: false,
-        use_fedcm_for_prompt: false,
+        use_fedcm_for_prompt: true, // Enable FedCM for future compatibility
         ux_mode: 'popup',
         context: 'signin',
         locale: currentLang
@@ -254,6 +254,7 @@ export class GoogleOAuthService {
               reject(new Error('No credential received'));
             }
           },
+          use_fedcm_for_prompt: true, // Enable FedCM for future compatibility
           ux_mode: 'popup',
           context: 'signin',
           locale: this.getCurrentLanguage()
