@@ -69,15 +69,15 @@ export class LoginModalComponent implements OnInit {
       // Initialize Apple OAuth
       this.appleOAuth.initializeApple().catch(error => {
         console.error('Failed to initialize Apple OAuth:', error);
-        this.loading = 'none';
+        this.resetLoading();
       });
       
       // Listen for OAuth login errors
       window.addEventListener('google-login-error', () => {
-        this.loading = 'none';
+        this.resetLoading();
       });
       window.addEventListener('apple-login-error', () => {
-        this.loading = 'none';
+        this.resetLoading();
       });
     }
   }
@@ -126,7 +126,7 @@ export class LoginModalComponent implements OnInit {
     const idToken = response?.credential;
     if (!idToken) {
       console.error('No ID token received from Google');
-      this.loading = 'none';
+      this.resetLoading();
       return;
     }
 
@@ -139,7 +139,7 @@ export class LoginModalComponent implements OnInit {
       this.translate.instant('authModal.loginSuccess'),
       this.translate.instant('authModal.success')
     );
-    this.loading = 'none';
+    this.resetLoading();
     this.close();
   }
 
@@ -222,49 +222,32 @@ export class LoginModalComponent implements OnInit {
         this.mode = 'register';
       }
     } catch (e) {
-      this.toastr.error(this.errMsg(e));
+      this.toastr.error('Network error. Please try again.');
       this.mode = 'idle';
-    } finally {
-      this.loading = 'none';
+      this.resetLoading();
     }
   }
 
   async onContinue() {
     if (this.loading !== 'none' || this.emailDisabled) return;
 
-    if (this.mode === 'login-password') {
-      // Email login
-      this.loading = 'email';
-      try {
+    this.loading = 'email';
+    try {
+      if (this.mode === 'login-password') {
         await this.http.post(`${this.baseUrl}/auth/login`, {
           email: this.email, password: this.password
         }).toPromise();
-        this.close();
-      } catch (e) {
-        this.toastr.error(this.errMsg(e));
-      } finally {
-        this.loading = 'none';
-      }
-      return;
-    }
-
-    if (this.mode === 'register') {
-      // Email register
-      this.loading = 'email';
-      try {
+      } else if (this.mode === 'register') {
         await this.http.post(`${this.baseUrl}/auth/register`, {
           email: this.email, fullName: this.fullName, password: this.password
         }).toPromise();
-        this.close();
-      } catch (e) {
-        this.toastr.error(this.errMsg(e));
-      } finally {
-        this.loading = 'none';
       }
-      return;
+      this.close();
+    } catch (e) {
+      this.toastr.error('Check your email or password.');
+    } finally {
+      this.resetLoading(); // <-- always stop spinner
     }
-
-    // In 'login-social' mode, do nothing (email path disabled)
   }
 
   async onLogin() {
@@ -326,17 +309,27 @@ export class LoginModalComponent implements OnInit {
     return typeof (window as any).AppleID !== 'undefined' || /iPhone|iPad|Macintosh/.test(navigator.userAgent);
   }
 
+  /**
+   * Centralized loading state reset - guarantees spinners stop on any error/cancel
+   */
+  private resetLoading(): void {
+    this.loading = 'none';
+    this.cdr.detectChanges(); // Force change detection to update UI
+  }
+
   async onGoogleClick() {
     if (this.loading !== 'none') return;
     this.loading = 'google';
     
     try {
-      const idToken = await this.gisGetIdToken();
+      const idToken = await this.gisGetIdToken(); // must reject on cancel/not-displayed
       await this.http.post(`${this.baseUrl}/auth/google`, { idToken }).toPromise();
       this.close();
     } catch (e) {
-      this.toastr.error(this.errMsg(e));
-      this.loading = 'none'; // re-enable Google button
+      const errorMessage = this.getGoogleErrorMessage(e);
+      this.toastr.error(errorMessage);
+    } finally {
+      this.resetLoading(); // <-- always stop
     }
   }
 
@@ -345,12 +338,14 @@ export class LoginModalComponent implements OnInit {
     this.loading = 'apple';
     
     try {
-      const token = await this.appleGetIdentityToken();
+      const token = await this.appleGetIdentityToken(); // must reject on cancel/error
       await this.http.post(`${this.baseUrl}/auth/apple`, { token }).toPromise();
       this.close();
     } catch (e) {
-      this.toastr.error(this.errMsg(e));
-      this.loading = 'none'; // re-enable Apple button
+      const errorMessage = this.getAppleErrorMessage(e);
+      this.toastr.error(errorMessage);
+    } finally {
+      this.resetLoading(); // <-- always stop
     }
   }
 
@@ -358,8 +353,8 @@ export class LoginModalComponent implements OnInit {
     return new Promise((resolve, reject) => {
       try {
         window.google.accounts.id.prompt((notification: any) => {
-          // If user dismissed, treat as cancel
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Handle all cancellation cases - these must reject so finally runs
+          if (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.getMomentType() === 'dismissed') {
             return reject(new Error('Google sign-in cancelled'));
           }
         });
@@ -384,6 +379,42 @@ export class LoginModalComponent implements OnInit {
   private appleGetIdentityToken(): Promise<string> {
     // TODO: integrate Sign in with Apple JS; return identity token
     return Promise.reject(new Error('Apple sign-in not implemented'));
+  }
+
+  private getGoogleErrorMessage(error: any): string {
+    const message = error?.message || error?.toString() || '';
+    
+    if (message.includes('cancelled') || message.includes('dismissed')) {
+      return 'Sign-in was cancelled.';
+    }
+    
+    if (message.includes('blocked') || message.includes('popup')) {
+      return 'Sign-in was blocked by the browser.';
+    }
+    
+    if (message.includes('network') || message.includes('fetch')) {
+      return 'Network error. Please try again.';
+    }
+    
+    return 'Google sign-in failed. Please try again.';
+  }
+
+  private getAppleErrorMessage(error: any): string {
+    const message = error?.message || error?.toString() || '';
+    
+    if (message.includes('cancelled') || message.includes('dismissed')) {
+      return 'Sign-in was cancelled.';
+    }
+    
+    if (message.includes('not supported') || message.includes('unavailable')) {
+      return 'Apple sign-in is not supported on this device.';
+    }
+    
+    if (message.includes('network') || message.includes('fetch')) {
+      return 'Network error. Please try again.';
+    }
+    
+    return 'Apple sign-in failed. Please try again.';
   }
 
   onForgotPassword() {

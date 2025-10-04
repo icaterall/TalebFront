@@ -42,10 +42,14 @@ export const appConfig: ApplicationConfig = {
 
     ...(isServer ? [provideNoopAnimations()] : [provideAnimations()]),
     importProvidersFrom(ToastrModule.forRoot({
-      positionClass: 'toast-bottom-center',
+      positionClass: 'toast-top-center',
+      newestOnTop: true,
       preventDuplicates: true,
+      closeButton: true,
+      progressBar: false,
       timeOut: 4000,
-      progressBar: true,
+      extendedTimeOut: 1000,
+      easeTime: 150,
     })),
 
     // ✅ reCAPTCHA v3 site key provider (GLOBAL)
