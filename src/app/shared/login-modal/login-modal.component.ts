@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, inject, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject, ChangeDetectorRef, HostListener, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -16,11 +16,12 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './login-modal.component.html',
   styleUrls: ['./login-modal.component.scss']
 })
-export class LoginModalComponent {
+export class LoginModalComponent implements OnInit {
   @Input() initialMode: 'login' | 'register' = 'login';
   @Output() closeModal = new EventEmitter<void>();
   @Output() switchToSignup = new EventEmitter<void>();
   @Output() forgotPassword = new EventEmitter<void>();
+  @ViewChild('googleBtn', { static: false }) googleBtn!: ElementRef<HTMLDivElement>;
   @Output() modeChanged = new EventEmitter<'login' | 'register'>();
 
   email = '';
@@ -45,15 +46,9 @@ export class LoginModalComponent {
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.add('modal-open');
-      // Initialize Google OAuth
-      this.googleOAuth.initializeGoogle().then(() => {
-        this.googleOAuthAvailable = this.googleOAuth.isGoogleOAuthAvailable();
-        console.log('Google OAuth available:', this.googleOAuthAvailable);
-      }).catch(error => {
-        console.warn('Google OAuth initialization failed:', error);
-        this.googleOAuthAvailable = false;
-        this.isLoading = false;
-      });
+      
+      // Initialize Google OAuth with proper GIS approach
+      this.initializeGoogleOAuth();
       
       // Initialize Apple OAuth
       this.appleOAuth.initializeApple().catch(error => {
@@ -69,6 +64,63 @@ export class LoginModalComponent {
         this.isLoading = false;
       });
     }
+  }
+
+  private initializeGoogleOAuth(): void {
+    const waitForGis = () => {
+      if (!window.google?.accounts?.id) {
+        setTimeout(waitForGis, 100);
+        return;
+      }
+      
+      try {
+        // Initialize Google Identity Services
+        window.google.accounts.id.initialize({
+          client_id: environment.googleClientId,
+          callback: (response: any) => this.handleGoogleResponse(response),
+          ux_mode: 'popup',
+          context: 'signin'
+        });
+        
+        this.googleOAuthAvailable = true;
+        console.log('Google OAuth initialized successfully');
+        
+        // Render Google button if element exists
+        if (this.googleBtn?.nativeElement) {
+          this.googleOAuth.renderGoogleButton(this.googleBtn.nativeElement);
+        }
+      } catch (error) {
+        console.error('Error initializing Google OAuth:', error);
+        this.googleOAuthAvailable = false;
+        this.toastr.error(
+          this.translate.instant('authModal.googleNotInitialized'),
+          this.translate.instant('authModal.error')
+        );
+      }
+    };
+    
+    waitForGis();
+  }
+
+  private handleGoogleResponse(response: any): void {
+    const idToken = response?.credential;
+    if (!idToken) {
+      console.error('No ID token received from Google');
+      this.isLoading = false;
+      return;
+    }
+
+    console.log('Google OAuth response received');
+    // TODO: Send ID token to backend for verification
+    // this.http.post(`${environment.apiUrl}/auth/google`, { idToken }).subscribe(...)
+    
+    // For now, just show success and close modal
+    this.toastr.success(
+      this.translate.instant('authModal.loginSuccess'),
+      this.translate.instant('authModal.success')
+    );
+    this.isLoading = false;
+    this.close();
   }
 
   ngOnDestroy() {
@@ -218,11 +270,17 @@ export class LoginModalComponent {
     
     if (provider === 'google') {
       try {
-        this.googleOAuth.loginWithGoogle();
-        // Reset loading state after a short delay to allow for OAuth flow
-        setTimeout(() => {
+        // Use Google Identity Services prompt
+        if (window.google?.accounts?.id) {
+          window.google.accounts.id.prompt();
+        } else {
+          console.error('Google Identity Services not available');
+          this.toastr.error(
+            this.translate.instant('authModal.googleNotInitialized'),
+            this.translate.instant('authModal.error')
+          );
           this.isLoading = false;
-        }, 3000);
+        }
       } catch (error) {
         console.error('Google login error:', error);
         this.isLoading = false;

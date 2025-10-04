@@ -155,13 +155,8 @@ export class GoogleOAuthService {
     }
 
     try {
-      // Use popup mode for better localhost compatibility
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // Fallback to manual popup
-          this.openGooglePopup();
-        }
-      });
+      // Use Google Identity Services prompt (no fallback to old OAuth)
+      window.google.accounts.id.prompt();
     } catch (error) {
       console.error('Error with Google prompt:', error);
       this.toastr.error(
@@ -169,7 +164,6 @@ export class GoogleOAuthService {
         this.translate.instant('authModal.error')
       );
       this.emitLoginError();
-      // Don't fallback to popup if there's an error
     }
   }
 
@@ -182,6 +176,30 @@ export class GoogleOAuthService {
 
 
   /**
+   * Render Google sign-in button using GIS
+   */
+  renderGoogleButton(element: HTMLElement): void {
+    if (!this.isReady()) {
+      console.warn('Google Identity Services not ready for button rendering');
+      return;
+    }
+
+    try {
+      window.google.accounts.id.renderButton(element, {
+        theme: 'outline',
+        size: 'large',
+        type: 'standard',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: '100%'
+      });
+    } catch (error) {
+      console.error('Error rendering Google button:', error);
+    }
+  }
+
+  /**
    * Emit login error event to reset loading state
    */
   private emitLoginError(): void {
@@ -189,52 +207,4 @@ export class GoogleOAuthService {
     window.dispatchEvent(new CustomEvent('google-login-error'));
   }
 
-  private openGooglePopup(): void {
-    // Fallback method using popup window
-    const popup = window.open(
-      `https://accounts.google.com/oauth/authorize?client_id=${this.GOOGLE_CLIENT_ID}&response_type=id_token&scope=openid%20email%20profile&redirect_uri=${encodeURIComponent(window.location.origin)}&nonce=${Date.now()}`,
-      'google-login',
-      'width=500,height=600,scrollbars=yes,resizable=yes'
-    );
-
-    // Listen for popup messages
-    const messageListener = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      
-      if (event.data.type === 'GOOGLE_AUTH_SUCCESS' && event.data.idToken) {
-        this.handleCredentialResponse({ credential: event.data.idToken });
-        window.removeEventListener('message', messageListener);
-      }
-    };
-
-    window.addEventListener('message', messageListener);
-
-    // Check if popup was closed
-    const checkClosed = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(checkClosed);
-        window.removeEventListener('message', messageListener);
-      }
-    }, 1000);
-  }
-
-  /**
-   * Render Google sign-in button
-   */
-  renderGoogleButton(elementId: string): void {
-    if (window.google) {
-      window.google.accounts.id.renderButton(
-        document.getElementById(elementId),
-        {
-          theme: 'outline',
-          size: 'large',
-          type: 'standard',
-          text: 'continue_with',
-          shape: 'rectangular',
-          logo_alignment: 'left',
-          width: '100%'
-        }
-      );
-    }
-  }
 }
