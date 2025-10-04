@@ -9,6 +9,8 @@ import { AppleOAuthService } from '../../core/services/apple-oauth.service';
 import { environment } from 'src/environments/environment';
 import { ToastrService } from 'ngx-toastr';
 
+type LoadingState = 'none' | 'email' | 'google' | 'apple';
+
 @Component({
   selector: 'app-login-modal',
   standalone: true,
@@ -16,8 +18,6 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './login-modal.component.html',
   styleUrls: ['./login-modal.component.scss']
 })
-type LoadingState = 'none' | 'email' | 'google' | 'apple';
-
 export class LoginModalComponent implements OnInit {
   @Input() initialMode: 'login' | 'register' = 'login';
   @Output() closeModal = new EventEmitter<void>();
@@ -55,15 +55,15 @@ export class LoginModalComponent implements OnInit {
       // Initialize Apple OAuth
       this.appleOAuth.initializeApple().catch(error => {
         console.error('Failed to initialize Apple OAuth:', error);
-        this.isLoading = false;
+        this.loading = 'none';
       });
       
       // Listen for OAuth login errors
       window.addEventListener('google-login-error', () => {
-        this.isLoading = false;
+        this.loading = 'none';
       });
       window.addEventListener('apple-login-error', () => {
-        this.isLoading = false;
+        this.loading = 'none';
       });
     }
   }
@@ -112,7 +112,7 @@ export class LoginModalComponent implements OnInit {
     const idToken = response?.credential;
     if (!idToken) {
       console.error('No ID token received from Google');
-      this.isLoading = false;
+      this.loading = 'none';
       return;
     }
 
@@ -125,7 +125,7 @@ export class LoginModalComponent implements OnInit {
       this.translate.instant('authModal.loginSuccess'),
       this.translate.instant('authModal.success')
     );
-    this.isLoading = false;
+    this.loading = 'none';
     this.close();
   }
 
@@ -176,13 +176,13 @@ export class LoginModalComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
+    this.loading = 'email';
     
     // Call the backend API to check if email exists
     this.http.post<any>(`${this.baseUrl}/auth/check-email-exist`, { email: this.email })
       .subscribe({
         next: (response) => {
-          this.isLoading = false;
+          this.loading = 'none';
           this.emailExists = response.exists;
           
           if (!this.emailExists) {
@@ -196,7 +196,7 @@ export class LoginModalComponent implements OnInit {
           }
         },
         error: (error) => {
-          this.isLoading = false;
+          this.loading = 'none';
           console.error('Error checking email:', error);
           this.handleApiError(error);
           // Default to showing registration fields on error
