@@ -7,6 +7,7 @@ export const environment = {
   apiDirectUrl:"https://backtest.anataleb.com/",
   apiUploadUrl:"https://anataleb.s3.us-east-2.amazonaws.com/",
   recaptchaSiteKey: '6Le_ytYrAAAAAPtWAIltkJkF4ijMK3jpGVQUEtQ-',
+  googleClientId: '255645745033-m554rtm8puu9l4p09qirqrfnd3cvr3te.apps.googleusercontent.com', // Replace with your actual Google Client ID
   enableServiceWorker: false,
   enableAnalytics: false,
     cacheTimeout: 300000, // 5 minutes in milliseconds

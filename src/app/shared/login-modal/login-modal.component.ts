@@ -2,10 +2,12 @@ import { Component, EventEmitter, Output, Input, inject, ChangeDetectorRef, Host
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 import { GoogleOAuthService } from '../../core/services/google-oauth.service';
 import { AppleOAuthService } from '../../core/services/apple-oauth.service';
+import { environment } from 'src/environments/environment';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login-modal',
@@ -29,24 +31,42 @@ export class LoginModalComponent {
   showFullNameField = false;
   showPasswordField = false;
   emailExists = false;
+  googleOAuthAvailable = false;
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly http = inject(HttpClient);
   private readonly googleOAuth = inject(GoogleOAuthService);
   private readonly appleOAuth = inject(AppleOAuthService);
+  private readonly baseUrl = environment.apiUrl;
+  private readonly toastr = inject(ToastrService);
+  private readonly translate = inject(TranslateService);
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.add('modal-open');
       // Initialize Google OAuth
-      this.googleOAuth.initializeGoogle().catch(error => {
-        console.error('Failed to initialize Google OAuth:', error);
+      this.googleOAuth.initializeGoogle().then(() => {
+        this.googleOAuthAvailable = this.googleOAuth.isGoogleOAuthAvailable();
+        console.log('Google OAuth available:', this.googleOAuthAvailable);
+      }).catch(error => {
+        console.warn('Google OAuth initialization failed:', error);
+        this.googleOAuthAvailable = false;
+        this.isLoading = false;
       });
       
       // Initialize Apple OAuth
       this.appleOAuth.initializeApple().catch(error => {
         console.error('Failed to initialize Apple OAuth:', error);
+        this.isLoading = false;
+      });
+      
+      // Listen for OAuth login errors
+      window.addEventListener('google-login-error', () => {
+        this.isLoading = false;
+      });
+      window.addEventListener('apple-login-error', () => {
+        this.isLoading = false;
       });
     }
   }
@@ -54,6 +74,9 @@ export class LoginModalComponent {
   ngOnDestroy() {
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.remove('modal-open');
+      // Remove event listeners
+      window.removeEventListener('google-login-error', () => {});
+      window.removeEventListener('apple-login-error', () => {});
     }
   }
 
@@ -83,7 +106,7 @@ export class LoginModalComponent {
     this.isLoading = true;
     
     // Call the backend API to check if email exists
-    this.http.post<any>('/api/auth/check-email-exist', { email: this.email })
+    this.http.post<any>(`${this.baseUrl}/auth/check-email-exist`, { email: this.email })
       .subscribe({
         next: (response) => {
           this.isLoading = false;
@@ -102,6 +125,7 @@ export class LoginModalComponent {
         error: (error) => {
           this.isLoading = false;
           console.error('Error checking email:', error);
+          this.handleApiError(error);
           // Default to showing registration fields on error
           this.showFullNameField = true;
           this.showPasswordField = true;
@@ -129,11 +153,12 @@ export class LoginModalComponent {
       password: this.password
     };
 
-    this.http.post<any>('/api/auth/login', loginData)
+    this.http.post<any>(`${this.baseUrl}/auth/login`, loginData)
       .subscribe({
         next: (response) => {
           this.isLoading = false;
           console.log('Login successful:', response);
+          this.showSuccess(this.translate.instant('authModal.loginSuccess'));
           // TODO: Handle successful login (store token, redirect, etc.)
           if (response.token) {
             localStorage.setItem('authToken', response.token);
@@ -143,10 +168,7 @@ export class LoginModalComponent {
         error: (error) => {
           this.isLoading = false;
           console.error('Login error:', error);
-          // TODO: Handle login error (show error message)
-          if (error.error && error.error.message) {
-            console.error('Login failed:', error.error.message);
-          }
+          this.handleApiError(error);
         }
       });
   }
@@ -166,22 +188,19 @@ export class LoginModalComponent {
       gender: 'other' // Default gender, can be updated later
     };
 
-    this.http.post<any>('/api/auth/register', registrationData)
+    this.http.post<any>(`${this.baseUrl}/auth/register`, registrationData)
       .subscribe({
         next: (response) => {
           this.isLoading = false;
           console.log('Registration successful:', response);
+          this.showSuccess(this.translate.instant('authModal.registrationSuccess'));
           // TODO: Handle successful registration (redirect, show success message, etc.)
           this.close();
         },
         error: (error) => {
           this.isLoading = false;
           console.error('Registration error:', error);
-          // TODO: Handle registration error (show error message)
-          if (error.error && error.error.message) {
-            // You can show error message to user here
-            console.error('Registration failed:', error.error.message);
-          }
+          this.handleApiError(error);
         }
       });
   }
@@ -198,15 +217,90 @@ export class LoginModalComponent {
     this.isLoading = true;
     
     if (provider === 'google') {
-      this.googleOAuth.loginWithGoogle();
+      try {
+        this.googleOAuth.loginWithGoogle();
+        // Reset loading state after a short delay to allow for OAuth flow
+        setTimeout(() => {
+          this.isLoading = false;
+        }, 3000);
+      } catch (error) {
+        console.error('Google login error:', error);
+        this.isLoading = false;
+        this.handleApiError(error);
+      }
     } else if (provider === 'apple') {
-      this.appleOAuth.loginWithApple();
+      try {
+        this.appleOAuth.loginWithApple();
+        // Reset loading state after a short delay to allow for OAuth flow
+        setTimeout(() => {
+          this.isLoading = false;
+        }, 3000);
+      } catch (error) {
+        console.error('Apple login error:', error);
+        this.isLoading = false;
+        this.handleApiError(error);
+      }
     }
   }
 
   onForgotPassword() {
     this.forgotPassword.emit();
     this.close();
+  }
+
+  /**
+   * Show error toastr message
+   */
+  private showError(message: string, title?: string): void {
+    const errorTitle = title || this.translate.instant('authModal.error');
+    this.toastr.error(message, errorTitle, {
+      timeOut: 5000,
+      closeButton: true,
+      progressBar: true,
+      positionClass: 'toast-top-right'
+    });
+  }
+
+  /**
+   * Show success toastr message
+   */
+  private showSuccess(message: string, title?: string): void {
+    const successTitle = title || this.translate.instant('authModal.success');
+    this.toastr.success(message, successTitle, {
+      timeOut: 3000,
+      closeButton: true,
+      progressBar: true,
+      positionClass: 'toast-top-right'
+    });
+  }
+
+  /**
+   * Handle API error response
+   */
+  private handleApiError(error: any): void {
+    let errorMessage = this.translate.instant('authModal.genericError');
+    
+    if (error.error && error.error.message) {
+      // Use server error message
+      errorMessage = error.error.message;
+    } else if (error.message) {
+      // Use client error message
+      errorMessage = error.message;
+    } else if (error.status === 0) {
+      // Network error
+      errorMessage = this.translate.instant('authModal.networkError');
+    } else if (error.status === 401) {
+      // Unauthorized
+      errorMessage = this.translate.instant('authModal.unauthorized');
+    } else if (error.status === 403) {
+      // Forbidden
+      errorMessage = this.translate.instant('authModal.forbidden');
+    } else if (error.status >= 500) {
+      // Server error
+      errorMessage = this.translate.instant('authModal.serverError');
+    }
+    
+    this.showError(errorMessage);
   }
 
   onSignupClick() {

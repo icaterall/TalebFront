@@ -293,6 +293,22 @@
   flex-shrink: 0;
 }
 
+.oauth-fallback {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fef5e7;
+  border: 1px solid #f6e05e;
+  border-radius: 5px;
+  text-align: center;
+
+  .fallback-text {
+    margin: 0;
+    font-size: 13px;
+    color: #744210;
+    font-weight: 500;
+  }
+}
+
 .google-button:hover {
   border-color: #4285f4;
 }

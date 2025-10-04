@@ -1,6 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 declare global {
   interface Window {
@@ -14,6 +17,9 @@ declare global {
 export class AppleOAuthService {
   private readonly APPLE_CLIENT_ID = 'YOUR_APPLE_CLIENT_ID'; // Replace with your actual client ID
   private readonly APPLE_REDIRECT_URI = 'YOUR_REDIRECT_URI'; // Replace with your actual redirect URI
+  private readonly baseUrl = environment.apiUrl;
+  private readonly toastr = inject(ToastrService);
+  private readonly translate = inject(TranslateService);
 
   constructor(private http: HttpClient) {}
 
@@ -67,7 +73,7 @@ export class AppleOAuthService {
    * Send Apple token to backend for verification
    */
   private sendTokenToBackend(idToken: string, userInfo: any = null): void {
-    this.http.post<any>('/api/auth/apple-login', { idToken, userInfo })
+    this.http.post<any>(`${this.baseUrl}/auth/apple-login`, { idToken, userInfo })
       .subscribe({
         next: (response) => {
           console.log('Apple login successful:', response);
@@ -82,7 +88,10 @@ export class AppleOAuthService {
         },
         error: (error) => {
           console.error('Apple login failed:', error);
-          // TODO: Handle login error
+          this.toastr.error(
+            this.translate.instant('authModal.genericError'),
+            this.translate.instant('authModal.error')
+          );
         }
       });
   }
@@ -98,10 +107,28 @@ export class AppleOAuthService {
         })
         .catch((error: any) => {
           console.error('Apple Sign In failed:', error);
+          this.toastr.error(
+            this.translate.instant('authModal.genericError'),
+            this.translate.instant('authModal.error')
+          );
+          this.emitLoginError();
         });
     } else {
       console.error('Apple Sign In not initialized');
+      this.toastr.error(
+        this.translate.instant('authModal.appleNotInitialized'),
+        this.translate.instant('authModal.error')
+      );
+      this.emitLoginError();
     }
+  }
+
+  /**
+   * Emit login error event to reset loading state
+   */
+  private emitLoginError(): void {
+    // Dispatch a custom event that the login modal can listen to
+    window.dispatchEvent(new CustomEvent('apple-login-error'));
   }
 
   /**

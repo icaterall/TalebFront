@@ -848,7 +848,20 @@
     "securityNotice": "This site is protected by reCAPTCHA Enterprise and the Google",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
-    "apply": "apply"
+    "apply": "apply",
+    "error": "Error",
+    "success": "Success",
+    "loginSuccess": "Login successful!",
+    "registrationSuccess": "Registration successful!",
+    "genericError": "An error occurred. Please try again.",
+    "networkError": "Network error. Please check your connection.",
+    "unauthorized": "Invalid credentials. Please check your email and password.",
+    "forbidden": "Access denied. Please contact support.",
+    "serverError": "Server error. Please try again later.",
+    "googleNotInitialized": "Google login is not available. Please try again or use email login.",
+    "appleNotInitialized": "Apple login is not available. Please try again or use email login.",
+    "googleUnavailable": "Google login is temporarily unavailable. Please use email login instead.",
+    "googleClientIdNotConfigured": "Google login is not configured. Please contact support or use email login."
   },
   "accountType": {
     "title": "Choose your account type",
