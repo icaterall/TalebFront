@@ -81,9 +81,9 @@
         type="button" 
         class="continue-button" 
         (click)="onContinue()"
-        [disabled]="!email || (showPasswordField && (!fullName || !password)) || loading === 'email'">
-        <span *ngIf="loading !== 'email'" class="spinner"></span>
-        <span *ngIf="loading === 'email'">
+        [disabled]="!email || (showPasswordField && (!fullName || !password)) || loading === 'email' || emailDisabled">
+        <span *ngIf="loading === 'email'" class="spinner"></span>
+        <span *ngIf="loading !== 'email'">
           {{ (showPasswordField ? 'authModal.joinForFree' : 'authModal.continue') | translate }}
         </span>
       </button>
@@ -94,6 +94,13 @@
         <button type="button" class="login-button-link" (click)="switchToLogin()">
           {{ 'authModal.logIn' | translate }}
         </button>
+      </div>
+
+      <!-- Social-only message (shown when email is disabled) -->
+      <div class="social-only-message" *ngIf="emailDisabled">
+        <p class="message-text">
+          {{ 'authModal.socialOnlyMessage' | translate }}
+        </p>
       </div>
 
       <!-- Separator -->

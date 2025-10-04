@@ -861,7 +861,8 @@
     "googleNotInitialized": "Google login is not available. Please try again or use email login.",
     "appleNotInitialized": "Apple login is not available. Please try again or use email login.",
     "googleUnavailable": "Google login is temporarily unavailable. Please use email login instead.",
-    "googleClientIdNotConfigured": "Google login is not configured. Please contact support or use email login."
+    "googleClientIdNotConfigured": "Google login is not configured. Please contact support or use email login.",
+    "socialOnlyMessage": "This email is registered via social login. Please continue with Google or Apple."
   },
   "accountType": {
     "title": "Choose your account type",

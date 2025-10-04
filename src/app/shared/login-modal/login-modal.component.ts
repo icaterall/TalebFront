@@ -9,6 +9,7 @@ import { AppleOAuthService } from '../../core/services/apple-oauth.service';
 import { environment } from 'src/environments/environment';
 import { ToastrService } from 'ngx-toastr';
 
+type ModalMode = 'idle' | 'login-password' | 'login-social' | 'register';
 type LoadingState = 'none' | 'email' | 'google' | 'apple';
 
 @Component({
@@ -26,15 +27,25 @@ export class LoginModalComponent implements OnInit {
   @ViewChild('googleBtn', { static: false }) googleBtn!: ElementRef<HTMLDivElement>;
   @Output() modeChanged = new EventEmitter<'login' | 'register'>();
 
+  // State management
+  providers = { password: false, google: false, apple: false };
+  mode: ModalMode = 'idle';
+  loading: LoadingState = 'none';
+
+  // Form fields
   email = '';
   password = '';
   fullName = '';
   showPassword = false;
-  loading: LoadingState = 'none';
-  showFullNameField = false;
-  showPasswordField = false;
-  emailExists = false;
+
+  // OAuth availability
   googleOAuthAvailable = false;
+  appleAvailable = false;
+
+  // Computed properties for template
+  get showFullNameField() { return this.mode === 'register'; }
+  get showPasswordField() { return this.mode === 'register' || this.mode === 'login-password'; }
+  get emailDisabled() { return this.mode === 'login-social'; }
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -48,6 +59,9 @@ export class LoginModalComponent implements OnInit {
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.add('modal-open');
+      
+      // Initialize Apple availability
+      this.appleAvailable = this.isAppleSupported();
       
       // Initialize Google OAuth with proper GIS approach
       this.initializeGoogleOAuth();
@@ -169,58 +183,88 @@ export class LoginModalComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  checkEmailExists() {
-    if (!this.email) {
-      this.showFullNameField = false;
-      this.showPasswordField = false;
+  async checkEmailExists() {
+    const email = (this.email || '').trim().toLowerCase();
+    if (!email) {
+      this.mode = 'idle';
       return;
     }
 
     this.loading = 'email';
     
-    // Call the backend API to check if email exists
-    this.http.post<any>(`${this.baseUrl}/auth/check-email-exist`, { email: this.email })
-      .subscribe({
-        next: (response) => {
-          this.loading = 'none';
-          this.emailExists = response.exists;
-          
-          if (!this.emailExists) {
-            // Email doesn't exist, show registration fields
-            this.showFullNameField = true;
-            this.showPasswordField = true;
-          } else {
-            // Email exists, hide registration fields
-            this.showFullNameField = false;
-            this.showPasswordField = false;
-          }
-        },
-        error: (error) => {
-          this.loading = 'none';
-          console.error('Error checking email:', error);
-          this.handleApiError(error);
-          // Default to showing registration fields on error
-          this.showFullNameField = true;
-          this.showPasswordField = true;
-        }
-      });
-  }
-
-  async onContinue() {
-    if (this.loading !== 'none') return;
-    this.loading = 'email';
-    
     try {
-      if (this.showPasswordField) {
-        await this.onLogin();
-      } else {
-        await this.onRegister();
+      const res: any = await this.http.post(`${this.baseUrl}/auth/check-email`, { email }).toPromise();
+      const exists = !!res?.exists;
+      const provs: string[] = res?.providers || [];
+      
+      this.providers = {
+        password: provs.includes('password'),
+        google: provs.includes('google'),
+        apple: provs.includes('apple'),
+      };
+
+      if (!exists) {
+        // New user → register
+        this.mode = 'register';
+        if (!this.fullName && res?.displayName) this.fullName = res.displayName;
+        return;
       }
-    } catch (err) {
-      this.handleApiError(err);
+
+      // Exists
+      if (this.providers.password) {
+        // User has password → show password field
+        this.mode = 'login-password';
+      } else if (this.providers.google || this.providers.apple) {
+        // Social-only account → disable email path
+        this.mode = 'login-social';
+      } else {
+        // Edge: exists but no providers? treat as register to set password
+        this.mode = 'register';
+      }
+    } catch (e) {
+      this.toastr.error(this.errMsg(e));
+      this.mode = 'idle';
     } finally {
       this.loading = 'none';
     }
+  }
+
+  async onContinue() {
+    if (this.loading !== 'none' || this.emailDisabled) return;
+
+    if (this.mode === 'login-password') {
+      // Email login
+      this.loading = 'email';
+      try {
+        await this.http.post(`${this.baseUrl}/auth/login`, {
+          email: this.email, password: this.password
+        }).toPromise();
+        this.close();
+      } catch (e) {
+        this.toastr.error(this.errMsg(e));
+      } finally {
+        this.loading = 'none';
+      }
+      return;
+    }
+
+    if (this.mode === 'register') {
+      // Email register
+      this.loading = 'email';
+      try {
+        await this.http.post(`${this.baseUrl}/auth/register`, {
+          email: this.email, fullName: this.fullName, password: this.password
+        }).toPromise();
+        this.close();
+      } catch (e) {
+        this.toastr.error(this.errMsg(e));
+      } finally {
+        this.loading = 'none';
+      }
+      return;
+    }
+
+    // In 'login-social' mode, do nothing (email path disabled)
   }
 
   async onLogin() {
@@ -270,10 +314,16 @@ export class LoginModalComponent implements OnInit {
   }
 
   switchToLogin() {
-    this.showFullNameField = false;
-    this.showPasswordField = false;
-    this.fullName = '';
-    this.password = '';
+    // Optional "Already on … Log in" link
+    if (this.providers.password) this.mode = 'login-password';
+  }
+
+  private errMsg(_e: any): string { 
+    return this.translate.instant('authModal.genericError');
+  }
+
+  private isAppleSupported(): boolean {
+    return typeof (window as any).AppleID !== 'undefined' || /iPhone|iPad|Macintosh/.test(navigator.userAgent);
   }
 
   async onGoogleClick() {
@@ -281,36 +331,30 @@ export class LoginModalComponent implements OnInit {
     this.loading = 'google';
     
     try {
-      if (!this.googleOAuthAvailable) {
-        throw new Error('Google OAuth not available');
-      }
-      
-      const idToken = await this.gisSignIn();
-      await this.http.post(`${this.baseUrl}/auth/google-login`, { idToken }).toPromise();
-      this.showSuccess('authModal.loginSuccess');
+      const idToken = await this.gisGetIdToken();
+      await this.http.post(`${this.baseUrl}/auth/google`, { idToken }).toPromise();
       this.close();
-    } catch (err) {
-      this.handleApiError(err);
-      this.loading = 'none'; // re-enable on error
+    } catch (e) {
+      this.toastr.error(this.errMsg(e));
+      this.loading = 'none'; // re-enable Google button
     }
   }
 
   async onAppleClick() {
-    if (this.loading !== 'none') return;
+    if (!this.appleAvailable || this.loading !== 'none') return;
     this.loading = 'apple';
     
     try {
-      const appleToken = await this.appleSignIn();
-      await this.http.post(`${this.baseUrl}/auth/apple-login`, { token: appleToken }).toPromise();
-      this.showSuccess('authModal.loginSuccess');
+      const token = await this.appleGetIdentityToken();
+      await this.http.post(`${this.baseUrl}/auth/apple`, { token }).toPromise();
       this.close();
-    } catch (err) {
-      this.handleApiError(err);
-      this.loading = 'none'; // re-enable on error
+    } catch (e) {
+      this.toastr.error(this.errMsg(e));
+      this.loading = 'none'; // re-enable Apple button
     }
   }
 
-  private gisSignIn(): Promise<string> {
+  private gisGetIdToken(): Promise<string> {
     return new Promise((resolve, reject) => {
       try {
         window.google.accounts.id.prompt((notification: any) => {
@@ -337,7 +381,7 @@ export class LoginModalComponent implements OnInit {
     });
   }
 
-  private appleSignIn(): Promise<string> {
+  private appleGetIdentityToken(): Promise<string> {
     // TODO: integrate Sign in with Apple JS; return identity token
     return Promise.reject(new Error('Apple sign-in not implemented'));
   }
