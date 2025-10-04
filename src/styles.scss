@@ -816,3 +816,52 @@ main.min-vh-20{ padding-top: var(--header-20-stack); }
 
 /* RTL nicety: a touch more leading for Arabic headlines */
 html[dir="rtl"] .title { line-height: 1.35; }
+
+/* Toastr Styles - Simple Outline Design */
+.toast-top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.toast {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px 20px;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.toast-success {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.toast-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.toast-warning {
+  border-color: #d97706;
+  background: #fffbeb;
+}
+
+.toast-info {
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: #1f2937;
+}
+
+.toast-message {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.4;
+}

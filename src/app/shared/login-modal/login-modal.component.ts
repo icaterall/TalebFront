@@ -16,6 +16,8 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './login-modal.component.html',
   styleUrls: ['./login-modal.component.scss']
 })
+type LoadingState = 'none' | 'email' | 'google' | 'apple';
+
 export class LoginModalComponent implements OnInit {
   @Input() initialMode: 'login' | 'register' = 'login';
   @Output() closeModal = new EventEmitter<void>();
@@ -28,7 +30,7 @@ export class LoginModalComponent implements OnInit {
   password = '';
   fullName = '';
   showPassword = false;
-  isLoading = false;
+  loading: LoadingState = 'none';
   showFullNameField = false;
   showPasswordField = false;
   emailExists = false;
@@ -74,12 +76,16 @@ export class LoginModalComponent implements OnInit {
       }
       
       try {
+        // Get current language for Google Identity Services
+        const currentLang = this.getCurrentLanguage();
+        
         // Initialize Google Identity Services
         window.google.accounts.id.initialize({
           client_id: environment.googleClientId,
           callback: (response: any) => this.handleGoogleResponse(response),
           ux_mode: 'popup',
-          context: 'signin'
+          context: 'signin',
+          locale: currentLang // Set the language for Google OAuth UI
         });
         
         this.googleOAuthAvailable = true;
@@ -121,6 +127,21 @@ export class LoginModalComponent implements OnInit {
     );
     this.isLoading = false;
     this.close();
+  }
+
+  /**
+   * Get current language for Google Identity Services
+   */
+  private getCurrentLanguage(): string {
+    // Try to get language from sessionStorage first
+    const savedLang = sessionStorage.getItem('anataleb.lang');
+    if (savedLang === 'en' || savedLang === 'ar') {
+      return savedLang;
+    }
+
+    // Fallback to current translate service language
+    const currentLang = this.translate.currentLang || this.translate.defaultLang || 'ar';
+    return currentLang === 'en' ? 'en' : 'ar';
   }
 
   ngOnDestroy() {
@@ -185,52 +206,50 @@ export class LoginModalComponent implements OnInit {
       });
   }
 
-  onContinue() {
-    if (this.showPasswordField) {
-      this.onRegister();
-    } else {
-      this.onLogin();
+  async onContinue() {
+    if (this.loading !== 'none') return;
+    this.loading = 'email';
+    
+    try {
+      if (this.showPasswordField) {
+        await this.onLogin();
+      } else {
+        await this.onRegister();
+      }
+    } catch (err) {
+      this.handleApiError(err);
+    } finally {
+      this.loading = 'none';
     }
   }
 
-  onLogin() {
+  async onLogin() {
     if (!this.email || !this.password) {
       return;
     }
-    
-    this.isLoading = true;
     
     const loginData = {
       email: this.email,
       password: this.password
     };
 
-    this.http.post<any>(`${this.baseUrl}/auth/login`, loginData)
-      .subscribe({
-        next: (response) => {
-          this.isLoading = false;
-          console.log('Login successful:', response);
-          this.showSuccess(this.translate.instant('authModal.loginSuccess'));
-          // TODO: Handle successful login (store token, redirect, etc.)
-          if (response.token) {
-            localStorage.setItem('authToken', response.token);
-          }
-          this.close();
-        },
-        error: (error) => {
-          this.isLoading = false;
-          console.error('Login error:', error);
-          this.handleApiError(error);
+    return this.http.post<any>(`${this.baseUrl}/auth/login`, loginData)
+      .toPromise()
+      .then((response) => {
+        console.log('Login successful:', response);
+        this.showSuccess(this.translate.instant('authModal.loginSuccess'));
+        // TODO: Handle successful login (store token, redirect, etc.)
+        if (response.token) {
+          localStorage.setItem('authToken', response.token);
         }
+        this.close();
       });
   }
 
-  onRegister() {
+  async onRegister() {
     if (!this.email || !this.fullName || !this.password) {
       return;
     }
-    
-    this.isLoading = true;
     
     const registrationData = {
       email: this.email,
@@ -240,20 +259,13 @@ export class LoginModalComponent implements OnInit {
       gender: 'other' // Default gender, can be updated later
     };
 
-    this.http.post<any>(`${this.baseUrl}/auth/register`, registrationData)
-      .subscribe({
-        next: (response) => {
-          this.isLoading = false;
-          console.log('Registration successful:', response);
-          this.showSuccess(this.translate.instant('authModal.registrationSuccess'));
-          // TODO: Handle successful registration (redirect, show success message, etc.)
-          this.close();
-        },
-        error: (error) => {
-          this.isLoading = false;
-          console.error('Registration error:', error);
-          this.handleApiError(error);
-        }
+    return this.http.post<any>(`${this.baseUrl}/auth/register`, registrationData)
+      .toPromise()
+      .then((response) => {
+        console.log('Registration successful:', response);
+        this.showSuccess(this.translate.instant('authModal.registrationSuccess'));
+        // TODO: Handle successful registration (redirect, show success message, etc.)
+        this.close();
       });
   }
 
@@ -264,41 +276,70 @@ export class LoginModalComponent implements OnInit {
     this.password = '';
   }
 
-  onSocialLogin(provider: 'google' | 'apple') {
-    console.log(`Social login with ${provider}`);
-    this.isLoading = true;
+  async onGoogleClick() {
+    if (this.loading !== 'none') return;
+    this.loading = 'google';
     
-    if (provider === 'google') {
-      try {
-        // Use Google Identity Services prompt
-        if (window.google?.accounts?.id) {
-          window.google.accounts.id.prompt();
-        } else {
-          console.error('Google Identity Services not available');
-          this.toastr.error(
-            this.translate.instant('authModal.googleNotInitialized'),
-            this.translate.instant('authModal.error')
-          );
-          this.isLoading = false;
-        }
-      } catch (error) {
-        console.error('Google login error:', error);
-        this.isLoading = false;
-        this.handleApiError(error);
+    try {
+      if (!this.googleOAuthAvailable) {
+        throw new Error('Google OAuth not available');
       }
-    } else if (provider === 'apple') {
-      try {
-        this.appleOAuth.loginWithApple();
-        // Reset loading state after a short delay to allow for OAuth flow
-        setTimeout(() => {
-          this.isLoading = false;
-        }, 3000);
-      } catch (error) {
-        console.error('Apple login error:', error);
-        this.isLoading = false;
-        this.handleApiError(error);
-      }
+      
+      const idToken = await this.gisSignIn();
+      await this.http.post(`${this.baseUrl}/auth/google-login`, { idToken }).toPromise();
+      this.showSuccess('authModal.loginSuccess');
+      this.close();
+    } catch (err) {
+      this.handleApiError(err);
+      this.loading = 'none'; // re-enable on error
     }
+  }
+
+  async onAppleClick() {
+    if (this.loading !== 'none') return;
+    this.loading = 'apple';
+    
+    try {
+      const appleToken = await this.appleSignIn();
+      await this.http.post(`${this.baseUrl}/auth/apple-login`, { token: appleToken }).toPromise();
+      this.showSuccess('authModal.loginSuccess');
+      this.close();
+    } catch (err) {
+      this.handleApiError(err);
+      this.loading = 'none'; // re-enable on error
+    }
+  }
+
+  private gisSignIn(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      try {
+        window.google.accounts.id.prompt((notification: any) => {
+          // If user dismissed, treat as cancel
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            return reject(new Error('Google sign-in cancelled'));
+          }
+        });
+        
+        // Set up callback for credential response
+        window.google.accounts.id.initialize({
+          client_id: environment.googleClientId,
+          callback: (res: any) => {
+            const token = res?.credential;
+            token ? resolve(token) : reject(new Error('No credential'));
+          },
+          ux_mode: 'popup',
+          context: 'signin',
+          locale: this.getCurrentLanguage()
+        });
+      } catch (e) { 
+        reject(e); 
+      }
+    });
+  }
+
+  private appleSignIn(): Promise<string> {
+    // TODO: integrate Sign in with Apple JS; return identity token
+    return Promise.reject(new Error('Apple sign-in not implemented'));
   }
 
   onForgotPassword() {

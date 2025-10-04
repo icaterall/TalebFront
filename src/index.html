@@ -14,9 +14,6 @@
       #preloader.hide { display:none }
     </style>
 
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-
     <!-- Set lang/dir BEFORE any render -->
     <script>
       (function () {
@@ -29,6 +26,13 @@
           el.setAttribute('lang', lang);
           el.setAttribute('dir',  dir);
           window.__ANATALEB_STARTUP_LANG__ = lang; // used in app.config.ts
+          
+          // Load Google Identity Services with the detected language
+          var gisScript = document.createElement('script');
+          gisScript.src = 'https://accounts.google.com/gsi/client?hl=' + lang;
+          gisScript.async = true;
+          gisScript.defer = true;
+          document.head.appendChild(gisScript);
         } catch(e) {}
       })();
     </script>

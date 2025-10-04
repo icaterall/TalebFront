@@ -75,6 +75,9 @@ export class GoogleOAuthService {
         return;
       }
 
+      // Get current language for Google Identity Services
+      const currentLang = this.getCurrentLanguage();
+
       window.google.accounts.id.initialize({
         client_id: this.GOOGLE_CLIENT_ID,
         callback: this.handleCredentialResponse.bind(this),
@@ -82,7 +85,8 @@ export class GoogleOAuthService {
         cancel_on_tap_outside: false,
         use_fedcm_for_prompt: false, // Disable FedCM for localhost compatibility
         ux_mode: 'popup', // Use popup instead of redirect
-        context: 'signin'
+        context: 'signin',
+        locale: currentLang // Set the language for Google OAuth UI
       });
     } catch (error) {
       console.error('Error initializing Google Auth:', error);
@@ -91,6 +95,21 @@ export class GoogleOAuthService {
         this.translate.instant('authModal.error')
       );
     }
+  }
+
+  /**
+   * Get current language for Google Identity Services
+   */
+  private getCurrentLanguage(): string {
+    // Try to get language from sessionStorage first
+    const savedLang = sessionStorage.getItem('anataleb.lang');
+    if (savedLang === 'en' || savedLang === 'ar') {
+      return savedLang;
+    }
+
+    // Fallback to current translate service language
+    const currentLang = this.translate.currentLang || this.translate.defaultLang || 'ar';
+    return currentLang === 'en' ? 'en' : 'ar';
   }
 
   /**
