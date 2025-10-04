@@ -13,7 +13,7 @@ export const appRoutes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    loadComponent: () => import('./layouts/features/dashboard/pages/home/dashboard-home.component').then(m => m.DashboardHomeComponent),
     canActivate: [OnboardingGuard],
   },
   {

@@ -43,6 +43,10 @@ export class AccountTypePageComponent {
       // Update user role in backend
       const response = await this.authService.updateRole(type).toPromise();
       
+      if (!response) {
+        throw new Error('No response from server');
+      }
+      
       // Update local user state
       this.authService.storeAuthData(response.user, this.authService.getToken()!, this.authService.getRefreshToken()!);
       

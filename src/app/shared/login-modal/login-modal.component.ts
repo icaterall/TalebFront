@@ -230,6 +230,9 @@ export class LoginModalComponent implements OnInit {
     try {
       if (this.mode === 'login-password') {
         const response = await this.authService.login(this.email, this.password).toPromise();
+        if (!response) {
+          throw new Error('No response from server');
+        }
         this.authService.postLoginNavigate(response.user);
         this.toastr.success(this.translate.instant('authModal.loginSuccess'));
       } else if (this.mode === 'register') {
@@ -238,6 +241,9 @@ export class LoginModalComponent implements OnInit {
           email: this.email,
           password: this.password
         }).toPromise();
+        if (!response) {
+          throw new Error('No response from server');
+        }
         this.authService.postLoginNavigate(response.user);
         this.toastr.success(this.translate.instant('authModal.registrationSuccess'));
       }
@@ -326,6 +332,10 @@ export class LoginModalComponent implements OnInit {
       
       // Call backend with ID token
       const response = await this.authService.googleLogin(idToken).toPromise();
+      
+      if (!response) {
+        throw new Error('No response from server');
+      }
       
       // Handle successful login
       this.authService.postLoginNavigate(response.user);

@@ -757,14 +757,8 @@ main.min-vh-20{ padding-top: var(--header-20-stack); }
 }
 
 // --------------------------------------------
-// 11) Toastr (match theme scale + colors)
+// 11) Toastr (match theme scale + colors) - Moved to dedicated section below
 // --------------------------------------------
-.toast-title{ font-size: var(--fs-sm); font-weight:700 }
-.toast-message{ font-size: var(--fs-sm); line-height: var(--lh-normal) }
-.toast-success{ background: color-mix(in srgb, var(--success), white 85%) }
-.toast-error{ background: color-mix(in srgb, var(--danger), white 85%) }
-.toast-info{ background: color-mix(in srgb, var(--info), white 85%) }
-.toast-warning{ background: color-mix(in srgb, var(--warning), white 85%) }
 /* ===== Contact form mobile legibility fixes ===== */
 
 /* ===============================
@@ -817,7 +811,7 @@ main.min-vh-20{ padding-top: var(--header-20-stack); }
 /* RTL nicety: a touch more leading for Arabic headlines */
 html[dir="rtl"] .title { line-height: 1.35; }
 
-/* Anataleb Toast Styles - Outlined Design */
+/* Anataleb Toast Styles - Dark Blur Background */
 #toast-container {
   z-index: 1300 !important; /* Higher than Bootstrap modal (1050) and backdrop (1040) */
   top: calc(env(safe-area-inset-top, 0px) + 20px) !important;
@@ -828,45 +822,78 @@ html[dir="rtl"] .title { line-height: 1.35; }
   pointer-events: none !important;
 }
 
-/* Shared outline style */
+/* Shared dark blur background style */
 .toast-container .ngx-toastr {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: 1px solid currentColor; /* overridden per type below */
-  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.95) !important; /* Dark grey with transparency */
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
   pointer-events: auto !important;
   margin: 0 auto 8px auto !important;
   width: 100% !important;
   max-width: 520px !important;
-  padding: 12px 16px !important;
+  padding: 16px 20px !important;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif !important;
 }
 
-/* Error: red outline + bold message */
+/* Error: white text on dark background with red border */
 .toast-error {
-  color: #b91c1c;                 /* red-700 */
-  border-color: #ef4444 !important; /* red-500 */
+  color: #ffffff !important;
+  background: rgba(30, 41, 59, 0.95) !important; /* Dark background */
+  border: 2px solid #ef4444 !important; /* Red border */
+  border-color: #ef4444 !important;
 }
 .toast-error .toast-message {
-  font-weight: 700;               /* bold error text */
+  font-weight: 600 !important;
+  color: #ffffff !important;
+}
+.toast-error .toast-title {
+  color: #ffffff !important;
+  font-weight: 700 !important;
 }
 
-/* Success: green outline */
+/* Success: white text on dark background with green border */
 .toast-success {
-  color: #166534;                   /* green-800 */
-  border-color: #22c55e !important; /* green-500 */
+  color: #ffffff !important;
+  background: rgba(30, 41, 59, 0.95) !important; /* Dark background */
+  border: 2px solid #22c55e !important; /* Green border */
+  border-color: #22c55e !important;
+}
+.toast-success .toast-message {
+  color: #ffffff !important;
+}
+.toast-success .toast-title {
+  color: #ffffff !important;
 }
 
-/* Info: blue outline */
+/* Info: white text on dark background with blue border */
 .toast-info {
-  color: #1e40af;  /* blue-800 */
-  border-color: #60a5fa !important; /* blue-400 */
+  color: #ffffff !important;
+  background: rgba(30, 41, 59, 0.95) !important; /* Dark background */
+  border: 2px solid #3b82f6 !important; /* Blue border */
+  border-color: #3b82f6 !important;
+}
+.toast-info .toast-message {
+  color: #ffffff !important;
+}
+.toast-info .toast-title {
+  color: #ffffff !important;
 }
 
-/* Warning: amber outline */
+/* Warning: white text on dark background with amber border */
 .toast-warning {
-  color: #92400e;  /* amber-800 */
-  border-color: #f59e0b !important; /* amber-500 */
+  color: #ffffff !important;
+  background: rgba(30, 41, 59, 0.95) !important; /* Dark background */
+  border: 2px solid #f59e0b !important; /* Amber border */
+  border-color: #f59e0b !important;
+}
+.toast-warning .toast-message {
+  color: #ffffff !important;
+}
+.toast-warning .toast-title {
+  color: #ffffff !important;
 }
 
 /* Toast Content */
@@ -889,16 +916,19 @@ html[dir="rtl"] .title { line-height: 1.35; }
   top: 8px !important;
   right: 8px !important;
   font-size: 16px !important;
-  opacity: 0.6 !important;
+  opacity: 0.7 !important;
   background: none !important;
   border: none !important;
   padding: 4px !important;
   cursor: pointer !important;
   line-height: 1 !important;
+  color: #ffffff !important;
+  transition: opacity 0.2s ease !important;
 }
 
 .toast-close-button:hover {
   opacity: 1 !important;
+  color: #ffffff !important;
 }
 
 /* RTL Support */
@@ -933,5 +963,7 @@ html[dir="rtl"] .toast-close-button {
   .toast-container .ngx-toastr {
     max-width: none !important;
     margin: 0 0 8px 0 !important;
+    padding: 14px 18px !important;
+    border-radius: 10px !important;
   }
 }

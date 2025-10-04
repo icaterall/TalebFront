@@ -234,25 +234,17 @@ export class GoogleOAuthService {
       }
 
       try {
-        // Use the rendered Google button or manual popup
-        if (this.googleBtn?.nativeElement) {
-          // If we have a rendered button, trigger it
-          this.googleBtn.nativeElement.click();
-        } else {
-          // Fallback to manual popup
-          window.google.accounts.id.prompt((notification: any) => {
-            if (notification.isNotDisplayed() || 
-                notification.isSkippedMoment() || 
-                notification.getMomentType() === 'dismissed') {
-              reject(new Error('Google sign-in cancelled'));
-              return;
-            }
-          });
-        }
+        // Use manual popup for sign-in
+        window.google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || 
+              notification.isSkippedMoment() || 
+              notification.getMomentType() === 'dismissed') {
+            reject(new Error('Google sign-in cancelled'));
+            return;
+          }
+        });
 
         // Set up callback for credential response
-        const originalCallback = window.google.accounts.id.initialize;
-        
         window.google.accounts.id.initialize({
           client_id: this.GOOGLE_CLIENT_ID,
           callback: (response: any) => {
