@@ -84,7 +84,7 @@ export class GoogleOAuthService {
         callback: this.handleOneTapResponse.bind(this),
         auto_select: false,
         cancel_on_tap_outside: false,
-        use_fedcm_for_prompt: true, // Enable FedCM for future compatibility
+        use_fedcm_for_prompt: false, // Disable FedCM to avoid AbortError
         ux_mode: 'popup',
         context: 'signin',
         locale: currentLang
@@ -173,7 +173,7 @@ export class GoogleOAuthService {
    * Send Google token to backend for verification
    */
   private sendTokenToBackend(idToken: string): void {
-    this.http.post<any>(`${this.baseUrl}/auth/google-login`, { idToken })
+    this.http.post<any>(`${this.baseUrl}/auth/google`, { idToken })
       .subscribe({
         next: (response) => {
           console.log('Google login successful:', response);
@@ -254,7 +254,7 @@ export class GoogleOAuthService {
               reject(new Error('No credential received'));
             }
           },
-          use_fedcm_for_prompt: true, // Enable FedCM for future compatibility
+          use_fedcm_for_prompt: false, // Disable FedCM to avoid AbortError
           ux_mode: 'popup',
           context: 'signin',
           locale: this.getCurrentLanguage()
