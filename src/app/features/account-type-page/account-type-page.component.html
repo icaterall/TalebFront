@@ -1,4 +1,22 @@
 <div class="account-type-page">
+  <!-- Header styled like teacher header -->
+  <header class="app-header" *ngIf="user">
+    <div class="brand">
+      <img src="assets/logo-dark-t.png" alt="Ana Taleb" class="logo-img">
+      <span class="org">{{ userName }}</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <button class="language-btn" aria-label="Change language" (click)="toggleLanguage()">
+      <span class="lang-dot" [class.ar]="languageClass==='ar'" [class.en]="languageClass==='en'"></span>
+      <span class="lang-text">{{ languageButtonText }}</span>
+    </button>
+
+    <div class="avatar" *ngIf="!hasAvatar">{{ userInitials }}</div>
+    <img *ngIf="hasAvatar" [src]="userAvatarUrl" alt="avatar" class="avatar-img">
+  </header>
+
   <!-- Main content -->
   <main class="main-content">
     <div class="content-container">
@@ -74,4 +92,7 @@
       </div>
     </div>
   </main>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
 </div>

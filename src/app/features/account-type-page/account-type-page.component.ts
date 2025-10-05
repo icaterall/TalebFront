@@ -6,13 +6,14 @@ import { I18nService } from '../../core/services/i18n.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { FooterComponent } from '../../shared/footer/footer.component';
 
 type Lang = 'ar' | 'en';
 
 @Component({
   selector: 'app-account-type-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, FormsModule],
+  imports: [CommonModule, TranslateModule, FormsModule, FooterComponent],
   templateUrl: './account-type-page.component.html',
   styleUrls: ['./account-type-page.component.scss']
 })
@@ -27,6 +28,50 @@ export class AccountTypePageComponent {
   selectedYear = '';
   selectedMonth = '';
   selectedDay = '';
+
+  // Header: current user info
+  get user() {
+    return this.authService.getCurrentUser();
+  }
+  get userName(): string {
+    return (this.user?.name || this.user?.email || '').toString();
+  }
+  get userEmail(): string {
+    return this.user?.email || '';
+  }
+  get userAvatarUrl(): string {
+    return this.user?.profile_photo_url || 'assets/default-avatar.png';
+  }
+  get hasAvatar(): boolean {
+    return !!this.user?.profile_photo_url;
+  }
+  get userInitials(): string {
+    const name = this.userName.trim();
+    if (!name) return '';
+    const parts = name.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] || '';
+    const last = (parts.length > 1 ? parts[parts.length - 1][0] : '') || '';
+    return (first + last).toUpperCase();
+  }
+
+  // Language button like teacher header
+  get currentLanguage(): string {
+    return this.currentLang.toUpperCase();
+  }
+  get languageButtonText(): string {
+    // If current is RTL (ar), show EN; otherwise show Arabic letter
+    return this.currentLang === 'ar' ? 'EN' : 'ع';
+  }
+  get languageClass(): 'ar' | 'en' {
+    return this.currentLang === 'ar' ? 'ar' : 'en';
+  }
+  toggleLanguage() {
+    const next = this.currentLang === 'ar' ? 'en' : 'ar';
+    this.setLang(next as any);
+  }
+
+  // Placeholder for hamburger in header (no sidebar here)
+  onToggle() {}
 
   get currentLang(): Lang { 
     return this.i18n.current; 
