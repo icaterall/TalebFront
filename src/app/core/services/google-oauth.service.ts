@@ -1,14 +1,17 @@
+// google-oauth.service.ts
 import { Injectable, inject, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 
 declare global {
   interface Window {
     google: any;
+    handleGoogleCallback?: (response: any) => void;
   }
 }
 
@@ -16,169 +19,110 @@ declare global {
   providedIn: 'root'
 })
 export class GoogleOAuthService {
-  private readonly GOOGLE_CLIENT_ID = environment.googleClientId || 'YOUR_GOOGLE_CLIENT_ID';
+  private readonly GOOGLE_CLIENT_ID = environment.googleClientId;
   private readonly baseUrl = environment.apiUrl;
   private readonly toastr = inject(ToastrService);
   private readonly translate = inject(TranslateService);
-  private pendingResolve?: (token: string) => void;
-  private pendingReject?: (err: Error) => void;
+  private readonly router = inject(Router);
+  
   private initialized = false;
+  private initializationPromise: Promise<void> | null = null;
+  private loginCompleteSubject = new BehaviorSubject<boolean>(false);
+  public loginComplete$ = this.loginCompleteSubject.asObservable();
+
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
-
-  /**
-   * Check if Google Identity Services is ready
-   */
-  isReady(): boolean {
-    return isPlatformBrowser(this.platformId) && !!(window.google?.accounts?.id);
+  ) {
+    // Set up global callback for Google
+    if (isPlatformBrowser(this.platformId)) {
+      window.handleGoogleCallback = (response: any) => this.handleCredentialResponse(response);
+    }
   }
 
   /**
-   * Initialize Google OAuth (now that script is loaded statically)
+   * Initialize Google OAuth
    */
   initializeGoogle(): Promise<void> {
-    return new Promise((resolve) => {
-      if (!isPlatformBrowser(this.platformId)) {
-        resolve();
+    if (!isPlatformBrowser(this.platformId)) {
+      return Promise.resolve();
+    }
+
+    // Return existing promise if already initializing
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    // If already initialized, return resolved promise
+    if (this.initialized) {
+      return Promise.resolve();
+    }
+
+    this.initializationPromise = new Promise((resolve, reject) => {
+      // Check if client ID is configured
+      if (!this.GOOGLE_CLIENT_ID || this.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+        console.error('Google Client ID not configured in environment');
+        this.toastr.error('Google sign-in is not configured', 'Configuration Error');
+        reject(new Error('Google Client ID not configured'));
         return;
       }
 
-      const tryInit = () => {
-        if (!this.isReady()) {
-          // Retry a few times if script hasn't finished loading yet
-          setTimeout(tryInit, 100);
-          return;
-        }
-        
-        try {
-          this.setupGoogleAuth();
-          resolve();
-        } catch (error) {
-          console.warn('Google OAuth setup failed:', error);
-          resolve(); // Don't reject, just continue without Google OAuth
+      // Wait for Google Identity Services to load
+      const checkGoogleLoaded = () => {
+        if (window.google?.accounts?.id) {
+          try {
+            // Initialize Google Identity Services
+            window.google.accounts.id.initialize({
+              client_id: this.GOOGLE_CLIENT_ID,
+              callback: window.handleGoogleCallback,
+              auto_select: false,
+              cancel_on_tap_outside: true,
+              ux_mode: 'popup',
+              context: 'signin',
+              itp_support: true
+            });
+
+            this.initialized = true;
+            console.log('Google OAuth initialized successfully');
+            resolve();
+          } catch (error) {
+            console.error('Failed to initialize Google OAuth:', error);
+            reject(error);
+          }
+        } else {
+          // Retry after a short delay
+          setTimeout(checkGoogleLoaded, 100);
         }
       };
 
-      tryInit();
+      // Start checking for Google Identity Services
+      checkGoogleLoaded();
+
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        if (!this.initialized) {
+          reject(new Error('Google Identity Services failed to load'));
+        }
+      }, 5000);
     });
+
+    return this.initializationPromise;
   }
 
-  private setupGoogleAuth(): void {
-    if (this.initialized) return;
-  
-    if (this.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID' || !this.GOOGLE_CLIENT_ID) {
-      console.error('Google Client ID not configured');
-      this.toastr.error(
-        this.translate.instant('authModal.googleClientIdNotConfigured'),
-        this.translate.instant('authModal.error')
-      );
+  /**
+   * Handle credential response from Google
+   */
+  private handleCredentialResponse(response: any): void {
+    console.log('Google credential response received');
+    
+    if (!response.credential) {
+      console.error('No credential in response');
+      this.emitLoginError();
       return;
     }
-  
-    // Single, central credential handler (used by both One Tap and manual prompt)
-    const handleCredentialResponse = (response: any) => {
-      const idToken = response?.credential;
-      if (!idToken) return;
-  
-      // If a manual login call is waiting, resolve that promise
-      if (this.pendingResolve) {
-        this.pendingResolve(idToken);
-        this.pendingResolve = undefined;
-        this.pendingReject = undefined;
-        return;
-      }
-  
-      // Otherwise treat as One Tap auto-prompt success
-      this.sendTokenToBackend(idToken);
-    };
-  
-    // Initialize GIS with FedCM enabled
-    window.google.accounts.id.initialize({
-      client_id: this.GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse,
-      auto_select: false,
-      cancel_on_tap_outside: false,
-      use_fedcm_for_prompt: true,  // <-- TURN ON FedCM
-      itp_support: true,
-      ux_mode: 'popup',
-      context: 'signin'
-    });
-  
-    // Keep your OAuth 2.0 code client (optional fallback)
-    this.initializeCodeClient();
-  
-    this.initialized = true;
-  }
 
-  private initializeCodeClient(): void {
-    try {
-      window.google.accounts.oauth2.initCodeClient({
-        client_id: this.GOOGLE_CLIENT_ID,
-        scope: 'openid email profile',
-        ux_mode: 'popup',
-        callback: this.handleCodeResponse.bind(this)
-      });
-    } catch (error) {
-      console.error('Error initializing OAuth Code Client:', error);
-    }
-  }
-  
-
-  /**
-   * Get current language for Google Identity Services
-   */
-  private getCurrentLanguage(): string {
-    // Try to get language from sessionStorage first
-    const savedLang = sessionStorage.getItem('anataleb.lang');
-    if (savedLang === 'en' || savedLang === 'ar') {
-      return savedLang;
-    }
-
-    // Fallback to current translate service language
-    const currentLang = this.translate.currentLang || this.translate.defaultLang || 'ar';
-    return currentLang === 'en' ? 'en' : 'ar';
-  }
-
-  /**
-   * Handle One Tap response (auto-prompt)
-   */
-  private handleOneTapResponse(response: any): void {
-    if (response.credential) {
-      this.sendTokenToBackend(response.credential);
-    }
-  }
-
-  /**
-   * Handle OAuth Code response (manual sign-in)
-   */
-  private handleCodeResponse(response: any): void {
-    if (response.code) {
-      // Exchange code for token
-      this.exchangeCodeForToken(response.code);
-    }
-  }
-
-  /**
-   * Exchange authorization code for ID token
-   */
-  private exchangeCodeForToken(code: string): void {
-    this.http.post<any>(`${this.baseUrl}/auth/google-code-exchange`, { code })
-      .subscribe({
-        next: (response) => {
-          if (response.idToken) {
-            this.sendTokenToBackend(response.idToken);
-          }
-        },
-        error: (error) => {
-          console.error('Code exchange failed:', error);
-          this.toastr.error(
-            this.translate.instant('authModal.genericError'),
-            this.translate.instant('authModal.error')
-          );
-        }
-      });
+    // Send token to backend
+    this.sendTokenToBackend(response.credential);
   }
 
   /**
@@ -189,135 +133,98 @@ export class GoogleOAuthService {
       .subscribe({
         next: (response) => {
           console.log('Google login successful:', response);
-          // Store tokens
+          
+          // Store authentication tokens
           if (response.token) {
             localStorage.setItem('authToken', response.token);
           }
           if (response.refreshToken) {
             localStorage.setItem('refreshToken', response.refreshToken);
           }
-          // TODO: Handle successful login (redirect, emit event, etc.)
+          if (response.user) {
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+          }
+          
+          // Emit success event
+          this.loginCompleteSubject.next(true);
+          window.dispatchEvent(new CustomEvent('google-login-success', { 
+            detail: response 
+          }));
+          
+          // Navigate based on user state
+          this.handlePostLogin(response.user);
         },
         error: (error) => {
           console.error('Google login failed:', error);
-          this.toastr.error(
-            this.translate.instant('authModal.genericError'),
-            this.translate.instant('authModal.error')
-          );
+          this.handleLoginError(error);
         }
       });
   }
 
   /**
-   * Initialize One Tap auto-prompt (called once on modal open)
+   * Handle post-login navigation
    */
-  initOneTapAutoPrompt(): void {
-    if (!this.isReady()) {
-      console.warn('Google Identity Services not ready');
-      return;
-    }
-    try {
-      window.google.accounts.id.prompt((notification: any) => {
-        const dismissed = notification.isNotDisplayed?.() ||
-                          notification.isSkippedMoment?.() ||
-                          notification.getMomentType?.() === 'dismissed';
-        if (dismissed) {
-          // notify UI to stop spinners
-          window.dispatchEvent(new CustomEvent('google-login-error'));
-        }
-      });
-    } catch (error) {
-      console.error('One Tap initialization failed:', error);
-      window.dispatchEvent(new CustomEvent('google-login-error'));
+  private handlePostLogin(user: any): void {
+    if (!user.role || user.onboarding_step === 'need_role') {
+      this.router.navigate(['/account-type']);
+    } else if (user.onboarding_step === 'need_teacher_form') {
+      this.router.navigate(['/teacher/setup']);
+    } else {
+      this.router.navigate(['/dashboard']);
     }
   }
-  
+
   /**
-   * Get Google ID token for manual sign-in
+   * Handle login errors
    */
-  getGoogleIdToken(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (!this.isReady()) {
-        reject(new Error('Google Identity Services not ready'));
-        return;
-      }
-  
-      // Set pending resolvers so our global callback in setupGoogleAuth can resolve this
-      this.pendingResolve = resolve;
-      this.pendingReject  = reject;
-  
-      try {
-        // Trigger the FedCM / One Tap prompt
-        window.google.accounts.id.prompt((notification: any) => {
-          const dismissed = notification.isNotDisplayed?.() ||
-                            notification.isSkippedMoment?.() ||
-                            notification.getMomentType?.() === 'dismissed';
-          if (dismissed && this.pendingReject) {
-            this.pendingReject(new Error('Google sign-in cancelled'));
-            this.pendingResolve = undefined;
-            this.pendingReject = undefined;
-          }
-        });
-      } catch (err) {
-        this.pendingResolve = undefined;
-        this.pendingReject  = undefined;
-        reject(err as Error);
-      }
-    });
+  private handleLoginError(error: any): void {
+    let errorMessage = 'Google sign-in failed';
+    
+    if (error.status === 0) {
+      errorMessage = 'Network error. Please check your connection.';
+    } else if (error.status === 401) {
+      errorMessage = 'Invalid Google credentials';
+    } else if (error.error?.message) {
+      errorMessage = error.error.message;
+    }
+    
+    this.toastr.error(errorMessage, 'Sign-in Error');
+    this.emitLoginError();
   }
-  
+
   /**
    * Trigger Google OAuth login
    */
-  loginWithGoogle(): void {
-    // Check if client ID is valid
-    if (this.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID' || !this.GOOGLE_CLIENT_ID) {
-      console.error('Google Client ID not configured');
-      this.toastr.error(
-        this.translate.instant('authModal.googleClientIdNotConfigured'),
-        this.translate.instant('authModal.error')
-      );
-      this.emitLoginError();
-      return;
-    }
-
-    if (!this.isReady()) {
-      console.warn('Google Identity Services not ready');
-      this.toastr.error(
-        this.translate.instant('authModal.googleNotInitialized'),
-        this.translate.instant('authModal.error')
-      );
-      this.emitLoginError();
-      return;
-    }
-
+  async loginWithGoogle(): Promise<void> {
     try {
-      // Use Google Identity Services prompt (no fallback to old OAuth)
-      window.google.accounts.id.prompt();
+      // Ensure Google is initialized
+      await this.initializeGoogle();
+      
+      if (!window.google?.accounts?.id) {
+        throw new Error('Google Identity Services not available');
+      }
+
+      // Trigger the sign-in prompt
+      window.google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          console.log('Google One Tap was not displayed or was skipped');
+          // Fall back to button click
+          this.emitLoginError();
+        }
+      });
     } catch (error) {
-      console.error('Error with Google prompt:', error);
-      this.toastr.error(
-        this.translate.instant('authModal.genericError'),
-        this.translate.instant('authModal.error')
-      );
+      console.error('Failed to trigger Google login:', error);
+      this.toastr.error('Failed to open Google sign-in', 'Error');
       this.emitLoginError();
     }
   }
 
   /**
-   * Check if Google OAuth is available
-   */
-  isGoogleOAuthAvailable(): boolean {
-    return this.isReady();
-  }
-
-
-  /**
-   * Render Google sign-in button using GIS
+   * Render Google sign-in button
    */
   renderGoogleButton(element: HTMLElement): void {
-    if (!this.isReady()) {
-      console.warn('Google Identity Services not ready for button rendering');
+    if (!this.initialized || !window.google?.accounts?.id) {
+      console.warn('Google not initialized, cannot render button');
       return;
     }
 
@@ -329,7 +236,7 @@ export class GoogleOAuthService {
         text: 'continue_with',
         shape: 'rectangular',
         logo_alignment: 'left',
-        width: '100%'
+        width: element.offsetWidth || 280
       });
     } catch (error) {
       console.error('Error rendering Google button:', error);
@@ -337,11 +244,30 @@ export class GoogleOAuthService {
   }
 
   /**
-   * Emit login error event to reset loading state
+   * Check if Google OAuth is available
+   */
+  isGoogleOAuthAvailable(): boolean {
+    return this.initialized && !!window.google?.accounts?.id;
+  }
+
+  /**
+   * Emit login error event
    */
   private emitLoginError(): void {
-    // Dispatch a custom event that the login modal can listen to
     window.dispatchEvent(new CustomEvent('google-login-error'));
   }
 
+  /**
+   * Revoke Google OAuth token
+   */
+  revokeGoogleToken(hint?: string): void {
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+      if (hint) {
+        window.google.accounts.id.revoke(hint, (done: any) => {
+          console.log('Google token revoked:', done);
+        });
+      }
+    }
+  }
 }

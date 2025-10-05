@@ -20,7 +20,7 @@ type LoadingState = 'none' | 'email' | 'google' | 'apple';
   templateUrl: './login-modal.component.html',
   styleUrls: ['./login-modal.component.scss']
 })
-export class LoginModalComponent implements OnInit {
+export class LoginModalComponent implements OnInit, OnDestroy {
   @Input() initialMode: 'login' | 'register' = 'login';
   @Output() closeModal = new EventEmitter<void>();
   @Output() switchToSignup = new EventEmitter<void>();
@@ -58,64 +58,69 @@ export class LoginModalComponent implements OnInit {
   private readonly toastr = inject(ToastrService);
   private readonly translate = inject(TranslateService);
 
-  ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      document.body.classList.add('modal-open');
-      
-      // Initialize Apple availability
-      this.appleAvailable = this.isAppleSupported();
-      
-      // Initialize Google OAuth with proper GIS approach
-      this.initializeGoogleOAuth();
-      
-      // Initialize Apple OAuth
+ // In ngOnInit(), update the initialization:
+ngOnInit() {
+  if (isPlatformBrowser(this.platformId)) {
+    document.body.classList.add('modal-open');
+    
+    // Initialize Apple availability
+    this.appleAvailable = this.isAppleSupported();
+    
+    // Initialize Google OAuth
+    this.initializeGoogleOAuth();
+    
+    // Initialize Apple OAuth if needed
+    if (this.appleAvailable) {
       this.appleOAuth.initializeApple().catch(error => {
         console.error('Failed to initialize Apple OAuth:', error);
-        this.resetLoading();
-      });
-      
-      // Listen for OAuth login errors
-      window.addEventListener('google-login-error', () => {
-        this.resetLoading();
-      });
-      window.addEventListener('apple-login-error', () => {
-        this.resetLoading();
       });
     }
-  }
-
-  private initializeGoogleOAuth(): void {
-    const waitForGis = () => {
-      if (!window.google?.accounts?.id) {
-        setTimeout(waitForGis, 100);
-        return;
-      }
-      
-      try {
-        // Initialize Google OAuth service
-        this.googleOAuth.initializeGoogle().then(() => {
-          this.googleOAuthAvailable = true;
-          console.log('Google OAuth initialized successfully');
-          
-          // Initialize One Tap auto-prompt (only once)
-          this.googleOAuth.initOneTapAutoPrompt();
-          
-          // Render Google button if element exists
-          if (this.googleBtn?.nativeElement) {
-            this.googleOAuth.renderGoogleButton(this.googleBtn.nativeElement);
-          }
-        }).catch(error => {
-          console.error('Failed to initialize Google OAuth:', error);
-          this.googleOAuthAvailable = false;
-        });
-      } catch (error) {
-        console.error('Failed to initialize Google OAuth:', error);
-        this.googleOAuthAvailable = false;
-      }
-    };
     
-    waitForGis();
+    // Listen for OAuth events
+    this.setupEventListeners();
   }
+}
+private setupEventListeners(): void {
+  // Listen for successful Google login
+  const successHandler = (event: any) => {
+    console.log('Google login successful, closing modal');
+    this.resetLoading();
+    this.close();
+  };
+  
+  // Listen for Google login errors
+  const errorHandler = () => {
+    console.log('Google login error, resetting loading state');
+    this.resetLoading();
+  };
+  
+  window.addEventListener('google-login-success', successHandler);
+  window.addEventListener('google-login-error', errorHandler);
+  window.addEventListener('apple-login-error', errorHandler);
+  
+  // Store handlers for cleanup
+  (this as any).googleSuccessHandler = successHandler;
+  (this as any).googleErrorHandler = errorHandler;
+}
+private initializeGoogleOAuth(): void {
+  // Initialize the Google OAuth service
+  this.googleOAuth.initializeGoogle()
+    .then(() => {
+      this.googleOAuthAvailable = true;
+      console.log('Google OAuth ready');
+      
+      // Try to render button after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        if (this.googleBtn?.nativeElement) {
+          this.googleOAuth.renderGoogleButton(this.googleBtn.nativeElement);
+        }
+      }, 100);
+    })
+    .catch(error => {
+      console.error('Google OAuth initialization failed:', error);
+      this.googleOAuthAvailable = false;
+    });
+}
 
   private handleGoogleResponse(response: any): void {
     const idToken = response?.credential;
@@ -324,37 +329,15 @@ export class LoginModalComponent implements OnInit {
 
   async onGoogleClick() {
     if (this.loading !== 'none') return;
+    
     this.loading = 'google';
     
     try {
-      // Get Google ID token for manual sign-in
-      const idToken = await this.googleOAuth.getGoogleIdToken();
-      
-      // Call backend with ID token
-      const response = await this.authService.googleLogin(idToken).toPromise();
-      
-      if (!response) {
-        throw new Error('No response from server');
-      }
-      
-      // Handle successful login
-      this.authService.postLoginNavigate(response.user);
-      this.close();
-      
-    } catch (e: any) {
-      console.error('Google login error:', e);
-      let errorMessage = this.getGoogleErrorMessage(e);
-      
-      // Handle specific network errors
-      if (e?.status === 0) {
-        errorMessage = this.translate.instant('authModal.networkError');
-      } else if (e?.status === 404) {
-        errorMessage = this.translate.instant('authModal.googleUnavailable');
-      }
-      
-      this.toastr.error(errorMessage);
-    } finally {
-      this.resetLoading(); // <-- always stop
+      await this.googleOAuth.loginWithGoogle();
+      // The success/error will be handled by event listeners
+    } catch (error) {
+      console.error('Google login failed:', error);
+      this.resetLoading();
     }
   }
 
@@ -488,5 +471,18 @@ export class LoginModalComponent implements OnInit {
 
   close() {
     this.closeModal.emit();
+  }
+
+  ngOnDestroy() {
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.classList.remove('modal-open');
+      
+      // Clean up event listeners
+      if ((this as any).googleSuccessHandler) {
+        window.removeEventListener('google-login-success', (this as any).googleSuccessHandler);
+        window.removeEventListener('google-login-error', (this as any).googleErrorHandler);
+        window.removeEventListener('apple-login-error', (this as any).googleErrorHandler);
+      }
+    }
   }
 }
