@@ -20,7 +20,9 @@ export class GoogleOAuthService {
   private readonly baseUrl = environment.apiUrl;
   private readonly toastr = inject(ToastrService);
   private readonly translate = inject(TranslateService);
-
+  private pendingResolve?: (token: string) => void;
+  private pendingReject?: (err: Error) => void;
+  private initialized = false;
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -64,41 +66,50 @@ export class GoogleOAuthService {
   }
 
   private setupGoogleAuth(): void {
-    try {
-      // Check if client ID is valid before initializing
-      if (this.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID' || !this.GOOGLE_CLIENT_ID) {
-        console.error('Google Client ID not configured');
-        this.toastr.error(
-          this.translate.instant('authModal.googleClientIdNotConfigured'),
-          this.translate.instant('authModal.error')
-        );
-        return;
-      }
-
-      // Get current language for Google Identity Services
-      const currentLang = this.getCurrentLanguage();
-
-      // Initialize GIS for One Tap (auto-prompt)
-      window.google.accounts.id.initialize({
-        client_id: this.GOOGLE_CLIENT_ID,
-        callback: this.handleOneTapResponse.bind(this),
-        auto_select: false,
-        cancel_on_tap_outside: false,
-        use_fedcm_for_prompt: false, // Disable FedCM to avoid AbortError
-        ux_mode: 'popup',
-        context: 'signin',
-        locale: currentLang
-      });
-
-      // Initialize OAuth 2.0 Code Client for manual sign-in
-      this.initializeCodeClient();
-    } catch (error) {
-      console.error('Error initializing Google Auth:', error);
+    if (this.initialized) return;
+  
+    if (this.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID' || !this.GOOGLE_CLIENT_ID) {
+      console.error('Google Client ID not configured');
       this.toastr.error(
-        this.translate.instant('authModal.googleNotInitialized'),
+        this.translate.instant('authModal.googleClientIdNotConfigured'),
         this.translate.instant('authModal.error')
       );
+      return;
     }
+  
+    // Single, central credential handler (used by both One Tap and manual prompt)
+    const handleCredentialResponse = (response: any) => {
+      const idToken = response?.credential;
+      if (!idToken) return;
+  
+      // If a manual login call is waiting, resolve that promise
+      if (this.pendingResolve) {
+        this.pendingResolve(idToken);
+        this.pendingResolve = undefined;
+        this.pendingReject = undefined;
+        return;
+      }
+  
+      // Otherwise treat as One Tap auto-prompt success
+      this.sendTokenToBackend(idToken);
+    };
+  
+    // Initialize GIS with FedCM enabled
+    window.google.accounts.id.initialize({
+      client_id: this.GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse,
+      auto_select: false,
+      cancel_on_tap_outside: false,
+      use_fedcm_for_prompt: true,  // <-- TURN ON FedCM
+      itp_support: true,
+      ux_mode: 'popup',
+      context: 'signin'
+    });
+  
+    // Keep your OAuth 2.0 code client (optional fallback)
+    this.initializeCodeClient();
+  
+    this.initialized = true;
   }
 
   private initializeCodeClient(): void {
@@ -113,6 +124,7 @@ export class GoogleOAuthService {
       console.error('Error initializing OAuth Code Client:', error);
     }
   }
+  
 
   /**
    * Get current language for Google Identity Services
@@ -204,17 +216,14 @@ export class GoogleOAuthService {
       console.warn('Google Identity Services not ready');
       return;
     }
-
     try {
       window.google.accounts.id.prompt((notification: any) => {
-        // Handle One Tap dismissal - do not retry
-        if (notification.isNotDisplayed() || 
-            notification.isSkippedMoment() || 
-            notification.getMomentType() === 'dismissed') {
-          console.log('One Tap dismissed by user');
-          // Emit event to reset loading state
+        const dismissed = notification.isNotDisplayed?.() ||
+                          notification.isSkippedMoment?.() ||
+                          notification.getMomentType?.() === 'dismissed';
+        if (dismissed) {
+          // notify UI to stop spinners
           window.dispatchEvent(new CustomEvent('google-login-error'));
-          return;
         }
       });
     } catch (error) {
@@ -222,7 +231,7 @@ export class GoogleOAuthService {
       window.dispatchEvent(new CustomEvent('google-login-error'));
     }
   }
-
+  
   /**
    * Get Google ID token for manual sign-in
    */
@@ -232,40 +241,31 @@ export class GoogleOAuthService {
         reject(new Error('Google Identity Services not ready'));
         return;
       }
-
+  
+      // Set pending resolvers so our global callback in setupGoogleAuth can resolve this
+      this.pendingResolve = resolve;
+      this.pendingReject  = reject;
+  
       try {
-        // Use manual popup for sign-in
+        // Trigger the FedCM / One Tap prompt
         window.google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || 
-              notification.isSkippedMoment() || 
-              notification.getMomentType() === 'dismissed') {
-            reject(new Error('Google sign-in cancelled'));
-            return;
+          const dismissed = notification.isNotDisplayed?.() ||
+                            notification.isSkippedMoment?.() ||
+                            notification.getMomentType?.() === 'dismissed';
+          if (dismissed && this.pendingReject) {
+            this.pendingReject(new Error('Google sign-in cancelled'));
+            this.pendingResolve = undefined;
+            this.pendingReject = undefined;
           }
         });
-
-        // Set up callback for credential response
-        window.google.accounts.id.initialize({
-          client_id: this.GOOGLE_CLIENT_ID,
-          callback: (response: any) => {
-            if (response.credential) {
-              resolve(response.credential);
-            } else {
-              reject(new Error('No credential received'));
-            }
-          },
-          use_fedcm_for_prompt: false, // Disable FedCM to avoid AbortError
-          ux_mode: 'popup',
-          context: 'signin',
-          locale: this.getCurrentLanguage()
-        });
-
-      } catch (error) {
-        reject(error);
+      } catch (err) {
+        this.pendingResolve = undefined;
+        this.pendingReject  = undefined;
+        reject(err as Error);
       }
     });
   }
-
+  
   /**
    * Trigger Google OAuth login
    */
