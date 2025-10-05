@@ -161,9 +161,13 @@ private initializeGoogleOAuth(): void {
   ngOnDestroy() {
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.remove('modal-open');
-      // Remove event listeners
-      window.removeEventListener('google-login-error', () => {});
-      window.removeEventListener('apple-login-error', () => {});
+      
+      // Clean up event listeners
+      if ((this as any).googleSuccessHandler) {
+        window.removeEventListener('google-login-success', (this as any).googleSuccessHandler);
+        window.removeEventListener('google-login-error', (this as any).googleErrorHandler);
+        window.removeEventListener('apple-login-error', (this as any).googleErrorHandler);
+      }
     }
   }
 
@@ -473,16 +477,5 @@ private initializeGoogleOAuth(): void {
     this.closeModal.emit();
   }
 
-  ngOnDestroy() {
-    if (isPlatformBrowser(this.platformId)) {
-      document.body.classList.remove('modal-open');
-      
-      // Clean up event listeners
-      if ((this as any).googleSuccessHandler) {
-        window.removeEventListener('google-login-success', (this as any).googleSuccessHandler);
-        window.removeEventListener('google-login-error', (this as any).googleErrorHandler);
-        window.removeEventListener('apple-login-error', (this as any).googleErrorHandler);
-      }
-    }
-  }
+ 
 }
