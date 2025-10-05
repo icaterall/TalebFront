@@ -1,10 +1,11 @@
 import { Component, inject, Renderer2, OnInit, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT, DecimalPipe, CurrencyPipe, NgOptimizedImage } from '@angular/common';
 import { TranslateService, TranslatePipe, TranslateModule } from '@ngx-translate/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HeaderComponent } from '../../../shared/header/header.component';
 import { FooterComponent } from '../../../shared/footer/footer.component';
 import { ContactComponent } from '../contact/contact.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 
 type Lang = 'ar' | 'en';
@@ -26,6 +27,8 @@ type Lang = 'ar' | 'en';
 export class LandingPageComponent implements OnInit {
   private translate = inject(TranslateService);
   private renderer = inject(Renderer2);
+  private auth = inject(AuthService);
+  private router = inject(Router);
   constructor(@Inject(PLATFORM_ID) private platformId: object, @Inject(DOCUMENT) private doc: Document) {}
   isMenuOpen = false;
   private MOBILE_BP = 1060;
@@ -50,6 +53,12 @@ export class LandingPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.setLang((this.translate.currentLang as Lang) || 'ar');
+
+    // If user is already logged in but has no role yet, redirect to account-type
+    if (this.auth.isAuthenticated() && this.auth.needsRoleSelection()) {
+      this.router.navigate(['/account-type']);
+      return;
+    }
   }
 
   toggleMobileMenu(){

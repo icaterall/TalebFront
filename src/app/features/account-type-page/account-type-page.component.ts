@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -22,6 +22,7 @@ export class AccountTypePageComponent {
   private readonly i18n = inject(I18nService);
   private readonly authService = inject(AuthService);
   private readonly toastr = inject(ToastrService);
+  private readonly el = inject(ElementRef);
 
   showDateOfBirth = false;
   showTeacherDashboard = false;
@@ -72,6 +73,24 @@ export class AccountTypePageComponent {
 
   // Placeholder for hamburger in header (no sidebar here)
   onToggle() {}
+
+  // Avatar menu
+  showUserMenu = false;
+  toggleUserMenu() {
+    this.showUserMenu = !this.showUserMenu;
+  }
+  logout() {
+    this.authService.logout();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    if (!this.showUserMenu) return;
+    const target = event.target as HTMLElement;
+    if (!this.el.nativeElement.contains(target)) {
+      this.showUserMenu = false;
+    }
+  }
 
   get currentLang(): Lang { 
     return this.i18n.current; 

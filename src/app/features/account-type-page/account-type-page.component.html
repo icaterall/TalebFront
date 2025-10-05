@@ -13,8 +13,14 @@
       <span class="lang-text">{{ languageButtonText }}</span>
     </button>
 
-    <div class="avatar" *ngIf="!hasAvatar">{{ userInitials }}</div>
-    <img *ngIf="hasAvatar" [src]="userAvatarUrl" alt="avatar" class="avatar-img">
+    <div class="user-actions">
+      <div class="avatar" *ngIf="!hasAvatar" (click)="toggleUserMenu()">{{ userInitials }}</div>
+      <img *ngIf="hasAvatar" [src]="userAvatarUrl" alt="avatar" class="avatar-img" (click)="toggleUserMenu()">
+
+      <div class="user-menu" *ngIf="showUserMenu">
+        <button class="menu-item" (click)="logout()">{{ 'general.logout' | translate }}</button>
+      </div>
+    </div>
   </header>
 
   <!-- Main content -->
