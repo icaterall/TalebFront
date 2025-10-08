@@ -7,6 +7,7 @@ import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from './auth.service';
 
 declare global {
   interface Window {
@@ -24,6 +25,7 @@ export class GoogleOAuthService {
   private readonly toastr = inject(ToastrService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
   
   private initialized = false;
   private initializationPromise: Promise<void> | null = null;
@@ -134,15 +136,11 @@ export class GoogleOAuthService {
         next: (response) => {
           console.log('Google login successful:', response);
           
-          // Store authentication tokens
-          if (response.token) {
-            localStorage.setItem('authToken', response.token);
-          }
-          if (response.refreshToken) {
-            localStorage.setItem('refreshToken', response.refreshToken);
-          }
-          if (response.user) {
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+          // Use AuthService to store authentication data
+          // This ensures the BehaviorSubject is updated and all subscribers are notified
+          if (response.user && response.token && response.refreshToken) {
+            this.authService.storeAuthData(response.user, response.token, response.refreshToken);
+            console.log('Auth data stored, currentUser$ updated');
           }
           
           // Emit success event
@@ -151,8 +149,11 @@ export class GoogleOAuthService {
             detail: response 
           }));
           
-          // Navigate based on user state
-          this.handlePostLogin(response.user);
+          // Small delay to ensure state is fully propagated before navigation
+          setTimeout(() => {
+            // Navigate based on user state
+            this.handlePostLogin(response.user);
+          }, 100);
         },
         error: (error) => {
           console.error('Google login failed:', error);
