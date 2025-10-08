@@ -1,12 +1,13 @@
-import { Component, inject, HostListener, ElementRef } from '@angular/core';
+import { Component, inject, HostListener, ElementRef, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { I18nService } from '../../core/services/i18n.service';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService, User } from '../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { FooterComponent } from '../../shared/footer/footer.component';
+import { Subscription } from 'rxjs';
 
 type Lang = 'ar' | 'en';
 
@@ -17,12 +18,15 @@ type Lang = 'ar' | 'en';
   templateUrl: './account-type-page.component.html',
   styleUrls: ['./account-type-page.component.scss']
 })
-export class AccountTypePageComponent {
+export class AccountTypePageComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
   private readonly authService = inject(AuthService);
   private readonly toastr = inject(ToastrService);
   private readonly el = inject(ElementRef);
+  private readonly cdr = inject(ChangeDetectorRef);
+  
+  private userSubscription?: Subscription;
 
   showDateOfBirth = false;
   showTeacherDashboard = false;
@@ -31,8 +35,20 @@ export class AccountTypePageComponent {
   selectedDay = '';
 
   // Header: current user info
-  get user() {
-    return this.authService.getCurrentUser();
+  user: User | null = null;
+
+  ngOnInit() {
+    // Subscribe to user changes for reactive updates
+    this.userSubscription = this.authService.currentUser$.subscribe(user => {
+      console.log('Account type page - user updated:', user);
+      this.user = user;
+      this.cdr.detectChanges(); // Manually trigger change detection
+    });
+  }
+
+  ngOnDestroy() {
+    // Clean up subscription
+    this.userSubscription?.unsubscribe();
   }
   get userName(): string {
     return (this.user?.name || this.user?.email || '').toString();
