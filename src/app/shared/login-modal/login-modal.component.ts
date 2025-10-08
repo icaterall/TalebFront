@@ -65,12 +65,14 @@ ngOnInit() {
     
     // Initialize Apple availability
     this.appleAvailable = this.isAppleSupported();
+    console.log('Apple Sign-In available:', this.appleAvailable);
     
     // Initialize Google OAuth
     this.initializeGoogleOAuth();
     
     // Initialize Apple OAuth if needed
     if (this.appleAvailable) {
+      console.log('Initializing Apple Sign-In SDK...');
       this.appleOAuth.initializeApple().catch(error => {
         console.error('Failed to initialize Apple OAuth:', error);
       });
@@ -320,7 +322,25 @@ private initializeGoogleOAuth(): void {
   }
 
   private isAppleSupported(): boolean {
-    return typeof (window as any).AppleID !== 'undefined' || /iPhone|iPad|Macintosh/.test(navigator.userAgent);
+    if (typeof window === 'undefined') return false;
+    
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+    const platform = navigator.platform || '';
+    
+    // Check for iOS devices (iPhone, iPad, iPod)
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+    
+    // Check for macOS (including both Intel and Apple Silicon)
+    const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(platform) || 
+                  (platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPad in desktop mode
+    
+    // Check for visionOS (Apple Vision Pro)
+    const isVisionOS = /visionOS/.test(userAgent);
+    
+    // Check if AppleID SDK is loaded (secondary check)
+    const hasAppleSDK = typeof (window as any).AppleID !== 'undefined';
+    
+    return isIOS || isMac || isVisionOS || hasAppleSDK;
   }
 
   /**

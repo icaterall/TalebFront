@@ -117,11 +117,6 @@ export class I18nService {
       }
     } catch (error) {
       console.error('I18nService initialization failed:', error);
-    } finally {
-      // Always signal ready, even if initialization failed
-      if (this.isBrowser) {
-        window.dispatchEvent(new Event('AnatalebReady'));
-      }
     }
   }
 
