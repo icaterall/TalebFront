@@ -117,6 +117,9 @@ export class GoogleOAuthService {
   private handleCredentialResponse(response: any): void {
     console.log('Google credential response received');
     
+    // Emit event to show loading spinner
+    window.dispatchEvent(new CustomEvent('google-login-started'));
+    
     if (!response.credential) {
       console.error('No credential in response');
       this.emitLoginError();
@@ -198,6 +201,9 @@ export class GoogleOAuthService {
    */
   async loginWithGoogle(): Promise<void> {
     try {
+      // Emit event to show loading spinner
+      window.dispatchEvent(new CustomEvent('google-login-started'));
+      
       // Ensure Google is initialized
       await this.initializeGoogle();
       
@@ -209,7 +215,7 @@ export class GoogleOAuthService {
       window.google.accounts.id.prompt((notification: any) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
           console.log('Google One Tap was not displayed or was skipped');
-          // Fall back to button click
+          // User dismissed or cancelled
           this.emitLoginError();
         }
       });

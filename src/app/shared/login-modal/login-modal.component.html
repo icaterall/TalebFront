@@ -111,9 +111,16 @@
       <!-- Social Login Buttons (only shown when not in registration mode) -->
       <div class="social-login" *ngIf="!showPasswordField">
         <!-- Google Button Container (Google Identity Services will render the button here) -->
-        <div #googleBtn *ngIf="googleOAuthAvailable"></div>
+        <div class="google-button-wrapper" *ngIf="googleOAuthAvailable" [class.loading]="loading === 'google'">
+          <div #googleBtn class="google-button-container"></div>
+          <div class="google-loading-overlay" *ngIf="loading === 'google'">
+            <span class="spinner"></span>
+            <span class="loading-text">{{ 'authModal.signingIn' | translate }}</span>
+          </div>
+        </div>
 
-        <!-- Apple Button (only shown on Apple devices) -->
+        <!-- Apple Button - DISABLED -->
+        <!-- 
         <button 
           type="button" 
           class="social-button apple-button" 
@@ -128,6 +135,7 @@
             {{ 'authModal.continueWithApple' | translate }}
           </span>
         </button>
+        -->
 
         <!-- Fallback message when Google OAuth is not available -->
         <div class="oauth-fallback" *ngIf="!googleOAuthAvailable">

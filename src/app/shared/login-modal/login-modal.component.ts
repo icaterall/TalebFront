@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 import { GoogleOAuthService } from '../../core/services/google-oauth.service';
-import { AppleOAuthService } from '../../core/services/apple-oauth.service';
+// Apple OAuth disabled
+// import { AppleOAuthService } from '../../core/services/apple-oauth.service';
 import { AuthService } from '../../core/services/auth.service';
 import { environment } from 'src/environments/environment';
 import { ToastrService } from 'ngx-toastr';
@@ -52,7 +53,8 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly http = inject(HttpClient);
   private readonly googleOAuth = inject(GoogleOAuthService);
-  private readonly appleOAuth = inject(AppleOAuthService);
+  // Apple OAuth disabled
+  // private readonly appleOAuth = inject(AppleOAuthService);
   private readonly authService = inject(AuthService);
   private readonly baseUrl = environment.apiUrl;
   private readonly toastr = inject(ToastrService);
@@ -63,30 +65,40 @@ ngOnInit() {
   if (isPlatformBrowser(this.platformId)) {
     document.body.classList.add('modal-open');
     
-    // Initialize Apple availability
-    this.appleAvailable = this.isAppleSupported();
-    console.log('Apple Sign-In available:', this.appleAvailable);
+    // Apple OAuth disabled
+    // this.appleAvailable = this.isAppleSupported();
+    // console.log('Apple Sign-In available:', this.appleAvailable);
+    this.appleAvailable = false;
     
     // Initialize Google OAuth
     this.initializeGoogleOAuth();
     
-    // Initialize Apple OAuth if needed
-    if (this.appleAvailable) {
-      console.log('Initializing Apple Sign-In SDK...');
-      this.appleOAuth.initializeApple().catch(error => {
-        console.error('Failed to initialize Apple OAuth:', error);
-      });
-    }
+    // Apple OAuth disabled
+    // if (this.appleAvailable) {
+    //   console.log('Initializing Apple Sign-In SDK...');
+    //   this.appleOAuth.initializeApple().catch(error => {
+    //     console.error('Failed to initialize Apple OAuth:', error);
+    //   });
+    // }
     
     // Listen for OAuth events
     this.setupEventListeners();
   }
 }
 private setupEventListeners(): void {
+  // Listen for Google login started (when user clicks Google button)
+  const startedHandler = () => {
+    console.log('Google login started, showing spinner');
+    this.loading = 'google';
+    this.cdr.detectChanges();
+  };
+  
   // Listen for successful Google login
   const successHandler = (event: any) => {
-    console.log('Google login successful, closing modal');
-    this.resetLoading();
+    console.log('Google login successful, keeping spinner until redirect');
+    // Keep spinner active - it will be cleared when modal closes or component destroys
+    // The navigation happens in the service, so we just close the modal here
+    // The spinner will remain visible during the brief navigation moment
     this.close();
   };
   
@@ -96,11 +108,14 @@ private setupEventListeners(): void {
     this.resetLoading();
   };
   
+  window.addEventListener('google-login-started', startedHandler);
   window.addEventListener('google-login-success', successHandler);
   window.addEventListener('google-login-error', errorHandler);
-  window.addEventListener('apple-login-error', errorHandler);
+  // Apple OAuth disabled
+  // window.addEventListener('apple-login-error', errorHandler);
   
   // Store handlers for cleanup
+  (this as any).googleStartedHandler = startedHandler;
   (this as any).googleSuccessHandler = successHandler;
   (this as any).googleErrorHandler = errorHandler;
 }
@@ -166,9 +181,11 @@ private initializeGoogleOAuth(): void {
       
       // Clean up event listeners
       if ((this as any).googleSuccessHandler) {
+        window.removeEventListener('google-login-started', (this as any).googleStartedHandler);
         window.removeEventListener('google-login-success', (this as any).googleSuccessHandler);
         window.removeEventListener('google-login-error', (this as any).googleErrorHandler);
-        window.removeEventListener('apple-login-error', (this as any).googleErrorHandler);
+        // Apple OAuth disabled
+        // window.removeEventListener('apple-login-error', (this as any).googleErrorHandler);
       }
     }
   }
@@ -321,6 +338,8 @@ private initializeGoogleOAuth(): void {
     return this.translate.instant('authModal.genericError');
   }
 
+  // Apple OAuth disabled
+  /*
   private isAppleSupported(): boolean {
     if (typeof window === 'undefined') return false;
     
@@ -342,6 +361,7 @@ private initializeGoogleOAuth(): void {
     
     return isIOS || isMac || isVisionOS || hasAppleSDK;
   }
+  */
 
   /**
    * Centralized loading state reset - guarantees spinners stop on any error/cancel
@@ -365,6 +385,8 @@ private initializeGoogleOAuth(): void {
     }
   }
 
+  // Apple OAuth disabled
+  /*
   async onAppleClick() {
     if (!this.appleAvailable || this.loading !== 'none') return;
     this.loading = 'apple';
@@ -386,6 +408,7 @@ private initializeGoogleOAuth(): void {
     // TODO: integrate Sign in with Apple JS; return identity token
     return Promise.reject(new Error('Apple sign-in not implemented'));
   }
+  */
 
   private getGoogleErrorMessage(error: any): string {
     const message = error?.message || error?.toString() || '';
@@ -405,6 +428,8 @@ private initializeGoogleOAuth(): void {
     return 'Google sign-in failed. Please try again.';
   }
 
+  // Apple OAuth disabled
+  /*
   private getAppleErrorMessage(error: any): string {
     const message = error?.message || error?.toString() || '';
     
@@ -422,6 +447,7 @@ private initializeGoogleOAuth(): void {
     
     return 'Apple sign-in failed. Please try again.';
   }
+  */
 
   onForgotPassword() {
     this.forgotPassword.emit();

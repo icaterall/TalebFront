@@ -515,3 +515,44 @@
   margin: 0;
   line-height: 1.4;
 }
+
+/* Google Button Wrapper with Loading State */
+.google-button-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  
+  &.loading {
+    .google-button-container {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+  }
+}
+
+.google-button-container {
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.google-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 5px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.loading-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4285f4;
+}
