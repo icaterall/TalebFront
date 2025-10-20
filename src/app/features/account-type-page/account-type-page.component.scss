@@ -372,135 +372,7 @@
   }
 }
 
-/* Date of Birth Container */
-.date-of-birth-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.back-button {
-  align-self: flex-end;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: 2px solid var(--gray-300);
-  color: var(--gray-600);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 8px 16px;
-  border-radius: var(--radius);
-}
-
-.back-button:hover {
-  color: #9ca3af;
-  border-color: #d1d5db;
-  background: #f9fafb;
-}
-
-/* RTL Support */
-:host-context([dir="rtl"]) .back-button,
-:host-context(body.rtl) .back-button {
-  align-self: flex-start !important;
-}
-
-:host-context([dir="rtl"]) .back-button svg,
-:host-context(body.rtl) .back-button svg {
-  transform: scaleX(-1) !important;
-}
-
-/* Date of Birth Form Styles */
-.date-of-birth-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  background: white;
-  border: 2px solid var(--gray-200);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-}
-
-.form-title {
-  font-size: var(--fs-2xl);
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 32px 0;
-  text-align: center;
-}
-
-.form-container {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
-  width: 100%;
-}
-
-.form-group {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--gray-700);
-  margin-bottom: 8px;
-}
-
-.form-select {
-  padding: 12px 40px 12px 16px;
-  border: 2px solid var(--gray-200);
-  border-radius: var(--radius);
-  font-size: var(--fs-base);
-  color: var(--gray-900);
-  background: var(--white);
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-}
-
-.form-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.form-select:first-child:focus {
-  border-color: var(--primary);
-}
-
-
-/* Responsive design for date form */
-@media (max-width: 768px) {
-  .date-of-birth-form {
-    padding: 24px;
-    margin: 0 16px;
-  }
-  
-  .form-container {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .form-title {
-    font-size: 24px;
-  }
-}
-
-/* New styles for exact design from image */
+/* Date of Birth Container and Form Styles */
 .date-of-birth-container {
   display: flex;
   flex-direction: column;
@@ -621,6 +493,42 @@
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.age-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.age-icon {
+  color: #0284c7;
+  flex-shrink: 0;
+}
+
+.age-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0c4a6e;
+  text-align: center;
 }
 
 .continue-button {

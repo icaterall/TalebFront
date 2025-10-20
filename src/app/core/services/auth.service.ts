@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -41,6 +41,19 @@ export class AuthService {
     private router: Router
   ) {
     this.loadStoredUser();
+  }
+
+  /**
+   * Get onboarding state from localStorage
+   * (Direct access to avoid circular dependency with OnboardingStateService)
+   */
+  private getOnboardingStateFromStorage(): any {
+    try {
+      const stored = localStorage.getItem('onboardingState');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -108,7 +121,7 @@ export class AuthService {
   }
 
   /**
-   * Handle post-login navigation based on user state
+   * Handle post-login navigation based on user state and onboarding progress
    */
   postLoginNavigate(user: User, intendedUrl?: string): void {
     // Store auth data
@@ -119,7 +132,35 @@ export class AuthService {
       this.storeAuthData(user, token, refreshToken);
     }
 
-    // Navigate based on onboarding state
+    // Check if there's an ongoing onboarding process in localStorage
+    const onboardingState = this.getOnboardingStateFromStorage();
+    
+    if (onboardingState) {
+      console.log('Found onboarding state, navigating based on it:', onboardingState);
+      
+      // Navigate based on saved onboarding state
+      switch (onboardingState.step) {
+        case 'select_role':
+          this.router.navigate(['/account-type']);
+          return;
+        
+        case 'enter_dob':
+          // User was in the middle of entering DOB
+          this.router.navigate(['/account-type']);
+          return;
+        
+        case 'teacher_setup':
+          this.router.navigate(['/teacher']);
+          return;
+        
+        case 'complete':
+          // Clear the onboarding state and continue normally
+          localStorage.removeItem('onboardingState');
+          break;
+      }
+    }
+
+    // Fallback to server-side onboarding state
     if (!user.role || user.onboarding_step === 'need_role') {
       this.router.navigate(['/account-type']);
     } else if (user.onboarding_step === 'need_teacher_form') {
@@ -176,6 +217,8 @@ export class AuthService {
    */
   logout(): void {
     this.clearAuthData();
+    // Also clear onboarding state
+    localStorage.removeItem('onboardingState');
     this.router.navigate(['/']);
   }
 
