@@ -49,8 +49,7 @@
         </div>
       </div>
 
-
-      <!-- Date of Birth Form -->
+      <!-- Date of Birth Form - Exact design from image -->
       <div *ngIf="showDateOfBirth" class="date-of-birth-container">
         <button class="back-button" (click)="goBack()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -59,41 +58,58 @@
           {{ 'dateOfBirth.back' | translate }}
         </button>
         
-        <div class="date-of-birth-form">
+        <div class="date-of-birth-card">
           <h1 class="form-title">{{ 'dateOfBirth.title' | translate }}</h1>
-        
-        <div class="form-container">
-          <div class="form-group">
-            <label for="year">{{ 'dateOfBirth.year' | translate }}</label>
-            <select id="year" [(ngModel)]="selectedYear" class="form-select">
-              <option value="">{{ 'dateOfBirth.select' | translate }}</option>
-              <option *ngFor="let year of getYears()" [value]="year">{{ year }}</option>
-            </select>
+          
+          <div class="form-container">
+            <div class="form-group">
+              <label for="day">{{ 'dateOfBirth.day' | translate }}</label>
+              <select id="day" [(ngModel)]="selectedDay" class="form-select">
+                <option value="">{{ 'dateOfBirth.select' | translate }}</option>
+                <option *ngFor="let day of getDays()" [value]="day">{{ day }}</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="month">{{ 'dateOfBirth.month' | translate }}</label>
+              <select id="month" [(ngModel)]="selectedMonth" class="form-select">
+                <option value="">{{ 'dateOfBirth.select' | translate }}</option>
+                <option *ngFor="let month of getMonths()" [value]="month.value">{{ month.label }}</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="year">{{ 'dateOfBirth.year' | translate }}</label>
+              <select id="year" [(ngModel)]="selectedYear" class="form-select">
+                <option value="">{{ 'dateOfBirth.select' | translate }}</option>
+                <option *ngFor="let year of getYears()" [value]="year">{{ year }}</option>
+              </select>
+            </div>
           </div>
           
-          <div class="form-group">
-            <label for="month">{{ 'dateOfBirth.month' | translate }}</label>
-            <select id="month" [(ngModel)]="selectedMonth" class="form-select">
-              <option value="">{{ 'dateOfBirth.select' | translate }}</option>
-              <option *ngFor="let month of getMonths()" [value]="month.value">{{ month.label }}</option>
-            </select>
+          <button 
+            class="continue-button" 
+            [disabled]="isContinueDisabled()" 
+            (click)="continue()">
+            {{ 'dateOfBirth.continue' | translate }}
+          </button>
+          
+          <div class="login-link">
+            <span>{{ 'dateOfBirth.haveAnotherAccount' | translate }}</span>
+            <a href="#" class="login-link-text" (click)="logout()"> {{ 'dateOfBirth.signOut' | translate }}</a>
           </div>
           
-          <div class="form-group">
-            <label for="day">{{ 'dateOfBirth.day' | translate }}</label>
-            <select id="day" [(ngModel)]="selectedDay" class="form-select">
-              <option value="">{{ 'dateOfBirth.select' | translate }}</option>
-              <option *ngFor="let day of getDays()" [value]="day">{{ day }}</option>
-            </select>
+          <div class="info-section">
+            <button class="info-toggle" (click)="toggleInfo()">
+              <span>{{ 'dateOfBirth.whyNeedDateOfBirth' | translate }}</span>
+              <svg class="chevron" [class.rotated]="showInfo" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="info-content" *ngIf="showInfo">
+              <p>{{ 'dateOfBirth.explanation' | translate }}</p>
+            </div>
           </div>
-        </div>
-        
-        <button 
-          class="btn btn-primary" 
-          [disabled]="isContinueDisabled()" 
-          (click)="continue()">
-          {{ 'dateOfBirth.continue' | translate }}
-        </button>
         </div>
       </div>
     </div>

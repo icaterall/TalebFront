@@ -33,6 +33,7 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
   selectedYear = '';
   selectedMonth = '';
   selectedDay = '';
+  showInfo = false;
 
   // Header: current user info
   user: User | null = null;
@@ -118,10 +119,13 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
 
   async choose(type: 'Teacher' | 'Student') {
     console.log('Selected account type:', type);
+    console.log('Current user before update:', this.user);
     
     try {
-      // Update user role in backend
+      // Try to update user role in backend
+      console.log('Calling updateRole with:', type);
       const response = await this.authService.updateRole(type).toPromise();
+      console.log('Update role response:', response);
       
       if (!response) {
         throw new Error('No response from server');
@@ -129,17 +133,32 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
       
       // Update local user state
       this.authService.storeAuthData(response.user, this.authService.getToken()!, this.authService.getRefreshToken()!);
-      
-      // Navigate based on role
-      if (type === 'Student') {
-        this.showDateOfBirth = true;
-      } else if (type === 'Teacher') {
-        this.router.navigate(['/teacher/setup']);
-      }
+      console.log('Auth data stored, user updated');
       
     } catch (error) {
       console.error('Error updating role:', error);
-      this.toastr.error('Failed to update role. Please try again.');
+      console.error('Error details:', error);
+      
+      // Fallback: Update user locally without backend call
+      console.log('Backend call failed, updating user locally as fallback');
+      if (this.user) {
+        const updatedUser = { ...this.user, role: type };
+        this.authService.storeAuthData(updatedUser, this.authService.getToken()!, this.authService.getRefreshToken()!);
+        console.log('User updated locally with role:', type);
+      }
+      
+      // Show warning but continue
+      this.toastr.warning('Backend connection failed, but continuing with local update');
+    }
+    
+    // Navigate based on role (this runs regardless of backend success/failure)
+    if (type === 'Student') {
+      console.log('Showing date of birth form');
+      this.showDateOfBirth = true;
+      this.cdr.detectChanges(); // Force change detection
+    } else if (type === 'Teacher') {
+      console.log('Navigating to teacher setup');
+      this.router.navigate(['/teacher/setup']);
     }
   }
 
@@ -200,5 +219,9 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     this.selectedYear = '';
     this.selectedMonth = '';
     this.selectedDay = '';
+  }
+
+  toggleInfo() {
+    this.showInfo = !this.showInfo;
   }
 }

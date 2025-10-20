@@ -899,7 +899,13 @@
     "day": "اليوم",
     "select": "اختر...",
     "continue": "متابعة",
-    "back": "رجوع"
+    "back": "رجوع",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+    "logIn": "تسجيل الدخول",
+    "haveAnotherAccount": "لديك حساب آخر؟",
+    "signOut": "تسجيل الخروج",
+    "whyNeedDateOfBirth": "لماذا أحتاج إلى إدخال تاريخ ميلادي؟",
+    "explanation": "نطلب عمرك لضمان تجربة مستخدم آمنة لجميع الفئات العمرية وللامتثال للقوانين المحلية."
   },
   "teacherDashboard": {
     "mobileTitle": "سلايداتي",

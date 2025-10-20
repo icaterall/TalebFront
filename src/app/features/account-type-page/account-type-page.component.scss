@@ -399,18 +399,20 @@
 }
 
 .back-button:hover {
-  color: var(--primary);
-  border-color: var(--primary);
-  background: var(--gray-50);
+  color: #9ca3af;
+  border-color: #d1d5db;
+  background: #f9fafb;
 }
 
 /* RTL Support */
-[dir="rtl"] .back-button {
-  align-self: flex-start;
+:host-context([dir="rtl"]) .back-button,
+:host-context(body.rtl) .back-button {
+  align-self: flex-start !important;
 }
 
-[dir="rtl"] .back-button svg {
-  transform: scaleX(-1);
+:host-context([dir="rtl"]) .back-button svg,
+:host-context(body.rtl) .back-button svg {
+  transform: scaleX(-1) !important;
 }
 
 /* Date of Birth Form Styles */
@@ -495,5 +497,224 @@
   
   .form-title {
     font-size: 24px;
+  }
+}
+
+/* New styles for exact design from image */
+.date-of-birth-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 20px;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #374151;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.back-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* RTL Support for back button */
+:host-context([dir="rtl"]) .back-button,
+:host-context(body.rtl) .back-button {
+  left: auto !important;
+  right: 20px !important;
+}
+
+:host-context([dir="rtl"]) .back-button svg,
+:host-context(body.rtl) .back-button svg {
+  transform: scaleX(-1) !important;
+}
+
+.date-of-birth-card {
+  background: white;
+  border-radius: 8px;
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+}
+
+.form-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
+.form-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.form-select {
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* RTL Support for dropdown arrows */
+:host-context([dir="rtl"]) .form-select,
+:host-context(body.rtl) .form-select {
+  background-position: left 12px center !important;
+  padding: 12px 16px 12px 40px !important;
+}
+
+/* LTR Support (default) */
+:host-context([dir="ltr"]) .form-select,
+:host-context(body:not(.rtl)) .form-select {
+  background-position: right 12px center !important;
+  padding: 12px 40px 12px 16px !important;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.continue-button {
+  width: 100%;
+  padding: 12px 24px;
+  background: #f3f4f6;
+  color: #9ca3af;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: not-allowed;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.continue-button:not(:disabled) {
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.continue-button:not(:disabled):hover {
+  background: #1d4ed8;
+}
+
+.login-link {
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #666;
+}
+
+.login-link-text {
+  color: #2563eb;
+  text-decoration: underline;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.info-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+}
+
+.info-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.info-toggle:hover {
+  color: #333;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.info-content {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .date-of-birth-card {
+    padding: 24px;
+    margin: 0 16px;
+  }
+  
+  .form-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .form-title {
+    font-size: 20px;
   }
 }

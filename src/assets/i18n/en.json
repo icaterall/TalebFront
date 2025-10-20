@@ -877,7 +877,13 @@
     "day": "Day",
     "select": "Select...",
     "continue": "Continue",
-    "back": "Back"
+    "back": "Back",
+    "alreadyHaveAccount": "Already have an account?",
+    "logIn": "Log in",
+    "haveAnotherAccount": "Have another account?",
+    "signOut": "Sign out",
+    "whyNeedDateOfBirth": "Why do I need to enter my date of birth?",
+    "explanation": "We ask for your age to ensure a safe user experience for all age groups and to comply with local laws."
   },
   "teacherDashboard": {
     "mobileTitle": "My slides",
