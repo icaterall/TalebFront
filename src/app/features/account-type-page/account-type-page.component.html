@@ -27,7 +27,7 @@
   <main class="main-content">
     <div class="content-container">
       <!-- Account Type Selection -->
-      <div *ngIf="!showDateOfBirth">
+      <div *ngIf="!showDateOfBirth && !showStudentForm">
         <h1 class="page-title">{{ 'accountType.title' | translate }}</h1>
         
         <div class="card-grid">
@@ -49,8 +49,8 @@
         </div>
       </div>
 
-      <!-- Date of Birth Form - Exact design from image -->
-      <div *ngIf="showDateOfBirth" class="date-of-birth-container">
+      <!-- Date of Birth Form -->
+      <div *ngIf="showDateOfBirth && !showStudentForm" class="date-of-birth-container">
         <button class="back-button" (click)="goBack()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -66,7 +66,7 @@
               <label for="day">{{ 'dateOfBirth.day' | translate }}</label>
               <select id="day" [(ngModel)]="selectedDay" class="form-select">
                 <option value="">{{ 'dateOfBirth.select' | translate }}</option>
-                <option *ngFor="let day of getDays()" [value]="day">{{ day }}</option>
+                <option *ngFor="let day of days" [value]="day">{{ day }}</option>
               </select>
             </div>
             
@@ -74,7 +74,7 @@
               <label for="month">{{ 'dateOfBirth.month' | translate }}</label>
               <select id="month" [(ngModel)]="selectedMonth" class="form-select">
                 <option value="">{{ 'dateOfBirth.select' | translate }}</option>
-                <option *ngFor="let month of getMonths()" [value]="month.value">{{ month.label }}</option>
+                <option *ngFor="let month of months" [value]="month.value">{{ month.label }}</option>
               </select>
             </div>
             
@@ -82,7 +82,7 @@
               <label for="year">{{ 'dateOfBirth.year' | translate }}</label>
               <select id="year" [(ngModel)]="selectedYear" class="form-select">
                 <option value="">{{ 'dateOfBirth.select' | translate }}</option>
-                <option *ngFor="let year of getYears()" [value]="year">{{ year }}</option>
+                <option *ngFor="let year of years" [value]="year">{{ year }}</option>
               </select>
             </div>
           </div>
@@ -118,6 +118,149 @@
               <p>{{ 'dateOfBirth.explanation' | translate }}</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Student Registration Form -->
+      <div *ngIf="showStudentForm" class="date-of-birth-container">
+        <button class="back-button" (click)="goBackToDateOfBirth()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ 'studentRegistration.back' | translate }}
+        </button>
+        
+        <div class="date-of-birth-card student-registration-card">
+          <h1 class="form-title">{{ 'studentRegistration.title' | translate }}</h1>
+          
+          <form class="student-form" (ngSubmit)="submitStudentForm()">
+            <!-- Row 1: Name and Gender -->
+            <div class="form-row">
+              <div class="form-group name-field">
+                <label for="fullName">{{ 'studentRegistration.fullName' | translate }} <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="fullName" 
+                  [(ngModel)]="studentForm.fullName" 
+                  name="fullName"
+                  class="form-input"
+                  [placeholder]="'studentRegistration.fullNamePlaceholder' | translate"
+                  maxlength="255"
+                  required>
+                <div class="error-message" *ngIf="studentFormErrors.fullName">
+                  {{ studentFormErrors.fullName }}
+                </div>
+              </div>
+              
+              <div class="form-group gender-field">
+                <label for="gender">{{ 'studentRegistration.gender' | translate }} <span class="required">*</span></label>
+                <select 
+                  id="gender" 
+                  [(ngModel)]="studentForm.gender" 
+                  name="gender"
+                  class="form-select">
+                  <option value="">{{ 'studentRegistration.selectGender' | translate }}</option>
+                  <option value="Male">{{ 'studentRegistration.male' | translate }}</option>
+                  <option value="Female">{{ 'studentRegistration.female' | translate }}</option>
+                </select>
+                <div class="error-message" *ngIf="studentFormErrors.gender">
+                  {{ studentFormErrors.gender }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: Country and State -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="country">{{ 'studentRegistration.country' | translate }} <span class="required">*</span></label>
+                <ng-select
+                  id="country"
+                  [(ngModel)]="studentForm.countryId"
+                  name="country"
+                  [placeholder]="'studentRegistration.selectCountry' | translate"
+                  [searchable]="true"
+                  [clearable]="false"
+                  [loading]="loadingCountries"
+                  (change)="onCountryChange()"
+                  bindLabel="name"
+                  bindValue="id"
+                  [items]="countries">
+                </ng-select>
+                <div class="error-message" *ngIf="studentFormErrors.country">
+                  {{ studentFormErrors.country }}
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="state">{{ 'studentRegistration.state' | translate }} <span class="required" *ngIf="states.length > 0">*</span></label>
+                <ng-select
+                  id="state"
+                  [(ngModel)]="studentForm.stateId"
+                  name="state"
+                  [placeholder]="'studentRegistration.selectState' | translate"
+                  [searchable]="true"
+                  [clearable]="false"
+                  [loading]="loadingStates"
+                  [disabled]="!studentForm.countryId || loadingStates"
+                  bindLabel="name"
+                  bindValue="id"
+                  [items]="states">
+                </ng-select>
+                <div class="error-message" *ngIf="studentFormErrors.state">
+                  {{ studentFormErrors.state }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 3: Education Stage and Preferred Language -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="educationStage">{{ 'studentRegistration.educationStage' | translate }} <span class="required">*</span></label>
+                <ng-select
+                  id="educationStage"
+                  [(ngModel)]="studentForm.educationStageId"
+                  name="educationStage"
+                  [placeholder]="'studentRegistration.selectEducationStage' | translate"
+                  [searchable]="true"
+                  [clearable]="false"
+                  [loading]="loadingEducationStages"
+                  bindLabel="name"
+                  bindValue="id"
+                  [items]="educationStages">
+                </ng-select>
+                <div class="error-message" *ngIf="studentFormErrors.educationStage">
+                  {{ studentFormErrors.educationStage }}
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="locale">{{ 'studentRegistration.preferredLanguage' | translate }} <span class="required">*</span></label>
+                <select 
+                  id="locale" 
+                  [(ngModel)]="studentForm.locale" 
+                  name="locale"
+                  class="form-select"
+                  required>
+                  <option value="ar">{{ 'studentRegistration.arabic' | translate }}</option>
+                  <option value="en">{{ 'studentRegistration.english' | translate }}</option>
+                  <option value="fr">{{ 'studentRegistration.french' | translate }}</option>
+                  <option value="es">{{ 'studentRegistration.spanish' | translate }}</option>
+                </select>
+              </div>
+            </div>
+            
+            <button 
+              type="submit" 
+              class="submit-button" 
+              [disabled]="isSubmitting">
+              <span *ngIf="!isSubmitting">{{ 'studentRegistration.completeRegistration' | translate }}</span>
+              <span *ngIf="isSubmitting">{{ 'studentRegistration.submitting' | translate }}</span>
+            </button>
+            
+            <div class="required-fields-note">
+              <span>{{ 'general.requiredFields' | translate }} *</span>
+            </div>
+          </form>
         </div>
       </div>
     </div>

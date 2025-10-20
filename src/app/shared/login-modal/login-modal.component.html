@@ -30,7 +30,7 @@
           class="form-input" 
           [(ngModel)]="email"
           [placeholder]="('authModal.emailPlaceholder' | translate)"
-          (blur)="checkEmailExists()"
+          (keydown.enter)="onContinue()"
           required>
       </div>
 
@@ -46,17 +46,27 @@
           required>
       </div>
 
-      <!-- Password Input (shown when email doesn't exist) -->
+      <!-- Welcome Back Message (shown when user exists with password) -->
+      <div class="welcome-message" *ngIf="mode === 'login-password'">
+        <p class="welcome-text">{{ 'authModal.welcomeBack' | translate }}</p>
+      </div>
+
+      <!-- Password Input (shown for login or registration) -->
       <div class="form-group" *ngIf="showPasswordField">
-        <label for="password" class="form-label">{{ 'authModal.passwordLabel' | translate }} *</label>
-        <div class="password-helper" *ngIf="showPasswordField">{{ 'authModal.passwordHelper' | translate }}</div>
+        <label for="password" class="form-label" *ngIf="mode === 'login-password'">
+          {{ 'authModal.enterPassword' | translate }} *
+        </label>
+        <label for="password" class="form-label" *ngIf="mode === 'register'">
+          {{ 'authModal.passwordLabel' | translate }} *
+        </label>
+        <div class="password-helper" *ngIf="mode === 'register'">{{ 'authModal.passwordHelper' | translate }}</div>
         <div class="password-input-wrapper">
           <input 
             [type]="showPassword ? 'text' : 'password'" 
             id="password" 
             class="form-input password-input" 
             [(ngModel)]="password"
-            [placeholder]="('authModal.passwordPlaceholder' | translate)"
+            [placeholder]="mode === 'login-password' ? ('authModal.enterPassword' | translate) : ('authModal.passwordPlaceholder' | translate)"
             required>
           <button 
             type="button" 
@@ -72,6 +82,12 @@
               <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4C19 4 23 12 23 12A18.5 18.5 0 0 1 19.24 16.1L9.9 4.24Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
+          </button>
+        </div>
+        <!-- Forgot Password Link (shown in login mode) -->
+        <div class="forgot-password-link" *ngIf="mode === 'login-password'">
+          <button type="button" class="link-button" (click)="onForgotPassword()">
+            {{ 'authModal.forgotPassword' | translate }}
           </button>
         </div>
       </div>
@@ -97,19 +113,26 @@
       </div>
 
       <!-- Social-only message (shown when email is disabled) -->
-      <div class="social-only-message" *ngIf="emailDisabled">
-        <p class="message-text">
-          {{ 'authModal.socialOnlyMessage' | translate }}
-        </p>
+      <div class="social-only-message" *ngIf="mode === 'login-social'">
+        <div class="info-box">
+          <p class="message-title">{{ 'authModal.emailRegisteredGoogle' | translate }}</p>
+          <p class="message-text">{{ 'authModal.pleaseUseGoogle' | translate }}</p>
+          <p class="message-note">
+            {{ 'authModal.orResetPassword' | translate }}
+            <button type="button" class="link-button" (click)="onForgotPassword()">
+              {{ 'authModal.resetPasswordLink' | translate }}
+            </button>
+          </p>
+        </div>
       </div>
 
       <!-- Separator -->
-      <div class="separator" *ngIf="!showPasswordField">
+      <div class="separator" *ngIf="mode === 'idle' || mode === 'login-social'">
         <span class="separator-text">{{ 'authModal.or' | translate }}</span>
       </div>
 
-      <!-- Social Login Buttons (only shown when not in registration mode) -->
-      <div class="social-login" *ngIf="!showPasswordField">
+      <!-- Social Login Buttons (shown when not in registration mode OR in social-only mode) -->
+      <div class="social-login" *ngIf="!showPasswordField || mode === 'login-social'">
         <!-- Google Button Container (Google Identity Services will render the button here) -->
         <div class="google-button-wrapper" *ngIf="googleOAuthAvailable" [class.loading]="loading === 'google'">
           <div #googleBtn class="google-button-container"></div>

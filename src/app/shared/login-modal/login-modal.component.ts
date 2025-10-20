@@ -216,7 +216,10 @@ private initializeGoogleOAuth(): void {
     this.loading = 'email';
     
     try {
+      console.log('Checking email:', email);
       const res: any = await this.http.post(`${this.baseUrl}/auth/check-email`, { email }).toPromise();
+      console.log('Email check response:', res);
+      
       const exists = !!res?.exists;
       const provs: string[] = res?.providers || [];
       
@@ -226,10 +229,15 @@ private initializeGoogleOAuth(): void {
         apple: provs.includes('apple'),
       };
 
+      console.log('Email exists:', exists, 'Providers:', provs);
+
       if (!exists) {
         // New user → register
         this.mode = 'register';
         if (!this.fullName && res?.displayName) this.fullName = res.displayName;
+        // Clear password when switching to register
+        this.password = '';
+        this.resetLoading();
         return;
       }
 
@@ -237,22 +245,41 @@ private initializeGoogleOAuth(): void {
       if (this.providers.password) {
         // User has password → show password field
         this.mode = 'login-password';
+        // Clear password and full name when switching to login
+        this.password = '';
+        this.fullName = '';
       } else if (this.providers.google || this.providers.apple) {
         // Social-only account → disable email path
         this.mode = 'login-social';
+        // Clear password and full name when switching to social
+        this.password = '';
+        this.fullName = '';
       } else {
         // Edge: exists but no providers? treat as register to set password
         this.mode = 'register';
+        this.password = '';
       }
+      
+      // Reset loading state and trigger change detection
+      this.resetLoading();
+      this.cdr.detectChanges();
     } catch (e) {
+      console.error('Error checking email:', e);
       this.toastr.error('Network error. Please try again.');
       this.mode = 'idle';
       this.resetLoading();
+      this.cdr.detectChanges();
     }
   }
 
   async onContinue() {
     if (this.loading !== 'none' || this.emailDisabled) return;
+
+    // If in idle mode, check email first
+    if (this.mode === 'idle') {
+      await this.checkEmailExists();
+      return; // After email check, user can click continue again
+    }
 
     this.loading = 'email';
     try {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 
 export interface OnboardingState {
-  step: 'select_role' | 'enter_dob' | 'teacher_setup' | 'complete';
+  step: 'select_role' | 'enter_dob' | 'student_registration' | 'teacher_setup' | 'complete';
   selectedRole?: 'Teacher' | 'Student';
   dateOfBirth?: {
     year: string;
@@ -87,11 +87,11 @@ export class OnboardingStateService {
   }
 
   /**
-   * Save date of birth
+   * Save date of birth (student moving to registration form)
    */
   saveDateOfBirth(year: string, month: string, day: string): void {
     this.updateState({
-      step: 'complete',
+      step: 'student_registration',  // Student is now filling out full form
       dateOfBirth: { year, month, day }
     });
   }
@@ -117,6 +117,12 @@ export class OnboardingStateService {
       case 'enter_dob':
         // User selected Student but hasn't entered DOB yet
         this.router.navigate(['/account-type']); // Will show DOB form
+        return true;
+      
+      case 'student_registration':
+        // Student has entered DOB, now filling out full form
+        // The form is on the same account-type page, so navigate there
+        this.router.navigate(['/account-type']);
         return true;
       
       case 'teacher_setup':

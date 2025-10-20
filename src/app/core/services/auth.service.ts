@@ -12,6 +12,12 @@ export interface User {
   auth_provider: string;
   provider_sub?: string;
   profile_photo_url?: string;
+  locale: string;
+  gender?: string;
+  dob?: string;
+  education_stage_id?: number;
+  country_id?: number;
+  state_id?: number;
   onboarding_step: string;
   institution_id?: number;
   institution_role?: string;
@@ -149,6 +155,11 @@ export class AuthService {
           this.router.navigate(['/account-type']);
           return;
         
+        case 'student_registration':
+          // User has entered DOB, now on registration form
+          this.router.navigate(['/student/registration']);
+          return;
+        
         case 'teacher_setup':
           this.router.navigate(['/teacher']);
           return;
@@ -203,6 +214,23 @@ export class AuthService {
     return this.http.patch<{ user: User }>(`${this.baseUrl}/auth/users/role`, {
       role
     });
+  }
+
+  /**
+   * Complete student registration with all details
+   */
+  completeStudentRegistration(data: {
+    name: string;
+    date_of_birth: string;
+    country_id: number;
+    state_id: number | null;
+    education_stage_id: number;
+    gender: string | null;
+    locale: string;
+    profile_photo_url: string | null;
+    role: string;
+  }): Observable<{ user: User }> {
+    return this.http.post<{ user: User }>(`${this.baseUrl}/auth/complete-registration`, data);
   }
 
   /**

@@ -7,6 +7,10 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./features/account-type-page/account-type-page.component').then(m => m.AccountTypePageComponent),
   },
   {
+    path: 'student/registration',
+    loadComponent: () => import('./features/student/registration/student-registration.component').then(m => m.StudentRegistrationComponent),
+  },
+  {
     path: 'teacher',
     loadChildren: () => import('./features/teacher/teacher.routes').then(m => m.TEACHER_ROUTES),
     canActivate: [OnboardingGuard],

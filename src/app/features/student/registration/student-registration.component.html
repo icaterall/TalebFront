@@ -1,0 +1,208 @@
+<div class="registration-page">
+  <!-- Header -->
+  <header class="page-header">
+    <button class="back-button" (click)="goBack()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      {{ 'general.back' | translate }}
+    </button>
+    
+    <div class="header-info">
+      <h1 class="page-title">{{ 'studentRegistration.title' | translate }}</h1>
+      <p class="page-subtitle" *ngIf="studentAge !== null">
+        {{ 'studentRegistration.ageInfo' | translate }} {{ studentAge }} 
+        {{ 'studentRegistration.years' | translate }} 
+        ({{ 'studentRegistration.schoolYear' | translate }} {{ schoolYear }})
+      </p>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="registration-content">
+    <div class="registration-card">
+      <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Full Name -->
+        <div class="form-group">
+          <label for="name" class="required">
+            {{ 'studentRegistration.fullName' | translate }}
+          </label>
+          <input 
+            type="text" 
+            id="name"
+            formControlName="name"
+            class="form-input"
+            [placeholder]="'studentRegistration.fullNamePlaceholder' | translate"
+            [class.error]="registrationForm.get('name')?.invalid && registrationForm.get('name')?.touched"
+          />
+          <div class="error-message" *ngIf="registrationForm.get('name')?.invalid && registrationForm.get('name')?.touched">
+            <span *ngIf="registrationForm.get('name')?.errors?.['required']">
+              {{ 'studentRegistration.nameRequired' | translate }}
+            </span>
+            <span *ngIf="registrationForm.get('name')?.errors?.['maxlength']">
+              {{ 'studentRegistration.nameTooLong' | translate }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Country -->
+        <div class="form-group">
+          <label for="country" class="required">
+            {{ 'studentRegistration.country' | translate }}
+          </label>
+          <select 
+            id="country"
+            formControlName="country_id"
+            class="form-select"
+            [class.error]="registrationForm.get('country_id')?.invalid && registrationForm.get('country_id')?.touched"
+            [disabled]="loadingCountries"
+          >
+            <option value="">{{ 'studentRegistration.selectCountry' | translate }}</option>
+            <option *ngFor="let country of countries" [value]="country.id">
+              {{ country.name }}
+            </option>
+          </select>
+          <div class="loading-indicator" *ngIf="loadingCountries">
+            {{ 'general.loading' | translate }}...
+          </div>
+          <div class="error-message" *ngIf="registrationForm.get('country_id')?.invalid && registrationForm.get('country_id')?.touched">
+            {{ 'studentRegistration.countryRequired' | translate }}
+          </div>
+        </div>
+
+        <!-- State/Region (conditional) -->
+        <div class="form-group" *ngIf="showStates">
+          <label for="state" [class.required]="showStates">
+            {{ 'studentRegistration.stateRegion' | translate }}
+          </label>
+          <select 
+            id="state"
+            formControlName="state_id"
+            class="form-select"
+            [class.error]="registrationForm.get('state_id')?.invalid && registrationForm.get('state_id')?.touched"
+            [disabled]="loadingStates || states.length === 0"
+          >
+            <option value="">{{ 'studentRegistration.selectState' | translate }}</option>
+            <option *ngFor="let state of states" [value]="state.id">
+              {{ state.name }}
+            </option>
+          </select>
+          <div class="loading-indicator" *ngIf="loadingStates">
+            {{ 'general.loading' | translate }}...
+          </div>
+          <div class="error-message" *ngIf="registrationForm.get('state_id')?.invalid && registrationForm.get('state_id')?.touched">
+            {{ 'studentRegistration.stateRequired' | translate }}
+          </div>
+        </div>
+
+        <!-- Education Stage -->
+        <div class="form-group">
+          <label for="stage" class="required">
+            {{ 'studentRegistration.educationStage' | translate }}
+          </label>
+          <select 
+            id="stage"
+            formControlName="education_stage_id"
+            class="form-select"
+            [class.error]="registrationForm.get('education_stage_id')?.invalid && registrationForm.get('education_stage_id')?.touched"
+            [disabled]="loadingStages || educationStages.length === 0"
+          >
+            <option value="">{{ 'studentRegistration.selectStage' | translate }}</option>
+            <option *ngFor="let stage of educationStages" [value]="stage.id">
+              {{ getStageDisplayName(stage) }}
+            </option>
+          </select>
+          <div class="loading-indicator" *ngIf="loadingStages">
+            {{ 'general.loading' | translate }}...
+          </div>
+          <div class="help-text" *ngIf="educationStages.length > 0">
+            {{ 'studentRegistration.stageHelpText' | translate }}
+          </div>
+          <div class="error-message" *ngIf="registrationForm.get('education_stage_id')?.invalid && registrationForm.get('education_stage_id')?.touched">
+            {{ 'studentRegistration.stageRequired' | translate }}
+          </div>
+        </div>
+
+        <!-- Gender (Optional) -->
+        <div class="form-group">
+          <label for="gender">
+            {{ 'studentRegistration.gender' | translate }}
+            <span class="optional-label">({{ 'general.optional' | translate }})</span>
+          </label>
+          <select 
+            id="gender"
+            formControlName="gender"
+            class="form-select"
+          >
+            <option value="">{{ 'studentRegistration.selectGender' | translate }}</option>
+            <option *ngFor="let option of genderOptions" [value]="option.value">
+              {{ getGenderLabel(option) }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Preferred Language -->
+        <div class="form-group">
+          <label for="locale" class="required">
+            {{ 'studentRegistration.preferredLanguage' | translate }}
+          </label>
+          <select 
+            id="locale"
+            formControlName="locale"
+            class="form-select"
+          >
+            <option *ngFor="let option of languageOptions" [value]="option.value">
+              {{ getLanguageLabel(option) }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Profile Photo URL (Optional) -->
+        <div class="form-group">
+          <label for="photo">
+            {{ 'studentRegistration.profilePhoto' | translate }}
+            <span class="optional-label">({{ 'general.optional' | translate }})</span>
+          </label>
+          <input 
+            type="url" 
+            id="photo"
+            formControlName="profile_photo_url"
+            class="form-input"
+            [placeholder]="'studentRegistration.photoPlaceholder' | translate"
+            [class.error]="registrationForm.get('profile_photo_url')?.invalid && registrationForm.get('profile_photo_url')?.touched"
+          />
+          <div class="help-text">
+            {{ 'studentRegistration.photoHelpText' | translate }}
+          </div>
+          <div class="error-message" *ngIf="registrationForm.get('profile_photo_url')?.invalid && registrationForm.get('profile_photo_url')?.touched">
+            {{ 'studentRegistration.invalidUrl' | translate }}
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="submit-button"
+            [disabled]="loading || registrationForm.invalid"
+            [class.loading]="loading"
+          >
+            <span *ngIf="!loading">{{ 'studentRegistration.completeRegistration' | translate }}</span>
+            <span *ngIf="loading">{{ 'general.submitting' | translate }}...</span>
+          </button>
+        </div>
+
+        <!-- Required Fields Notice -->
+        <p class="required-notice">
+          <span class="required-star">*</span>
+          {{ 'general.requiredFields' | translate }}
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
+</div>
+

@@ -831,6 +831,8 @@
 "withdraw": "انسحاب",
 
 "continue": "متابعة",
+"optional": "اختياري",
+"requiredFields": "الحقول المطلوبة",
 "mr": "السيد",
 "ms": "السيدة",
 "miss": "الآنسة",
@@ -885,7 +887,14 @@
     "googleUnavailable": "تسجيل الدخول عبر Google غير متاح مؤقتاً. يرجى استخدام تسجيل الدخول بالبريد الإلكتروني بدلاً من ذلك.",
     "googleClientIdNotConfigured": "تسجيل الدخول عبر Google غير مُكوَّن. يرجى الاتصال بالدعم أو استخدام تسجيل الدخول بالبريد الإلكتروني.",
     "socialOnlyMessage": "هذا البريد الإلكتروني مسجل عبر تسجيل الدخول الاجتماعي. يرجى المتابعة مع Google أو Apple.",
-    "signingIn": "جارٍ تسجيل الدخول..."
+    "signingIn": "جارٍ تسجيل الدخول...",
+    "enterPassword": "أدخل كلمة المرور الخاصة بك",
+    "welcomeBack": "مرحبًا بعودتك!",
+    "emailRegisteredGoogle": "هذا البريد الإلكتروني مسجل عبر Google.",
+    "pleaseUseGoogle": "يرجى استخدام زر 'المتابعة مع Google' أدناه لتسجيل الدخول.",
+    "orResetPassword": "أو يمكنك إعادة تعيين كلمة المرور لاستخدام تسجيل الدخول بالبريد الإلكتروني/كلمة المرور.",
+    "resetPasswordLink": "إعادة تعيين كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟"
   },
   "accountType": {
     "title": "اختر نوع حسابك",
@@ -906,6 +915,38 @@
     "signOut": "تسجيل الخروج",
     "whyNeedDateOfBirth": "لماذا أحتاج إلى إدخال تاريخ ميلادي؟",
     "explanation": "نطلب عمرك لضمان تجربة مستخدم آمنة لجميع الفئات العمرية وللامتثال للقوانين المحلية."
+  },
+  "studentRegistration": {
+    "title": "تسجيل الطالب",
+    "back": "رجوع",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "أدخل اسمك الكامل",
+    "country": "الدولة",
+    "selectCountry": "اختر دولتك",
+    "searchCountry": "البحث عن دولة...",
+    "countryAutoDetected": "تم التحديد تلقائيًا من موقعك",
+    "state": "الولاية/المنطقة",
+    "selectState": "اختر ولايتك/منطقتك",
+    "searchState": "البحث عن ولاية...",
+    "educationStage": "المرحلة التعليمية",
+    "selectEducationStage": "اختر مرحلتك التعليمية",
+    "searchEducationStage": "البحث عن مرحلة تعليمية...",
+    "gender": "الجنس",
+    "selectGender": "اختر الجنس",
+    "male": "ذكر",
+    "female": "أنثى",
+    "other": "آخر",
+    "preferNotToSay": "أفضل عدم الإفصاح",
+    "preferredLanguage": "اللغة المفضلة",
+    "arabic": "العربية",
+    "english": "الإنجليزية",
+    "french": "الفرنسية",
+    "spanish": "الإسبانية",
+    "completeRegistration": "إكمال التسجيل",
+    "submitting": "جاري الإرسال...",
+    "noCountriesFound": "لم يتم العثور على دول",
+    "noStatesFound": "لم يتم العثور على ولايات",
+    "noEducationStagesFound": "لم يتم العثور على مراحل تعليمية"
   },
   "teacherDashboard": {
     "mobileTitle": "سلايداتي",
@@ -1720,4 +1761,5 @@
       "email": "البريد الإلكتروني غير صالح"
     }
   }
+
 }

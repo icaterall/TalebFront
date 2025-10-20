@@ -47,6 +47,13 @@ export class OnboardingGuard implements CanActivate {
           }
           return true;
         
+        case 'student_registration':
+          if (state.url !== '/student/registration') {
+            this.router.navigate(['/student/registration']);
+            return false;
+          }
+          return true;
+        
         case 'teacher_setup':
           // For now, allow access to teacher routes
           // In the future, redirect to a specific setup page

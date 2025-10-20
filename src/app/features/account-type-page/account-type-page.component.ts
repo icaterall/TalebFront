@@ -1,13 +1,16 @@
-import { Component, inject, HostListener, ElementRef, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, HostListener, ElementRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { I18nService } from '../../core/services/i18n.service';
 import { AuthService, User } from '../../core/services/auth.service';
 import { OnboardingStateService } from '../../core/services/onboarding-state.service';
+import { GeographyService } from '../../core/services/geography.service';
+import { EducationService } from '../../core/services/education.service';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { FooterComponent } from '../../shared/footer/footer.component';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { Subscription } from 'rxjs';
 
 type Lang = 'ar' | 'en';
@@ -15,7 +18,7 @@ type Lang = 'ar' | 'en';
 @Component({
   selector: 'app-account-type-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, FormsModule, FooterComponent],
+  imports: [CommonModule, TranslateModule, FormsModule, FooterComponent, NgSelectModule],
   templateUrl: './account-type-page.component.html',
   styleUrls: ['./account-type-page.component.scss']
 })
@@ -24,57 +27,140 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
   private readonly i18n = inject(I18nService);
   private readonly authService = inject(AuthService);
   private readonly onboardingState = inject(OnboardingStateService);
+  private readonly geographyService = inject(GeographyService);
+  private readonly educationService = inject(EducationService);
   private readonly toastr = inject(ToastrService);
   private readonly el = inject(ElementRef);
-  private readonly cdr = inject(ChangeDetectorRef);
   
   private userSubscription?: Subscription;
 
   showDateOfBirth = false;
+  showStudentForm = false;
   showTeacherDashboard = false;
   
   private _selectedYear = '';
   private _selectedMonth = '';
   private _selectedDay = '';
   
+  // Cached arrays for dropdowns
+  years: string[] = [];
+  months: Array<{ value: string; label: string }> = [];
+  days: string[] = [];
+  
   get selectedYear() { return this._selectedYear; }
   set selectedYear(value: string) {
     this._selectedYear = value;
-    this.validateAndAdjustDay(); // Check if current day is still valid
+    this.updateDaysArray(); // Update days when year changes
+    this.validateAndAdjustDay();
     this.saveDateOfBirthProgress();
-    this.cdr.detectChanges(); // Update age display
   }
   
   get selectedMonth() { return this._selectedMonth; }
   set selectedMonth(value: string) {
     this._selectedMonth = value;
-    this.validateAndAdjustDay(); // Check if current day is still valid
+    this.updateDaysArray(); // Update days when month changes
+    this.validateAndAdjustDay();
     this.saveDateOfBirthProgress();
-    this.cdr.detectChanges(); // Update age display
   }
   
   get selectedDay() { return this._selectedDay; }
   set selectedDay(value: string) {
     this._selectedDay = value;
     this.saveDateOfBirthProgress();
-    this.cdr.detectChanges(); // Update age display
   }
   
   showInfo = false;
+
+  // Student form data
+  studentForm = {
+    fullName: '',
+    countryId: null as number | null,
+    stateId: null as number | null,
+    educationStageId: null as number | null,
+    gender: '',
+    locale: 'ar'
+  };
+
+  // Form validation errors
+  studentFormErrors: any = {};
+
+  // Data arrays
+  countries: any[] = [];
+  states: any[] = [];
+  educationStages: any[] = [];
+  isSubmitting = false;
+
+  // Loading states
+  loadingCountries = false;
+  loadingStates = false;
+  loadingEducationStages = false;
 
   // Header: current user info
   user: User | null = null;
 
   ngOnInit() {
+    // Initialize dropdown arrays
+    this.initializeDropdowns();
+    
     // Subscribe to user changes for reactive updates
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
       console.log('Account type page - user updated:', user);
       this.user = user;
-      this.cdr.detectChanges(); // Manually trigger change detection
+      // Angular's automatic change detection will handle the update
     });
 
     // Restore onboarding state from localStorage
     this.restoreOnboardingState();
+  }
+  
+  /**
+   * Initialize dropdown arrays (called once)
+   */
+  private initializeDropdowns(): void {
+    // Initialize years
+    const currentYear = new Date().getFullYear();
+    this.years = [];
+    for (let i = currentYear - 3; i >= currentYear - 100; i--) {
+      this.years.push(i.toString());
+    }
+    
+    // Initialize months
+    this.updateMonthsArray();
+    
+    // Initialize days
+    this.updateDaysArray();
+  }
+  
+  /**
+   * Update months array (can change with language)
+   */
+  private updateMonthsArray(): void {
+    const isArabic = this.currentLang === 'ar';
+    this.months = [
+      { value: '01', label: isArabic ? 'يناير' : 'January' },
+      { value: '02', label: isArabic ? 'فبراير' : 'February' },
+      { value: '03', label: isArabic ? 'مارس' : 'March' },
+      { value: '04', label: isArabic ? 'أبريل' : 'April' },
+      { value: '05', label: isArabic ? 'مايو' : 'May' },
+      { value: '06', label: isArabic ? 'يونيو' : 'June' },
+      { value: '07', label: isArabic ? 'يوليو' : 'July' },
+      { value: '08', label: isArabic ? 'أغسطس' : 'August' },
+      { value: '09', label: isArabic ? 'سبتمبر' : 'September' },
+      { value: '10', label: isArabic ? 'أكتوبر' : 'October' },
+      { value: '11', label: isArabic ? 'نوفمبر' : 'November' },
+      { value: '12', label: isArabic ? 'ديسمبر' : 'December' }
+    ];
+  }
+  
+  /**
+   * Update days array based on selected month and year
+   */
+  private updateDaysArray(): void {
+    const maxDays = this.getMaxDaysInMonth();
+    this.days = [];
+    for (let i = 1; i <= maxDays; i++) {
+      this.days.push(i.toString().padStart(2, '0'));
+    }
   }
 
   ngOnDestroy() {
@@ -147,6 +233,13 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
 
   async setLang(next: Lang) {
     await this.i18n.setLang(next);
+    // Update month labels when language changes
+    this.updateMonthsArray();
+    
+    // Reload data from backend if student form is visible
+    if (this.showStudentForm) {
+      this.reloadStudentFormData();
+    }
   }
 
   /**
@@ -161,18 +254,39 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
 
     console.log('Restoring onboarding state:', state);
 
+    // If onboarding is complete, don't restore anything here
+    if (state.step === 'complete') {
+      return;
+    }
+
     // If user selected Student role but hasn't completed DOB, show DOB form
     if (state.step === 'enter_dob' && state.selectedRole === 'Student') {
       this.showDateOfBirth = true;
       
       // Restore DOB fields if they were partially filled (without triggering save)
       if (state.dateOfBirth) {
+        console.log('Restoring partially filled DOB:', state.dateOfBirth);
         this._selectedYear = state.dateOfBirth.year || '';
         this._selectedMonth = state.dateOfBirth.month || '';
         this._selectedDay = state.dateOfBirth.day || '';
       }
+    }
+
+    // If user has entered DOB and needs to fill out student registration form
+    if (state.step === 'student_registration' && state.selectedRole === 'Student' && state.dateOfBirth) {
+      console.log('Restoring student registration form with DOB:', state.dateOfBirth);
       
-      this.cdr.detectChanges();
+      // Restore DOB
+      this._selectedYear = state.dateOfBirth.year;
+      this._selectedMonth = state.dateOfBirth.month;
+      this._selectedDay = state.dateOfBirth.day;
+      
+      // Show student registration form
+      this.showDateOfBirth = false;
+      this.showStudentForm = true;
+      
+      // Load form data
+      this.loadStudentFormData();
     }
   }
 
@@ -200,12 +314,14 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
   private saveDateOfBirthProgress(): void {
     // Only save if we're on the DOB step
     if (this.showDateOfBirth) {
+      const dobData = {
+        year: this._selectedYear,
+        month: this._selectedMonth,
+        day: this._selectedDay
+      };
+      console.log('Saving DOB progress to localStorage:', dobData);
       this.onboardingState.updateState({
-        dateOfBirth: {
-          year: this._selectedYear,
-          month: this._selectedMonth,
-          day: this._selectedDay
-        }
+        dateOfBirth: dobData
       });
     }
   }
@@ -221,49 +337,13 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     if (type === 'Student') {
       console.log('Showing date of birth form');
       this.showDateOfBirth = true;
-      this.cdr.detectChanges(); // Force change detection
+      // Angular's automatic change detection will update the view
     } else if (type === 'Teacher') {
       console.log('Navigating to teacher dashboard');
       this.router.navigate(['/teacher']);
     }
   }
 
-  getYears() {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let i = currentYear - 3; i >= currentYear - 100; i--) {
-      years.push(i.toString());
-    }
-    return years;
-  }
-
-  getMonths() {
-    const isArabic = this.currentLang === 'ar';
-    return [
-      { value: '01', label: isArabic ? 'يناير' : 'January' },
-      { value: '02', label: isArabic ? 'فبراير' : 'February' },
-      { value: '03', label: isArabic ? 'مارس' : 'March' },
-      { value: '04', label: isArabic ? 'أبريل' : 'April' },
-      { value: '05', label: isArabic ? 'مايو' : 'May' },
-      { value: '06', label: isArabic ? 'يونيو' : 'June' },
-      { value: '07', label: isArabic ? 'يوليو' : 'July' },
-      { value: '08', label: isArabic ? 'أغسطس' : 'August' },
-      { value: '09', label: isArabic ? 'سبتمبر' : 'September' },
-      { value: '10', label: isArabic ? 'أكتوبر' : 'October' },
-      { value: '11', label: isArabic ? 'نوفمبر' : 'November' },
-      { value: '12', label: isArabic ? 'ديسمبر' : 'December' }
-    ];
-  }
-
-  getDays() {
-    // Calculate maximum days based on selected month and year
-    const maxDays = this.getMaxDaysInMonth();
-    const days = [];
-    for (let i = 1; i <= maxDays; i++) {
-      days.push(i.toString().padStart(2, '0'));
-    }
-    return days;
-  }
 
   /**
    * Get maximum days in the selected month
@@ -413,16 +493,9 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     );
     console.log('Date of birth saved to localStorage');
     
-    // Navigate to next step (e.g., student dashboard or additional setup)
-    // For now, navigate to signup or dashboard based on your flow
-    this.router.navigate(['/signup'], {
-      queryParams: { 
-        type: 'student',
-        year: this.selectedYear,
-        month: this.selectedMonth,
-        day: this.selectedDay
-      }
-    });
+    // Show student registration form
+    this.showStudentForm = true;
+    this.loadStudentFormData();
   }
 
   goBack() {
@@ -442,4 +515,298 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
   toggleInfo() {
     this.showInfo = !this.showInfo;
   }
+
+  goBackToDateOfBirth() {
+    this.showStudentForm = false;
+    this.showDateOfBirth = true;
+  }
+
+  /**
+   * Reload student form data when language changes
+   */
+  private reloadStudentFormData() {
+    console.log('Reloading student form data for language:', this.currentLang);
+    
+    // Save current selections
+    const currentCountryId = this.studentForm.countryId;
+    const currentStateId = this.studentForm.stateId;
+    const currentEducationStageId = this.studentForm.educationStageId;
+    
+    // Reload countries
+    this.loadingCountries = true;
+    this.geographyService.getCountries().subscribe({
+      next: (response) => {
+        console.log('Countries reloaded:', response.countries.length, 'countries');
+        this.countries = response.countries;
+        this.loadingCountries = false;
+        
+        // Restore country selection if it was set
+        if (currentCountryId) {
+          this.studentForm.countryId = currentCountryId;
+          
+          // Reload states if country was selected
+          this.loadingStates = true;
+          this.geographyService.getStatesByCountry(currentCountryId).subscribe({
+            next: (statesResponse) => {
+              console.log('States reloaded:', statesResponse.states.length, 'states');
+              this.states = statesResponse.states;
+              this.loadingStates = false;
+              
+              // Restore state selection if it was set
+              if (currentStateId) {
+                this.studentForm.stateId = currentStateId;
+              }
+            },
+            error: (error) => {
+              console.error('Error reloading states:', error);
+              this.loadingStates = false;
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error reloading countries:', error);
+        this.loadingCountries = false;
+      }
+    });
+    
+    // Reload education stages
+    const age = this.calculateAge();
+    if (age !== null) {
+      this.loadingEducationStages = true;
+      this.educationService.getStagesByAge(age, 'student').subscribe({
+        next: (response) => {
+          console.log('Education stages reloaded:', response.stages.length, 'stages');
+          this.educationStages = response.stages;
+          this.loadingEducationStages = false;
+          
+          // Restore education stage selection if it was set
+          if (currentEducationStageId) {
+            this.studentForm.educationStageId = currentEducationStageId;
+          }
+        },
+        error: (error) => {
+          console.error('Error reloading education stages:', error);
+          this.loadingEducationStages = false;
+        }
+      });
+    }
+  }
+
+  /**
+   * Load data for student registration form
+   */
+  async loadStudentFormData() {
+    try {
+      // Start IP detection early (parallel with countries loading)
+      console.log('Starting IP detection...');
+      const ipDetectionPromise = this.geographyService.detectCountryByIP().toPromise();
+      
+      // Load countries
+      this.loadingCountries = true;
+      console.log('Loading countries...');
+      this.geographyService.getCountries().subscribe({
+        next: async (response) => {
+          console.log('Countries loaded:', response.countries.length, 'countries');
+          this.countries = response.countries;
+          this.loadingCountries = false;
+          
+          // Wait for IP detection and auto-select country
+          try {
+            console.log('Waiting for IP detection result...');
+            const countryCode = await ipDetectionPromise;
+            console.log('IP detection returned country code:', countryCode);
+            
+            if (countryCode && this.countries.length > 0) {
+              console.log('Looking up country ID for code:', countryCode);
+              console.log('Available country codes:', this.countries.map(c => c.iso_code).join(', '));
+              
+              const countryId = this.geographyService.getCountryIdByCode(countryCode, this.countries);
+              console.log('Found country ID:', countryId);
+              
+              if (countryId) {
+                console.log(`Auto-detected country: ${countryCode}, setting to ID: ${countryId}`);
+                // ng-select bindValue="id" expects number type, not string
+                this.studentForm.countryId = countryId;
+                console.log('Country form value set to:', this.studentForm.countryId);
+                // Trigger change detection manually to ensure ng-select updates
+                setTimeout(() => {
+                  // Automatically load states for detected country
+                  this.onCountryChange();
+                }, 100);
+              } else {
+                console.log(`Country code ${countryCode} not found in database`);
+              }
+            } else {
+              console.log('Could not auto-select: countryCode =', countryCode, ', countries.length =', this.countries.length);
+            }
+          } catch (error) {
+            console.error('Error in IP detection:', error);
+            console.log('Could not auto-detect country, user will select manually');
+          }
+        },
+        error: (error) => {
+          console.error('Error loading countries:', error);
+          this.toastr.error('Failed to load countries');
+          this.loadingCountries = false;
+        }
+      });
+
+      // Load education stages based on age
+      const age = this.calculateAge();
+      if (age !== null) {
+        this.loadingEducationStages = true;
+        this.educationService.getStagesByAge(age, 'student').subscribe({
+          next: (response) => {
+            console.log('Education stages loaded:', response.stages);
+            this.educationStages = response.stages;
+            this.loadingEducationStages = false;
+          },
+          error: (error) => {
+            console.error('Error loading education stages:', error);
+            this.toastr.error('Failed to load education stages');
+            this.loadingEducationStages = false;
+          }
+        });
+      } else {
+        console.warn('Cannot load education stages: age is null');
+        this.educationStages = [];
+      }
+
+      // Pre-fill form with user data
+      if (this.user) {
+        this.studentForm.fullName = this.user.name || '';
+        this.studentForm.locale = this.user.locale || 'ar';
+      }
+    } catch (error) {
+      console.error('Error loading student form data:', error);
+    }
+  }
+
+  /**
+   * Handle country selection change
+   */
+  onCountryChange() {
+    // Clear state selection and states list
+    this.studentForm.stateId = null;
+    this.states = [];
+    
+    if (this.studentForm.countryId) {
+      console.log('Loading states for country:', this.studentForm.countryId);
+      this.loadingStates = true;
+      this.geographyService.getStatesByCountry(this.studentForm.countryId).subscribe({
+        next: (response) => {
+          console.log('States loaded:', response.states);
+          this.states = response.states;
+          this.loadingStates = false;
+        },
+        error: (error) => {
+          console.error('Error loading states:', error);
+          this.toastr.error('Failed to load states');
+          this.loadingStates = false;
+        }
+      });
+    } else {
+      // No country selected, ensure states are empty and not loading
+      this.states = [];
+      this.loadingStates = false;
+    }
+  }
+
+  /**
+   * Submit student registration form
+   */
+  async submitStudentForm() {
+    // Clear previous errors
+    this.studentFormErrors = {};
+
+    // Validate form
+    if (!this.validateStudentForm()) {
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    try {
+      // Prepare submission data
+      const submissionData = {
+        name: this.studentForm.fullName,
+        date_of_birth: `${this._selectedYear}-${this._selectedMonth}-${this._selectedDay}`,
+        country_id: this.studentForm.countryId!,
+        state_id: this.studentForm.stateId,
+        education_stage_id: this.studentForm.educationStageId!,
+        gender: this.studentForm.gender,
+        locale: this.studentForm.locale,
+        profile_photo_url: null, // No profile photo at this stage
+        role: 'Student'
+      };
+
+      // Submit to backend
+      this.authService.completeStudentRegistration(submissionData).subscribe({
+        next: (response) => {
+          this.toastr.success('Registration completed successfully!');
+          
+          // Clear onboarding state
+          this.onboardingState.clearState();
+          
+          // Navigate to student dashboard
+          this.router.navigate(['/student/dashboard']);
+        },
+        error: (error) => {
+          console.error('Registration error:', error);
+          this.toastr.error('Registration failed. Please try again.');
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      this.toastr.error('Registration failed. Please try again.');
+      this.isSubmitting = false;
+    }
+  }
+
+  /**
+   * Validate student registration form
+   */
+  private validateStudentForm(): boolean {
+    let isValid = true;
+
+    // Validate full name
+    if (!this.studentForm.fullName || this.studentForm.fullName.trim().length === 0) {
+      this.studentFormErrors.fullName = 'Full name is required';
+      isValid = false;
+    } else if (this.studentForm.fullName.length > 255) {
+      this.studentFormErrors.fullName = 'Full name must be 255 characters or less';
+      isValid = false;
+    }
+
+    // Validate gender (mandatory)
+    if (!this.studentForm.gender) {
+      this.studentFormErrors.gender = 'Gender is required';
+      isValid = false;
+    }
+
+    // Validate country
+    if (!this.studentForm.countryId) {
+      this.studentFormErrors.country = 'Country is required';
+      isValid = false;
+    }
+
+    // Validate state (if country has states)
+    if (this.studentForm.countryId && this.states.length > 0 && !this.studentForm.stateId) {
+      this.studentFormErrors.state = 'State is required';
+      isValid = false;
+    }
+
+    // Validate education stage
+    if (!this.studentForm.educationStageId) {
+      this.studentFormErrors.educationStage = 'Education stage is required';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
 }
