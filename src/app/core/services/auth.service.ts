@@ -194,8 +194,23 @@ export class AuthService {
   /**
    * User registration
    */
-  register(userData: { name: string; email: string; password: string }): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, userData);
+  register(userData: { 
+    name: string; 
+    email: string; 
+    password: string;
+    gender?: string;
+    role?: string;
+  }): Observable<AuthResponse> {
+    // Add default values for required fields if not provided
+    const registrationData = {
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
+      gender: userData.gender || 'Other',  // Default gender
+      role: userData.role || 'Student'     // Default role
+    };
+    
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, registrationData);
   }
 
   /**

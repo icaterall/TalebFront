@@ -826,7 +826,7 @@
 },
   "authModal": {
     "title": "Log in or create account",
-    "subtitle": "Learn on your own time from top universities and businesses.",
+    "subtitle": "Learn on your own time and improve your skills.",
     "emailLabel": "Email",
     "emailPlaceholder": "name@email.com",
     "fullNameLabel": "Full Name",

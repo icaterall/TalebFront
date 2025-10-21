@@ -848,7 +848,7 @@
 },
   "authModal": {
     "title": "تسجيل الدخول أو إنشاء حساب",
-    "subtitle": "تعلم في وقتك الخاص من أفضل الجامعات والشركات.",
+    "subtitle": "تعلّم في وقتك وبأسلوبك وارتقِ بمهاراتك",
     "emailLabel": "البريد الإلكتروني",
     "emailPlaceholder": "name@email.com",
     "fullNameLabel": "الاسم الكامل",

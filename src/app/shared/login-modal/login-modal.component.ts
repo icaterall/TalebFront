@@ -284,6 +284,7 @@ private initializeGoogleOAuth(): void {
     this.loading = 'email';
     try {
       if (this.mode === 'login-password') {
+        console.log('Attempting login for:', this.email);
         const response = await this.authService.login(this.email, this.password).toPromise();
         if (!response) {
           throw new Error('No response from server');
@@ -291,6 +292,7 @@ private initializeGoogleOAuth(): void {
         this.authService.postLoginNavigate(response.user);
         this.toastr.success(this.translate.instant('authModal.loginSuccess'));
       } else if (this.mode === 'register') {
+        console.log('Attempting registration for:', this.email);
         const response = await this.authService.register({
           name: this.fullName,
           email: this.email,
@@ -303,8 +305,13 @@ private initializeGoogleOAuth(): void {
         this.toastr.success(this.translate.instant('authModal.registrationSuccess'));
       }
       this.close();
-    } catch (e) {
-      this.toastr.error('Check your email or password.');
+    } catch (e: any) {
+      // Display error message from server or fallback to generic message
+      const errorMessage = e?.error?.message || e?.message || 
+        this.translate.instant('authModal.genericError');
+      
+      console.error('Login/Register error:', e);
+      this.toastr.error(errorMessage, this.translate.instant('authModal.error'));
     } finally {
       this.resetLoading(); // <-- always stop spinner
     }
