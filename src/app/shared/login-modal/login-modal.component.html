@@ -92,20 +92,20 @@
         </div>
       </div>
 
-      <!-- Continue/Join Button -->
+      <!-- Continue/Join/Login Button -->
       <button 
         type="button" 
         class="continue-button" 
         (click)="onContinue()"
-        [disabled]="!email || (showPasswordField && (!fullName || !password)) || loading === 'email' || emailDisabled">
+        [disabled]="!email || (showPasswordField && !password) || (mode === 'register' && !fullName) || loading === 'email' || emailDisabled">
         <span *ngIf="loading === 'email'" class="spinner"></span>
         <span *ngIf="loading !== 'email'">
-          {{ (showPasswordField ? 'authModal.joinForFree' : 'authModal.continue') | translate }}
+          {{ getButtonText() | translate }}
         </span>
       </button>
 
-      <!-- Login Link (shown when in registration mode) -->
-      <div class="login-link" *ngIf="showPasswordField">
+      <!-- Login Link (shown only when in registration mode) -->
+      <div class="login-link" *ngIf="mode === 'register'">
         <span class="login-text">{{ 'authModal.alreadyOn' | translate }}</span>
         <button type="button" class="login-button-link" (click)="switchToLogin()">
           {{ 'authModal.logIn' | translate }}
@@ -180,3 +180,13 @@
     </div>
   </div>
 </div>
+
+<!-- Verification Modal (shown after successful login/registration if email not verified) -->
+<app-verification-modal
+  *ngIf="showVerificationModal"
+  [email]="email"
+  [initialCanResendAt]="verificationCanResendAt"
+  (closeModal)="onCloseVerificationModal()"
+  (verificationSuccess)="onVerificationSuccess()">
+</app-verification-modal>
+

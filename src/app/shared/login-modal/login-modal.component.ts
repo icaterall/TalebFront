@@ -14,10 +14,12 @@ import { ToastrService } from 'ngx-toastr';
 type ModalMode = 'idle' | 'login-password' | 'login-social' | 'register';
 type LoadingState = 'none' | 'email' | 'google' | 'apple';
 
+import { VerificationModalComponent } from '../verification-modal/verification-modal.component';
+
 @Component({
   selector: 'app-login-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, VerificationModalComponent],
   templateUrl: './login-modal.component.html',
   styleUrls: ['./login-modal.component.scss']
 })
@@ -33,6 +35,10 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   providers = { password: false, google: false, apple: false };
   mode: ModalMode = 'idle';
   loading: LoadingState = 'none';
+  
+  // Verification modal state
+  showVerificationModal = false;
+  verificationCanResendAt?: string;
 
   // Form fields
   email = '';
@@ -206,6 +212,19 @@ private initializeGoogleOAuth(): void {
     this.showPassword = !this.showPassword;
   }
 
+  getButtonText(): string {
+    switch (this.mode) {
+      case 'idle':
+        return 'authModal.continue';
+      case 'login-password':
+        return 'authModal.logIn';
+      case 'register':
+        return 'authModal.joinForFree';
+      default:
+        return 'authModal.continue';
+    }
+  }
+
   async checkEmailExists() {
     const email = (this.email || '').trim().toLowerCase();
     if (!email) {
@@ -289,8 +308,28 @@ private initializeGoogleOAuth(): void {
         if (!response) {
           throw new Error('No response from server');
         }
+        
+        // Store auth data first (needed for verification API calls)
+        const token = (response as any).accessToken || response.token;
+        this.authService.storeAuthData(response.user, token, response.refreshToken);
+        
+        // Check if email is verified (check both fields)
+        const isVerified = response.user.is_verified || !!response.user.email_verified_at;
+        
+        if (!isVerified) {
+          console.log('Email not verified, showing verification modal');
+          // Show verification modal with countdown timestamp
+          this.verificationCanResendAt = (response as any).verification?.canResendAt || 
+                                         new Date(Date.now() + 30000).toISOString();
+          this.showVerificationModal = true;
+          this.resetLoading();
+          return;
+        }
+        
+        console.log('Email verified, navigating...');
         this.authService.postLoginNavigate(response.user);
         this.toastr.success(this.translate.instant('authModal.loginSuccess'));
+        this.close();
       } else if (this.mode === 'register') {
         console.log('Attempting registration for:', this.email);
         const response = await this.authService.register({
@@ -301,10 +340,18 @@ private initializeGoogleOAuth(): void {
         if (!response) {
           throw new Error('No response from server');
         }
-        this.authService.postLoginNavigate(response.user);
-        this.toastr.success(this.translate.instant('authModal.registrationSuccess'));
+        
+        // Store auth data first (needed for verification API calls)
+        const token = (response as any).accessToken || response.token;
+        this.authService.storeAuthData(response.user, token, response.refreshToken);
+        
+        // Show verification modal for new registrations with countdown timestamp
+        this.verificationCanResendAt = (response as any).verification?.canResendAt || 
+                                       new Date(Date.now() + 30000).toISOString();
+        this.showVerificationModal = true;
+        this.resetLoading();
+        return;
       }
-      this.close();
     } catch (e: any) {
       // Display error message from server or fallback to generic message
       const errorMessage = e?.error?.message || e?.message || 
@@ -488,6 +535,81 @@ private initializeGoogleOAuth(): void {
     this.close();
   }
 
+  onCloseVerificationModal() {
+    this.showVerificationModal = false;
+  }
+
+  async onVerificationSuccess() {
+    console.log('Verification successful! Closing modal and navigating...');
+    
+    // Close verification modal first
+    this.showVerificationModal = false;
+    
+    // After successful verification, fetch updated user data and navigate
+    try {
+      const response: any = await this.http.get(`${this.baseUrl}/auth/me`).toPromise();
+      if (response && response.user) {
+        console.log('Updated user data fetched:', response.user);
+        
+        // Update stored user data with verified status
+        this.authService.storeAuthData(
+          response.user, 
+          this.authService.getToken() || '', 
+          this.authService.getRefreshToken() || ''
+        );
+        
+        // Navigate based on user state
+        this.authService.postLoginNavigate(response.user);
+        this.toastr.success(this.translate.instant('authModal.emailVerified'));
+      } else {
+        // Fallback: navigate based on current user data
+        console.log('No user data in response, using cached user');
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser) {
+          // Mark as verified in cached data
+          currentUser.is_verified = true;
+          currentUser.email_verified_at = new Date().toISOString();
+          this.authService.storeAuthData(
+            currentUser,
+            this.authService.getToken() || '',
+            this.authService.getRefreshToken() || ''
+          );
+          this.authService.postLoginNavigate(currentUser);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user after verification:', error);
+      // Still try to navigate with cached user
+      const currentUser = this.authService.getCurrentUser();
+      if (currentUser) {
+        currentUser.is_verified = true;
+        currentUser.email_verified_at = new Date().toISOString();
+        this.authService.storeAuthData(
+          currentUser,
+          this.authService.getToken() || '',
+          this.authService.getRefreshToken() || ''
+        );
+        this.authService.postLoginNavigate(currentUser);
+      }
+    }
+    
+    // Close login modal
+    this.close();
+  }
+
+  /**
+   * Force toast container to appear on top of modals
+   */
+  private forceToastOnTop(): void {
+    setTimeout(() => {
+      const container = document.getElementById('toast-container');
+      if (container) {
+        container.style.setProperty('z-index', '999999', 'important');
+        container.style.setProperty('position', 'fixed', 'important');
+      }
+    }, 10);
+  }
+
   /**
    * Show error toastr message
    */
@@ -499,6 +621,7 @@ private initializeGoogleOAuth(): void {
       progressBar: true,
       positionClass: 'toast-top-right'
     });
+    this.forceToastOnTop();
   }
 
   /**
@@ -512,6 +635,7 @@ private initializeGoogleOAuth(): void {
       progressBar: true,
       positionClass: 'toast-top-right'
     });
+    this.forceToastOnTop();
   }
 
   /**

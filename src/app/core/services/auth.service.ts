@@ -7,10 +7,13 @@ import { environment } from '../../../environments/environment';
 export interface User {
   id: number;
   name: string;
+  name_en?: string;  // English name
+  name_ar?: string;  // Arabic name
   email: string;
   role?: string;
   auth_provider: string;
   provider_sub?: string;
+  profile_photo?: string;  // Legacy field name
   profile_photo_url?: string;
   locale: string;
   gender?: string;
@@ -21,17 +24,26 @@ export interface User {
   onboarding_step: string;
   institution_id?: number;
   institution_role?: string;
-  institution_verified: boolean;
+  institution_verified?: boolean;
+  is_verified?: boolean;
   email_verified_at?: string;
   last_login_at?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuthResponse {
   user: User;
-  token: string;
+  token?: string;           // For compatibility
+  accessToken?: string;     // Backend returns this
   refreshToken: string;
+  message?: string;
+  requiresVerification?: boolean;
+  verification?: {
+    canResendAfter: number;
+    canResendAt: string;
+    serverTime: string;
+  };
 }
 
 @Injectable({
@@ -110,10 +122,22 @@ export class AuthService {
    * Store authentication data
    */
   storeAuthData(user: User, token: string, refreshToken: string): void {
+    console.log('💾 Storing auth data:', {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      name_en: user.name_en,
+      name_ar: user.name_ar,
+      role: user.role,
+      hasToken: !!token
+    });
+    
     localStorage.setItem('currentUser', JSON.stringify(user));
     localStorage.setItem('authToken', token);
     localStorage.setItem('refreshToken', refreshToken);
     this.currentUserSubject.next(user);
+    
+    console.log('✅ Auth data stored successfully');
   }
 
   /**
@@ -185,9 +209,18 @@ export class AuthService {
    * Email/password login
    */
   login(email: string, password: string): Observable<AuthResponse> {
+    // Get current language
+    const currentLang = localStorage.getItem('anataleb.lang') || 
+                       sessionStorage.getItem('anataleb.lang') || 'ar';
+    
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, {
       email,
-      password
+      password,
+      language: currentLang  // Send language to backend
+    }, {
+      headers: {
+        'Accept-Language': currentLang
+      }
     });
   }
 
@@ -201,16 +234,24 @@ export class AuthService {
     gender?: string;
     role?: string;
   }): Observable<AuthResponse> {
+    // Get current language
+    const currentLang = localStorage.getItem('anataleb.lang') || 
+                       sessionStorage.getItem('anataleb.lang') || 'ar';
+    
     // Add default values for required fields if not provided
     const registrationData = {
       name: userData.name,
       email: userData.email,
       password: userData.password,
       gender: userData.gender || 'Other',  // Default gender
-      role: userData.role || 'Student'     // Default role
+      role: userData.role || null          // No default role - let user choose on account-type page
     };
     
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, registrationData);
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, registrationData, {
+      headers: {
+        'Accept-Language': currentLang
+      }
+    });
   }
 
   /**

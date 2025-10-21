@@ -12,6 +12,7 @@ import { ToastrService } from 'ngx-toastr';
 import { FooterComponent } from '../../shared/footer/footer.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Subscription } from 'rxjs';
+import { getUserInitials } from '../../shared/utils/user-initials.util';
 
 type Lang = 'ar' | 'en';
 
@@ -184,12 +185,7 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     return !!this.user?.profile_photo_url;
   }
   get userInitials(): string {
-    const name = this.userName.trim();
-    if (!name) return '';
-    const parts = name.split(/\s+/).filter(Boolean);
-    const first = parts[0]?.[0] || '';
-    const last = (parts.length > 1 ? parts[parts.length - 1][0] : '') || '';
-    return (first + last).toUpperCase();
+    return getUserInitials(this.userName);
   }
 
   // Language button like teacher header

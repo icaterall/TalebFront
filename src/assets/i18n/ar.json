@@ -896,6 +896,24 @@
     "resetPasswordLink": "إعادة تعيين كلمة المرور",
     "forgotPassword": "نسيت كلمة المرور؟"
   },
+  "verification": {
+    "title": "تحقق من بريدك الإلكتروني",
+    "message": "لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى",
+    "enterCode": "رمز التحقق",
+    "codePlaceholder": "000000",
+    "codeHint": "أدخل الرمز المكون من 6 أرقام المرسل إلى بريدك الإلكتروني",
+    "verify": "تحقق من البريد الإلكتروني",
+    "verifying": "جارٍ التحقق...",
+    "didntReceive": "لم تستلم الرمز؟",
+    "resendCode": "إعادة إرسال الرمز",
+    "resendIn": "إعادة الإرسال خلال",
+    "invalidCode": "رمز التحقق غير صحيح",
+    "codeRequired": "الرجاء إدخال رمز التحقق",
+    "verificationSuccess": "تم التحقق من البريد الإلكتروني بنجاح!",
+    "verificationFailed": "فشل التحقق. يرجى المحاولة مرة أخرى.",
+    "resendSuccess": "تم إرسال رمز التحقق!",
+    "resendFailed": "فشل إعادة إرسال الرمز"
+  },
   "accountType": {
     "title": "اختر نوع حسابك",
     "teacher": "معلم",

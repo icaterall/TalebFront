@@ -1,0 +1,83 @@
+<!-- Modal Backdrop -->
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <!-- Modal Dialog -->
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 id="modal-title" class="modal-title">
+        {{ 'verification.title' | translate }}
+      </h2>
+      <button type="button" class="close-button" (click)="close()" aria-label="Close modal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- Email Icon -->
+      <div class="email-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 6L12 13L2 6" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <p class="instruction-text">
+          {{ 'verification.message' | translate }}
+        </p>
+        <p class="email-display">{{ email }}</p>
+      </div>
+
+      <!-- Verification Code Input -->
+      <div class="code-input-section">
+        <label for="code" class="code-label">{{ 'verification.enterCode' | translate }}</label>
+        <input 
+          type="text" 
+          id="code" 
+          class="code-input" 
+          [(ngModel)]="verificationCode"
+          [placeholder]="'verification.codePlaceholder' | translate"
+          maxlength="6"
+          (input)="onInput($event)"
+          (paste)="onPaste($event)"
+          autocomplete="off"
+          required>
+        <p class="code-hint">{{ 'verification.codeHint' | translate }}</p>
+      </div>
+
+      <!-- Verify Button -->
+      <button 
+        type="button" 
+        class="verify-button" 
+        (click)="verifyCode()"
+        [disabled]="verificationCode.length !== 6 || isSubmitting">
+        <span *ngIf="isSubmitting" class="spinner"></span>
+        <span *ngIf="!isSubmitting">{{ 'verification.verify' | translate }}</span>
+      </button>
+
+      <!-- Resend Section -->
+      <div class="resend-section">
+        <p class="resend-text">{{ 'verification.didntReceive' | translate }}</p>
+        <button 
+          type="button" 
+          class="resend-button" 
+          (click)="resendCode()"
+          [disabled]="!canResend"
+          [class.disabled]="!canResend">
+          <span *ngIf="!canResend">
+            {{ 'verification.resendIn' | translate }} ({{ resendCountdown }}s)
+          </span>
+          <span *ngIf="canResend">
+            {{ 'verification.resendCode' | translate }}
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+

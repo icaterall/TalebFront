@@ -874,6 +874,24 @@
     "resetPasswordLink": "Reset password",
     "forgotPassword": "Forgot password?"
   },
+  "verification": {
+    "title": "Verify Your Email",
+    "message": "We've sent a 6-digit verification code to",
+    "enterCode": "Verification Code",
+    "codePlaceholder": "000000",
+    "codeHint": "Enter the 6-digit code sent to your email",
+    "verify": "Verify Email",
+    "verifying": "Verifying...",
+    "didntReceive": "Didn't receive the code?",
+    "resendCode": "Resend Code",
+    "resendIn": "Resend in",
+    "invalidCode": "Invalid verification code",
+    "codeRequired": "Please enter the verification code",
+    "verificationSuccess": "Email verified successfully!",
+    "verificationFailed": "Verification failed. Please try again.",
+    "resendSuccess": "Verification code sent!",
+    "resendFailed": "Failed to resend code"
+  },
   "accountType": {
     "title": "Choose your account type",
     "teacher": "Teacher",

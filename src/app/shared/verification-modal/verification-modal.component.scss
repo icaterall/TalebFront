@@ -1,0 +1,254 @@
+/* Modal Backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+}
+
+/* Modal Dialog */
+.modal-dialog {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+  
+  svg {
+    color: #6b7280;
+  }
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+/* Email Icon */
+.email-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  
+  svg {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* Instructions */
+.instructions {
+  margin-bottom: 32px;
+}
+
+.instruction-text {
+  font-size: 16px;
+  color: #374151;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.email-display {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3b82f6;
+  margin: 0;
+}
+
+/* Code Input Section */
+.code-input-section {
+  margin-bottom: 24px;
+}
+
+.code-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.code-input {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 8px;
+  color: #111827;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  &::placeholder {
+    letter-spacing: normal;
+    font-size: 14px;
+    font-weight: normal;
+    color: #9ca3af;
+  }
+}
+
+.code-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 8px 0 0 0;
+  text-align: left;
+}
+
+/* Verify Button */
+.verify-button {
+  width: 100%;
+  padding: 14px 24px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  &:hover:not(:disabled) {
+    background-color: #2563eb;
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  
+  &:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+  }
+}
+
+/* Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Resend Section */
+.resend-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.resend-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+}
+
+.resend-button {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  
+  &:hover:not(:disabled) {
+    color: #2563eb;
+  }
+  
+  &:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .modal-dialog {
+    margin: 16px;
+  }
+  
+  .modal-body {
+    padding: 24px 16px;
+  }
+  
+  .code-input {
+    font-size: 20px;
+    letter-spacing: 6px;
+  }
+}
+
+

@@ -61,6 +61,14 @@
     font-weight: 700;
     font-size: 12px;
     cursor: pointer;
+    letter-spacing: 0;  // Default for English
+    
+    // For Arabic initials - prevent letter connection
+    &[dir="rtl"],
+    [dir="rtl"] & {
+      letter-spacing: 0;  // Space is already in the text
+      font-family: 'Cairo', 'Tajawal', sans-serif;  // Better Arabic rendering
+    }
   }
 
   .avatar-img {
@@ -465,7 +473,7 @@
   padding: 12px 16px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 16px;  // Changed from 14px to 16px to prevent iOS zoom
   color: #333;
   background: white;
   cursor: pointer;
@@ -474,6 +482,11 @@
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
+  
+  // iOS-specific fixes
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;  // Prevent double-tap zoom
 }
 
 /* RTL Support for dropdown arrows */

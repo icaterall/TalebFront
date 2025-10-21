@@ -993,3 +993,39 @@ select,
 .badge:not(.rounded-pill) {
   border-radius: 4px !important;
 }
+
+/* ============================================
+   TOASTR ALWAYS ON TOP - Z-INDEX FIX
+   ============================================ */
+
+// Toastr container - EXTREMELY HIGH Z-INDEX
+#toast-container,
+.toast-container {
+  z-index: 999999 !important;
+  position: fixed !important;
+  pointer-events: none;  // Allow clicks to pass through container
+  
+  // Individual toasts
+  > div,
+  .ngx-toastr,
+  .toast {
+    z-index: 999999 !important;
+    pointer-events: auto;  // But allow clicks on toasts
+  }
+}
+
+// All toast types
+.toast-success,
+.toast-error,
+.toast-info,
+.toast-warning {
+  z-index: 999999 !important;
+}
+
+// Lower all modals
+.modal,
+.modal-dialog,
+.modal-backdrop,
+.verification-modal {
+  z-index: 1050 !important;
+}
