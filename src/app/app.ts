@@ -21,7 +21,7 @@ export class App implements OnInit {
   }
 
   ngOnInit() {
-    // Only dispatch AnatalebReady after the first navigation completes
+    // Only dispatch AnatalebReady after the first navigation completes AND content is rendered
     if (this.isBrowser) {
       this.router.events
         .pipe(
@@ -29,10 +29,16 @@ export class App implements OnInit {
           take(1) // Only take the first navigation
         )
         .subscribe(() => {
-          // Small delay to ensure content is rendered
-          setTimeout(() => {
-            window.dispatchEvent(new Event('AnatalebReady'));
-          }, 100);
+          // Use requestAnimationFrame to wait for the browser to paint
+          requestAnimationFrame(() => {
+            // Double RAF to ensure content is actually painted
+            requestAnimationFrame(() => {
+              // Additional small delay to ensure lazy-loaded components are rendered
+              setTimeout(() => {
+                window.dispatchEvent(new Event('AnatalebReady'));
+              }, 150);
+            });
+          });
         });
     }
   }

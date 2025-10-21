@@ -45,26 +45,55 @@ export class GeographyService {
   }
 
   /**
-   * Detect user's country based on IP address using ip-api.com
+   * Detect user's country based on IP address
    * Returns country code (e.g., 'US', 'OM', 'SA')
-   * Free service with CORS support, no API key required
+   * Using multiple fallback services for reliability
    */
   detectCountryByIP(): Observable<string | null> {
-    return this.http.get<any>('http://ip-api.com/json/?fields=countryCode').pipe(
+    // Try api.country.is first (simple, reliable, CORS-friendly)
+    return this.http.get<any>('https://api.country.is').pipe(
       map(response => {
-        console.log('IP API response:', response);
-        if (response.countryCode) {
-          console.log('Alpha-2 code from IP API:', response.countryCode);
+        console.log('Country.is API response:', response);
+        // api.country.is returns { country: 'US', ip: '1.2.3.4' }
+        const countryCode = response.country;
+        if (countryCode) {
+          console.log('Alpha-2 code from Country.is:', countryCode);
           // Convert ISO alpha-2 to alpha-3 (e.g., 'OM' -> 'OMN')
-          const alpha3 = this.convertAlpha2ToAlpha3(response.countryCode);
+          const alpha3 = this.convertAlpha2ToAlpha3(countryCode);
           console.log('Converted to alpha-3:', alpha3);
           return alpha3;
         }
-        console.log('No country code in IP API response');
+        console.log('No country code in response');
         return null;
       }),
       catchError(error => {
-        console.error('Error detecting country by IP:', error);
+        console.error('Error detecting country by IP (primary):', error);
+        // Fallback to freeipapi.com
+        return this.detectCountryFallback();
+      })
+    );
+  }
+
+  /**
+   * Fallback IP detection using freeipapi.com
+   */
+  private detectCountryFallback(): Observable<string | null> {
+    console.log('Trying fallback IP detection service...');
+    return this.http.get<any>('https://freeipapi.com/api/json').pipe(
+      map(response => {
+        console.log('FreeIPAPI response:', response);
+        const countryCode = response.countryCode;
+        if (countryCode) {
+          console.log('Alpha-2 code from FreeIPAPI:', countryCode);
+          const alpha3 = this.convertAlpha2ToAlpha3(countryCode);
+          console.log('Converted to alpha-3:', alpha3);
+          return alpha3;
+        }
+        return null;
+      }),
+      catchError(error => {
+        console.error('Error detecting country by IP (fallback):', error);
+        console.log('IP detection failed completely, user will select country manually');
         return of(null);
       })
     );
@@ -144,6 +173,38 @@ export class GeographyService {
       c.iso_code?.toUpperCase() === countryCode.toUpperCase()
     );
     return country ? country.id : null;
+  }
+
+  /**
+   * Test IP detection - call this to verify the API works
+   */
+  async testIPDetection(): Promise<void> {
+    console.log('=== TESTING IP DETECTION ===');
+    
+    try {
+      // Test 1: Direct fetch to verify API is accessible
+      console.log('Test 1: Testing direct fetch to ipapi.co...');
+      const response = await fetch('https://ipapi.co/json/');
+      const data = await response.json();
+      console.log('✅ Direct fetch successful:', data);
+      console.log('Country Code:', data.country_code);
+      console.log('Country Name:', data.country_name);
+      
+      // Test 2: Using Angular HttpClient
+      console.log('\nTest 2: Testing via Angular HttpClient...');
+      this.detectCountryByIP().subscribe({
+        next: (countryCode) => {
+          console.log('✅ HttpClient successful, country code:', countryCode);
+        },
+        error: (error) => {
+          console.error('❌ HttpClient failed:', error);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Direct fetch failed:', error);
+    }
+    
+    console.log('=== END TEST ===');
   }
 }
 

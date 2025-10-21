@@ -108,6 +108,10 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
       this.user = user;
       // Angular's automatic change detection will handle the update
     });
+    
+    // Test IP detection
+    console.log('🔍 Testing IP detection on component init...');
+    this.testIPDetection();
 
     // Restore onboarding state from localStorage
     this.restoreOnboardingState();
@@ -514,6 +518,26 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
 
   toggleInfo() {
     this.showInfo = !this.showInfo;
+  }
+
+  /**
+   * Test IP detection service
+   */
+  testIPDetection() {
+    console.log('=== MANUAL IP DETECTION TEST ===');
+    this.geographyService.detectCountryByIP().subscribe({
+      next: (countryCode) => {
+        console.log('✅ IP Detection Result:', countryCode);
+        if (countryCode) {
+          console.log(`✅ Success! Detected country code: ${countryCode}`);
+        } else {
+          console.log('⚠️ IP detection returned null - service may be blocked or unavailable');
+        }
+      },
+      error: (error) => {
+        console.error('❌ IP Detection Error:', error);
+      }
+    });
   }
 
   goBackToDateOfBirth() {
