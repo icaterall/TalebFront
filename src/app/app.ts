@@ -33,10 +33,11 @@ export class App implements OnInit {
           requestAnimationFrame(() => {
             // Double RAF to ensure content is actually painted
             requestAnimationFrame(() => {
-              // Additional small delay to ensure lazy-loaded components are rendered
+              // Additional delay to ensure lazy-loaded components are fully rendered
               setTimeout(() => {
+                console.log('Dispatching AnatalebReady event');
                 window.dispatchEvent(new Event('AnatalebReady'));
-              }, 150);
+              }, 300);
             });
           });
         });

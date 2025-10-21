@@ -6,12 +6,37 @@
 
     <!-- Minimal critical CSS & preinit state -->
     <style>
-      /* Keep background stable and app hidden until we’re truly ready */
+      /* Keep background stable and app hidden until we're truly ready */
       html.preinit, html.preinit body { background:#fff; }
-      html.preinit app-root { visibility:hidden }
-      #preloader { position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-                   background:#fff; z-index:9999; font:600 14px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif }
-      #preloader.hide { display:none }
+      html.preinit app-root { opacity: 0; visibility: hidden; }
+      
+      /* Smooth fade-in when ready */
+      html:not(.preinit) app-root { 
+        opacity: 1; 
+        visibility: visible;
+        transition: opacity 0.3s ease-in;
+      }
+      
+      #preloader { 
+        position:fixed; 
+        inset:0; 
+        display:flex; 
+        align-items:center; 
+        justify-content:center;
+        background:#fff; 
+        z-index:9999; 
+        font:600 14px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        transition: opacity 0.3s ease-out;
+      }
+      
+      #preloader.hide { 
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      #preloader.removed {
+        display: none;
+      }
     </style>
 
     <!-- Set lang/dir BEFORE any render -->
@@ -52,15 +77,34 @@
       var reveal = function () {
         if (hasRevealed) return;
         hasRevealed = true;
+        
+        var p = document.getElementById('preloader');
+        
+        // Step 1: Remove preinit class to start app fade-in
         document.documentElement.classList.remove('preinit');
-        var p = document.getElementById('preloader'); if (p) p.classList.add('hide');
+        
+        // Step 2: Hide preloader with fade-out
+        if (p) {
+          p.classList.add('hide');
+          
+          // Step 3: Remove preloader from DOM after fade-out completes
+          setTimeout(function() {
+            if (p) p.classList.add('removed');
+          }, 300); // Match CSS transition duration
+        }
       };
       
       // Listen for the ready event
       window.addEventListener('AnatalebReady', function(){
+        // Wait for fonts to be ready before revealing
         if (document.fonts && document.fonts.ready) {
-          document.fonts.ready.then(reveal).catch(reveal);
-        } else { reveal(); }
+          document.fonts.ready.then(function() {
+            // Extra delay to ensure content is painted
+            setTimeout(reveal, 100);
+          }).catch(reveal);
+        } else { 
+          setTimeout(reveal, 100);
+        }
       });
       
       // Fallback timeout to prevent infinite loading
@@ -69,24 +113,12 @@
           console.warn('App ready timeout - revealing anyway');
           reveal();
         }
-      }, 3000); // 3 second timeout - reduced since we dispatch after navigation
+      }, 4000); // Increased timeout for lazy-loaded routes
     </script>
   </body>
 </html>
 
 <style>
-  /* Keep background stable and app hidden until we’re truly ready */
-  html.preinit, html.preinit body { background:#fff; }
-  html.preinit app-root { visibility:hidden }
-
-  /* Preloader container */
-  #preloader{
-    position:fixed; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    background:#fff; z-index:9999;
-  }
-  #preloader.hide{ display:none }
-
   /* Spinner */
   .spinner{
     inline-size:48px; block-size:48px;         /* 48x48 circle */
