@@ -124,7 +124,12 @@
     linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   background-size: contain, contain;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;  // Changed from overflow: hidden
+  overflow-y: auto;    // Allow vertical scroll
+  
+  // iOS smooth scrolling
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .account-type-page::before {
@@ -147,6 +152,12 @@
     linear-gradient(123deg, transparent 0%, rgba(255, 255, 255, 0.2) 69%, transparent 29%),
     linear-gradient(14deg, transparent 42%, rgba(255, 255, 255, 0.15) 67%, transparent 28%);
   pointer-events: none;
+  z-index: 0;  // Behind content
+  
+  // iOS fix - prevent rendering glitches
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: auto;  // Don't optimize (causes glitches on iOS)
 }
 
 .account-type-page::after {
@@ -166,17 +177,27 @@
     linear-gradient(28deg, transparent 0%, rgba(255, 255, 255, 0.2) 25%, transparent 25%),
     linear-gradient(-15deg, transparent 50%, rgba(255, 255, 255, 0.15) 67%, transparent 43%);
   pointer-events: none;
+  z-index: 0;  // Behind content
+  
+  // iOS fix - prevent rendering glitches
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: auto;  // Don't optimize (causes glitches on iOS)
 }
 
 .main-content {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;  // Above background pseudo-elements
   min-height: 40vh;
   padding: 40px 32px;
 }
 
 .content-container {
+  position: relative;
+  z-index: 1;  // Above background decorations
   max-width: 800px;
   width: 100%;
   text-align: center;
@@ -445,6 +466,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   max-width: 500px;
   width: 100%;
+  position: relative;
+  z-index: 10;  // Well above background decorations
   
   // iOS scrolling optimization
   -webkit-overflow-scrolling: touch;
@@ -638,6 +661,9 @@
 
 .student-registration-card {
   max-width: 1000px; /* Wider than default 800px */
+  position: relative;
+  z-index: 10;  // Above background decorations
+  background: white;  // Ensure solid background
 }
 
 .student-form {
@@ -1131,6 +1157,18 @@ input[type="number"],
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  // Disable decorative backgrounds on mobile to prevent scrolling issues
+  .account-type-page::before,
+  .account-type-page::after {
+    display: none;  // Remove decorative gradients on mobile
+  }
+  
+  .account-type-page {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);  // Simple gradient only
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
   .date-of-birth-card {
     padding: 24px;
     margin: 0 16px;

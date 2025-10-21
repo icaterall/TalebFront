@@ -226,6 +226,8 @@ export class AuthService {
 
   /**
    * User registration
+   * Only requires: name, email, password
+   * Gender and role will be selected later on account-type page
    */
   register(userData: { 
     name: string; 
@@ -238,14 +240,20 @@ export class AuthService {
     const currentLang = localStorage.getItem('anataleb.lang') || 
                        sessionStorage.getItem('anataleb.lang') || 'ar';
     
-    // Add default values for required fields if not provided
-    const registrationData = {
+    // Minimal registration data - only required fields
+    const registrationData: any = {
       name: userData.name,
       email: userData.email,
       password: userData.password,
-      gender: userData.gender || 'Other',  // Default gender
-      role: userData.role || null          // No default role - let user choose on account-type page
     };
+    
+    // Only add gender and role if explicitly provided (otherwise null)
+    if (userData.gender) {
+      registrationData.gender = userData.gender;
+    }
+    if (userData.role) {
+      registrationData.role = userData.role;
+    }
     
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, registrationData, {
       headers: {
