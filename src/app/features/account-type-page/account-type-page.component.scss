@@ -389,11 +389,16 @@
   min-height: 60vh;
   padding: 0px;
   position: relative;
+  
+  // iOS smooth scrolling fix
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior: contain;  // Prevent scroll chaining on iOS
 }
 
 .back-button {
   position: absolute;
-  top: -15px;
+  top: 0px;
   left: 0;
   display: flex;
   align-items: center;
@@ -440,6 +445,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   max-width: 500px;
   width: 100%;
+  
+  // iOS scrolling optimization
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);  // Force GPU acceleration for smoother scrolling
+  will-change: transform;     // Optimize for transforms
 }
 
 .form-title {
@@ -1055,6 +1065,70 @@
   }
 }
 
+/* ============================================
+   iOS / MOBILE FIXES - PREVENT GLITCHES
+   ============================================ */
+
+// Fix for ng-select on iOS
+::ng-deep {
+  .ng-select {
+    // iOS smooth scrolling for dropdown
+    .ng-dropdown-panel {
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior: contain !important;
+      transform: translateZ(0) !important;
+    }
+    
+    // Prevent iOS glitches in dropdown items
+    .ng-dropdown-panel-items {
+      -webkit-overflow-scrolling: touch !important;
+      transform: translateZ(0) !important;
+    }
+    
+    // Fix iOS tap highlighting
+    .ng-option {
+      -webkit-tap-highlight-color: transparent !important;
+      touch-action: manipulation !important;
+      min-height: 44px;  // iOS minimum tap target
+    }
+  }
+}
+
+// Fix for iOS input glitches (applies to all inputs globally in this component)
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+.form-input {
+  // Prevent iOS zoom (minimum 16px font size)
+  font-size: 16px !important;
+  
+  // iOS-specific fixes
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  
+  // Smooth rendering
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+// Prevent iOS safari bottom bar issues
+@supports (-webkit-touch-callout: none) {
+  .account-type-page {
+    // iOS Safari specific
+    min-height: -webkit-fill-available;
+  }
+  
+  .main-content {
+    min-height: calc(100vh - 64px - 200px); // viewport - header - footer
+    min-height: calc(-webkit-fill-available - 264px);
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .date-of-birth-card {
@@ -1069,6 +1143,75 @@
   
   .form-title {
     font-size: 20px;
+  }
+  
+  // iOS mobile fixes for forms
+  .date-of-birth-container {
+    min-height: auto;
+    padding: 20px 0;
+  }
+  
+  .student-registration-card {
+    padding: 20px;
+    max-height: none;  // Allow natural height on mobile
+    margin: 0 10px;
+  }
+  
+  .student-form {
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
 }
 
+// iPhone-specific fixes (detect iPhone)
+@media only screen 
+  and (max-width: 480px) 
+  and (-webkit-min-device-pixel-ratio: 2) {
+  
+  // Prevent select dropdown glitches on iPhone
+  .form-select {
+    min-height: 44px;  // iOS minimum tap target
+    padding: 12px 40px 12px 16px;
+    font-size: 16px !important;  // Prevent zoom
+    line-height: 1.5;
+    
+    // Fix iOS dropdown rendering
+    &:focus {
+      font-size: 16px !important;  // Keep same size on focus
+    }
+  }
+  
+  // Prevent scrolling glitches
+  .date-of-birth-card,
+  .student-registration-card {
+    // Remove fixed positioning elements that cause glitches
+    position: relative;
+    overflow: visible;
+    
+    // Ensure proper stacking
+    isolation: isolate;
+  }
+  
+  // Fix form input glitches
+  input,
+  select,
+  .form-input,
+  .form-select {
+    // Prevent iOS text rendering issues
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    // Stable height
+    box-sizing: border-box;
+    min-height: 44px;
+  }
+}
+
+// Fix for iOS 15+ (Safari address bar issues)
+@supports (height: 100dvh) {
+  .main-content {
+    min-height: calc(100dvh - 64px - 200px);
+  }
 }
