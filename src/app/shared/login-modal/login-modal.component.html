@@ -190,3 +190,10 @@
   (verificationSuccess)="onVerificationSuccess()">
 </app-verification-modal>
 
+<!-- Forgot Password Modal -->
+<app-forgot-password-modal
+  *ngIf="showForgotPasswordModal"
+  (closeModal)="onCloseForgotPasswordModal()"
+  (backToLogin)="onBackToLoginFromForgot()">
+</app-forgot-password-modal>
+

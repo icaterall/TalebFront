@@ -2,34 +2,36 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { AuthService, User } from '../../../core/services/auth.service';
-import { OnboardingStateService } from '../../../core/services/onboarding-state.service';
 import { GeographyService, Country, State } from '../../../core/services/geography.service';
 import { EducationService, EducationStage } from '../../../core/services/education.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { FooterComponent } from '../../../shared/footer/footer.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
-  selector: 'app-student-registration',
+  selector: 'app-student-profile',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, TranslateModule, FooterComponent],
-  templateUrl: './student-registration.component.html',
-  styleUrls: ['./student-registration.component.scss']
+  templateUrl: './student-profile.component.html',
+  styleUrls: ['./student-profile.component.scss']
 })
-export class StudentRegistrationComponent implements OnInit {
+export class StudentProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
-  private readonly onboardingState = inject(OnboardingStateService);
   private readonly geographyService = inject(GeographyService);
   private readonly educationService = inject(EducationService);
   private readonly i18n = inject(I18nService);
   private readonly toastr = inject(ToastrService);
+  private readonly http = inject(HttpClient);
+  private readonly translate = inject(TranslateService);
 
-  registrationForm!: FormGroup;
+  profileForm!: FormGroup;
   user: User | null = null;
   
   // Data for dropdowns
@@ -45,7 +47,6 @@ export class StudentRegistrationComponent implements OnInit {
   
   // Computed values
   studentAge: number | null = null;
-  schoolYear: string = '';
   birthDate: Date | null = null;
   
   // Gender options
@@ -53,7 +54,7 @@ export class StudentRegistrationComponent implements OnInit {
     { value: 'Male', labelEn: 'Male', labelAr: 'ذكر' },
     { value: 'Female', labelEn: 'Female', labelAr: 'أنثى' },
     { value: 'Other', labelEn: 'Other', labelAr: 'آخر' },
-    { value: 'PreferNotToSay', labelEn: 'Prefer not to say', labelAr: 'أفضل عدم الإجابة' }
+    { value: 'Prefer not to say', labelEn: 'Prefer not to say', labelAr: 'أفضل عدم الإجابة' }
   ];
   
   // Language options
@@ -65,28 +66,17 @@ export class StudentRegistrationComponent implements OnInit {
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
     
-    // Get birth date from onboarding state
-    const onboardingData = this.onboardingState.getState();
-    
-    if (!onboardingData?.dateOfBirth || !onboardingData.dateOfBirth.year) {
-      this.toastr.error('Please select your date of birth first');
-      this.router.navigate(['/account-type']);
+    if (!this.user) {
+      this.toastr.error('Please login first');
+      this.router.navigate(['/']);
       return;
     }
-    
-    // Parse birth date
-    const { year, month, day } = onboardingData.dateOfBirth;
-    this.birthDate = new Date(
-      parseInt(year),
-      parseInt(month) - 1,
-      parseInt(day)
-    );
-    
-    // Calculate school age
-    this.studentAge = this.educationService.calculateSchoolAge(this.birthDate);
-    this.schoolYear = this.educationService.getCurrentSchoolYear();
-    
-    console.log('Student age for school year', this.schoolYear, ':', this.studentAge);
+
+    if (this.user.role !== 'Student') {
+      this.toastr.error('This page is for students only');
+      this.router.navigate(['/dashboard']);
+      return;
+    }
     
     // Initialize form
     this.initializeForm();
@@ -97,19 +87,25 @@ export class StudentRegistrationComponent implements OnInit {
   }
 
   private initializeForm(): void {
-    this.registrationForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(255)]],
-      country_id: ['', Validators.required],
-      state_id: [''],
-      education_stage_id: ['', Validators.required],
-      gender: [''],
-      locale: [this.i18n.current || 'ar', Validators.required],
-      profile_photo_url: ['', this.urlValidator]
+    this.profileForm = this.fb.group({
+      name: [this.user?.name || '', [Validators.required, Validators.maxLength(255)]],
+      date_of_birth: [this.user?.dob || '', Validators.required],
+      country_id: [this.user?.country_id || '', Validators.required],
+      state_id: [this.user?.state_id || ''],
+      education_stage_id: [this.user?.education_stage_id || '', Validators.required],
+      gender: [this.user?.gender || ''],
+      locale: [this.user?.locale || this.i18n.current, Validators.required],
+      profile_photo_url: [this.user?.profile_photo_url || '', this.urlValidator]
     });
     
     // Watch country changes to load states
-    this.registrationForm.get('country_id')?.valueChanges.subscribe(countryId => {
+    this.profileForm.get('country_id')?.valueChanges.subscribe(countryId => {
       this.onCountryChange(countryId);
+    });
+
+    // Watch date changes to calculate age and load appropriate education stages
+    this.profileForm.get('date_of_birth')?.valueChanges.subscribe(dateValue => {
+      this.onDateChange(dateValue);
     });
   }
 
@@ -130,9 +126,6 @@ export class StudentRegistrationComponent implements OnInit {
       next: (response) => {
         this.countries = response.countries;
         this.loadingCountries = false;
-        
-        // Auto-detect country (placeholder - would use IP geolocation)
-        // For now, we could pre-select based on user's previous data or leave empty
       },
       error: (error) => {
         console.error('Error loading countries:', error);
@@ -150,21 +143,6 @@ export class StudentRegistrationComponent implements OnInit {
       next: (response) => {
         this.educationStages = response.stages.sort((a, b) => a.sort_order - b.sort_order);
         this.loadingStages = false;
-        
-        // If only one stage, auto-select but still show for confirmation
-        if (this.educationStages.length === 1) {
-          this.registrationForm.patchValue({
-            education_stage_id: this.educationStages[0].id
-          });
-        }
-        
-        if (this.educationStages.length === 0) {
-          this.toastr.warning(
-            this.currentLang === 'ar'
-              ? 'لا توجد مراحل تعليمية متاحة لعمرك'
-              : 'No education stages available for your age'
-          );
-        }
       },
       error: (error) => {
         console.error('Error loading education stages:', error);
@@ -177,13 +155,11 @@ export class StudentRegistrationComponent implements OnInit {
   private onCountryChange(countryId: string): void {
     if (!countryId) {
       this.states = [];
-      this.registrationForm.get('state_id')?.clearValidators();
-      this.registrationForm.get('state_id')?.setValue('');
+      this.profileForm.get('state_id')?.clearValidators();
+      this.profileForm.get('state_id')?.setValue('');
       return;
     }
     
-    // Load states for the selected country
-    // Backend will return empty array if country has no states
     this.loadStates(parseInt(countryId));
   }
 
@@ -194,25 +170,36 @@ export class StudentRegistrationComponent implements OnInit {
         this.states = response.states;
         this.loadingStates = false;
         
-        // Set validation based on whether country has states
         if (this.states.length > 0) {
-          this.registrationForm.get('state_id')?.setValidators([Validators.required]);
+          this.profileForm.get('state_id')?.setValidators([Validators.required]);
         } else {
-          this.registrationForm.get('state_id')?.clearValidators();
-          this.registrationForm.get('state_id')?.setValue('');
+          this.profileForm.get('state_id')?.clearValidators();
+          this.profileForm.get('state_id')?.setValue('');
         }
-        this.registrationForm.get('state_id')?.updateValueAndValidity();
+        this.profileForm.get('state_id')?.updateValueAndValidity();
       },
       error: (error) => {
         console.error('Error loading states:', error);
         this.toastr.error('Failed to load states');
         this.loadingStates = false;
         this.states = [];
-        this.registrationForm.get('state_id')?.clearValidators();
-        this.registrationForm.get('state_id')?.setValue('');
-        this.registrationForm.get('state_id')?.updateValueAndValidity();
+        this.profileForm.get('state_id')?.clearValidators();
+        this.profileForm.get('state_id')?.setValue('');
+        this.profileForm.get('state_id')?.updateValueAndValidity();
       }
     });
+  }
+
+  private onDateChange(dateValue: string): void {
+    if (!dateValue) {
+      this.studentAge = null;
+      this.educationStages = [];
+      return;
+    }
+
+    this.birthDate = new Date(dateValue);
+    this.studentAge = this.educationService.calculateSchoolAge(this.birthDate);
+    this.loadEducationStages();
   }
 
   get currentLang(): 'ar' | 'en' {
@@ -220,7 +207,7 @@ export class StudentRegistrationComponent implements OnInit {
   }
 
   get selectedCountry(): Country | undefined {
-    const countryId = this.registrationForm.get('country_id')?.value;
+    const countryId = this.profileForm.get('country_id')?.value;
     return this.countries.find(c => c.id.toString() === countryId);
   }
 
@@ -243,8 +230,8 @@ export class StudentRegistrationComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.registrationForm.invalid) {
-      this.registrationForm.markAllAsTouched();
+    if (this.profileForm.invalid) {
+      this.profileForm.markAllAsTouched();
       this.toastr.error(
         this.currentLang === 'ar'
           ? 'الرجاء ملء جميع الحقول المطلوبة'
@@ -253,49 +240,45 @@ export class StudentRegistrationComponent implements OnInit {
       return;
     }
     
-    if (!this.birthDate) {
-      this.toastr.error('Birth date is missing');
-      return;
-    }
-    
     this.loading = true;
     
     // Prepare submission data
-    const formValue = this.registrationForm.value;
+    const formValue = this.profileForm.value;
     const submissionData = {
       name: formValue.name.trim(),
-      date_of_birth: this.birthDate.toISOString().split('T')[0], // YYYY-MM-DD format
+      date_of_birth: formValue.date_of_birth,
       country_id: parseInt(formValue.country_id),
       state_id: formValue.state_id ? parseInt(formValue.state_id) : null,
       education_stage_id: parseInt(formValue.education_stage_id),
       gender: formValue.gender || null,
       locale: formValue.locale,
-      profile_photo_url: formValue.profile_photo_url?.trim() || null,
-      role: 'Student'
+      profile_photo_url: formValue.profile_photo_url?.trim() || null
     };
     
-    console.log('Submitting student registration:', submissionData);
+    console.log('Updating student profile:', submissionData);
     
-    // Call backend to complete registration
-    this.authService.completeStudentRegistration(submissionData).subscribe({
-      next: (response) => {
-        console.log('Registration successful:', response);
+    // Call backend to update profile
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.authService.getToken()}`,
+      'Accept-Language': this.currentLang
+    });
+
+    this.http.put(`${environment.apiUrl}/auth/students/profile`, submissionData, { headers }).subscribe({
+      next: (response: any) => {
+        console.log('Profile update successful:', response);
         
-        // Update local user
+        // Update local user data
         this.authService.storeAuthData(
           response.user,
           this.authService.getToken()!,
           this.authService.getRefreshToken()!
         );
         
-        // Clear onboarding state
-        this.onboardingState.clearState();
-        
         // Show success message
         this.toastr.success(
           this.currentLang === 'ar'
-            ? 'تم إكمال التسجيل بنجاح!'
-            : 'Registration completed successfully!'
+            ? 'تم تحديث الملف الشخصي بنجاح!'
+            : 'Profile updated successfully!'
         );
         
         this.loading = false;
@@ -304,14 +287,13 @@ export class StudentRegistrationComponent implements OnInit {
         this.router.navigate(['/student/dashboard']);
       },
       error: (error) => {
-        console.error('Registration error:', error);
+        console.error('Profile update error:', error);
         this.loading = false;
         
         // Handle specific errors
         if (error.error?.message) {
           this.toastr.error(error.error.message);
         } else if (error.error?.errors) {
-          // Validation errors from backend
           const errors = error.error.errors;
           Object.keys(errors).forEach(key => {
             this.toastr.error(errors[key][0]);
@@ -319,8 +301,8 @@ export class StudentRegistrationComponent implements OnInit {
         } else {
           this.toastr.error(
             this.currentLang === 'ar'
-              ? 'حدث خطأ أثناء التسجيل'
-              : 'An error occurred during registration'
+              ? 'حدث خطأ أثناء تحديث الملف الشخصي'
+              : 'An error occurred while updating profile'
           );
         }
       }
@@ -328,7 +310,6 @@ export class StudentRegistrationComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/account-type']);
+    this.router.navigate(['/student/dashboard']);
   }
 }
-

@@ -15,11 +15,12 @@ type ModalMode = 'idle' | 'login-password' | 'login-social' | 'register';
 type LoadingState = 'none' | 'email' | 'google' | 'apple';
 
 import { VerificationModalComponent } from '../verification-modal/verification-modal.component';
+import { ForgotPasswordModalComponent } from '../forgot-password-modal/forgot-password-modal.component';
 
 @Component({
   selector: 'app-login-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, VerificationModalComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, VerificationModalComponent, ForgotPasswordModalComponent],
   templateUrl: './login-modal.component.html',
   styleUrls: ['./login-modal.component.scss']
 })
@@ -39,6 +40,9 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   // Verification modal state
   showVerificationModal = false;
   verificationCanResendAt?: string;
+  
+  // Forgot password modal state
+  showForgotPasswordModal = false;
 
   // Form fields
   email = '';
@@ -531,8 +535,15 @@ private initializeGoogleOAuth(): void {
   */
 
   onForgotPassword() {
-    this.forgotPassword.emit();
-    this.close();
+    this.showForgotPasswordModal = true;
+  }
+  
+  onCloseForgotPasswordModal() {
+    this.showForgotPasswordModal = false;
+  }
+  
+  onBackToLoginFromForgot() {
+    this.showForgotPasswordModal = false;
   }
 
   onCloseVerificationModal() {

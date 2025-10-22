@@ -1,6 +1,29 @@
 {
 
-"general":{
+  "student": {
+    "profile": {
+      "title": "Student Profile",
+      "basicInfo": "Basic Information",
+      "location": "Location",
+      "education": "Education",
+      "preferences": "Preferences"
+    },
+    "dashboard": {
+      "welcome": "Welcome",
+      "subtitle": "Ready to continue your learning journey?",
+      "updateProfile": "Update Profile",
+      "totalCourses": "Total Courses",
+      "activeCourses": "Active Courses",
+      "completedLessons": "Completed Lessons",
+      "totalPoints": "Total Points",
+      "quickActions": "Quick Actions",
+      "recentActivities": "Recent Activities",
+      "upcomingEvents": "Upcoming Events",
+      "noActivities": "No recent activities",
+      "noEvents": "No upcoming events"
+    }
+  },
+  "general":{
     "disruptive_behavior":      "Disruptive Behavior",
     "late_submission":          "Late Submission",
     "hurtful_language":         "Hurtful Language",
@@ -98,6 +121,12 @@
   "changepassword": "Change Password",
   "deleteAccount": "Delete Account",
   "deleteAccountConfirmation": "Are you sure you want to delete your account?",
+  "validating": "Validating",
+  "sending": "Sending",
+  "resetting": "Resetting",
+  "passwordMustBe8Characters": "Password must be at least 8 characters",
+  "success": "Success",
+  "error": "Error",
   "deleteAccountMessage": "Your account will be permanently deleted and you will lose all your data.",
   "deleteAccountFailed": "Account deletion failed!",
   "deleteAccountFailedMessage": "An error occurred while deleting your account!",
@@ -1578,7 +1607,19 @@
     "photoPlaceholder": "https://example.com/photo.jpg",
     "photoHelpText": "Optional: Enter a URL for your profile photo",
     "invalidUrl": "Please enter a valid URL",
-    "completeRegistration": "Complete Registration"
+    "completeRegistration": "Complete Registration",
+    "enterName": "Enter your name",
+    "nameRequired": "Name is required",
+    "dateOfBirthRequired": "Date of birth is required",
+    "selectGender": "Select gender",
+    "selectEducationStage": "Select education stage",
+    "educationStageRequired": "Education stage is required",
+    "languageRequired": "Language is required",
+    "enterPhotoUrl": "Enter photo URL",
+    "invalidUrl": "Invalid URL",
+    "updateProfile": "Update Profile",
+    "viewAll": "View All",
+    "points": "points"
   }
 }
 }

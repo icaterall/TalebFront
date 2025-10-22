@@ -1,0 +1,199 @@
+<div class="student-profile-container">
+  <div class="profile-header">
+    <div class="container">
+      <div class="header-content">
+        <button class="back-button" (click)="goBack()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ 'general.back' | translate }}
+        </button>
+        <h1 class="page-title">{{ 'student.profile.title' | translate }}</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-content">
+    <div class="container">
+      <div class="profile-form-container">
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+          
+          <!-- Basic Information Section -->
+          <div class="form-section">
+            <h2 class="section-title">{{ 'student.profile.basicInfo' | translate }}</h2>
+            
+            <div class="form-group">
+              <label for="name" class="form-label">{{ 'general.name' | translate }} *</label>
+              <input
+                type="text"
+                id="name"
+                class="form-input"
+                formControlName="name"
+                [placeholder]="('general.enterName' | translate)"
+                [class.error]="profileForm.get('name')?.invalid && profileForm.get('name')?.touched"
+              >
+              <div *ngIf="profileForm.get('name')?.invalid && profileForm.get('name')?.touched" class="error-message">
+                {{ 'general.nameRequired' | translate }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="date_of_birth" class="form-label">{{ 'general.dateOfBirth' | translate }} *</label>
+              <input
+                type="date"
+                id="date_of_birth"
+                class="form-input"
+                formControlName="date_of_birth"
+                [class.error]="profileForm.get('date_of_birth')?.invalid && profileForm.get('date_of_birth')?.touched"
+              >
+              <div *ngIf="profileForm.get('date_of_birth')?.invalid && profileForm.get('date_of_birth')?.touched" class="error-message">
+                {{ 'general.dateOfBirthRequired' | translate }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="gender" class="form-label">{{ 'general.gender' | translate }}</label>
+              <select
+                id="gender"
+                class="form-select"
+                formControlName="gender"
+              >
+                <option value="">{{ 'general.selectGender' | translate }}</option>
+                <option *ngFor="let option of genderOptions" [value]="option.value">
+                  {{ getGenderLabel(option) }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Location Section -->
+          <div class="form-section">
+            <h2 class="section-title">{{ 'student.profile.location' | translate }}</h2>
+            
+            <div class="form-group">
+              <label for="country_id" class="form-label">{{ 'general.country' | translate }} *</label>
+              <select
+                id="country_id"
+                class="form-select"
+                formControlName="country_id"
+                [class.error]="profileForm.get('country_id')?.invalid && profileForm.get('country_id')?.touched"
+                [disabled]="loadingCountries"
+              >
+                <option value="">{{ 'general.selectCountry' | translate }}</option>
+                <option *ngFor="let country of countries" [value]="country.id">
+                  {{ currentLang === 'ar' ? country.name_ar : country.name_en }}
+                </option>
+              </select>
+              <div *ngIf="loadingCountries" class="loading-indicator">
+                {{ 'general.loading' | translate }}...
+              </div>
+              <div *ngIf="profileForm.get('country_id')?.invalid && profileForm.get('country_id')?.touched" class="error-message">
+                {{ 'general.countryRequired' | translate }}
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="showStates">
+              <label for="state_id" class="form-label">{{ 'general.state' | translate }} *</label>
+              <select
+                id="state_id"
+                class="form-select"
+                formControlName="state_id"
+                [class.error]="profileForm.get('state_id')?.invalid && profileForm.get('state_id')?.touched"
+                [disabled]="loadingStates"
+              >
+                <option value="">{{ 'general.selectState' | translate }}</option>
+                <option *ngFor="let state of states" [value]="state.id">
+                  {{ currentLang === 'ar' ? state.name_ar : state.name_en }}
+                </option>
+              </select>
+              <div *ngIf="loadingStates" class="loading-indicator">
+                {{ 'general.loading' | translate }}...
+              </div>
+              <div *ngIf="profileForm.get('state_id')?.invalid && profileForm.get('state_id')?.touched" class="error-message">
+                {{ 'general.stateRequired' | translate }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Education Section -->
+          <div class="form-section">
+            <h2 class="section-title">{{ 'student.profile.education' | translate }}</h2>
+            
+            <div class="form-group">
+              <label for="education_stage_id" class="form-label">{{ 'general.educationStage' | translate }} *</label>
+              <select
+                id="education_stage_id"
+                class="form-select"
+                formControlName="education_stage_id"
+                [class.error]="profileForm.get('education_stage_id')?.invalid && profileForm.get('education_stage_id')?.touched"
+                [disabled]="loadingStages"
+              >
+                <option value="">{{ 'general.selectEducationStage' | translate }}</option>
+                <option *ngFor="let stage of educationStages" [value]="stage.id">
+                  {{ getStageDisplayName(stage) }}
+                </option>
+              </select>
+              <div *ngIf="loadingStages" class="loading-indicator">
+                {{ 'general.loading' | translate }}...
+              </div>
+              <div *ngIf="profileForm.get('education_stage_id')?.invalid && profileForm.get('education_stage_id')?.touched" class="error-message">
+                {{ 'general.educationStageRequired' | translate }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Preferences Section -->
+          <div class="form-section">
+            <h2 class="section-title">{{ 'student.profile.preferences' | translate }}</h2>
+            
+            <div class="form-group">
+              <label for="locale" class="form-label">{{ 'general.language' | translate }} *</label>
+              <select
+                id="locale"
+                class="form-select"
+                formControlName="locale"
+                [class.error]="profileForm.get('locale')?.invalid && profileForm.get('locale')?.touched"
+              >
+                <option *ngFor="let option of languageOptions" [value]="option.value">
+                  {{ getLanguageLabel(option) }}
+                </option>
+              </select>
+              <div *ngIf="profileForm.get('locale')?.invalid && profileForm.get('locale')?.touched" class="error-message">
+                {{ 'general.languageRequired' | translate }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="profile_photo_url" class="form-label">{{ 'general.profilePhoto' | translate }}</label>
+              <input
+                type="url"
+                id="profile_photo_url"
+                class="form-input"
+                formControlName="profile_photo_url"
+                [placeholder]="('general.enterPhotoUrl' | translate)"
+                [class.error]="profileForm.get('profile_photo_url')?.invalid && profileForm.get('profile_photo_url')?.touched"
+              >
+              <div *ngIf="profileForm.get('profile_photo_url')?.invalid && profileForm.get('profile_photo_url')?.touched" class="error-message">
+                {{ 'general.invalidUrl' | translate }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="submit-button"
+              [disabled]="profileForm.invalid || loading"
+            >
+              <span *ngIf="loading" class="spinner"></span>
+              <span *ngIf="!loading">{{ 'general.updateProfile' | translate }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <app-footer></app-footer>
+</div>

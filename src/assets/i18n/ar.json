@@ -1,4 +1,27 @@
 {  
+  "student": {
+    "profile": {
+      "title": "الملف الشخصي للطالب",
+      "basicInfo": "المعلومات الأساسية",
+      "location": "الموقع",
+      "education": "التعليم",
+      "preferences": "التفضيلات"
+    },
+    "dashboard": {
+      "welcome": "مرحباً",
+      "subtitle": "مستعد لمتابعة رحلة التعلم الخاصة بك؟",
+      "updateProfile": "تحديث الملف الشخصي",
+      "totalCourses": "إجمالي الدورات",
+      "activeCourses": "الدورات النشطة",
+      "completedLessons": "الدروس المكتملة",
+      "totalPoints": "إجمالي النقاط",
+      "quickActions": "الإجراءات السريعة",
+      "recentActivities": "الأنشطة الأخيرة",
+      "upcomingEvents": "الأحداث القادمة",
+      "noActivities": "لا توجد أنشطة حديثة",
+      "noEvents": "لا توجد أحداث قادمة"
+    }
+  },
   "general":{
 
     "disruptive_behavior":      "سلوك معرقل",
@@ -98,6 +121,12 @@
   "pleaseProvideValidEmail": "يرجى ادخال بريد إلكتروني صالح",
   "emailIsUsed": "البريد الالكتروني مستخدم بالفعل",
   "errorChickingEmailTryLater": "خطأ في التحقق من البريد الإلكتروني، حاول لاحقًا",
+  "validating": "جارٍ التحقق",
+  "sending": "جارٍ الإرسال",
+  "resetting": "جارٍ إعادة التعيين",
+  "passwordMustBe8Characters": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+  "success": "نجاح",
+  "error": "خطأ",
   "waitIrememberMyPassword":"انتظر! لقد تذكرت كلمة المرور",
   "passwordMustContain":"يجب أن تحتوي كلمة المرور على:",
   "atleast":  "على الأقل",

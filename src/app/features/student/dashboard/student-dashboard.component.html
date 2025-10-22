@@ -1,0 +1,149 @@
+<div class="student-dashboard">
+  <app-header></app-header>
+
+  <div class="dashboard-content">
+    <div class="container">
+      
+      <!-- Welcome Section -->
+      <div class="welcome-section">
+        <div class="welcome-content">
+          <h1 class="welcome-title">
+            {{ 'student.dashboard.welcome' | translate }}, {{ userName }}! 👋
+          </h1>
+          <p class="welcome-subtitle">
+            {{ 'student.dashboard.subtitle' | translate }}
+          </p>
+        </div>
+        <div class="welcome-actions">
+          <button class="profile-button" (click)="onUpdateProfile()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            {{ 'student.dashboard.updateProfile' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="stats-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+              <div class="stat-number">{{ stats.totalCourses }}</div>
+              <div class="stat-label">{{ 'student.dashboard.totalCourses' | translate }}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-content">
+              <div class="stat-number">{{ stats.activeCourses }}</div>
+              <div class="stat-label">{{ 'student.dashboard.activeCourses' | translate }}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <div class="stat-number">{{ stats.completedLessons }}</div>
+              <div class="stat-label">{{ 'student.dashboard.completedLessons' | translate }}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-content">
+              <div class="stat-number">{{ stats.totalPoints }}</div>
+              <div class="stat-label">{{ 'student.dashboard.totalPoints' | translate }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-section">
+        <h2 class="section-title">{{ 'student.dashboard.quickActions' | translate }}</h2>
+        <div class="quick-actions-grid">
+          <div 
+            *ngFor="let action of quickActions" 
+            class="quick-action-card"
+            (click)="onQuickAction(action.id)"
+            [style.--action-color]="action.color"
+          >
+            <div class="action-icon">{{ action.icon }}</div>
+            <div class="action-content">
+              <h3 class="action-title">{{ action.title }}</h3>
+              <p class="action-description">{{ action.description }}</p>
+            </div>
+            <div class="action-arrow">→</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="content-grid">
+        
+        <!-- Recent Activities -->
+        <div class="content-card">
+          <div class="card-header">
+            <h3 class="card-title">{{ 'student.dashboard.recentActivities' | translate }}</h3>
+            <button class="view-all-button" (click)="onViewAllActivities()">
+              {{ 'general.viewAll' | translate }}
+            </button>
+          </div>
+          <div class="card-content">
+            <div *ngIf="recentActivities.length === 0" class="empty-state">
+              <div class="empty-icon">📚</div>
+              <p class="empty-text">{{ 'student.dashboard.noActivities' | translate }}</p>
+            </div>
+            <div *ngFor="let activity of recentActivities" class="activity-item">
+              <div class="activity-icon">{{ getActivityIcon(activity.type) }}</div>
+              <div class="activity-content">
+                <h4 class="activity-title">{{ activity.title }}</h4>
+                <p class="activity-description">{{ activity.description }}</p>
+                <div class="activity-meta">
+                  <span class="activity-time">{{ formatTimestamp(activity.timestamp) }}</span>
+                  <span class="activity-points">+{{ activity.points }} {{ 'general.points' | translate }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="content-card">
+          <div class="card-header">
+            <h3 class="card-title">{{ 'student.dashboard.upcomingEvents' | translate }}</h3>
+            <button class="view-all-button" (click)="onViewAllEvents()">
+              {{ 'general.viewAll' | translate }}
+            </button>
+          </div>
+          <div class="card-content">
+            <div *ngIf="upcomingEvents.length === 0" class="empty-state">
+              <div class="empty-icon">📅</div>
+              <p class="empty-text">{{ 'student.dashboard.noEvents' | translate }}</p>
+            </div>
+            <div *ngFor="let event of upcomingEvents" class="event-item">
+              <div class="event-icon">{{ getEventIcon(event.type) }}</div>
+              <div class="event-content">
+                <h4 class="event-title">{{ event.title }}</h4>
+                <div class="event-meta">
+                  <span class="event-time">{{ event.time }}</span>
+                  <span class="event-date">{{ event.date }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">{{ 'general.loading' | translate }}...</p>
+      </div>
+
+    </div>
+  </div>
+
+  <app-footer></app-footer>
+</div>

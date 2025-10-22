@@ -15,6 +15,16 @@ export const appRoutes: Routes = [
     canActivate: [StudentRegistrationGuard],
   },
   {
+    path: 'student/dashboard',
+    loadComponent: () => import('./features/student/dashboard/student-dashboard.component').then(m => m.StudentDashboardComponent),
+    canActivate: [OnboardingGuard],
+  },
+  {
+    path: 'student/profile',
+    loadComponent: () => import('./features/student/profile/student-profile.component').then(m => m.StudentProfileComponent),
+    canActivate: [OnboardingGuard],
+  },
+  {
     path: 'teacher',
     loadChildren: () => import('./features/teacher/teacher.routes').then(m => m.TEACHER_ROUTES),
     canActivate: [OnboardingGuard],
@@ -23,6 +33,10 @@ export const appRoutes: Routes = [
     path: 'dashboard',
     loadComponent: () => import('./layouts/features/dashboard/pages/home/dashboard-home.component').then(m => m.DashboardHomeComponent),
     canActivate: [OnboardingGuard],
+  },
+  {
+    path: 'auth/reset-password/:token',
+    loadComponent: () => import('./features/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
   },
   {
     path: '',
