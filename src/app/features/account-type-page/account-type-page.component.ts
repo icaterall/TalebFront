@@ -775,6 +775,7 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Registration error:', error);
           this.toastr.error('Registration failed. Please try again.');
+          this.isSubmitting = false; // Re-enable the button on error
         },
         complete: () => {
           this.isSubmitting = false;
