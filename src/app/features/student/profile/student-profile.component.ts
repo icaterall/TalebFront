@@ -11,7 +11,7 @@ import { GeographyService, Country, State } from '../../../core/services/geograp
 import { EducationService, EducationStage } from '../../../core/services/education.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { FooterComponent } from '../../../shared/footer/footer.component';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-student-profile',

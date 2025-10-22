@@ -1,9 +1,5 @@
 import { Component, Inject, NgZone, OnDestroy, AfterViewInit, ViewChild, ElementRef, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { KpiStripComponent } from './kpi-strip/kpi-strip.component';
-import { TodayAgendaComponent } from './today-agenda/today-agenda.component';
-import { RecentActivityComponent } from './recent-activity/recent-activity.component';
-import { QuickLinksComponent } from './quick-links/quick-links.component';
 import { OnboardingChecklistComponent, OnbStep, StepKey } from './onboarding-checklist/onboarding-checklist.component';
 import { CreateCourseFormComponent, CourseFormData } from './create-course-form/create-course-form.component';
 import { AnimateOnIntersectDirective } from './animate-on-intersect.directive';
@@ -21,10 +17,6 @@ import { TranslateModule } from '@ngx-translate/core';
   imports: [
     CommonModule,
     TranslateModule,
-    KpiStripComponent,
-    TodayAgendaComponent,
-    RecentActivityComponent,
-    QuickLinksComponent,
     OnboardingChecklistComponent,
     CreateCourseFormComponent,
     AnimateOnIntersectDirective,
