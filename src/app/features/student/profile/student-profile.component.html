@@ -81,7 +81,7 @@
               >
                 <option value="">{{ 'general.selectCountry' | translate }}</option>
                 <option *ngFor="let country of countries" [value]="country.id">
-                  {{ currentLang === 'ar' ? country.name_ar : country.name_en }}
+                  {{ country.name }}
                 </option>
               </select>
               <div *ngIf="loadingCountries" class="loading-indicator">
@@ -103,7 +103,7 @@
               >
                 <option value="">{{ 'general.selectState' | translate }}</option>
                 <option *ngFor="let state of states" [value]="state.id">
-                  {{ currentLang === 'ar' ? state.name_ar : state.name_en }}
+                  {{ state.name }}
                 </option>
               </select>
               <div *ngIf="loadingStates" class="loading-indicator">

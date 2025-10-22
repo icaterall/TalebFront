@@ -6,8 +6,6 @@ import { environment } from '../../../environments/environment';
 export interface EducationStage {
   id: number;
   name: string;
-  name_ar: string;
-  name_en: string;
   type: 'student' | 'teacher';
   min_age: number;
   max_age: number;

@@ -89,20 +89,14 @@ export function getAvatarColor(name: string): string {
 }
 
 /**
- * Format user display name based on language preference
+ * Format user display name
  * 
- * @param user - User object with name fields
- * @param preferredLang - Preferred language ('ar' or 'en')
- * @returns Display name in preferred language
+ * @param user - User object with name field
+ * @returns Display name
  */
 export function getUserDisplayName(
-  user: { name?: string; name_en?: string; name_ar?: string; email?: string },
-  preferredLang: 'ar' | 'en' = 'ar'
+  user: { name?: string; email?: string }
 ): string {
-  if (preferredLang === 'ar') {
-    return user.name || user.name_ar || user.name_en || user.email || '';
-  } else {
-    return user.name || user.name_en || user.name_ar || user.email || '';
-  }
+  return user.name || user.email || '';
 }
 

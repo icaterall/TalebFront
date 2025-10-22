@@ -15,7 +15,7 @@
  
     <img src="assets/logo-dark-t.png" alt="Ana Taleb" class="logo-img">
     <span class="org" *ngIf="!isMobile">{{ userName }}</span>
-    <span class="badge" *ngIf="!isMobile">Student</span>
+    <span class="badge" *ngIf="!isMobile">{{ 'student.student' | translate }}</span>
   </div>
 
   <div class="spacer"></div>
@@ -24,5 +24,60 @@
     <span>{{ currentLanguage }}</span>
   </button>
 
-  <div class="avatar" (click)="onProfile()" title="View Profile">{{ userInitials }}</div>
+
+  <div class="avatar-container" (click)="onAvatarClick()">
+    <div class="avatar" [title]="userName">
+      <img 
+        *ngIf="userPhoto" 
+        [src]="userPhoto" 
+        [alt]="userName"
+        class="avatar-image"
+        (error)="onImageError($event)"
+      />
+      <span *ngIf="!userPhoto" class="avatar-initials">{{ userInitials }}</span>
+    </div>
+    
+    <!-- Profile Dropdown Menu -->
+    <div class="profile-menu" *ngIf="showProfileMenu">
+      <div class="profile-menu-header">
+        <div class="profile-info">
+          <div class="profile-avatar">
+            <img 
+              *ngIf="userPhoto" 
+              [src]="userPhoto" 
+              [alt]="userName"
+              class="profile-avatar-image"
+              (error)="onImageError($event)"
+            />
+            <span *ngIf="!userPhoto" class="profile-avatar-initials">{{ userInitials }}</span>
+          </div>
+          <div class="profile-details">
+            <div class="profile-name">{{ userName }}</div>
+            <div class="profile-role">{{ 'student.student' | translate }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="profile-menu-divider"></div>
+      
+      <div class="profile-menu-items">
+        <button class="profile-menu-item" (click)="onProfileSettings()">
+          <svg class="menu-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26 15 3.41 18.13 3.41 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>{{ 'student.profileSettings' | translate }}</span>
+        </button>
+        
+        <button class="profile-menu-item" (click)="onSignOut()">
+          <svg class="menu-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>{{ 'student.signOut' | translate }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </header>

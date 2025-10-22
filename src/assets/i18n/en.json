@@ -3,6 +3,18 @@
   "student": {
     "studentName": "Student",
     "student": "Student",
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "courses": "Courses",
+      "assignments": "Assignments",
+      "quizzes": "Quizzes",
+      "grades": "Grades",
+      "calendar": "Calendar",
+      "library": "Library",
+      "profile": "Profile"
+    },
+    "profileSettings": "Profile Settings",
+    "signOut": "Sign Out",
     "profile": {
       "title": "Student Profile",
       "basicInfo": "Basic Information",
@@ -51,6 +63,7 @@
         "viewGrades": "View Grades",
         "viewGradesSub": "Check your academic performance",
         "msPractices": "MS Practices",
+        "msPracticesTitle": "Microsoft Office Skills Practice",
         "msPracticesSub": "Test your Microsoft Office skills"
       },
       "highlights": {
@@ -90,6 +103,54 @@
         "card4Title": "Environmental Science",
         "card4Desc": "Explore environmental issues and sustainable solutions.",
         "enrollNow": "Enroll Now"
+      }
+    },
+    "courses": {
+      "title": "My Courses",
+      "subtitle": "Manage your enrolled courses",
+      "empty": {
+        "title": "No courses yet",
+        "description": "You haven't enrolled in any courses yet. Contact your teacher to get started."
+      }
+    },
+    "assignments": {
+      "title": "Assignments",
+      "subtitle": "View and submit your assignments",
+      "empty": {
+        "title": "No assignments",
+        "description": "You don't have any assignments yet. Check back later for updates."
+      }
+    },
+    "quizzes": {
+      "title": "Quizzes",
+      "subtitle": "Take quizzes and track your progress",
+      "empty": {
+        "title": "No quizzes available",
+        "description": "There are no quizzes available at the moment. Check back later."
+      }
+    },
+    "grades": {
+      "title": "Grades",
+      "subtitle": "View your academic performance",
+      "empty": {
+        "title": "No grades yet",
+        "description": "Your grades will appear here once your teachers start grading your work."
+      }
+    },
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "View your schedule and important dates",
+      "empty": {
+        "title": "No events scheduled",
+        "description": "You don't have any events scheduled. Check back later for updates."
+      }
+    },
+    "library": {
+      "title": "Library",
+      "subtitle": "Access learning materials and resources",
+      "empty": {
+        "title": "No resources available",
+        "description": "Learning resources will be available here once your teachers add them."
       }
     }
   },
@@ -154,65 +215,6 @@
           "Data Analysis",
           "Pivot Tables"
         ]
-      }
-    }
-  },
-  "sidebar": {
-      "dashboard": "Dashboard",
-      "courses": "Courses",
-      "assignments": "Assignments",
-      "quizzes": "Quizzes",
-      "grades": "Grades",
-      "calendar": "Calendar",
-      "library": "Library",
-      "profile": "Profile"
-    },
-    "courses": {
-      "title": "My Courses",
-      "subtitle": "Manage your enrolled courses",
-      "empty": {
-        "title": "No courses yet",
-        "description": "You haven't enrolled in any courses yet. Contact your teacher to get started."
-      }
-    },
-    "assignments": {
-      "title": "Assignments",
-      "subtitle": "View and submit your assignments",
-      "empty": {
-        "title": "No assignments",
-        "description": "You don't have any assignments yet. Check back later for updates."
-      }
-    },
-    "quizzes": {
-      "title": "Quizzes",
-      "subtitle": "Take quizzes and track your progress",
-      "empty": {
-        "title": "No quizzes available",
-        "description": "There are no quizzes available at the moment. Check back later."
-      }
-    },
-    "grades": {
-      "title": "Grades",
-      "subtitle": "View your academic performance",
-      "empty": {
-        "title": "No grades yet",
-        "description": "Your grades will appear here once your teachers start grading your work."
-      }
-    },
-    "calendar": {
-      "title": "Calendar",
-      "subtitle": "View your schedule and important dates",
-      "empty": {
-        "title": "No events scheduled",
-        "description": "You don't have any events scheduled. Check back later for updates."
-      }
-    },
-    "library": {
-      "title": "Library",
-      "subtitle": "Access learning materials and resources",
-      "empty": {
-        "title": "No resources available",
-        "description": "Learning resources will be available here once your teachers add them."
       }
     }
   },
@@ -1802,16 +1804,14 @@
     "invalidUrl": "Please enter a valid URL",
     "completeRegistration": "Complete Registration",
     "enterName": "Enter your name",
-    "nameRequired": "Name is required",
     "dateOfBirthRequired": "Date of birth is required",
-    "selectGender": "Select gender",
     "selectEducationStage": "Select education stage",
     "educationStageRequired": "Education stage is required",
     "languageRequired": "Language is required",
     "enterPhotoUrl": "Enter photo URL",
-    "invalidUrl": "Invalid URL",
     "updateProfile": "Update Profile",
     "viewAll": "View All",
     "points": "points"
   }
+}
 }

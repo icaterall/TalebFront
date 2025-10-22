@@ -21,11 +21,11 @@ export class I18nService {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  /** SSR-safe: only read sessionStorage in the browser */
+  /** SSR-safe: only read localStorage in the browser */
   private readSaved(): Lang | null {
     if (!this.isBrowser) return null;
     try {
-      const v = sessionStorage.getItem(this.STORAGE_KEY);
+      const v = localStorage.getItem(this.STORAGE_KEY);
       return v === 'ar' || v === 'en' ? v : null;
     } catch {
       return null;
@@ -143,13 +143,17 @@ export class I18nService {
     console.log('Translation service default lang:', this.translate.defaultLang);
     
     // Test a translation to see if it's working
-    const testTranslation = this.translate.instant('general.disruptive_behavior');
-    console.log('Test translation result:', testTranslation);
+    const testTranslation = this.translate.instant('student.student');
+    console.log('Test translation result for student.student:', testTranslation);
+    
+    // Test sidebar translation
+    const sidebarTest = this.translate.instant('student.sidebar.dashboard');
+    console.log('Test translation result for student.sidebar.dashboard:', sidebarTest);
     
     // Save to storage
     if (this.isBrowser) {
       try { 
-        sessionStorage.setItem(this.STORAGE_KEY, lang);
+        localStorage.setItem(this.STORAGE_KEY, lang);
         console.log('Language saved to storage:', lang); // Debug log
       } catch (e) {
         console.error('Failed to save language to storage:', e);
@@ -165,7 +169,7 @@ export class I18nService {
   clearLanguageStorage(): void {
     if (this.isBrowser) {
       try {
-        sessionStorage.removeItem(this.STORAGE_KEY);
+        localStorage.removeItem(this.STORAGE_KEY);
         console.log('Language storage cleared');
       } catch (e) {
         console.error('Failed to clear language storage:', e);

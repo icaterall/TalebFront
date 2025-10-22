@@ -1,8 +1,19 @@
-{  
-
+{
   "student": {
     "studentName": "طالب",
     "student": "طالب",
+    "sidebar": {
+      "dashboard": "لوحة التحكم",
+      "courses": "الدورات",
+      "assignments": "المهام",
+      "quizzes": "الاختبارات",
+      "grades": "الدرجات",
+      "calendar": "التقويم",
+      "library": "المكتبة",
+      "profile": "الملف الشخصي"
+    },
+    "profileSettings": "إعدادات الملف الشخصي",
+    "signOut": "تسجيل الخروج",
     "profile": {
       "title": "الملف الشخصي للطالب",
       "basicInfo": "المعلومات الأساسية",

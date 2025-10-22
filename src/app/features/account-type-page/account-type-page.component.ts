@@ -339,8 +339,24 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
       this.showDateOfBirth = true;
       // Angular's automatic change detection will update the view
     } else if (type === 'Teacher') {
-      console.log('Navigating to teacher dashboard');
-      this.router.navigate(['/teacher']);
+      console.log('Updating role to Teacher');
+      this.authService.updateRole('Teacher').subscribe({
+        next: (response) => {
+          console.log('Teacher role updated successfully');
+          
+          // Update the stored user data with the response
+          if (response.user) {
+            this.authService.updateCurrentUser(response.user);
+          }
+          
+          // Navigate to teacher dashboard
+          this.router.navigate(['/teacher']);
+        },
+        error: (error) => {
+          console.error('Role update error:', error);
+          this.toastr.error('Failed to update role. Please try again.');
+        }
+      });
     }
   }
 
@@ -765,6 +781,11 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
       this.authService.completeStudentRegistration(submissionData).subscribe({
         next: (response) => {
           this.toastr.success('Registration completed successfully!');
+          
+          // Update the stored user data with the response
+          if (response.user) {
+            this.authService.updateCurrentUser(response.user);
+          }
           
           // Clear onboarding state
           this.onboardingState.clearState();

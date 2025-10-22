@@ -7,8 +7,6 @@ import { environment } from '../../../environments/environment';
 export interface User {
   id: number;
   name: string;
-  name_en?: string;  // English name
-  name_ar?: string;  // Arabic name
   email: string;
   role?: string;
   auth_provider: string;
@@ -126,8 +124,6 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       name: user.name,
-      name_en: user.name_en,
-      name_ar: user.name_ar,
       role: user.role,
       hasToken: !!token
     });
@@ -138,6 +134,24 @@ export class AuthService {
     this.currentUserSubject.next(user);
     
     console.log('✅ Auth data stored successfully');
+  }
+
+  /**
+   * Update current user data without changing tokens
+   */
+  updateCurrentUser(user: User): void {
+    console.log('🔄 Updating current user data:', {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      onboarding_step: user.onboarding_step
+    });
+    
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+    
+    console.log('✅ User data updated successfully');
   }
 
   /**

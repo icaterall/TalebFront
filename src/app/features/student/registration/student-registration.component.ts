@@ -237,9 +237,7 @@ export class StudentRegistrationComponent implements OnInit {
   }
 
   getStageDisplayName(stage: EducationStage): string {
-    const name = this.currentLang === 'ar' ? stage.name_ar : stage.name_en;
-    const altName = this.currentLang === 'ar' ? stage.name_en : stage.name_ar;
-    return `${name} / ${altName}`;
+    return stage.name;
   }
 
   onSubmit(): void {
