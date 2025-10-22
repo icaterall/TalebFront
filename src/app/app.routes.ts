@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { OnboardingGuard } from './core/guards/onboarding.guard';
 import { AccountTypeGuard } from './core/guards/account-type.guard';
 import { StudentRegistrationGuard } from './core/guards/student-registration.guard';
+import { DashboardRedirectGuard } from './core/guards/dashboard-redirect.guard';
 
 export const appRoutes: Routes = [
   {
@@ -15,13 +16,8 @@ export const appRoutes: Routes = [
     canActivate: [StudentRegistrationGuard],
   },
   {
-    path: 'student/dashboard',
-    loadComponent: () => import('./features/student/dashboard/student-dashboard.component').then(m => m.StudentDashboardComponent),
-    canActivate: [OnboardingGuard],
-  },
-  {
-    path: 'student/profile',
-    loadComponent: () => import('./features/student/profile/student-profile.component').then(m => m.StudentProfileComponent),
+    path: 'student',
+    loadChildren: () => import('./features/student/student.routes').then(m => m.STUDENT_ROUTES),
     canActivate: [OnboardingGuard],
   },
   {
@@ -32,7 +28,7 @@ export const appRoutes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () => import('./layouts/features/dashboard/pages/home/dashboard-home.component').then(m => m.DashboardHomeComponent),
-    canActivate: [OnboardingGuard],
+    canActivate: [DashboardRedirectGuard],
   },
   {
     path: 'auth/reset-password/:token',

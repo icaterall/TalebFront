@@ -81,6 +81,19 @@ export class OnboardingGuard implements CanActivate {
       }
     }
 
+    // User has completed onboarding - check if they should be redirected to appropriate dashboard
+    if (user && user.onboarding_step === 'complete') {
+      if (user.role === 'Student' && !state.url.startsWith('/student')) {
+        console.log('OnboardingGuard: Completed student accessing non-student route, redirecting to student dashboard');
+        this.router.navigate(['/student/dashboard']);
+        return false;
+      } else if (user.role === 'Teacher' && !state.url.startsWith('/teacher')) {
+        console.log('OnboardingGuard: Completed teacher accessing non-teacher route, redirecting to teacher dashboard');
+        this.router.navigate(['/teacher']);
+        return false;
+      }
+    }
+
     // User has completed onboarding
     return true;
   }

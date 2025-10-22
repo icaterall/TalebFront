@@ -1,6 +1,8 @@
 {
 
   "student": {
+    "studentName": "Student",
+    "student": "Student",
     "profile": {
       "title": "Student Profile",
       "basicInfo": "Basic Information",
@@ -20,7 +22,198 @@
       "recentActivities": "Recent Activities",
       "upcomingEvents": "Upcoming Events",
       "noActivities": "No recent activities",
-      "noEvents": "No upcoming events"
+      "noEvents": "No upcoming events",
+      "tipText": "Complete your profile to unlock all features and get personalized recommendations!",
+      "tryNow": "Update Now",
+      "badges": {
+        "enrolledCourses": "Enrolled Courses",
+        "activeCourses": "Active Courses",
+        "totalPoints": "Total Points"
+      },
+      "kpi": {
+        "totalCourses": "Total Courses",
+        "activeCourses": "Active Courses",
+        "completedLessons": "Completed Lessons",
+        "totalPoints": "Total Points",
+        "viewAllCourses": "View All Courses",
+        "viewActiveCourses": "View Active Courses",
+        "viewProgress": "View Progress",
+        "viewAchievements": "View Achievements"
+      },
+      "actions": {
+        "quickAction": "Quick Action",
+        "viewCourses": "View Courses",
+        "viewCoursesSub": "Browse all your enrolled courses",
+        "viewAssignments": "View Assignments",
+        "viewAssignmentsSub": "Check your pending assignments",
+        "takeQuiz": "Take Quiz",
+        "takeQuizSub": "Start a new quiz or continue existing ones",
+        "viewGrades": "View Grades",
+        "viewGradesSub": "Check your academic performance",
+        "msPractices": "MS Practices",
+        "msPracticesSub": "Test your Microsoft Office skills"
+      },
+      "highlights": {
+        "title": "Today's Highlights",
+        "item1Title": "Mathematics Quiz",
+        "item1Time": "Due in 2 hours",
+        "item2Title": "Science Assignment",
+        "item2Time": "Due tomorrow",
+        "item3Title": "English Essay",
+        "item3Time": "Due next week",
+        "start": "Start",
+        "prepare": "Prepare",
+        "details": "Details"
+      },
+      "activity": {
+        "title": "Recent Activity",
+        "completedQuiz": "completed the quiz",
+        "quizName": "Mathematics Basics",
+        "withScore": "with a score of",
+        "submittedAssignment": "submitted the assignment",
+        "assignmentName": "Science Project",
+        "enrolledCourse": "enrolled in the course",
+        "courseName": "Advanced Physics",
+        "time2min": "2 minutes ago",
+        "time1hour": "1 hour ago",
+        "timeYesterday": "Yesterday"
+      },
+      "library": {
+        "title": "Recommended Courses",
+        "plays": "{{count}} students enrolled",
+        "card1Title": "Advanced Mathematics",
+        "card1Desc": "Master advanced mathematical concepts and problem-solving techniques.",
+        "card2Title": "Computer Science Fundamentals",
+        "card2Desc": "Learn the basics of programming and computer science principles.",
+        "card3Title": "Creative Writing Workshop",
+        "card3Desc": "Develop your writing skills through creative exercises and feedback.",
+        "card4Title": "Environmental Science",
+        "card4Desc": "Explore environmental issues and sustainable solutions.",
+        "enrollNow": "Enroll Now"
+      }
+    }
+  },
+  "msPractices": {
+    "title": "Microsoft Office Skills Practice",
+    "subtitle": "Test and improve your skills in Microsoft Office applications",
+    "close": "Close",
+    "backToApps": "Back to Applications",
+    "estimatedTime": "Estimated Time",
+    "difficultyLevel": "Difficulty Level",
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "skillsYouWillPractice": "Skills You Will Practice",
+    "startPractice": "Start Practice",
+    "beginNow": "Begin your skill assessment now",
+    "practiceStarted": "Practice session started for {{app}}",
+    "success": "Success",
+    "apps": {
+      "outlook": {
+        "name": "Outlook",
+        "description": "Master email management, calendar scheduling, and task organization",
+        "estimatedTime": "15-20 min",
+        "skills": [
+          "Email Management",
+          "Calendar Scheduling", 
+          "Task Organization",
+          "Contact Management"
+        ]
+      },
+      "word": {
+        "name": "Microsoft Word",
+        "description": "Create professional documents, reports, and formatted text",
+        "estimatedTime": "10-15 min",
+        "skills": [
+          "Document Formatting",
+          "Tables & Lists",
+          "Headers & Footers",
+          "Styles & Templates"
+        ]
+      },
+      "powerpoint": {
+        "name": "PowerPoint",
+        "description": "Design engaging presentations with animations and transitions",
+        "estimatedTime": "20-25 min",
+        "skills": [
+          "Slide Design",
+          "Animations",
+          "Transitions",
+          "Master Slides"
+        ]
+      },
+      "excel": {
+        "name": "Excel",
+        "description": "Master spreadsheets, formulas, charts, and data analysis",
+        "estimatedTime": "25-30 min",
+        "skills": [
+          "Formulas & Functions",
+          "Charts & Graphs",
+          "Data Analysis",
+          "Pivot Tables"
+        ]
+      }
+    }
+  },
+  "sidebar": {
+      "dashboard": "Dashboard",
+      "courses": "Courses",
+      "assignments": "Assignments",
+      "quizzes": "Quizzes",
+      "grades": "Grades",
+      "calendar": "Calendar",
+      "library": "Library",
+      "profile": "Profile"
+    },
+    "courses": {
+      "title": "My Courses",
+      "subtitle": "Manage your enrolled courses",
+      "empty": {
+        "title": "No courses yet",
+        "description": "You haven't enrolled in any courses yet. Contact your teacher to get started."
+      }
+    },
+    "assignments": {
+      "title": "Assignments",
+      "subtitle": "View and submit your assignments",
+      "empty": {
+        "title": "No assignments",
+        "description": "You don't have any assignments yet. Check back later for updates."
+      }
+    },
+    "quizzes": {
+      "title": "Quizzes",
+      "subtitle": "Take quizzes and track your progress",
+      "empty": {
+        "title": "No quizzes available",
+        "description": "There are no quizzes available at the moment. Check back later."
+      }
+    },
+    "grades": {
+      "title": "Grades",
+      "subtitle": "View your academic performance",
+      "empty": {
+        "title": "No grades yet",
+        "description": "Your grades will appear here once your teachers start grading your work."
+      }
+    },
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "View your schedule and important dates",
+      "empty": {
+        "title": "No events scheduled",
+        "description": "You don't have any events scheduled. Check back later for updates."
+      }
+    },
+    "library": {
+      "title": "Library",
+      "subtitle": "Access learning materials and resources",
+      "empty": {
+        "title": "No resources available",
+        "description": "Learning resources will be available here once your teachers add them."
+      }
     }
   },
   "general":{
@@ -1621,5 +1814,4 @@
     "viewAll": "View All",
     "points": "points"
   }
-}
 }

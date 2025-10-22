@@ -35,10 +35,32 @@ export class AccountTypeGuard implements CanActivate {
         this.router.navigate(['/teacher/setup']);
         return false;
       } else if (user.onboarding_step === 'complete') {
-        console.log('AccountTypeGuard: Redirecting to dashboard');
-        this.router.navigate(['/dashboard']);
+        console.log('AccountTypeGuard: User has completed onboarding, redirecting to appropriate dashboard');
+        if (user.role === 'Student') {
+          console.log('AccountTypeGuard: Redirecting student to student dashboard');
+          this.router.navigate(['/student/dashboard']);
+        } else if (user.role === 'Teacher') {
+          console.log('AccountTypeGuard: Redirecting teacher to teacher dashboard');
+          this.router.navigate(['/teacher']);
+        } else {
+          console.log('AccountTypeGuard: Redirecting to generic dashboard');
+          this.router.navigate(['/dashboard']);
+        }
         return false;
       }
+    }
+
+    // Additional check: If user has completed onboarding, they should not access account-type page
+    if (user.onboarding_step === 'complete') {
+      console.log('AccountTypeGuard: User has completed onboarding, preventing access to account-type page');
+      if (user.role === 'Student') {
+        this.router.navigate(['/student/dashboard']);
+      } else if (user.role === 'Teacher') {
+        this.router.navigate(['/teacher']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
+      return false;
     }
 
     // User is authenticated and needs role selection

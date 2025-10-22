@@ -14,6 +14,7 @@ import { provideAnimations, provideNoopAnimations } from '@angular/platform-brow
 import { RECAPTCHA_V3_SITE_KEY } from 'ng-recaptcha-2';
 import { environment } from '../environments/environment';
 import { langInterceptor } from './core/interceptors/lang.interceptor';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 function getStartupLang(): 'ar' | 'en' {
   const w = typeof window !== 'undefined' ? (window as any) : undefined;
@@ -32,7 +33,7 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withPreloading(PreloadAllModules)
     ),
-    provideHttpClient(withInterceptors([langInterceptor])),
+    provideHttpClient(withInterceptors([langInterceptor, authInterceptor])),
     provideTranslateService({
       loader: provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
       lang: getStartupLang(),

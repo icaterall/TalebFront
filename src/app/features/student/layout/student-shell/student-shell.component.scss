@@ -1,7 +1,7 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: var(--bg);
+  background: var(--bg, #f8fafc);
 }
 
 .shell {
@@ -25,9 +25,10 @@
   padding: 0px;
   margin-left: 0;
   transition: margin-left 0.25s ease;
+  width: 100%;
 }
 
-.shell:not(:has(app-teacher-sidebar)) .content {
+.shell:not(:has(app-student-sidebar)) .content {
   margin-left: 0;
 }
 
@@ -51,8 +52,6 @@
   .sidebar {
     position: fixed;
     top: 0;
- 
-
     z-index: 1000;
   }
 
@@ -63,5 +62,6 @@
   .content {
     margin-left: 0;
     padding: 0px 0px 48px;
+    width: 100%;
   }
 }

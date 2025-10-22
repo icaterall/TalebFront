@@ -1,149 +1,240 @@
-<div class="student-dashboard">
-  <app-header></app-header>
-
-  <div class="dashboard-content">
-    <div class="container">
-      
-      <!-- Welcome Section -->
-      <div class="welcome-section">
-        <div class="welcome-content">
-          <h1 class="welcome-title">
-            {{ 'student.dashboard.welcome' | translate }}, {{ userName }}! 👋
-          </h1>
-          <p class="welcome-subtitle">
-            {{ 'student.dashboard.subtitle' | translate }}
-          </p>
-        </div>
-        <div class="welcome-actions">
-          <button class="profile-button" (click)="onUpdateProfile()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            {{ 'student.dashboard.updateProfile' | translate }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Stats Section -->
-      <div class="stats-section">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">📚</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ stats.totalCourses }}</div>
-              <div class="stat-label">{{ 'student.dashboard.totalCourses' | translate }}</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🎯</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ stats.activeCourses }}</div>
-              <div class="stat-label">{{ 'student.dashboard.activeCourses' | translate }}</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">✅</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ stats.completedLessons }}</div>
-              <div class="stat-label">{{ 'student.dashboard.completedLessons' | translate }}</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ stats.totalPoints }}</div>
-              <div class="stat-label">{{ 'student.dashboard.totalPoints' | translate }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions-section">
-        <h2 class="section-title">{{ 'student.dashboard.quickActions' | translate }}</h2>
-        <div class="quick-actions-grid">
-          <div 
-            *ngFor="let action of quickActions" 
-            class="quick-action-card"
-            (click)="onQuickAction(action.id)"
-            [style.--action-color]="action.color"
-          >
-            <div class="action-icon">{{ action.icon }}</div>
-            <div class="action-content">
-              <h3 class="action-title">{{ action.title }}</h3>
-              <p class="action-description">{{ action.description }}</p>
-            </div>
-            <div class="action-arrow">→</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Content Grid -->
-      <div class="content-grid">
-        
-        <!-- Recent Activities -->
-        <div class="content-card">
-          <div class="card-header">
-            <h3 class="card-title">{{ 'student.dashboard.recentActivities' | translate }}</h3>
-            <button class="view-all-button" (click)="onViewAllActivities()">
-              {{ 'general.viewAll' | translate }}
-            </button>
-          </div>
-          <div class="card-content">
-            <div *ngIf="recentActivities.length === 0" class="empty-state">
-              <div class="empty-icon">📚</div>
-              <p class="empty-text">{{ 'student.dashboard.noActivities' | translate }}</p>
-            </div>
-            <div *ngFor="let activity of recentActivities" class="activity-item">
-              <div class="activity-icon">{{ getActivityIcon(activity.type) }}</div>
-              <div class="activity-content">
-                <h4 class="activity-title">{{ activity.title }}</h4>
-                <p class="activity-description">{{ activity.description }}</p>
-                <div class="activity-meta">
-                  <span class="activity-time">{{ formatTimestamp(activity.timestamp) }}</span>
-                  <span class="activity-points">+{{ activity.points }} {{ 'general.points' | translate }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Upcoming Events -->
-        <div class="content-card">
-          <div class="card-header">
-            <h3 class="card-title">{{ 'student.dashboard.upcomingEvents' | translate }}</h3>
-            <button class="view-all-button" (click)="onViewAllEvents()">
-              {{ 'general.viewAll' | translate }}
-            </button>
-          </div>
-          <div class="card-content">
-            <div *ngIf="upcomingEvents.length === 0" class="empty-state">
-              <div class="empty-icon">📅</div>
-              <p class="empty-text">{{ 'student.dashboard.noEvents' | translate }}</p>
-            </div>
-            <div *ngFor="let event of upcomingEvents" class="event-item">
-              <div class="event-icon">{{ getEventIcon(event.type) }}</div>
-              <div class="event-content">
-                <h4 class="event-title">{{ event.title }}</h4>
-                <div class="event-meta">
-                  <span class="event-time">{{ event.time }}</span>
-                  <span class="event-date">{{ event.date }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Loading State -->
-      <div *ngIf="loading" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">{{ 'general.loading' | translate }}...</p>
-      </div>
-
-    </div>
+<section class="dashboard" *ngIf="isBrowser">
+  <!-- Floating Background Shapes -->
+  <div class="floating-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
   </div>
 
-  <app-footer></app-footer>
-</div>
+  <div class="dashboard-container">
+    <!-- Hero Welcome Section -->
+    <section class="hero-section-dashboard" #hero>
+      <div class="welcome-banner">
+        <div class="welcome-content">
+          <div class="welcome-text">
+            <h1 class="welcome-title">👋 {{ 'student.dashboard.welcome' | translate }}, {{ userName }}!</h1>
+            <p class="welcome-subtitle">{{ 'student.dashboard.subtitle' | translate }}</p>
+            <div class="welcome-stats">
+              <span class="stat-badge">📚 {{ 'student.dashboard.badges.enrolledCourses' | translate:{count: stats.totalCourses} }}</span>
+              <span class="stat-badge">🎯 {{ 'student.dashboard.badges.activeCourses' | translate:{count: stats.activeCourses} }}</span>
+              <span class="stat-badge">⭐ {{ 'student.dashboard.badges.totalPoints' | translate:{count: stats.totalPoints} }}</span>
+            </div>
+          </div>
+          <div class="ai-tip glass-card">
+            <div class="tip-content">
+              <div class="tip-line">
+                <span class="tip-icon">💡</span>
+                <p class="tip-text">{{ 'student.dashboard.tipText' | translate }}</p>
+              </div>
+              <button class="tip-action" (click)="onUpdateProfile()">{{ 'student.dashboard.tryNow' | translate }} →</button>
+            </div>
+          </div>
+        </div>
+        <div class="welcome-decoration">
+          <div class="decoration-circle circle-1"></div>
+          <div class="decoration-circle circle-2"></div>
+          <div class="decoration-circle circle-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Cards Section -->
+    <section class="kpi-section">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-1">📚</div>
+          <div class="kpi-number">{{ stats.totalCourses }}</div>
+        </div>
+        <div class="kpi-label">{{ 'student.dashboard.kpi.totalCourses' | translate }}</div>
+        <button class="kpi-btn" (click)="onViewCourses()">
+          {{ 'student.dashboard.kpi.viewAllCourses' | translate }}
+        </button>
+      </div>
+      
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-2">🎯</div>
+          <div class="kpi-number">{{ stats.activeCourses }}</div>
+        </div>
+        <div class="kpi-label">{{ 'student.dashboard.kpi.activeCourses' | translate }}</div>
+        <button class="kpi-btn" (click)="onViewActiveCourses()">
+          {{ 'student.dashboard.kpi.viewActiveCourses' | translate }}
+        </button>
+      </div>
+      
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-3">✅</div>
+          <div class="kpi-number">{{ stats.completedLessons }}</div>
+        </div>
+        <div class="kpi-label">{{ 'student.dashboard.kpi.completedLessons' | translate }}</div>
+        <button class="kpi-btn" (click)="onViewProgress()">
+          {{ 'student.dashboard.kpi.viewProgress' | translate }}
+        </button>
+      </div>
+      
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon kpi-icon-4">⭐</div>
+          <div class="kpi-number">{{ stats.totalPoints }}</div>
+        </div>
+        <div class="kpi-label">{{ 'student.dashboard.kpi.totalPoints' | translate }}</div>
+        <button class="kpi-btn" (click)="onViewAchievements()">
+          {{ 'student.dashboard.kpi.viewAchievements' | translate }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Quick Actions Section -->
+    <section class="actions-section">
+      <div class="action-card action-3 glass-card" (click)="onOpenMsPractices()">
+        <div class="action-icon">💼</div>
+        <div class="action-title">{{ 'student.dashboard.actions.msPractices' | translate }}</div>
+        <div class="action-subtitle">{{ 'student.dashboard.actions.msPracticesSub' | translate }}</div>
+      </div>
+      <div class="action-card action-1 glass-card" (click)="onViewCourses()">
+        <span class="action-step">{{ 'student.dashboard.actions.quickAction' | translate }}</span>
+        <div class="action-icon">📚</div>
+        <div class="action-title">{{ 'student.dashboard.actions.viewCourses' | translate }}</div>
+        <div class="action-subtitle">{{ 'student.dashboard.actions.viewCoursesSub' | translate }}</div>
+      </div>
+      <div class="action-card action-2 glass-card" (click)="onViewAssignments()">
+        <div class="action-icon">📝</div>
+        <div class="action-title">{{ 'student.dashboard.actions.viewAssignments' | translate }}</div>
+        <div class="action-subtitle">{{ 'student.dashboard.actions.viewAssignmentsSub' | translate }}</div>
+      </div>
+  
+      <div class="action-card action-4 glass-card" (click)="onViewGrades()">
+        <div class="action-icon">📊</div>
+        <div class="action-title">{{ 'student.dashboard.actions.viewGrades' | translate }}</div>
+        <div class="action-subtitle">{{ 'student.dashboard.actions.viewGradesSub' | translate }}</div>
+      </div>
+     
+    </section>
+
+    <!-- Today's Highlights -->
+    <section class="highlights-section glass-card">
+      <h2 class="section-title">{{ 'student.dashboard.highlights.title' | translate }}</h2>
+      <div class="highlight-item">
+        <div class="highlight-icon">📚</div>
+        <div class="highlight-content">
+          <h4>{{ 'student.dashboard.highlights.item1Title' | translate }}</h4>
+          <span class="highlight-time">{{ 'student.dashboard.highlights.item1Time' | translate }}</span>
+        </div>
+        <button class="action-button" (click)="onViewCourses()">{{ 'student.dashboard.highlights.start' | translate }}</button>
+      </div>
+      <div class="highlight-item">
+        <div class="highlight-icon">📝</div>
+        <div class="highlight-content">
+          <h4>{{ 'student.dashboard.highlights.item2Title' | translate }}</h4>
+          <span class="highlight-time">{{ 'student.dashboard.highlights.item2Time' | translate }}</span>
+        </div>
+        <button class="action-button" (click)="onViewAssignments()">{{ 'student.dashboard.highlights.prepare' | translate }}</button>
+      </div>
+      <div class="highlight-item">
+        <div class="highlight-icon">🎯</div>
+        <div class="highlight-content">
+          <h4>{{ 'student.dashboard.highlights.item3Title' | translate }}</h4>
+          <span class="highlight-time">{{ 'student.dashboard.highlights.item3Time' | translate }}</span>
+        </div>
+        <button class="action-button" (click)="onViewQuizzes()">{{ 'student.dashboard.highlights.details' | translate }}</button>
+      </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="activity-section glass-card">
+      <h2 class="section-title">{{ 'student.dashboard.activity.title' | translate }}</h2>
+
+      <div class="activity-item">
+        <div class="activity-avatar">{{ userInitials }}</div>
+        <div class="activity-content">
+          <div class="activity-text">
+            <strong>{{ userName }}</strong> {{ 'student.dashboard.activity.completedQuiz' | translate }} "{{ 'student.dashboard.activity.quizName' | translate }}" {{ 'student.dashboard.activity.withScore' | translate }}
+            <span class="activity-score">95%</span> 🎉
+          </div>
+          <div class="activity-time">{{ 'student.dashboard.activity.time2min' | translate }}</div>
+        </div>
+      </div>
+
+      <div class="activity-item">
+        <div class="activity-avatar">{{ userInitials }}</div>
+        <div class="activity-content">
+          <div class="activity-text">
+            <strong>{{ userName }}</strong> {{ 'student.dashboard.activity.submittedAssignment' | translate }} "{{ 'student.dashboard.activity.assignmentName' | translate }}"
+          </div>
+          <div class="activity-time">{{ 'student.dashboard.activity.time1hour' | translate }}</div>
+        </div>
+      </div>
+
+      <div class="activity-item">
+        <div class="activity-avatar">{{ userInitials }}</div>
+        <div class="activity-content">
+          <div class="activity-text">
+            <strong>{{ userName }}</strong> {{ 'student.dashboard.activity.enrolledCourse' | translate }} "{{ 'student.dashboard.activity.courseName' | translate }}"
+          </div>
+          <div class="activity-time">{{ 'student.dashboard.activity.timeYesterday' | translate }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Library -->
+    <section class="library-section">
+      <h2 class="section-title">{{ 'student.dashboard.library.title' | translate }}</h2>
+      <div class="library-carousel">
+        <div class="library-card glass-card">
+          <div class="library-image">
+            <div class="library-plays">{{ 'student.dashboard.library.plays' | translate:{count:'2.3k'} }}</div>
+          </div>
+          <div class="library-content">
+            <h3 class="library-title">{{ 'student.dashboard.library.card1Title' | translate }}</h3>
+            <p class="library-description">{{ 'student.dashboard.library.card1Desc' | translate }}</p>
+            <button class="library-button-student" (click)="onViewCourses()">{{ 'student.dashboard.library.enrollNow' | translate }}</button>
+          </div>
+        </div>
+        <div class="library-card glass-card">
+          <div class="library-image library-image-2">
+            <div class="library-plays">{{ 'student.dashboard.library.plays' | translate:{count:'1.8k'} }}</div>
+          </div>
+          <div class="library-content">
+            <h3 class="library-title">{{ 'student.dashboard.library.card2Title' | translate }}</h3>
+            <p class="library-description">{{ 'student.dashboard.library.card2Desc' | translate }}</p>
+            <button class="library-button-student" (click)="onViewCourses()">{{ 'student.dashboard.library.enrollNow' | translate }}</button>
+          </div>
+        </div>
+        <div class="library-card glass-card">
+          <div class="library-image library-image-3">
+            <div class="library-plays">{{ 'student.dashboard.library.plays' | translate:{count:'3.1k'} }}</div>
+          </div>
+          <div class="library-content">
+            <h3 class="library-title">{{ 'student.dashboard.library.card3Title' | translate }}</h3>
+            <p class="library-description">{{ 'student.dashboard.library.card3Desc' | translate }}</p>
+            <button class="library-button-student" (click)="onViewCourses()">{{ 'student.dashboard.library.enrollNow' | translate }}</button>
+          </div>
+        </div>
+        <div class="library-card glass-card">
+          <div class="library-image library-image-4">
+            <div class="library-plays">{{ 'student.dashboard.library.plays' | translate:{count:'2.7k'} }}</div>
+          </div>
+          <div class="library-content">
+            <h3 class="library-title">{{ 'student.dashboard.library.card4Title' | translate }}</h3>
+            <p class="library-description">{{ 'student.dashboard.library.card4Desc' | translate }}</p>
+            <button class="library-button-student" (click)="onViewCourses()">{{ 'student.dashboard.library.enrollNow' | translate }}</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">{{ 'general.loading' | translate }}...</p>
+    </div>
+  </div>
+</section>
+
+<!-- MS Practices Modal -->
+<app-ms-practices-modal 
+  [isOpen]="msPracticesModalOpen" 
+  (close)="onCloseMsPractices()"
+  (startPractice)="onStartMsPractice($event)">
+</app-ms-practices-modal>

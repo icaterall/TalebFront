@@ -1,0 +1,42 @@
+<aside
+  id="student-sidebar"
+  class="sidebar"
+  [ngClass]="{ open: menuOpen, mobile: isMobile }"
+  role="navigation"
+  aria-label="Student navigation"
+  [attr.aria-hidden]="isMobile && !menuOpen"
+>
+  <div class="sidebar-header" *ngIf="isMobile">
+    <div class="mobile-org-header">
+      <div class="org-info">
+        <div class="org-icon">
+          <svg width="40" height="40" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="icon-size16">
+            <path d="M8.17137 1.53027L8.25194 1.56811L14.2476 5.06551C14.2749 5.08109 14.3006 5.09917 14.3243 5.11943L14.2519 5.06811C14.2933 5.09223 14.3295 5.1208 14.3605 5.15271C14.3683 5.16158 14.3767 5.17097 14.3848 5.18066C14.3978 5.19526 14.4092 5.21071 14.4196 5.22665C14.4239 5.23456 14.4288 5.24246 14.4334 5.2505C14.4637 5.30207 14.4835 5.35855 14.4931 5.41647L14.5 5.5V9.5C14.5 9.77614 14.2761 10 14 10C13.7545 10 13.5504 9.82312 13.5081 9.58988L13.5 9.5V6.369L12.5 6.952V9.5C12.5 11.9143 10.5988 13.8845 8.21184 13.9951L8 14C5.67107 14 3.74307 12.2265 3.52084 9.92881L3.50505 9.7119L3.5 9.5V6.953L1.74806 5.93189C1.44487 5.75503 1.41961 5.33872 1.67227 5.12195L1.74806 5.06811L7.74806 1.56811C7.8778 1.49243 8.03311 1.47982 8.17137 1.53027ZM11.5 7.536L8.25195 9.43188C8.12221 9.50757 7.96689 9.52018 7.82862 9.46972L7.74805 9.43188L4.5 7.536L4.49985 9.48774L4.50429 9.67509C4.59561 11.5329 6.13213 13 8 13C9.86856 13 11.3951 11.5357 11.4948 9.69204L11.5 9.5V7.536ZM8 2.578L2.991 5.5L4.246 6.232L4.25195 6.2346L8 8.421L11.748 6.2346C11.75 6.23345 11.752 6.23231 11.754 6.23119L13.008 5.5L8 2.578Z"></path>
+          </svg>
+        </div>
+        <div class="org-details">
+          <div class="org-name">{{ getTranslation('studentName') }}</div>
+          <div class="org-badges">
+            <span class="student-badge">{{ getTranslation('student') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <ul class="items">
+      <li *ngFor="let item of navItems">
+        <a 
+          class="item" 
+          [class.active]="item.active"
+          [routerLink]="item.route"
+          (click)="onNavigate(item.route)"
+        >
+          <span class="icon">{{ item.icon }}</span>
+          <span class="label">{{ getTranslation(item.label) }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>

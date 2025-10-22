@@ -305,6 +305,20 @@ export class AuthService {
   }
 
   /**
+   * Refresh access token using refresh token
+   */
+  refreshToken(): Observable<AuthResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/refresh`, {
+      refreshToken
+    });
+  }
+
+  /**
    * Logout
    */
   logout(): void {

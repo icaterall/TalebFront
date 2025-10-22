@@ -1,0 +1,107 @@
+<!-- Modal Backdrop -->
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="modal-container" [class.rtl]="currentLang === 'ar'">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="header-icon">💼</div>
+        <div class="header-text">
+          <h2 class="modal-title">{{ 'msPractices.title' | translate }}</h2>
+          <p class="modal-subtitle">{{ 'msPractices.subtitle' | translate }}</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="onClose()" [attr.aria-label]="'msPractices.close' | translate">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Apps Grid View -->
+    <div class="modal-content" *ngIf="!showAppDetails">
+      <div class="apps-grid">
+        <div 
+          class="app-card" 
+          *ngFor="let app of officeApps" 
+          (click)="onSelectApp(app)"
+          [style.background]="app.gradient"
+        >
+          <div class="app-icon">{{ app.icon }}</div>
+          <div class="app-info">
+            <h3 class="app-name">{{ 'msPractices.apps.' + app.id + '.name' | translate }}</h3>
+            <p class="app-description">{{ 'msPractices.apps.' + app.id + '.description' | translate }}</p>
+            <div class="app-meta">
+              <span class="difficulty-badge" [style.background-color]="getDifficultyColor(app.difficulty)">
+                {{ getDifficultyText(app.difficulty) }}
+              </span>
+              <span class="time-badge">{{ 'msPractices.apps.' + app.id + '.estimatedTime' | translate }}</span>
+            </div>
+          </div>
+          <div class="app-arrow">→</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Details View -->
+    <div class="modal-content" *ngIf="showAppDetails && selectedApp">
+      <div class="app-details">
+        <button class="back-btn" (click)="onBackToApps()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ 'msPractices.backToApps' | translate }}
+        </button>
+
+        <div class="app-header" [style.background]="selectedApp.gradient">
+          <div class="app-icon-large">{{ selectedApp.icon }}</div>
+          <div class="app-title-section">
+            <h2 class="app-title">{{ 'msPractices.apps.' + selectedApp.id + '.name' | translate }}</h2>
+            <p class="app-description-large">{{ 'msPractices.apps.' + selectedApp.id + '.description' | translate }}</p>
+          </div>
+        </div>
+
+        <div class="app-info-grid">
+          <div class="info-card">
+            <div class="info-icon">⏱️</div>
+            <div class="info-content">
+              <h4>{{ 'msPractices.estimatedTime' | translate }}</h4>
+              <p>{{ 'msPractices.apps.' + selectedApp.id + '.estimatedTime' | translate }}</p>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">📊</div>
+            <div class="info-content">
+              <h4>{{ 'msPractices.difficultyLevel' | translate }}</h4>
+              <p [style.color]="getDifficultyColor(selectedApp.difficulty)">
+                {{ getDifficultyText(selectedApp.difficulty) }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="skills-section">
+          <h3 class="skills-title">{{ 'msPractices.skillsYouWillPractice' | translate }}</h3>
+          <div class="skills-grid">
+            <div class="skill-item" *ngFor="let skill of 'msPractices.apps.' + selectedApp.id + '.skills' | translate">
+              <div class="skill-icon">✓</div>
+              <span class="skill-text">{{ skill }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-section">
+          <button class="start-practice-btn" (click)="onStartPractice()" [style.background]="selectedApp.gradient">
+            <div class="btn-icon">🚀</div>
+            <div class="btn-text">
+              <span class="btn-title">{{ 'msPractices.startPractice' | translate }}</span>
+              <span class="btn-subtitle">{{ 'msPractices.beginNow' | translate }}</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

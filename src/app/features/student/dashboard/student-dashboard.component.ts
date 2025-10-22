@@ -6,13 +6,12 @@ import { ToastrService } from 'ngx-toastr';
 
 import { AuthService, User } from '../../../core/services/auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
-import { HeaderComponent } from '../../../shared/header/header.component';
-import { FooterComponent } from '../../../shared/footer/footer.component';
+import { MsPracticesModalComponent, OfficeApp } from '../ms-practices/ms-practices-modal.component';
 
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [CommonModule, TranslateModule, HeaderComponent, FooterComponent],
+  imports: [CommonModule, TranslateModule, MsPracticesModalComponent],
   templateUrl: './student-dashboard.component.html',
   styleUrls: ['./student-dashboard.component.scss']
 })
@@ -25,6 +24,8 @@ export class StudentDashboardComponent implements OnInit {
 
   user: User | null = null;
   loading = false;
+  isBrowser = typeof window !== 'undefined';
+  msPracticesModalOpen = false;
 
   // Dashboard data
   stats = {
@@ -234,5 +235,63 @@ export class StudentDashboardComponent implements OnInit {
     } else {
       return timestamp.toLocaleDateString(this.currentLang === 'ar' ? 'ar-SA' : 'en-US');
     }
+  }
+
+  get userInitials(): string {
+    if (!this.user?.name) return 'S';
+    const names = this.user.name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0][0].toUpperCase();
+  }
+
+  // Navigation methods
+  onViewCourses(): void {
+    this.router.navigate(['/student/courses']);
+  }
+
+  onViewActiveCourses(): void {
+    this.router.navigate(['/student/courses']);
+  }
+
+  onViewProgress(): void {
+    this.router.navigate(['/student/grades']);
+  }
+
+  onViewAchievements(): void {
+    this.router.navigate(['/student/grades']);
+  }
+
+  onViewAssignments(): void {
+    this.router.navigate(['/student/assignments']);
+  }
+
+  onViewQuizzes(): void {
+    this.router.navigate(['/student/quizzes']);
+  }
+
+  onViewGrades(): void {
+    this.router.navigate(['/student/grades']);
+  }
+
+  // MS Practices Modal Methods
+  onOpenMsPractices(): void {
+    this.msPracticesModalOpen = true;
+  }
+
+  onCloseMsPractices(): void {
+    this.msPracticesModalOpen = false;
+  }
+
+  onStartMsPractice(app: OfficeApp): void {
+    this.msPracticesModalOpen = false;
+    this.toastr.success(
+      this.translate.instant('msPractices.practiceStarted', { app: app.name }),
+      this.translate.instant('msPractices.success')
+    );
+    // Here you would typically navigate to the practice interface
+    // For now, we'll just show a success message
+    console.log('Starting practice for:', app);
   }
 }
