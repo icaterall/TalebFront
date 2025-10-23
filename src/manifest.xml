@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xsi:type="MailApp"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Id>12345678-1234-1234-1234-123456789012</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>AnaTaleb</ProviderName>
+  <DisplayName>Training: Outlook Signature</DisplayName>
+  <Description>Practice & grade email signatures directly in Outlook</Description>
+  <IconUrl DefaultValue="https://your-domain.com/assets/icon-64.png"/>
+  <SupportUrl DefaultValue="https://your-domain.com/support"/>
+  <AppDomains>
+    <AppDomain>your-domain.com</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.8">
+      <Set Name="Mailbox"/>
+    </Sets>
+  </Requirements>
+
+  <FormSettings>
+    <Form xsi:type="ItemCompose">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://your-domain.com/training/outlook"/>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <FunctionFile resid="fnFile"/>
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="grpTrain" label="Training">
+                <Control xsi:type="Button" id="btnOpen" label="Open Training"
+                         icon="https://your-domain.com/assets/icon-32.png" action="functionFile.openPane"/>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+          <Taskpane id="pane" title="Training" sourceLocation="https://your-domain.com/training/outlook"/>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Urls xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0">
+        <bt:Url id="fnFile" DefaultValue="https://your-domain.com/function-file.html"/>
+      </bt:Urls>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

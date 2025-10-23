@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script>
+    Office.onReady(() => {
+      console.log('Office.js is ready');
+    });
+    
+    function openPane(event) {
+      Office.addin.showAsTaskpane().then(() => {
+        console.log('Task pane opened');
+        event.completed();
+      }).catch((error) => {
+        console.error('Error opening task pane:', error);
+        event.completed();
+      });
+    }
+    
+    // Make the function available globally
+    window.functionFile = { openPane };
+  </script>
+</head>
+<body>
+  <p>Loading Office Add-in...</p>
+</body>
+</html>

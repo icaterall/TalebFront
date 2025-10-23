@@ -1954,6 +1954,53 @@
       "maxLength": "يجب أن يكون 60 حرف أو أقل",
       "email": "البريد الإلكتروني غير صالح"
     }
+  },
+  "msPractices": {
+    "title": "ممارسة مهارات Microsoft Office",
+    "subtitle": "اختبر وحسّن مهاراتك في تطبيقات Microsoft Office",
+    "close": "إغلاق",
+    "backToApps": "العودة للتطبيقات",
+    "estimatedTime": "الوقت المقدر",
+    "difficultyLevel": "مستوى الصعوبة",
+    "skillsYouWillPractice": "المهارات التي ستتدرب عليها",
+    "startPractice": "بدء الممارسة",
+    "beginNow": "ابدأ تقييم مهاراتك الآن",
+    "difficulty": {
+      "beginner": "مبتدئ",
+      "intermediate": "متوسط",
+      "advanced": "متقدم"
+    },
+    "apps": {
+      "outlook": {
+        "name": "Outlook",
+        "description": "أتقن إدارة البريد الإلكتروني وجدولة التقويم وتنظيم المهام",
+        "estimatedTime": "15-20 دقيقة",
+        "skills": ["إدارة البريد الإلكتروني", "جدولة التقويم", "تنظيم المهام", "إدارة جهات الاتصال"]
+      },
+      "word": {
+        "name": "Microsoft Word",
+        "description": "أنشئ المستندات والتقارير والنصوص المهنية",
+        "estimatedTime": "10-15 دقيقة",
+        "skills": ["تنسيق المستندات", "الجداول والقوائم", "العناوين والتذييلات", "الأنماط والقوالب"]
+      },
+      "powerpoint": {
+        "name": "PowerPoint",
+        "description": "صمم عروضاً تقديمية جذابة بالرسوم المتحركة والانتقالات",
+        "estimatedTime": "20-25 دقيقة",
+        "skills": ["تصميم الشرائح", "الرسوم المتحركة", "الانتقالات", "الشرائح الرئيسية"]
+      },
+      "excel": {
+        "name": "Excel",
+        "description": "أتقن الجداول والصيغ والرسوم البيانية وتحليل البيانات",
+        "estimatedTime": "25-30 دقيقة",
+        "skills": ["الصيغ والدوال", "الرسوم البيانية", "تحليل البيانات", "الجداول المحورية"]
+      }
+    },
+    "practiceStarted": "تم بدء الممارسة لـ {{app}}",
+    "outlookPracticeStarted": "تم بدء ممارسة توقيع Outlook!",
+    "comingSoon": "ممارسة {{app}} قريباً!",
+    "success": "نجح",
+    "info": "معلومات"
   }
 
 }

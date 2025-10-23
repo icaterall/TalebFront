@@ -35,6 +35,10 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./features/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
   },
   {
+    path: 'training-demo',
+    loadChildren: () => import('./training-demo/training-demo.module').then(m => m.TrainingDemoModule),
+  },
+  {
     path: '',
     pathMatch: 'full',
     loadComponent: () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent),

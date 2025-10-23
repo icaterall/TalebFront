@@ -1,0 +1,249 @@
+<div class="training-demo-container">
+  <!-- Header -->
+  <div class="demo-header">
+    <div class="container">
+      <h1 class="demo-title">📧 Outlook Email Signature Lab</h1>
+      <p class="demo-subtitle">Practice building professional email signatures and test your knowledge</p>
+      
+      <!-- Progress Bar -->
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="getStepProgress()"></div>
+        </div>
+        <span class="progress-text">{{ getStepProgress() }}% Complete</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="demo-content">
+    <div class="container">
+      
+      <!-- Instructions Step -->
+      <div *ngIf="currentStep === 'instructions'" class="step-container">
+        <div class="step-header">
+          <h2>📋 Lab Instructions</h2>
+        </div>
+        
+        <div class="instructions-content">
+          <div class="instruction-card">
+            <h3>🎯 Learning Objectives</h3>
+            <ul>
+              <li>Build a professional email signature that meets brand specifications</li>
+              <li>Use correct link schemes (tel: for phone, https: for website)</li>
+              <li>Apply proper formatting (bold, brand color) and layout</li>
+              <li>Answer questions about Outlook signature best practices</li>
+            </ul>
+          </div>
+
+          <div class="instruction-card">
+            <h3>📝 Requirements Checklist</h3>
+            <ul>
+              <li>✅ Company logo (left side)</li>
+              <li>✅ Your name (bold, brand color)</li>
+              <li>✅ Job title</li>
+              <li>✅ Company name</li>
+              <li>✅ Phone number (with tel: link)</li>
+              <li>✅ Email address (with mailto: link)</li>
+              <li>✅ Website URL (with https: link)</li>
+              <li>✅ Professional layout (logo left, text right)</li>
+            </ul>
+          </div>
+
+          <div class="instruction-card">
+            <h3>💡 Sample Signature</h3>
+            <div class="sample-signature" [innerHTML]="sampleSignature"></div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-primary" (click)="currentStep = 'builder'">
+            Start Building Signature →
+          </button>
+        </div>
+      </div>
+
+      <!-- Signature Builder Step -->
+      <div *ngIf="currentStep === 'builder'" class="step-container">
+        <div class="step-header">
+          <h2>🛠️ Signature Builder</h2>
+          <p>Fill in your information to build a professional email signature</p>
+        </div>
+
+        <div class="builder-content">
+          <div class="builder-form">
+            <form [formGroup]="signatureForm" (ngModelChange)="generateSignature()">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="name">Full Name *</label>
+                  <input type="text" id="name" formControlName="name" placeholder="John Smith">
+                </div>
+                <div class="form-group">
+                  <label for="title">Job Title *</label>
+                  <input type="text" id="title" formControlName="title" placeholder="Marketing Manager">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="company">Company Name *</label>
+                  <input type="text" id="company" formControlName="company" placeholder="Acme Corporation">
+                </div>
+                <div class="form-group">
+                  <label for="phone">Phone Number *</label>
+                  <input type="tel" id="phone" formControlName="phone" placeholder="(123) 456-7890">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">Email Address *</label>
+                  <input type="email" id="email" formControlName="email" placeholder="john.smith@acme.com">
+                </div>
+                <div class="form-group">
+                  <label for="website">Website URL *</label>
+                  <input type="url" id="website" formControlName="website" placeholder="www.acme.com">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="logoUrl">Logo URL *</label>
+                <input type="url" id="logoUrl" formControlName="logoUrl" placeholder="https://example.com/logo.png">
+              </div>
+            </form>
+          </div>
+
+          <div class="signature-preview">
+            <h3>📧 Signature Preview</h3>
+            <div class="preview-container">
+              <div class="signature-output" [innerHTML]="signatureHtml"></div>
+            </div>
+            <div class="preview-actions">
+              <button class="btn btn-secondary" (click)="copySignature()">
+                📋 Copy Signature
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-secondary" (click)="currentStep = 'instructions'">
+            ← Back to Instructions
+          </button>
+          <button class="btn btn-primary" (click)="gradeSignature()" [disabled]="signatureForm.invalid">
+            Grade My Signature →
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Step -->
+      <div *ngIf="currentStep === 'quiz'" class="step-container">
+        <div class="step-header">
+          <h2>🧠 Knowledge Quiz</h2>
+          <p>Test your understanding of email signature best practices</p>
+        </div>
+
+        <!-- Signature Grade Results -->
+        <div *ngIf="signatureGrade" class="grade-results">
+          <div class="grade-card" [ngClass]="getGradeColorClass(signatureGrade.percentage)">
+            <h3>📊 Signature Grade: {{ getGradeLabel(signatureGrade.percentage) }}</h3>
+            <div class="grade-score">{{ signatureGrade.percentage }}% ({{ signatureGrade.score }}/{{ signatureGrade.maxScore }})</div>
+            <div class="grade-feedback">
+              <h4>Feedback:</h4>
+              <ul>
+                <li *ngFor="let feedback of signatureGrade.feedback">{{ feedback }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quiz Form -->
+        <form [formGroup]="quizForm" class="quiz-form">
+          <div *ngFor="let question of quizQuestions; let i = index" class="quiz-question">
+            <h4>{{ i + 1 }}. {{ question.question }}</h4>
+            <div class="quiz-options">
+              <label *ngFor="let option of question.options; let j = index" class="quiz-option">
+                <input type="radio" [formControlName]="question.id" [value]="j">
+                <span class="option-text">{{ option }}</span>
+              </label>
+            </div>
+          </div>
+        </form>
+
+        <div class="step-actions">
+          <button class="btn btn-secondary" (click)="currentStep = 'builder'">
+            ← Back to Builder
+          </button>
+          <button class="btn btn-primary" (click)="submitQuiz()" [disabled]="quizForm.invalid">
+            Submit Quiz →
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Step -->
+      <div *ngIf="currentStep === 'results'" class="step-container">
+        <div class="step-header">
+          <h2>🎉 Lab Complete!</h2>
+          <p>Here are your results</p>
+        </div>
+
+        <!-- Overall Score -->
+        <div class="overall-score">
+          <div class="score-card" [ngClass]="getGradeColorClass(totalScore)">
+            <h3>🏆 Overall Score: {{ totalScore }}%</h3>
+            <div class="score-label">{{ getGradeLabel(totalScore) }}</div>
+          </div>
+        </div>
+
+        <!-- Signature Results -->
+        <div *ngIf="signatureGrade" class="results-section">
+          <h3>📧 Signature Results</h3>
+          <div class="grade-card" [ngClass]="getGradeColorClass(signatureGrade.percentage)">
+            <div class="grade-header">
+              <span class="grade-title">Signature Grade</span>
+              <span class="grade-percentage">{{ signatureGrade.percentage }}%</span>
+            </div>
+            <div class="grade-feedback">
+              <ul>
+                <li *ngFor="let feedback of signatureGrade.feedback">{{ feedback }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quiz Results -->
+        <div *ngIf="quizGrade" class="results-section">
+          <h3>🧠 Quiz Results</h3>
+          <div class="grade-card" [ngClass]="getGradeColorClass(quizGrade.percentage)">
+            <div class="grade-header">
+              <span class="grade-title">Quiz Score</span>
+              <span class="grade-percentage">{{ quizGrade.percentage }}%</span>
+            </div>
+            <div class="quiz-results">
+              <div *ngFor="let result of quizGrade.results" class="quiz-result">
+                <div class="question-result" [ngClass]="result.isCorrect ? 'correct' : 'incorrect'">
+                  <span class="result-icon">{{ result.isCorrect ? '✅' : '❌' }}</span>
+                  <span class="result-text">{{ result.question.question }}</span>
+                </div>
+                <div *ngIf="!result.isCorrect" class="explanation">
+                  <strong>Correct Answer:</strong> {{ result.question.options[result.question.correctAnswer] }}<br>
+                  <strong>Explanation:</strong> {{ result.explanation }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-secondary" (click)="resetLab()">
+            🔄 Retake Lab
+          </button>
+          <button class="btn btn-primary" (click)="copySignature()">
+            📋 Copy Signature
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1812,6 +1812,53 @@
     "updateProfile": "Update Profile",
     "viewAll": "View All",
     "points": "points"
+  },
+  "msPractices": {
+    "title": "Microsoft Office Skills Practice",
+    "subtitle": "Test and improve your skills in Microsoft Office applications",
+    "close": "Close",
+    "backToApps": "Back to Apps",
+    "estimatedTime": "ESTIMATED TIME",
+    "difficultyLevel": "DIFFICULTY LEVEL",
+    "skillsYouWillPractice": "Skills You Will Practice",
+    "startPractice": "Start Practice",
+    "beginNow": "Begin your skill assessment now",
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "apps": {
+      "outlook": {
+        "name": "Outlook",
+        "description": "Master email management, calendar scheduling, and task organization",
+        "estimatedTime": "15-20 min",
+        "skills": ["Email Management", "Calendar Scheduling", "Task Organization", "Contact Management"]
+      },
+      "word": {
+        "name": "Microsoft Word",
+        "description": "Create professional documents, reports, and formatted text",
+        "estimatedTime": "10-15 min",
+        "skills": ["Document Formatting", "Tables & Lists", "Headers & Footers", "Styles & Templates"]
+      },
+      "powerpoint": {
+        "name": "PowerPoint",
+        "description": "Design engaging presentations with animations and transitions",
+        "estimatedTime": "20-25 min",
+        "skills": ["Slide Design", "Animations", "Transitions", "Master Slides"]
+      },
+      "excel": {
+        "name": "Excel",
+        "description": "Master spreadsheets, formulas, charts, and data analysis",
+        "estimatedTime": "25-30 min",
+        "skills": ["Formulas & Functions", "Charts & Graphs", "Data Analysis", "Pivot Tables"]
+      }
+    },
+    "practiceStarted": "Practice started for {{app}}",
+    "outlookPracticeStarted": "Outlook signature practice started!",
+    "comingSoon": "{{app}} practice coming soon!",
+    "success": "Success",
+    "info": "Information"
   }
 }
 }

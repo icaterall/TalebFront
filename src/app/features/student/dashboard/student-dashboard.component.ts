@@ -286,12 +286,29 @@ export class StudentDashboardComponent implements OnInit {
 
   onStartMsPractice(app: OfficeApp): void {
     this.msPracticesModalOpen = false;
-    this.toastr.success(
-      this.translate.instant('msPractices.practiceStarted', { app: app.name }),
-      this.translate.instant('msPractices.success')
-    );
-    // Here you would typically navigate to the practice interface
-    // For now, we'll just show a success message
+    
+    // Handle Outlook practice specifically - check by ID since name might be empty
+    if (app.id.toLowerCase() === 'outlook') {
+      this.toastr.success(
+        this.translate.instant('msPractices.outlookPracticeStarted'),
+        this.translate.instant('msPractices.success')
+      );
+      // Navigate to the Outlook signature training demo
+      this.router.navigate(['/training-demo/outlook-signature']);
+    } else {
+      // Get app name for display (fallback to ID if name is empty)
+      const appName = app.name || app.id;
+      this.toastr.success(
+        this.translate.instant('msPractices.practiceStarted', { app: appName }),
+        this.translate.instant('msPractices.success')
+      );
+      // For other apps, show a message that practice is coming soon
+      this.toastr.info(
+        this.translate.instant('msPractices.comingSoon', { app: appName }),
+        this.translate.instant('msPractices.info')
+      );
+    }
+    
     console.log('Starting practice for:', app);
   }
 }
