@@ -1,0 +1,117 @@
+.main-content {
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.mail-content,
+.calendar-content,
+.people-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mail-header,
+.calendar-header,
+.people-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--outlook-border);
+  backdrop-filter: blur(10px);
+}
+
+.new-mail-btn,
+.new-event-btn,
+.new-contact-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--outlook-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  
+  &:hover {
+    background: var(--outlook-blue-hover);
+  }
+}
+
+.mail-workspace,
+.calendar-workspace,
+.people-workspace {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.workspace-placeholder {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  max-width: 500px;
+  width: 100%;
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.placeholder-icon {
+  color: var(--outlook-blue);
+  opacity: 0.7;
+}
+
+.placeholder-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--outlook-text);
+  margin: 0;
+}
+
+.placeholder-description {
+  font-size: 16px;
+  color: var(--outlook-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .mail-header,
+  .calendar-header,
+  .people-header {
+    padding: 12px 16px;
+  }
+  
+  .workspace-placeholder {
+    padding: 24px;
+    margin: 16px;
+  }
+  
+  .placeholder-title {
+    font-size: 20px;
+  }
+  
+  .placeholder-description {
+    font-size: 14px;
+  }
+}

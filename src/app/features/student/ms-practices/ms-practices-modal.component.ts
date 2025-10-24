@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { I18nService } from '../../../core/services/i18n.service';
 
@@ -29,6 +30,7 @@ export class MsPracticesModalComponent implements OnInit, OnChanges {
 
   private readonly i18n = inject(I18nService);
   private readonly translate = inject(TranslateService);
+  private readonly router = inject(Router);
 
   selectedApp: OfficeApp | null = null;
   showAppDetails = false;
@@ -180,7 +182,14 @@ export class MsPracticesModalComponent implements OnInit, OnChanges {
 
   onStartPractice(): void {
     if (this.selectedApp) {
-      this.startPractice.emit(this.selectedApp);
+      if (this.selectedApp.id === 'outlook') {
+        // Navigate to Outlook training
+        this.router.navigate(['/outlook-training']);
+        this.onClose();
+      } else {
+        // For other apps, emit the event
+        this.startPractice.emit(this.selectedApp);
+      }
     }
   }
 

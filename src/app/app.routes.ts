@@ -5,6 +5,35 @@ import { StudentRegistrationGuard } from './core/guards/student-registration.gua
 import { DashboardRedirectGuard } from './core/guards/dashboard-redirect.guard';
 
 export const appRoutes: Routes = [
+  // Public routes (no guards)
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent),
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent),
+  },
+  {
+    path: 'auth/reset-password/:token',
+    loadComponent: () => import('./features/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
+  },
+  {
+    path: 'training-demo',
+    loadChildren: () => import('./training-demo/training-demo.module').then(m => m.TrainingDemoModule),
+  },
+  {
+    path: 'outlook-training',
+    loadChildren: () => import('./features/outlook-training/outlook-training.module').then(m => m.OutlookTrainingModule),
+  },
+  {
+    path: 'outlook-signature',
+    redirectTo: '/outlook-training',
+    pathMatch: 'full'
+  },
+  
+  // Protected routes (with guards)
   {
     path: 'account-type',
     loadComponent: () => import('./features/account-type-page/account-type-page.component').then(m => m.AccountTypePageComponent),
@@ -30,19 +59,8 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./layouts/features/dashboard/pages/home/dashboard-home.component').then(m => m.DashboardHomeComponent),
     canActivate: [DashboardRedirectGuard],
   },
-  {
-    path: 'auth/reset-password/:token',
-    loadComponent: () => import('./features/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
-  },
-  {
-    path: 'training-demo',
-    loadChildren: () => import('./training-demo/training-demo.module').then(m => m.TrainingDemoModule),
-  },
-  {
-    path: '',
-    pathMatch: 'full',
-    loadComponent: () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent),
-  },
+  
+  // Fallback
   {
     path: '**',
     redirectTo: '',

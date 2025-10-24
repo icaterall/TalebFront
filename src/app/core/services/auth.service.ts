@@ -92,7 +92,11 @@ export class AuthService {
    * Get current user
    */
   getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
+    const user = this.currentUserSubject.value;
+    console.log('🔍 AuthService.getCurrentUser() called');
+    console.log('👤 Current user:', user);
+    console.log('💾 localStorage user:', localStorage.getItem('currentUser'));
+    return user;
   }
 
   /**
@@ -106,7 +110,11 @@ export class AuthService {
    * Get stored token
    */
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
+    console.log('🎫 AuthService.getToken() called');
+    console.log('🎫 Token exists:', !!token);
+    console.log('🎫 Token preview:', token ? token.substring(0, 20) + '...' : 'null');
+    return token;
   }
 
   /**
@@ -129,7 +137,7 @@ export class AuthService {
     });
     
     localStorage.setItem('currentUser', JSON.stringify(user));
-    localStorage.setItem('authToken', token);
+    localStorage.setItem('accessToken', token);
     localStorage.setItem('refreshToken', refreshToken);
     this.currentUserSubject.next(user);
     
@@ -159,7 +167,7 @@ export class AuthService {
    */
   private clearAuthData(): void {
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     this.currentUserSubject.next(null);
   }
@@ -185,21 +193,21 @@ export class AuthService {
       // Navigate based on saved onboarding state
       switch (onboardingState.step) {
         case 'select_role':
-          this.router.navigate(['/account-type']);
+          this.router.navigateByUrl('/account-type');
           return;
         
         case 'enter_dob':
           // User was in the middle of entering DOB
-          this.router.navigate(['/account-type']);
+          this.router.navigateByUrl('/account-type');
           return;
         
         case 'student_registration':
           // User has entered DOB, now on registration form
-          this.router.navigate(['/student/registration']);
+          this.router.navigateByUrl('/student/registration');
           return;
         
         case 'teacher_setup':
-          this.router.navigate(['/teacher']);
+          this.router.navigateByUrl('/teacher');
           return;
         
         case 'complete':
@@ -211,11 +219,11 @@ export class AuthService {
 
     // Fallback to server-side onboarding state
     if (!user.role || user.onboarding_step === 'need_role') {
-      this.router.navigate(['/account-type']);
+      this.router.navigateByUrl('/account-type');
     } else if (user.onboarding_step === 'need_teacher_form') {
-      this.router.navigate(['/teacher/setup']);
+      this.router.navigateByUrl('/teacher/setup');
     } else {
-      this.router.navigate([intendedUrl || '/dashboard']);
+      this.router.navigateByUrl(intendedUrl || '/dashboard');
     }
   }
 
@@ -339,7 +347,7 @@ export class AuthService {
     this.clearAuthData();
     // Also clear onboarding state
     localStorage.removeItem('onboardingState');
-    this.router.navigate(['/']);
+    this.router.navigateByUrl('/');
   }
 
   /**
@@ -356,6 +364,183 @@ export class AuthService {
   needsTeacherSetup(): boolean {
     const user = this.getCurrentUser();
     return user?.onboarding_step === 'need_teacher_form';
+  }
+
+  /**
+   * Validate authentication and handle expired/invalid tokens
+   */
+  validateAuthentication(): boolean {
+    const token = this.getToken();
+    const user = this.getCurrentUser();
+    
+    console.log('🔐 AuthService: validateAuthentication() called');
+    console.log('👤 User data:', user);
+    console.log('🎫 Token exists:', !!token);
+    console.log('🎫 Token preview:', token ? token.substring(0, 20) + '...' : 'null');
+    
+    // Check if user exists
+    if (!user) {
+      console.log('❌ AuthService: No user found, clearing auth data');
+      this.clearAuthData();
+      return false;
+    }
+    
+    // Check if token exists
+    if (!token) {
+      console.log('❌ AuthService: No token found, clearing auth data');
+      this.clearAuthData();
+      return false;
+    }
+    
+    // Check if token is expired (basic check)
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      const tokenExp = tokenPayload.exp;
+      const timeUntilExpiry = tokenExp ? tokenExp - currentTime : 0;
+      
+      console.log('⏰ Token expiry check:');
+      console.log('   Current time:', currentTime);
+      console.log('   Token expires at:', tokenExp);
+      console.log('   Time until expiry (seconds):', timeUntilExpiry);
+      console.log('   Token expired:', tokenExp && tokenExp < currentTime);
+      
+      if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+        console.log('⚠️ AuthService: Token expired, attempting refresh');
+        // Try to refresh token
+        this.refreshToken().subscribe({
+          next: (response) => {
+            const newToken = response.token || response.accessToken;
+            if (newToken && response.user && response.refreshToken) {
+              this.storeAuthData(response.user, newToken, response.refreshToken);
+              console.log('✅ AuthService: Token refreshed successfully');
+            } else {
+              console.log('❌ AuthService: Token refresh failed, logging out');
+              this.logout();
+            }
+          },
+          error: (error) => {
+            console.log('❌ AuthService: Token refresh error, logging out:', error);
+            this.logout();
+          }
+        });
+        return false;
+      }
+    } catch (error) {
+      console.log('❌ AuthService: Invalid token format, clearing auth data:', error);
+      this.clearAuthData();
+      return false;
+    }
+    
+    console.log('✅ AuthService: Authentication validation successful');
+    return true;
+  }
+
+  /**
+   * Force logout with redirect
+   */
+  forceLogout(reason: string = 'Authentication failed'): void {
+    console.log('AuthService: Force logout -', reason);
+    this.clearAuthData();
+    this.router.navigateByUrl('/');
+  }
+
+  /**
+   * Universal authentication and role validation
+   * @param requiredRole - The role required to access the page (optional)
+   * @param redirectPath - Where to redirect if validation fails (optional)
+   * @returns boolean - true if valid, false if invalid
+   */
+  validateAuthAndRole(requiredRole?: string, redirectPath?: string): boolean {
+    console.log('🔐 AuthService: validateAuthAndRole() called');
+    console.log('🎯 Required role:', requiredRole || 'any');
+    console.log('🔄 Redirect path:', redirectPath || 'default');
+    
+    // Step 1: Validate authentication
+    if (!this.validateAuthentication()) {
+      console.log('❌ AuthService: Authentication validation failed');
+      this.forceLogout('Authentication validation failed');
+      return false;
+    }
+
+    const user = this.getCurrentUser();
+    console.log('👤 User after auth validation:', user);
+    
+    // Step 2: Check if user exists
+    if (!user) {
+      console.log('❌ AuthService: No user data found');
+      this.forceLogout('No user data found');
+      return false;
+    }
+
+    console.log('👤 User role:', user.role);
+    console.log('📋 Onboarding step:', user.onboarding_step);
+
+    // Step 3: Check if user has required role (if specified)
+    if (requiredRole && user.role !== requiredRole) {
+      console.log(`❌ AuthService: User role '${user.role}' does not match required role '${requiredRole}'`);
+      
+      // Redirect based on user's actual role
+      if (user.role === 'Student') {
+        console.log('🔄 Redirecting Student to /student/dashboard');
+        this.router.navigateByUrl('/student/dashboard');
+      } else if (user.role === 'Teacher') {
+        console.log('🔄 Redirecting Teacher to /teacher');
+        this.router.navigateByUrl('/teacher');
+      } else {
+        console.log('🔄 Redirecting to default dashboard');
+        this.router.navigateByUrl(redirectPath || '/dashboard');
+      }
+      return false;
+    }
+
+    // Step 4: Check onboarding status
+    if (user.onboarding_step !== 'complete') {
+      console.log(`⚠️ AuthService: User onboarding not complete: ${user.onboarding_step}`);
+      
+      // Redirect based on onboarding step
+      switch (user.onboarding_step) {
+        case 'need_role':
+          console.log('🔄 Redirecting to /account-type');
+          this.router.navigateByUrl('/account-type');
+          break;
+        case 'student_registration':
+          console.log('🔄 Redirecting to /student/registration');
+          this.router.navigateByUrl('/student/registration');
+          break;
+        case 'need_teacher_form':
+          console.log('🔄 Redirecting to /teacher/setup');
+          this.router.navigateByUrl('/teacher/setup');
+          break;
+        default:
+          console.log('🔄 Redirecting to /account-type (default)');
+          this.router.navigateByUrl('/account-type');
+      }
+      return false;
+    }
+
+    console.log('✅ AuthService: Authentication and role validation successful');
+    return true;
+  }
+
+
+  /**
+   * Check if user has specific role
+   * @param role - The role to check for
+   * @returns boolean - true if user has the role, false if not
+   */
+  hasRole(role: string): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === role;
+  }
+
+  /**
+   * Get user's current role
+   * @returns string | undefined - The user's role or undefined
+   */
+  getCurrentRole(): string | undefined {
+    const user = this.getCurrentUser();
+    return user?.role;
   }
 
   /**

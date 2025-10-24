@@ -10,7 +10,7 @@ export class I18nService {
   private readonly STORAGE_KEY = 'anataleb.lang';
   private readonly isBrowser: boolean;
 
-  private _lang$ = new BehaviorSubject<Lang>('en');
+  private _lang$ = new BehaviorSubject<Lang>('ar');
   readonly lang$ = this._lang$.asObservable();
 
   constructor(
@@ -83,12 +83,12 @@ export class I18nService {
   /** Called via APP_INITIALIZER. Promise makes Angular wait before first paint. */
   async init(): Promise<void> {
     try {
-      // Priority: session value → browser language → inline boot value → default 'en'
+      // Priority: session value → browser language → inline boot value → default 'ar'
       const saved = this.readSaved();
       const browser = this.readBrowserLang();
       const inline = this.readInlineStartup();
       
-      const initial: Lang = saved ?? browser ?? inline ?? 'en';
+      const initial: Lang = saved ?? browser ?? inline ?? 'ar';
       
       console.log('Language initialization:', {
         saved,
@@ -99,11 +99,11 @@ export class I18nService {
 
       this._lang$.next(initial);
       this.apply(initial);
-      this.translate.setDefaultLang('en'); // Set fallback
+      this.translate.setDefaultLang('ar'); // Set fallback
       
       // Set the default language first
-      this.translate.setDefaultLang('en');
-      console.log('Default language set to: en');
+      this.translate.setDefaultLang('ar');
+      console.log('Default language set to: ar');
       
       // Then use the initial language
       this.translate.use(initial);

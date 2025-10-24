@@ -63,6 +63,11 @@ export class StudentRegistrationComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    // Universal authentication validation (no role required for registration)
+    if (!this.authService.validateAuthAndRole()) {
+      return; // Validation failed, user will be redirected automatically
+    }
+
     this.user = this.authService.getCurrentUser();
     
     // Get birth date from onboarding state
@@ -70,7 +75,7 @@ export class StudentRegistrationComponent implements OnInit {
     
     if (!onboardingData?.dateOfBirth || !onboardingData.dateOfBirth.year) {
       this.toastr.error('Please select your date of birth first');
-      this.router.navigate(['/account-type']);
+      this.router.navigateByUrl('/account-type');
       return;
     }
     
@@ -299,7 +304,7 @@ export class StudentRegistrationComponent implements OnInit {
         this.loading = false;
         
         // Navigate to student dashboard
-        this.router.navigate(['/student/dashboard']);
+        this.router.navigateByUrl('/student/dashboard');
       },
       error: (error) => {
         console.error('Registration error:', error);
@@ -326,7 +331,7 @@ export class StudentRegistrationComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/account-type']);
+    this.router.navigateByUrl('/account-type');
   }
 }
 

@@ -63,14 +63,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               return next(retryReq);
             }),
             catchError((refreshError) => {
-              // If refresh fails, logout user and redirect to login
-              authService.logout();
+              // If refresh fails, force logout
+              authService.forceLogout('Token refresh failed');
               return throwError(() => refreshError);
             })
           );
         }
         
-        // If no refresh token or other error, pass through the original error
+        // If no refresh token or other 401 error, force logout
+        if (error.status === 401) {
+          authService.forceLogout('Authentication failed');
+        }
+        
+        // For other errors, pass through the original error
         return throwError(() => error);
       })
     );

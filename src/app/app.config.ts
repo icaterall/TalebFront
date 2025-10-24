@@ -19,7 +19,7 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 function getStartupLang(): 'ar' | 'en' {
   const w = typeof window !== 'undefined' ? (window as any) : undefined;
   const v = w?.__ANATALEB_STARTUP_LANG__;
-  return (v === 'en' || v === 'ar') ? v : 'en'; // Default to English instead of Arabic
+  return (v === 'en' || v === 'ar') ? v : 'ar'; // Default to Arabic
 }
 function initI18n(i18n: I18nService) { return () => i18n.init(); }
 
@@ -32,12 +32,14 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withPreloading(PreloadAllModules)
+      // Note: enableTracing is not available in the new router configuration
+      // Use browser dev tools Network tab or console logs for debugging
     ),
     provideHttpClient(withInterceptors([langInterceptor, authInterceptor])),
     provideTranslateService({
       loader: provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
       lang: getStartupLang(),
-      fallbackLang: 'en'
+      fallbackLang: 'ar'
     }),
     { provide: APP_INITIALIZER, useFactory: initI18n, deps: [I18nService], multi: true },
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { OnboardingStateService } from '../services/onboarding-state.service';
@@ -7,94 +7,74 @@ import { OnboardingStateService } from '../services/onboarding-state.service';
   providedIn: 'root'
 })
 export class OnboardingGuard implements CanActivate {
-
-  constructor(
-    private authService: AuthService,
-    private onboardingState: OnboardingStateService,
-    private router: Router
-  ) {}
+  private authService = inject(AuthService);
+  private onboardingState = inject(OnboardingStateService);
+  private router = inject(Router);
 
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ): boolean {
+  ): boolean | import('@angular/router').UrlTree {
     const user = this.authService.getCurrentUser();
-    
-    // If not authenticated, allow access (will be handled by auth guard)
+
     if (!user) {
-      return true;
+      console.log('❌ No user → redirect to login');
+      return this.router.createUrlTree(['/login']);       // ✅ redirect to public login route
     }
 
-    // Check local onboarding state first (takes precedence during onboarding)
-    const localState = this.onboardingState.getState();
-    
-    if (localState && localState.step !== 'complete') {
-      console.log('OnboardingGuard: Found local onboarding state', localState);
-      
-      // Redirect based on local onboarding step
-      switch (localState.step) {
+    const token = this.authService.getToken();
+    if (!token) {
+      console.log('❌ No token → redirect to login');
+      return this.router.createUrlTree(['/login']);       // ✅ redirect to public login route
+    }
+
+    try {
+      const exp = JSON.parse(atob(token.split('.')[1]))?.exp;
+      if (exp && exp < Math.floor(Date.now()/1000)) {
+        console.log('❌ Token expired → redirect to login');
+        return this.router.createUrlTree(['/login']);     // ✅ redirect to public login route
+      }
+    } catch {
+      console.log('❌ Invalid token → redirect to login');
+      return this.router.createUrlTree(['/login']);      // ✅ redirect to public login route
+    }
+
+    const local = this.onboardingState.getState();
+    if (local && local.step !== 'complete') {
+      switch (local.step) {
         case 'select_role':
-          if (state.url !== '/account-type') {
-            this.router.navigate(['/account-type']);
-            return false;
-          }
-          return true;
-        
         case 'enter_dob':
-          if (state.url !== '/account-type') {
-            this.router.navigate(['/account-type']);
-            return false;
-          }
-          return true;
-        
+          return state.url === '/account-type'
+            ? true
+            : this.router.createUrlTree(['/account-type']);           // ✅
         case 'student_registration':
-          if (state.url !== '/student/registration') {
-            this.router.navigate(['/student/registration']);
-            return false;
-          }
-          return true;
-        
+          return state.url === '/student/registration'
+            ? true
+            : this.router.createUrlTree(['/student/registration']);    // ✅
         case 'teacher_setup':
-          // For now, allow access to teacher routes
-          // In the future, redirect to a specific setup page
-          if (!state.url.startsWith('/teacher')) {
-            this.router.navigate(['/teacher']);
-            return false;
-          }
-          return true;
+          return state.url.startsWith('/teacher')
+            ? true
+            : this.router.createUrlTree(['/teacher']);                 // ✅
       }
     }
 
-    // Fallback to server-side onboarding checks
-    // If user needs role selection
     if (this.authService.needsRoleSelection()) {
-      this.router.navigate(['/account-type']);
-      return false;
+      return this.router.createUrlTree(['/account-type']);             // ✅
     }
 
-    // If user needs teacher setup
-    if (this.authService.needsTeacherSetup()) {
-      // For now, allow access to teacher routes
-      if (!state.url.startsWith('/teacher')) {
-        this.router.navigate(['/teacher']);
-        return false;
-      }
+    if (this.authService.needsTeacherSetup() && !state.url.startsWith('/teacher')) {
+      return this.router.createUrlTree(['/teacher']);                  // ✅
     }
 
-    // User has completed onboarding - check if they should be redirected to appropriate dashboard
-    if (user && user.onboarding_step === 'complete') {
+    if (user?.onboarding_step === 'complete') {
       if (user.role === 'Student' && !state.url.startsWith('/student')) {
-        console.log('OnboardingGuard: Completed student accessing non-student route, redirecting to student dashboard');
-        this.router.navigate(['/student/dashboard']);
-        return false;
-      } else if (user.role === 'Teacher' && !state.url.startsWith('/teacher')) {
-        console.log('OnboardingGuard: Completed teacher accessing non-teacher route, redirecting to teacher dashboard');
-        this.router.navigate(['/teacher']);
-        return false;
+        return this.router.createUrlTree(['/student/dashboard']);      // ✅
+      }
+      if (user.role === 'Teacher' && !state.url.startsWith('/teacher')) {
+        return this.router.createUrlTree(['/teacher']);                // ✅
       }
     }
 
-    // User has completed onboarding
     return true;
   }
 }

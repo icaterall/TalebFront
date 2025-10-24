@@ -64,19 +64,12 @@ export class StudentProfileComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.user = this.authService.getCurrentUser();
-    
-    if (!this.user) {
-      this.toastr.error('Please login first');
-      this.router.navigate(['/']);
-      return;
+    // Universal authentication and role validation
+    if (!this.authService.validateAuthAndRole('Student')) {
+      return; // Validation failed, user will be redirected automatically
     }
 
-    if (this.user.role !== 'Student') {
-      this.toastr.error('This page is for students only');
-      this.router.navigate(['/dashboard']);
-      return;
-    }
+    this.user = this.authService.getCurrentUser();
     
     // Initialize form
     this.initializeForm();
@@ -282,7 +275,7 @@ export class StudentProfileComponent implements OnInit {
         this.loading = false;
         
         // Navigate to student dashboard
-        this.router.navigate(['/student/dashboard']);
+        this.router.navigateByUrl('/student/dashboard');
       },
       error: (error) => {
         console.error('Profile update error:', error);
@@ -308,6 +301,6 @@ export class StudentProfileComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/student/dashboard']);
+    this.router.navigateByUrl('/student/dashboard');
   }
 }

@@ -21,7 +21,7 @@ export class DashboardRedirectGuard implements CanActivate {
     // If not authenticated, redirect to landing page
     if (!user) {
       console.log('DashboardRedirectGuard: User not authenticated, redirecting to home');
-      this.router.navigate(['/']);
+      this.router.navigateByUrl('/');
       return false;
     }
 
@@ -30,11 +30,11 @@ export class DashboardRedirectGuard implements CanActivate {
       console.log('DashboardRedirectGuard: User has completed onboarding, redirecting to appropriate dashboard');
       if (user.role === 'Student') {
         console.log('DashboardRedirectGuard: Redirecting student to student dashboard');
-        this.router.navigate(['/student/dashboard']);
+        this.router.navigateByUrl('/student/dashboard');
         return false;
       } else if (user.role === 'Teacher') {
         console.log('DashboardRedirectGuard: Redirecting teacher to teacher dashboard');
-        this.router.navigate(['/teacher']);
+        this.router.navigateByUrl('/teacher');
         return false;
       }
     }
@@ -42,14 +42,14 @@ export class DashboardRedirectGuard implements CanActivate {
     // If user needs role selection, redirect to account type page
     if (this.authService.needsRoleSelection()) {
       console.log('DashboardRedirectGuard: User needs role selection, redirecting to account-type');
-      this.router.navigate(['/account-type']);
+      this.router.navigateByUrl('/account-type');
       return false;
     }
 
     // If user needs teacher setup, redirect to teacher routes
     if (this.authService.needsTeacherSetup()) {
       console.log('DashboardRedirectGuard: User needs teacher setup, redirecting to teacher');
-      this.router.navigate(['/teacher']);
+      this.router.navigateByUrl('/teacher');
       return false;
     }
 

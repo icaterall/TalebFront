@@ -350,7 +350,7 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
           }
           
           // Navigate to teacher dashboard
-          this.router.navigate(['/teacher']);
+          this.router.navigateByUrl('/teacher');
         },
         error: (error) => {
           console.error('Role update error:', error);
@@ -791,7 +791,7 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
           this.onboardingState.clearState();
           
           // Navigate to student dashboard
-          this.router.navigate(['/student/dashboard']);
+          this.router.navigateByUrl('/student/dashboard');
         },
         error: (error) => {
           console.error('Registration error:', error);

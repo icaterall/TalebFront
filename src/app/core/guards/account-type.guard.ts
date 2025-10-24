@@ -21,7 +21,7 @@ export class AccountTypeGuard implements CanActivate {
     // If not authenticated, redirect to landing page
     if (!user) {
       console.log('AccountTypeGuard: User not authenticated, redirecting to home');
-      this.router.navigate(['/']);
+      this.router.navigateByUrl('/');
       return false;
     }
 
@@ -32,19 +32,19 @@ export class AccountTypeGuard implements CanActivate {
       // Check onboarding step
       if (user.onboarding_step === 'need_teacher_form') {
         console.log('AccountTypeGuard: Redirecting to teacher setup');
-        this.router.navigate(['/teacher/setup']);
+        this.router.navigateByUrl('/teacher/setup');
         return false;
       } else if (user.onboarding_step === 'complete') {
         console.log('AccountTypeGuard: User has completed onboarding, redirecting to appropriate dashboard');
         if (user.role === 'Student') {
           console.log('AccountTypeGuard: Redirecting student to student dashboard');
-          this.router.navigate(['/student/dashboard']);
+          this.router.navigateByUrl('/student/dashboard');
         } else if (user.role === 'Teacher') {
           console.log('AccountTypeGuard: Redirecting teacher to teacher dashboard');
-          this.router.navigate(['/teacher']);
+          this.router.navigateByUrl('/teacher');
         } else {
           console.log('AccountTypeGuard: Redirecting to generic dashboard');
-          this.router.navigate(['/dashboard']);
+          this.router.navigateByUrl('/dashboard');
         }
         return false;
       }
@@ -54,11 +54,11 @@ export class AccountTypeGuard implements CanActivate {
     if (user.onboarding_step === 'complete') {
       console.log('AccountTypeGuard: User has completed onboarding, preventing access to account-type page');
       if (user.role === 'Student') {
-        this.router.navigate(['/student/dashboard']);
+        this.router.navigateByUrl('/student/dashboard');
       } else if (user.role === 'Teacher') {
-        this.router.navigate(['/teacher']);
+        this.router.navigateByUrl('/teacher');
       } else {
-        this.router.navigate(['/dashboard']);
+        this.router.navigateByUrl('/dashboard');
       }
       return false;
     }

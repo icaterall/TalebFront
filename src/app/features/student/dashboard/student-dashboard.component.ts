@@ -5,6 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 
 import { AuthService, User } from '../../../core/services/auth.service';
+import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { MsPracticesModalComponent, OfficeApp } from '../ms-practices/ms-practices-modal.component';
 
@@ -18,6 +19,7 @@ import { MsPracticesModalComponent, OfficeApp } from '../ms-practices/ms-practic
 export class StudentDashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly universalAuth = inject(UniversalAuthService);
   private readonly i18n = inject(I18nService);
   private readonly toastr = inject(ToastrService);
   private readonly translate = inject(TranslateService);
@@ -118,20 +120,18 @@ export class StudentDashboardComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.user = this.authService.getCurrentUser();
+    console.log('🏠 StudentDashboardComponent: ngOnInit() called');
+    console.log('🔐 Starting authentication validation...');
     
-    if (!this.user) {
-      this.toastr.error('Please login first');
-      this.router.navigate(['/']);
-      return;
+    // Universal authentication and role validation
+    if (!this.universalAuth.validateAccess('Student')) {
+      console.log('❌ StudentDashboardComponent: Authentication validation failed, redirecting...');
+      return; // Validation failed, user will be redirected automatically
     }
 
-    if (this.user.role !== 'Student') {
-      this.toastr.error('This page is for students only');
-      this.router.navigate(['/dashboard']);
-      return;
-    }
-
+    console.log('✅ StudentDashboardComponent: Authentication successful');
+    this.user = this.universalAuth.getCurrentUser();
+    console.log('👤 Student user loaded:', this.user);
     this.loadDashboardData();
   }
 
@@ -192,7 +192,7 @@ export class StudentDashboardComponent implements OnInit {
   }
 
   onUpdateProfile(): void {
-    this.router.navigate(['/student/profile']);
+    this.router.navigateByUrl('/student/profile');
   }
 
   getActivityIcon(type: string): string {
@@ -248,31 +248,31 @@ export class StudentDashboardComponent implements OnInit {
 
   // Navigation methods
   onViewCourses(): void {
-    this.router.navigate(['/student/courses']);
+    this.router.navigateByUrl('/student/courses');
   }
 
   onViewActiveCourses(): void {
-    this.router.navigate(['/student/courses']);
+    this.router.navigateByUrl('/student/courses');
   }
 
   onViewProgress(): void {
-    this.router.navigate(['/student/grades']);
+    this.router.navigateByUrl('/student/grades');
   }
 
   onViewAchievements(): void {
-    this.router.navigate(['/student/grades']);
+    this.router.navigateByUrl('/student/grades');
   }
 
   onViewAssignments(): void {
-    this.router.navigate(['/student/assignments']);
+    this.router.navigateByUrl('/student/assignments');
   }
 
   onViewQuizzes(): void {
-    this.router.navigate(['/student/quizzes']);
+    this.router.navigateByUrl('/student/quizzes');
   }
 
   onViewGrades(): void {
-    this.router.navigate(['/student/grades']);
+    this.router.navigateByUrl('/student/grades');
   }
 
   // MS Practices Modal Methods
@@ -294,7 +294,7 @@ export class StudentDashboardComponent implements OnInit {
         this.translate.instant('msPractices.success')
       );
       // Navigate to the Outlook signature training demo
-      this.router.navigate(['/training-demo/outlook-signature']);
+      this.router.navigateByUrl('/outlook-training');
     } else {
       // Get app name for display (fallback to ID if name is empty)
       const appName = app.name || app.id;

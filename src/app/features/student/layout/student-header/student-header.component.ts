@@ -50,6 +50,11 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
+    // Universal authentication and role validation
+    if (!this.authService.validateAuthAndRole('Student')) {
+      return; // Validation failed, user will be redirected automatically
+    }
+
     this.user = this.authService.getCurrentUser();
   }
 
@@ -73,12 +78,12 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
   }
 
   onProfile(): void {
-    this.router.navigate(['/student/profile']);
+    this.router.navigateByUrl('/student/profile');
   }
 
   onLogout(): void {
     this.authService.logout();
-    this.router.navigate(['/']);
+    this.router.navigateByUrl('/');
   }
 
   onAvatarClick(): void {
@@ -110,13 +115,13 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
 
   onProfileSettings(): void {
     this.showProfileMenu = false;
-    this.router.navigate(['/student/profile']);
+    this.router.navigateByUrl('/student/profile');
   }
 
   onSignOut(): void {
     this.showProfileMenu = false;
     this.authService.logout();
-    this.router.navigate(['/']);
+    this.router.navigateByUrl('/');
   }
 
   onImageError(event: Event): void {

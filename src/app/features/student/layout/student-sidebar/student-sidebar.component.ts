@@ -82,6 +82,8 @@ export class StudentSidebarComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    // Note: Authentication validation is handled by parent components
+    // This component is used within authenticated routes only
     this.updateActiveRoute();
     
     // Listen for route changes
@@ -105,7 +107,7 @@ export class StudentSidebarComponent implements OnInit, OnDestroy {
   }
 
   onNavigate(route: string): void {
-    this.router.navigate([route]);
+    this.router.navigateByUrl(route);
     
     // Close mobile menu after navigation
     if (this.isMobile) {

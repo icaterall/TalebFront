@@ -1,8 +1,9 @@
-import { Component, HostListener, OnDestroy, OnInit, AfterViewInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, AfterViewInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NgClass, NgIf } from '@angular/common';
 import { StudentHeaderComponent } from '../student-header/student-header.component';
 import { StudentSidebarComponent } from '../student-sidebar/student-sidebar.component';
+import { UniversalAuthService } from '../../../../core/services/universal-auth.service';
 
 @Component({
   selector: 'app-student-shell',
@@ -13,6 +14,7 @@ import { StudentSidebarComponent } from '../student-sidebar/student-sidebar.comp
 })
 export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly mobileBreakpoint = 992;
+  private readonly universalAuth = inject(UniversalAuthService);
 
   menuOpen = false;
   isMobile = false;
@@ -26,6 +28,16 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    console.log('🏠 StudentShellComponent: ngOnInit() called');
+    console.log('🔐 Starting authentication validation in shell...');
+    
+    // Universal authentication and role validation
+    if (!this.universalAuth.validateAccess('Student')) {
+      console.log('❌ StudentShellComponent: Authentication validation failed, redirecting...');
+      return; // Validation failed, user will be redirected automatically
+    }
+
+    console.log('✅ StudentShellComponent: Authentication successful');
     this.checkScreenSize();
   }
 

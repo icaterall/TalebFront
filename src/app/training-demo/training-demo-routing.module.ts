@@ -6,15 +6,17 @@ import { OutlookAddinComponent } from './pages/outlook-addin/outlook-addin.compo
 const routes: Routes = [
   {
     path: 'outlook-signature',
-    component: OutlookSignatureLabComponent
+    redirectTo: '/outlook-training',
+    pathMatch: 'full'
   },
   {
     path: 'outlook',
-    component: OutlookAddinComponent
+    redirectTo: '/outlook-training',
+    pathMatch: 'full'
   },
   {
     path: '',
-    redirectTo: 'outlook-signature',
+    redirectTo: '/outlook-training',
     pathMatch: 'full'
   }
 ];

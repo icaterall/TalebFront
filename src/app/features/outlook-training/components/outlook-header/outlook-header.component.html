@@ -1,0 +1,119 @@
+<div class="outlook-header">
+  <!-- Top Navigation Bar -->
+  <div class="top-nav">
+    <div class="nav-left">
+      <button class="hamburger-menu" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <path d="M2 4h12v1H2V4zm0 3h12v1H2V7zm0 3h12v1H2v-1z" fill="currentColor"/>
+        </svg>
+      </button>
+      
+      <div class="outlook-branding">
+        <svg class="outlook-logo" width="20" height="20" viewBox="0 0 20 20">
+          <path d="M3 3h14v14H3V3zm1 1v12h12V4H4zm2 2h8v1H6V6zm0 2h8v1H6V8zm0 2h5v1H6v-1z" fill="#0078d4"/>
+        </svg>
+        <span class="outlook-text">Outlook</span>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div class="search-container">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" fill="currentColor"/>
+        </svg>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search"
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()">
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button class="copilot-btn" type="button">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M10 2L3 7v11h14V7l-7-5z" fill="url(#gradient)"/>
+          <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+              <stop offset="50%" style="stop-color:#4ecdc4;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#45b7d1;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Copilot</span>
+      </button>
+
+      <button class="nav-icon" type="button" (click)="onNotifications()">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244a16.014 16.014 0 0 1-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.918z" fill="currentColor"/>
+        </svg>
+      </button>
+
+      <button class="nav-icon" type="button" (click)="onSettings()">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" fill="currentColor"/>
+        </svg>
+      </button>
+
+      <div class="profile-avatar">
+        <span class="avatar-initials">AQ</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" type="button">Home</button>
+    <button class="nav-tab" type="button">View</button>
+    <button class="nav-tab" type="button">Help</button>
+  </div>
+
+  <!-- Action Ribbon -->
+  <div class="action-ribbon">
+    <button class="ribbon-btn primary" type="button" (click)="onNewMail()">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <path d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zm0 1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="currentColor"/>
+      </svg>
+      New mail
+    </button>
+
+    <button class="ribbon-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z" fill="currentColor"/>
+      </svg>
+      Delete
+    </button>
+
+    <button class="ribbon-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2H1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z" fill="currentColor"/>
+      </svg>
+      Archive
+    </button>
+
+    <button class="ribbon-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z" fill="currentColor"/>
+      </svg>
+      Report
+    </button>
+
+    <div class="ribbon-separator"></div>
+
+    <button class="ribbon-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <path d="M8 4a.5.5 0 0 1 .5.5V6H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V7H6a.5.5 0 0 1 0-1h1.5V4.5A.5.5 0 0 1 8 4z" fill="currentColor"/>
+      </svg>
+      Quick steps
+    </button>
+
+    <button class="ribbon-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z" fill="currentColor"/>
+      </svg>
+      Mark all as read
+    </button>
+  </div>
+</div>
