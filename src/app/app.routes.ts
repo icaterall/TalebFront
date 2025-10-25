@@ -24,12 +24,22 @@ export const appRoutes: Routes = [
     loadChildren: () => import('./training-demo/training-demo.module').then(m => m.TrainingDemoModule),
   },
   {
+    path: 'custom-outlook',
+    loadChildren: () => import('./features/custom-outlook/custom-outlook.module').then(m => m.CustomOutlookModule),
+  },
+  {
+    path: 'desktop-outlook',
+    redirectTo: '/custom-outlook',
+    pathMatch: 'full'
+  },
+  {
     path: 'outlook-training',
-    loadChildren: () => import('./features/outlook-training/outlook-training.module').then(m => m.OutlookTrainingModule),
+    redirectTo: '/custom-outlook',
+    pathMatch: 'full'
   },
   {
     path: 'outlook-signature',
-    redirectTo: '/outlook-training',
+    redirectTo: '/custom-outlook',
     pathMatch: 'full'
   },
   

@@ -1,5 +1,30 @@
 {
 
+  "outlook": {
+    "training": "Outlook Training",
+    "quiz": "Quiz",
+    "newMail": "New mail",
+    "favorites": "Favorites",
+    "inbox": "Inbox",
+    "drafts": "Drafts",
+    "sentItems": "Sent Items",
+    "deletedItems": "Deleted Items",
+    "junkEmail": "Junk Email",
+    "focused": "Focused",
+    "other": "Other",
+    "quizNavigation": "Quiz Navigation",
+    "question": "Question",
+    "points": "points",
+    "instructions": "Instructions",
+    "finishAttempt": "Finish Attempt",
+    "send": "Send",
+    "to": "To",
+    "cc": "Cc",
+    "bcc": "Bcc",
+    "subject": "Add a subject",
+    "draftSaved": "Draft saved at",
+    "composeMessage": "Compose your message here..."
+  },
   "student": {
     "studentName": "Student",
     "student": "Student",
