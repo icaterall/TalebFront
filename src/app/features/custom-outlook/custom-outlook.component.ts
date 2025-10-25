@@ -235,7 +235,7 @@ import { Router } from '@angular/router';
         </div>
 
         <!-- Compose Interface Overlay -->
-        <div class="compose-overlay" *ngIf="isComposing">
+        <div class="compose-overlay" [class.rtl]="isRTL" *ngIf="isComposing">
             <div class="compose-header">
               <div class="compose-actions">
                 <button class="send-btn" (click)="sendEmail()">
@@ -1055,6 +1055,13 @@ import { Router } from '@angular/router';
       display: flex;
       flex-direction: column;
       overflow-y: auto;
+      border: 1px solid #e1e5e9;
+    }
+
+    /* RTL (Arabic) - Compose interface on the left side */
+    .compose-overlay.rtl {
+      left: 0;
+      right: 548px; /* Before right nav (48px) + mailbox sidebar (200px) + email list (300px) */
     }
 
     .compose-header {
