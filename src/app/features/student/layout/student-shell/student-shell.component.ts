@@ -28,16 +28,12 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🏠 StudentShellComponent: ngOnInit() called');
-    console.log('🔐 Starting authentication validation in shell...');
     
     // Universal authentication and role validation
     if (!this.universalAuth.validateAccess('Student')) {
-      console.log('❌ StudentShellComponent: Authentication validation failed, redirecting...');
       return; // Validation failed, user will be redirected automatically
     }
 
-    console.log('✅ StudentShellComponent: Authentication successful');
     this.checkScreenSize();
   }
 

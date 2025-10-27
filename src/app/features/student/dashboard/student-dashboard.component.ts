@@ -120,18 +120,13 @@ export class StudentDashboardComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    console.log('🏠 StudentDashboardComponent: ngOnInit() called');
-    console.log('🔐 Starting authentication validation...');
     
     // Universal authentication and role validation
     if (!this.universalAuth.validateAccess('Student')) {
-      console.log('❌ StudentDashboardComponent: Authentication validation failed, redirecting...');
       return; // Validation failed, user will be redirected automatically
     }
 
-    console.log('✅ StudentDashboardComponent: Authentication successful');
     this.user = this.universalAuth.getCurrentUser();
-    console.log('👤 Student user loaded:', this.user);
     this.loadDashboardData();
   }
 
@@ -309,6 +304,5 @@ export class StudentDashboardComponent implements OnInit {
       );
     }
     
-    console.log('Starting practice for:', app);
   }
 }

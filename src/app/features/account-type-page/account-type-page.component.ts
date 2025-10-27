@@ -13,6 +13,7 @@ import { FooterComponent } from '../../shared/footer/footer.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Subscription } from 'rxjs';
 import { getUserInitials } from '../../shared/utils/user-initials.util';
+import { getProfilePhotoUrl } from '../../core/utils/profile-photo.util';
 
 type Lang = 'ar' | 'en';
 
@@ -179,10 +180,11 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     return this.user?.email || '';
   }
   get userAvatarUrl(): string {
-    return this.user?.profile_photo_url || 'assets/default-avatar.png';
+    const photoUrl = this.user?.profile_photo_url || this.user?.profile_photo;
+    return getProfilePhotoUrl(photoUrl) || 'assets/default-avatar.png';
   }
   get hasAvatar(): boolean {
-    return !!this.user?.profile_photo_url;
+    return !!(this.user?.profile_photo_url || this.user?.profile_photo);
   }
   get userInitials(): string {
     return getUserInitials(this.userName);

@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { I18nService } from '../../../../core/services/i18n.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { getProfilePhotoUrl } from '../../../../core/utils/profile-photo.util';
 
 @Component({
   selector: 'app-student-header',
@@ -46,7 +47,8 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
   }
 
   get userPhoto(): string | null {
-    return this.user?.photo || this.user?.profile_photo || this.user?.avatar || null;
+    const photoUrl = this.user?.profile_photo_url || this.user?.profile_photo || this.user?.photo || this.user?.avatar || null;
+    return getProfilePhotoUrl(photoUrl);
   }
 
   ngOnInit(): void {
@@ -56,6 +58,11 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
     }
 
     this.user = this.authService.getCurrentUser();
+    
+    // If no profile photo URL in either field, try to refresh user data from backend
+    if (this.user && !this.user.profile_photo_url && !this.user.profile_photo) {
+      this.authService.updateUserFromBackend();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {

@@ -94,7 +94,6 @@ export class MsPracticesModalComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && changes['isOpen'].currentValue === true) {
-      console.log('Modal opened, checking translations...');
       this.onModalOpen();
     }
   }
@@ -102,52 +101,38 @@ export class MsPracticesModalComponent implements OnInit, OnChanges {
   private loadTranslations(): void {
     // Ensure translations are loaded
     this.translate.get('msPractices.title').subscribe((title) => {
-      console.log('Title translation:', title);
     });
     this.translate.get('msPractices.apps.outlook.name').subscribe((name) => {
-      console.log('Outlook name translation:', name);
     });
     this.translate.get('msPractices.apps.word.name').subscribe((name) => {
-      console.log('Word name translation:', name);
     });
     this.translate.get('msPractices.apps.powerpoint.name').subscribe((name) => {
-      console.log('PowerPoint name translation:', name);
     });
     this.translate.get('msPractices.apps.excel.name').subscribe((name) => {
-      console.log('Excel name translation:', name);
     });
   }
 
   private checkTranslationService(): void {
-    console.log('Current language:', this.translate.currentLang);
-    console.log('Default language:', this.translate.defaultLang);
-    console.log('Available languages:', this.translate.getLangs());
-    
+  
     // Test a simple translation
     const testTranslation = this.translate.instant('msPractices.title');
-    console.log('Test translation for msPractices.title:', testTranslation);
     
     // Check if translation service is working
     if (testTranslation === 'msPractices.title') {
-      console.warn('Translation service not working - showing keys instead of translations');
       this.forceReloadTranslations();
     } else {
-      console.log('Translation service is working correctly');
     }
   }
 
   private forceReloadTranslations(): void {
-    console.log('Forcing translation reload...');
     
     // Try to reload the current language
     const currentLang = this.translate.currentLang || this.translate.defaultLang;
     if (currentLang) {
       this.translate.reloadLang(currentLang).subscribe(() => {
-        console.log('Translation reloaded for language:', currentLang);
         
         // Test again
         const testTranslation = this.translate.instant('msPractices.title');
-        console.log('After reload - Test translation for msPractices.title:', testTranslation);
       });
     }
   }

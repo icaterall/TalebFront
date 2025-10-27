@@ -18,8 +18,7 @@ export class UniversalAuthService {
    * @returns boolean - true if valid, false if invalid
    */
   validateAccess(requiredRole?: string, showToast: boolean = true): boolean {
-    console.log(`UniversalAuthService: Validating access for role: ${requiredRole || 'any'}`);
-    
+
     // Use the universal validation from AuthService
     const isValid = this.authService.validateAuthAndRole(requiredRole);
     

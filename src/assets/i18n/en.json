@@ -23,7 +23,15 @@
     "bcc": "Bcc",
     "subject": "Add a subject",
     "draftSaved": "Draft saved at",
-    "composeMessage": "Compose your message here..."
+    "composeMessage": "Compose your message here...",
+    "home": "Home",
+    "view": "View",
+    "help": "Help",
+    "message": "Message",
+    "insert": "Insert",
+    "formatText": "Format text",
+    "draw": "Draw",
+    "options": "Options"
   },
   "student": {
     "studentName": "Student",

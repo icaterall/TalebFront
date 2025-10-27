@@ -22,7 +22,15 @@
     "bcc": "نسخة مخفية",
     "subject": "أضف موضوع",
     "draftSaved": "تم حفظ المسودة في",
-    "composeMessage": "اكتب رسالتك هنا..."
+    "composeMessage": "اكتب رسالتك هنا...",
+    "home": "الرئيسية",
+    "view": "عرض",
+    "help": "مساعدة",
+    "message": "رسالة",
+    "insert": "إدراج",
+    "formatText": "تنسيق النص",
+    "draw": "رسم",
+    "options": "خيارات"
   },
   "student": {
     "studentName": "طالب",

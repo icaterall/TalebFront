@@ -90,12 +90,7 @@ export class I18nService {
       
       const initial: Lang = saved ?? browser ?? inline ?? 'ar';
       
-      console.log('Language initialization:', {
-        saved,
-        browser,
-        inline,
-        initial
-      });
+   
 
       this._lang$.next(initial);
       this.apply(initial);
@@ -103,17 +98,17 @@ export class I18nService {
       
       // Set the default language first
       this.translate.setDefaultLang('ar');
-      console.log('Default language set to: ar');
+  
       
       // Then use the initial language
       this.translate.use(initial);
-      console.log('Using initial language:', initial);
+  
 
       // On the browser, wait for translations to load to avoid flicker.
       // On the server, skip waiting for HTTP to avoid window/DOM issues.
       if (this.isBrowser) {
         await firstValueFrom(this.translate.use(initial));
-        console.log('Translation loaded for:', initial);
+  
       }
     } catch (error) {
       console.error('I18nService initialization failed:', error);
