@@ -1344,7 +1344,7 @@
     "contactUsSub1": "We value your feedback and suggestions!",
     "contactUsSub2": "Please fill out the form below and we will respond to you as soon as possible."
   },
-"getInTouch": "Stay in Touch"
+  "getInTouch": "Stay in Touch"
 }
 
 ,"dashboardPage": {
@@ -1778,5 +1778,6 @@
     "updateProfile": "Update Profile",
     "viewAll": "View All",
     "points": "points"
+  }
   }
 }

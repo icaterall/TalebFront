@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-student-sidebar',
@@ -18,8 +19,10 @@ export class StudentSidebarComponent implements OnInit, OnDestroy {
 
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
+  private readonly authService = inject(AuthService);
 
   currentRoute = '';
+  user: any = null;
 
   // Student navigation items
   navItems = [
@@ -81,7 +84,18 @@ export class StudentSidebarComponent implements OnInit, OnDestroy {
     }
   ];
 
+  get userName(): string {
+    return this.user?.name || this.user?.email || 'Student';
+  }
+
+  get userRole(): string {
+    return this.user?.role || 'Student';
+  }
+
   ngOnInit(): void {
+    // Get user data from auth service
+    this.user = this.authService.getCurrentUser();
+    
     // Note: Authentication validation is handled by parent components
     // This component is used within authenticated routes only
     this.updateActiveRoute();

@@ -435,6 +435,7 @@ width: 44px;
 
 .mobile-drawer.open{
 transform:translateX(0); box-shadow:0 10px 30px rgba(0,0,0,.22);
+pointer-events: auto;
 }
 
 
@@ -527,7 +528,7 @@ padding: 1.25rem 1.75rem calc(env(safe-area-inset-bottom,0px) + 1.25rem);
 .mobile-drawer__backdrop{
 position: fixed;
 inset: 0;
-z-index: 1040;
+z-index: 10001;
 background: rgba(0,0,0,.35);
 opacity: 0;
 pointer-events: none;
@@ -547,12 +548,20 @@ height: 100vh;     /* fallback */
 height: 100dvh;    /* modern */
 height: 100svh;    /* iOS Safari dynamic-chrome */
 background:#fff;
-z-index:1050;
+z-index: 10002;
 
 display:flex;
 flex-direction:column;
 overflow:hidden;               /* children decide scrolling */
+transform: translateX(-100%); /* Hide drawer off-screen initially */
 transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s cubic-bezier(.2,.8,.2,1);
+pointer-events: none; /* Disable interactions when closed */
+}
+
+
+/* RTL support - drawer slides from right */
+:host-context([dir="rtl"]) .mobile-drawer {
+transform: translateX(100%); /* Hide drawer off-screen on the right for RTL */
 overscroll-behavior: contain;  /* no scroll chaining to page */
 }
 /* Real body freeze (prevents rubber-banding) */

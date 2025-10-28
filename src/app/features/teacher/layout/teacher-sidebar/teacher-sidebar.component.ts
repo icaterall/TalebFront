@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, computed, signal, OnInit, OnDes
 import { NgClass, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../../../core/services/i18n.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface NavItem {
   label: string;
@@ -33,6 +34,9 @@ export class TeacherSidebarComponent implements OnInit, OnDestroy {
   @Output() closeMenu = new EventEmitter<void>();
 
   private i18n = inject(I18nService);
+  private authService = inject(AuthService);
+
+  user: any = null;
 
   get isRTL(): boolean {
     return this.i18n.current === 'ar';
@@ -40,6 +44,14 @@ export class TeacherSidebarComponent implements OnInit, OnDestroy {
 
   get currentLang(): string {
     return this.i18n.current;
+  }
+
+  get userName(): string {
+    return this.user?.name || this.user?.email || 'Teacher';
+  }
+
+  get userRole(): string {
+    return this.user?.role || 'Teacher';
   }
 
   translations: Translations = {
@@ -78,6 +90,8 @@ export class TeacherSidebarComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    // Get user data from auth service
+    this.user = this.authService.getCurrentUser();
     // Language detection is now handled by I18nService
   }
 

@@ -57,7 +57,9 @@ async setLang(next: Lang) {
 
 
 toggleMobileMenu() {
+  console.log('Mobile menu toggle clicked, current state:', this.isMenuOpen);
   this.isMenuOpen = !this.isMenuOpen;
+  console.log('Mobile menu new state:', this.isMenuOpen);
   if (isPlatformBrowser(this.platformId)) {
     this.document.body.classList.toggle('no-scroll', this.isMenuOpen);
   }

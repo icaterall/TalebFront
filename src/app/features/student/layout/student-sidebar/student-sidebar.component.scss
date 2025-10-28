@@ -9,6 +9,7 @@
   overflow-y: auto;
   padding-bottom: 32px;
   transition: transform 0.25s ease;
+  overscroll-behavior: contain;
 }
 
 .sidebar-header {
@@ -166,9 +167,23 @@
     transform: translateX(-100%);
     z-index: 1000;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    overscroll-behavior: contain;
   }
 
   .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* RTL support - sidebar slides from right */
+  :host-context([dir="rtl"]) .sidebar {
+    left: auto;
+    right: 0;
+    transform: translateX(100%);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    overscroll-behavior: contain;
+  }
+
+  :host-context([dir="rtl"]) .sidebar.open {
     transform: translateX(0);
   }
 
