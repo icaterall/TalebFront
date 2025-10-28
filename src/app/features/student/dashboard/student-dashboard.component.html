@@ -92,6 +92,12 @@
         <div class="action-title">{{ 'student.dashboard.actions.msPractices' | translate }}</div>
         <div class="action-subtitle">{{ 'student.dashboard.actions.msPracticesSub' | translate }}</div>
       </div>
+      
+      <div class="action-card action-outlook glass-card" (click)="launchOutlookTest()">
+        <div class="action-icon">📧</div>
+        <div class="action-title">Test Outlook</div>
+        <div class="action-subtitle">Practice email composition with grading</div>
+      </div>
       <div class="action-card action-1 glass-card" (click)="onViewCourses()">
         <span class="action-step">{{ 'student.dashboard.actions.quickAction' | translate }}</span>
         <div class="action-icon">📚</div>

@@ -304,5 +304,20 @@ export class StudentDashboardComponent implements OnInit {
       );
     }
     
+    console.log('Starting practice for:', app);
+  }
+
+  // Outlook Test Method
+  launchOutlookTest() {
+    const base = 'https://outlook.office.com/mail/deeplink/compose';
+
+    const subject = encodeURIComponent('Practice: Quarterly Update');
+    const to      = encodeURIComponent('trainer@example.edu');
+    const cc      = encodeURIComponent('hr@example.edu');     // optional seed
+    const bcc     = encodeURIComponent('audit@example.edu');  // optional seed
+    const body    = encodeURIComponent('Please add the missing recipients and keyword as required.');
+
+    const url = `${base}?subject=${subject}&to=${to}&cc=${cc}&bcc=${bcc}&body=${body}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 }

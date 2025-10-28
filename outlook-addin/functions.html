@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+<body>
+  <script>
+    Office.onReady(() => {});
+
+    function showTaskPane(event) {
+      // In command add-ins, calling displayDialogAsync isn't needed for panes.
+      // Outlook will show the SourceLocation defined for ItemCompose automatically when the command is a "ShowTaskpane" type.
+      // But for classic button we can just display the pane by calling:
+      Office.addin.showAsTaskpane().then(() => event.completed());
+    }
+    // Make function global
+    window.showTaskPane = showTaskPane;
+  </script>
+</body>
+</html>
