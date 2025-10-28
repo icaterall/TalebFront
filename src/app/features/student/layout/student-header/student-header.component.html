@@ -13,7 +13,7 @@
       </svg>
     </button>
  
-    <img src="assets/logo-dark-t.png" alt="Ana Taleb" class="logo-img">
+    <img src="assets/logo-dark-t.png" alt="Ana Taleb" class="logo-img" (click)="onLogoClick()" style="cursor: pointer;">
     <span class="org" *ngIf="!isMobile">{{ userName }}</span>
     <span class="badge" *ngIf="!isMobile">{{ 'student.student' | translate }}</span>
   </div>

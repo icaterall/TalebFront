@@ -7,12 +7,11 @@ import { ToastrService } from 'ngx-toastr';
 import { AuthService, User } from '../../../core/services/auth.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { I18nService } from '../../../core/services/i18n.service';
-import { MsPracticesModalComponent, OfficeApp } from '../ms-practices/ms-practices-modal.component';
 
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [CommonModule, TranslateModule, MsPracticesModalComponent],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './student-dashboard.component.html',
   styleUrls: ['./student-dashboard.component.scss']
 })
@@ -27,7 +26,6 @@ export class StudentDashboardComponent implements OnInit {
   user: User | null = null;
   loading = false;
   isBrowser = typeof window !== 'undefined';
-  msPracticesModalOpen = false;
 
   // Dashboard data
   stats = {
@@ -268,56 +266,5 @@ export class StudentDashboardComponent implements OnInit {
 
   onViewGrades(): void {
     this.router.navigateByUrl('/student/grades');
-  }
-
-  // MS Practices Modal Methods
-  onOpenMsPractices(): void {
-    this.msPracticesModalOpen = true;
-  }
-
-  onCloseMsPractices(): void {
-    this.msPracticesModalOpen = false;
-  }
-
-  onStartMsPractice(app: OfficeApp): void {
-    this.msPracticesModalOpen = false;
-    
-    // Handle Outlook practice specifically - check by ID since name might be empty
-    if (app.id.toLowerCase() === 'outlook') {
-      this.toastr.success(
-        this.translate.instant('msPractices.outlookPracticeStarted'),
-        this.translate.instant('msPractices.success')
-      );
-      // Navigate to the Outlook signature training demo
-      this.router.navigateByUrl('/outlook-training');
-    } else {
-      // Get app name for display (fallback to ID if name is empty)
-      const appName = app.name || app.id;
-      this.toastr.success(
-        this.translate.instant('msPractices.practiceStarted', { app: appName }),
-        this.translate.instant('msPractices.success')
-      );
-      // For other apps, show a message that practice is coming soon
-      this.toastr.info(
-        this.translate.instant('msPractices.comingSoon', { app: appName }),
-        this.translate.instant('msPractices.info')
-      );
-    }
-    
-    console.log('Starting practice for:', app);
-  }
-
-  // Outlook Test Method
-  launchOutlookTest() {
-    const base = 'https://outlook.office.com/mail/deeplink/compose';
-
-    const subject = encodeURIComponent('Practice: Quarterly Update');
-    const to      = encodeURIComponent('trainer@example.edu');
-    const cc      = encodeURIComponent('hr@example.edu');     // optional seed
-    const bcc     = encodeURIComponent('audit@example.edu');  // optional seed
-    const body    = encodeURIComponent('Please add the missing recipients and keyword as required.');
-
-    const url = `${base}?subject=${subject}&to=${to}&cc=${cc}&bcc=${bcc}&body=${body}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
   }
 }

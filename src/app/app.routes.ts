@@ -3,17 +3,20 @@ import { OnboardingGuard } from './core/guards/onboarding.guard';
 import { AccountTypeGuard } from './core/guards/account-type.guard';
 import { StudentRegistrationGuard } from './core/guards/student-registration.guard';
 import { DashboardRedirectGuard } from './core/guards/dashboard-redirect.guard';
+import { LandingPageGuard } from './core/guards/landing-page.guard';
 
 export const appRoutes: Routes = [
-  // Public routes (no guards)
+  // Public routes (with landing page guard to redirect authenticated users)
   {
     path: '',
     pathMatch: 'full',
     loadComponent: () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent),
+    canActivate: [LandingPageGuard],
   },
   {
     path: 'login',
     loadComponent: () => import('./layouts/features/landing-page/landing-page.component').then(m => m.LandingPageComponent),
+    canActivate: [LandingPageGuard],
   },
   {
     path: 'auth/reset-password/:token',
@@ -22,25 +25,6 @@ export const appRoutes: Routes = [
   {
     path: 'training-demo',
     loadChildren: () => import('./training-demo/training-demo.module').then(m => m.TrainingDemoModule),
-  },
-  {
-    path: 'custom-outlook',
-    loadChildren: () => import('./features/custom-outlook/custom-outlook.module').then(m => m.CustomOutlookModule),
-  },
-  {
-    path: 'desktop-outlook',
-    redirectTo: '/custom-outlook',
-    pathMatch: 'full'
-  },
-  {
-    path: 'outlook-training',
-    redirectTo: '/custom-outlook',
-    pathMatch: 'full'
-  },
-  {
-    path: 'outlook-signature',
-    redirectTo: '/custom-outlook',
-    pathMatch: 'full'
   },
   
   // Protected routes (with guards)

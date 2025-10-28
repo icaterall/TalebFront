@@ -619,6 +619,21 @@ body {
             background: linear-gradient(90deg, #6d28d9 0%, #8b5cf6 100%);
          }
 
+        .action-assignment { 
+            background-color: #dc2626;
+            background: -webkit-gradient(linear, left top, right top, from(#991b1b), to(#dc2626));
+            background: -webkit-linear-gradient(left, #991b1b 0%, #dc2626 100%);
+            background: linear-gradient(90deg, #991b1b 0%, #dc2626 100%);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        .action-assignment:hover {
+            background: -webkit-gradient(linear, left top, right top, from(#7f1d1d), to(#b91c1c));
+            background: -webkit-linear-gradient(left, #7f1d1d 0%, #b91c1c 100%);
+            background: linear-gradient(90deg, #7f1d1d 0%, #b91c1c 100%);
+            box-shadow: 0 12px 35px rgba(220, 38, 38, 0.4);
+        }
+
         .action-icon {
             font-size: 48px;
             margin-bottom: 15px;

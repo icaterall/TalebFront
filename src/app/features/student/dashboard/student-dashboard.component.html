@@ -87,27 +87,21 @@
 
     <!-- Quick Actions Section -->
     <section class="actions-section">
-      <div class="action-card action-3 glass-card" (click)="onOpenMsPractices()">
-        <div class="action-icon">💼</div>
-        <div class="action-title">{{ 'student.dashboard.actions.msPractices' | translate }}</div>
-        <div class="action-subtitle">{{ 'student.dashboard.actions.msPracticesSub' | translate }}</div>
-      </div>
-      
-      <div class="action-card action-outlook glass-card" (click)="launchOutlookTest()">
-        <div class="action-icon">📧</div>
-        <div class="action-title">Test Outlook</div>
-        <div class="action-subtitle">Practice email composition with grading</div>
-      </div>
       <div class="action-card action-1 glass-card" (click)="onViewCourses()">
         <span class="action-step">{{ 'student.dashboard.actions.quickAction' | translate }}</span>
         <div class="action-icon">📚</div>
         <div class="action-title">{{ 'student.dashboard.actions.viewCourses' | translate }}</div>
         <div class="action-subtitle">{{ 'student.dashboard.actions.viewCoursesSub' | translate }}</div>
       </div>
-      <div class="action-card action-2 glass-card" (click)="onViewAssignments()">
+      <div class="action-card action-assignment glass-card" (click)="onViewAssignments()">
         <div class="action-icon">📝</div>
         <div class="action-title">{{ 'student.dashboard.actions.viewAssignments' | translate }}</div>
         <div class="action-subtitle">{{ 'student.dashboard.actions.viewAssignmentsSub' | translate }}</div>
+      </div>
+      <div class="action-card action-2 glass-card" (click)="onViewQuizzes()">
+        <div class="action-icon">🎯</div>
+        <div class="action-title">{{ 'student.dashboard.actions.takeQuiz' | translate }}</div>
+        <div class="action-subtitle">{{ 'student.dashboard.actions.takeQuizSub' | translate }}</div>
       </div>
   
       <div class="action-card action-4 glass-card" (click)="onViewGrades()">
@@ -238,9 +232,3 @@
   </div>
 </section>
 
-<!-- MS Practices Modal -->
-<app-ms-practices-modal 
-  [isOpen]="msPracticesModalOpen" 
-  (close)="onCloseMsPractices()"
-  (startPractice)="onStartMsPractice($event)">
-</app-ms-practices-modal>

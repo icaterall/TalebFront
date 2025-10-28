@@ -38,6 +38,8 @@
     "@angular/platform-server": "^20.3.1",
     "@angular/router": "^20.3.1",
     "@angular/ssr": "^20.3.1",
+    "@azure/msal-angular": "^4.0.20",
+    "@azure/msal-browser": "^4.25.1",
     "@fortawesome/fontawesome-free": "^7.0.1",
     "@google-cloud/local-auth": "^3.0.1",
     "@ng-select/ng-select": "^20.4.1",

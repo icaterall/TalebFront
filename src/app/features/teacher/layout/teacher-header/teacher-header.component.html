@@ -13,7 +13,7 @@
       </svg>
     </button>
  
-    <img src="assets/logo-dark-t.png" alt="Ana Taleb" class="logo-img">
+    <img src="assets/logo-dark-t.png" alt="Ana Taleb" class="logo-img" (click)="onLogoClick()" style="cursor: pointer;">
     <span class="org" *ngIf="!isMobile">Ahmed El Sayed</span>
     <span class="badge" *ngIf="!isMobile">Owner</span>
     <button class="upgrade-btn" *ngIf="!isMobile">UPGRADE</button>

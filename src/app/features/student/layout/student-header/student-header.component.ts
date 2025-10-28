@@ -75,6 +75,10 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
     this.menuToggle.emit();
   }
 
+  onLogoClick(): void {
+    this.router.navigateByUrl('/student/dashboard');
+  }
+
   async toggleLanguage(): Promise<void> {
     const newLang = this.i18n.current === 'ar' ? 'en' : 'ar';
     await this.i18n.setLang(newLang);
