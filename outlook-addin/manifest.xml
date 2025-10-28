@@ -1,82 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:type="MailApp">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xsi:type="MailApp">
   <Id>6f1ce2f0-1111-4f55-9c1e-aaaabbbbcccc</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Your Org</ProviderName>
+  <ProviderName>CLFS</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Outlook Exam – Task Pane"/>
   <Description DefaultValue="Practice grader for Outlook compose."/>
-  <IconUrl DefaultValue="http://localhost:3000/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="http://localhost:3000/icon-80.png"/>
+  <IconUrl DefaultValue="https://localhost:3001/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:3001/icon-80.png"/>
+  <SupportUrl DefaultValue="https://localhost:3001/"/>
 
-  <SupportUrl DefaultValue="http://localhost:3000/"/>
+  <Hosts><Host Name="Mailbox"/></Hosts>
 
-  <Hosts>
-    <Host Name="Mailbox"/>
-  </Hosts>
-
-  <!-- Compose surfaces -->
   <Requirements>
-    <Sets DefaultMinVersion="1.5">
-      <Set Name="Mailbox"/>
-    </Sets>
+    <Sets DefaultMinVersion="1.5"><Set Name="Mailbox"/></Sets>
   </Requirements>
 
   <FormSettings>
     <Form xsi:type="ItemCompose">
       <DesktopSettings>
-        <SourceLocation DefaultValue="http://localhost:3000/index.html"/>
+        <SourceLocation DefaultValue="https://localhost:3001/index.html"/>
       </DesktopSettings>
-      <TabletSettings>
-        <SourceLocation DefaultValue="http://localhost:3000/index.html"/>
-      </TabletSettings>
-      <PhoneSettings>
-        <SourceLocation DefaultValue="http://localhost:3000/index.html"/>
-      </PhoneSettings>
     </Form>
   </FormSettings>
-
-  <!-- Add a ribbon command to open the task pane -->
-  <ExtensionPoint xsi:type="MessageComposeCommandSurface">
-    <OfficeTab id="TabDefault">
-      <Group id="grp.Exam" label="Exam">
-        <Control xsi:type="Button" id="btn.OpenPane"
-                 label="Open Exam Pane"
-                 icon="http://localhost:3000/icon-32.png"
-                 onAction="showTaskPane"
-                 superTipTitle="Open Exam Pane"
-                 superTipDescription="Open the practice grader." />
-      </Group>
-    </OfficeTab>
-    <FunctionFile resid="res.fn" />
-  </ExtensionPoint>
-
-  <!-- Appointment compose as well (optional) -->
-  <ExtensionPoint xsi:type="AppointmentOrganizerCommandSurface">
-    <OfficeTab id="TabDefault">
-      <Group id="grp.Exam2" label="Exam">
-        <Control xsi:type="Button" id="btn.OpenPane2"
-                 label="Open Exam Pane"
-                 icon="http://localhost:3000/icon-32.png"
-                 onAction="showTaskPane"
-                 superTipTitle="Open Exam Pane"
-                 superTipDescription="Open the practice grader." />
-      </Group>
-    </OfficeTab>
-    <FunctionFile resid="res.fn" />
-  </ExtensionPoint>
-
-  <Resources>
-    <bt:Urls xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0">
-      <bt:Url id="res.fn" DefaultValue="http://localhost:3000/functions.html"/>
-    </bt:Urls>
-  </Resources>
 
   <Permissions>ReadWriteItem</Permissions>
   <Rule xsi:type="RuleCollection" Mode="Or">
     <Rule xsi:type="ItemIs" ItemType="Message" FormType="Edit"/>
     <Rule xsi:type="ItemIs" ItemType="Appointment" FormType="Edit"/>
   </Rule>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
+                    xsi:type="VersionOverridesV1_1">
+    <Requirements>
+      <Sets DefaultMinVersion="1.1"><Set Name="Mailbox"/></Sets>
+    </Requirements>
+
+    <Hosts>
+      <Host xsi:type="Mailbox">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="grp.Exam" label="Exam">
+                <Control xsi:type="Button" id="btn.OpenPane">
+                  <Label resid="res.labelOpenPane"/>
+                  <Supertip>
+                    <Title resid="res.tipTitle"/>
+                    <Description resid="res.tipDesc"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="res.icon16"/>
+                    <bt:Image size="32" resid="res.icon32"/>
+                    <bt:Image size="80" resid="res.icon80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="res.taskpaneUrl"/>
+                  </Action>
+                  <SupportsPinning>true</SupportsPinning>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+          <ExtensionPoint xsi:type="AppointmentOrganizerCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="grp.Exam2" label="Exam">
+                <Control xsi:type="Button" id="btn.OpenPane2">
+                  <Label resid="res.labelOpenPane"/>
+                  <Supertip>
+                    <Title resid="res.tipTitle"/>
+                    <Description resid="res.tipDesc"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="res.icon16"/>
+                    <bt:Image size="32" resid="res.icon32"/>
+                    <bt:Image size="80" resid="res.icon80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="res.taskpaneUrl"/>
+                  </Action>
+                  <SupportsPinning>true</SupportsPinning>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Urls>
+        <bt:Url id="res.taskpaneUrl" DefaultValue="https://localhost:3001/index.html"/>
+      </bt:Urls>
+      <bt:Images>
+        <bt:Image id="res.icon16" DefaultValue="https://localhost:3001/icon-16.png"/>
+        <bt:Image id="res.icon32" DefaultValue="https://localhost:3001/icon-32.png"/>
+        <bt:Image id="res.icon80" DefaultValue="https://localhost:3001/icon-80.png"/>
+      </bt:Images>
+      <bt:ShortStrings>
+        <bt:String id="res.labelOpenPane" DefaultValue="Open Exam Pane"/>
+        <bt:String id="res.tipTitle" DefaultValue="Open Exam Pane"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="res.tipDesc" DefaultValue="Open the practice grader task pane."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
 </OfficeApp>
