@@ -3,7 +3,7 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
            xsi:type="MailApp">
-  <Id>6f1ce2f0-1111-4f55-9c1e-aaaabbbbcccc</Id>
+  <Id>7f2de3f1-2222-5f66-0d2f-bbbbccccdddd</Id>
   <Version>1.0.0.0</Version>
   <ProviderName>AnaTaleb</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
