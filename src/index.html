@@ -52,26 +52,43 @@
       /* Clear cache button (shown after 3 seconds if stuck) */
       #preloader .clear-cache-btn {
         margin-top: 24px;
-        padding: 10px 20px;
+        padding: 12px 24px;
         background: #dc2626;
         color: white;
         border: none;
-        border-radius: 6px;
-        font-size: 14px;
+        border-radius: 8px;
+        font-size: 15px;
         font-weight: 600;
         cursor: pointer;
         opacity: 0;
-        transition: opacity 0.3s ease-in;
-        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        transition: opacity 0.3s ease-in, transform 0.2s ease;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
       
       #preloader .clear-cache-btn:hover {
         background: #b91c1c;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        box-shadow: 0 6px 16px rgba(220, 38, 38, 0.5);
+        transform: translateY(-2px);
+      }
+      
+      #preloader .clear-cache-btn:active {
+        transform: translateY(0);
       }
       
       #preloader.show-clear-btn .clear-cache-btn {
         opacity: 1;
+      }
+      
+      /* Make spinner clickable and hint at interaction */
+      #preloader .spinner {
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+      
+      #preloader .spinner:hover {
+        transform: scale(1.1);
       }
     </style>
 
@@ -100,6 +117,12 @@
               sessionStorage.removeItem('anataleb.clearCache');
               
               console.log('✅ All cookies, localStorage, and sessionStorage cleared');
+              
+              // Force a clean reload
+              console.log('🔄 Performing clean reload after cache clear...');
+              setTimeout(function() {
+                window.location.href = window.location.origin;
+              }, 100);
             } catch(err) {
               console.error('Error clearing cache:', err);
             }
@@ -151,8 +174,40 @@
       setTimeout(function() {
         if (preloader && !preloader.classList.contains('hide')) {
           preloader.classList.add('show-clear-btn');
+          // Also add click detection on spinner to clear cache
+          var spinner = document.querySelector('.spinner');
+          if (spinner) {
+            spinner.style.cursor = 'pointer';
+            spinner.title = 'Click to clear cache and reload';
+            spinner.onclick = function() {
+              window.clearCacheAndReload();
+            };
+          }
         }
       }, 3000);
+      
+      // Add immediate spinner click handler even before 3 seconds
+      document.addEventListener('DOMContentLoaded', function() {
+        var spinner = document.querySelector('.spinner');
+        if (spinner) {
+          spinner.style.cursor = 'pointer';
+          spinner.title = 'Click to clear cache and reload';
+          spinner.onclick = function() {
+            window.clearCacheAndReload();
+          };
+        }
+      });
+      
+      // Allow right-click and DevTools
+      document.addEventListener('contextmenu', function(e) {
+        return true; // Allow all right-clicks
+      });
+      
+      // Disable any attempts to block DevTools
+      document.addEventListener('keydown', function(e) {
+        // Allow F12, Ctrl+Shift+I, Ctrl+Shift+J
+        return true;
+      });
       
       // Clear cache and reload function
       window.clearCacheAndReload = function() {
@@ -224,21 +279,9 @@
       setTimeout(function() {
         if (!hasRevealed) {
           console.warn('App ready timeout - revealing anyway');
-          // If stuck for 5 seconds, try clearing cache and reloading
-          if (sessionStorage.getItem('anataleb.retryCount') === null) {
-            sessionStorage.setItem('anataleb.retryCount', '1');
-            sessionStorage.setItem('anataleb.clearCache', 'true');
-            console.warn('⚠️ App stuck in loading. Clearing cache and reloading...');
-            setTimeout(function() {
-              window.location.reload(true);
-            }, 1000);
-          } else {
-            // Already tried once, just reveal the app
-            sessionStorage.removeItem('anataleb.retryCount');
-            reveal();
-          }
+          reveal();
         }
-      }, 5000); // Increased timeout for lazy-loaded routes
+      }, 8000); // Increased timeout for slow connections
     </script>
   </body>
 </html>

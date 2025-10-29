@@ -4,13 +4,34 @@
 
 This guide explains how to clear all website data (cookies, localStorage, sessionStorage) when the website gets stuck in production.
 
-## 🚀 How to Use
+## 🚨 EMERGENCY: Page Completely Frozen/Unresponsive
 
-### Method 1: Keyboard Shortcut (Easiest)
+If the page is completely frozen and you can't interact with it:
 
-1. **Press `Ctrl + Shift + K`** (or `Cmd + Shift + K` on Mac) anywhere on the page
-2. **Confirm** when prompted
-3. The page will **automatically reload** and clear all data
+### Quick Fix:
+1. **Open a NEW browser tab**
+2. **Navigate to**: `chrome://settings/siteData` (Chrome) or `about:preferences#privacy` (Firefox)
+3. **Search for** "anataleb" or your domain name
+4. **Delete all stored data** for that site
+5. **Close and reopen** the browser
+6. **Visit the site again**
+
+### Alternative: Use Browser Settings
+1. **Close the browser completely**
+2. **Clear browser data** (Ctrl+Shift+Delete / Cmd+Shift+Delete)
+3. **Select "All time"** and check:
+   - Cookies and other site data
+   - Cached images and files
+4. **Clear data**
+5. **Reopen browser** and visit the site
+
+## 🚀 How to Use (When Page is Responding)
+
+### Method 1: Click the Spinner or Button
+
+1. **Wait 3 seconds** for the "Clear Cache & Reload" button to appear
+2. **Click the button** (or click the spinning circle)
+3. The page will reload and clear all data
 
 ### Method 2: Browser Console
 
