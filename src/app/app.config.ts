@@ -21,8 +21,8 @@ class GlobalErrorHandler implements ErrorHandler {
   handleError(error: any): void {
     console.error('❌ Global error:', error);
     // Dispatch ready event even on error to prevent infinite loading
-    if (typeof window !== 'undefined' && !window['anatalebReadySent']) {
-      window['anatalebReadySent'] = true;
+    if (typeof window !== 'undefined' && !(window as any).anatalebReadySent) {
+      (window as any).anatalebReadySent = true;
       console.log('⚠️ Error detected, forcing app reveal to prevent hang');
       window.dispatchEvent(new Event('AnatalebReady'));
     }

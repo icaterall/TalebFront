@@ -123,6 +123,7 @@
               setTimeout(function() {
                 window.location.href = window.location.origin;
               }, 100);
+              return; // Exit early to prevent further execution
             } catch(err) {
               console.error('Error clearing cache:', err);
             }

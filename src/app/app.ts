@@ -25,9 +25,9 @@ export class App implements OnInit {
     
     // Safety timeout to prevent infinite hanging
     setTimeout(() => {
-      if (!window['anatalebReadySent']) {
+      if (!(window as any).anatalebReadySent) {
         console.warn('⚠️ Safety timeout reached, forcing app reveal');
-        window['anatalebReadySent'] = true;
+        (window as any).anatalebReadySent = true;
         window.dispatchEvent(new Event('AnatalebReady'));
       }
     }, 6000);
@@ -52,8 +52,8 @@ export class App implements OnInit {
                   console.timeEnd('appInit-navigation');
                   console.timeEnd('appInit-full');
                   
-                  if (!window['anatalebReadySent']) {
-                    window['anatalebReadySent'] = true;
+                  if (!(window as any).anatalebReadySent) {
+                    (window as any).anatalebReadySent = true;
                     window.dispatchEvent(new Event('AnatalebReady'));
                   }
                 }, 800); // Increased delay to show loading spinner longer
@@ -63,8 +63,8 @@ export class App implements OnInit {
           error: (err) => {
             console.error('❌ Router error:', err);
             // Force app reveal on error
-            if (!window['anatalebReadySent']) {
-              window['anatalebReadySent'] = true;
+            if (!(window as any).anatalebReadySent) {
+              (window as any).anatalebReadySent = true;
               window.dispatchEvent(new Event('AnatalebReady'));
             }
           }
