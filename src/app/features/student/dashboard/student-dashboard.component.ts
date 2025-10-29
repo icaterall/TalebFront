@@ -1,8 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
+import { RecommendationsService, Recommendation } from '../../../core/services/recommendations.service';
+import { AIIntroService, AIIntroPack } from '../../../core/services/ai-intro.service';
+import { GeographyService } from '../../../core/services/geography.service';
+import { EducationService } from '../../../core/services/education.service';
 
 import { AuthService, User } from '../../../core/services/auth.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
@@ -11,7 +16,7 @@ import { I18nService } from '../../../core/services/i18n.service';
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './student-dashboard.component.html',
   styleUrls: ['./student-dashboard.component.scss']
 })
@@ -22,10 +27,26 @@ export class StudentDashboardComponent implements OnInit {
   private readonly i18n = inject(I18nService);
   private readonly toastr = inject(ToastrService);
   private readonly translate = inject(TranslateService);
+  private readonly recommendationsService = inject(RecommendationsService);
+  private readonly aiIntroService = inject(AIIntroService);
+  private readonly geographyService = inject(GeographyService);
+  private readonly educationService = inject(EducationService);
 
   user: User | null = null;
   loading = false;
   isBrowser = typeof window !== 'undefined';
+
+  // First-run CTA state
+  showJoinClassModal = false;
+  classCodeInput = '';
+  recommendations: Recommendation[] = [];
+  aiIntroPack: AIIntroPack | null = null;
+  loadingStartNow = false;
+  hasEnrollments = false;
+
+  // Localized labels pulled from backend
+  localizedCountryName: string | null = null;
+  localizedStageName: string | null = null;
 
   // Dashboard data
   stats = {
@@ -126,29 +147,103 @@ export class StudentDashboardComponent implements OnInit {
 
     this.user = this.universalAuth.getCurrentUser();
     this.loadDashboardData();
+    this.loadStartNowData();
+    this.loadLocalizedProfileBits();
   }
 
   private loadDashboardData(): void {
-    this.loading = true;
-    
-    // Simulate API call
-    setTimeout(() => {
-      this.stats = {
-        totalCourses: 5,
-        activeCourses: 3,
-        completedLessons: 12,
-        totalPoints: 1250
-      };
-      this.loading = false;
-    }, 1000);
+    this.loading = false;
+  }
+
+  private loadStartNowData(): void {
+    if (!this.user) return;
+    const profile = this.user;
+    // Guard: need minimal fields
+    const countryId = (profile as any)?.country_id || 1;
+    const stageId = (profile as any)?.education_stage_id ?? (profile as any)?.stage_id ?? null;
+    const stateId = (profile as any)?.state_id;
+    const locale = this.currentLang;
+
+    this.loadingStartNow = true;
+    this.recommendationsService.getRecommendations({ country_id: countryId, state_id: stateId, stage_id: stageId || 0, locale, limit: 3 })
+      .subscribe({
+        next: (res) => {
+          this.recommendations = res?.recommendations || [];
+          if (!this.recommendations.length) {
+            this.aiIntroService.generateIntroPack({ country_id: countryId, state_id: stateId, stage_id: stageId || 0, locale })
+              .subscribe({
+                next: (ai) => {
+                  this.aiIntroPack = ai?.lesson || null;
+                  this.loadingStartNow = false;
+                },
+                error: () => {
+                  this.loadingStartNow = false;
+                }
+              });
+          } else {
+            this.loadingStartNow = false;
+          }
+        },
+        error: () => {
+          this.loadingStartNow = false;
+        }
+      });
+  }
+
+  private loadLocalizedProfileBits(): void {
+    const user = this.user as any;
+    const countryId: number | undefined = user?.country_id;
+    const stageId: number | undefined = user?.education_stage_id ?? user?.stage_id;
+
+    if (countryId) {
+      this.geographyService.getCountries().subscribe({
+        next: (res) => {
+          const match = (res?.countries || []).find(c => c.id === countryId);
+          if (match?.name) this.localizedCountryName = match.name;
+        },
+        error: () => {}
+      });
+    }
+
+    if (stageId) {
+      this.educationService.getAllStages().subscribe({
+        next: (res) => {
+          const match = (res?.stages || []).find(s => s.id === stageId);
+          if (match?.name) {
+            this.localizedStageName = match.name;
+          } else {
+            this.localizedStageName = null;
+          }
+        },
+        error: () => {}
+      });
+    }
   }
 
   get currentLang(): 'ar' | 'en' {
     return this.i18n.current;
   }
 
+  get displayLang(): string {
+    return this.currentLang === 'ar' ? 'العربية' : 'English';
+  }
+
   get userName(): string {
     return (this.user?.name || this.user?.email || '').toString();
+  }
+
+  get countryName(): string {
+    if (this.localizedCountryName) return this.localizedCountryName;
+    const c = (this.user as any)?.country_name;
+    if (typeof c === 'string' && c.trim()) return c;
+    return this.currentLang === 'ar' ? 'الدولة' : 'Country';
+  }
+
+  get stageName(): string {
+    if (this.localizedStageName) return this.localizedStageName;
+    const s = (this.user as any)?.stage_name;
+    if (typeof s === 'string' && s.trim()) return s;
+    return this.currentLang === 'ar' ? 'غير محددة' : 'Not set';
   }
 
   onQuickAction(actionId: string): void {
@@ -171,6 +266,39 @@ export class StudentDashboardComponent implements OnInit {
         break;
       default:
         this.toastr.info('Feature coming soon!');
+    }
+  }
+
+  // Join class
+  openJoinClass(): void {
+    this.showJoinClassModal = true;
+  }
+
+  closeJoinClass(): void {
+    this.showJoinClassModal = false;
+    this.classCodeInput = '';
+  }
+
+  submitJoinClass(): void {
+    if (!this.classCodeInput.trim()) {
+      this.toastr.warning(this.currentLang === 'ar' ? 'أدخل رمز الصف' : 'Enter class code');
+      return;
+    }
+    this.toastr.info(this.currentLang === 'ar' ? 'جارٍ الانضمام...' : 'Joining...');
+    // TODO: Call backend join endpoint then navigate to courses
+    this.closeJoinClass();
+  }
+
+  startNow(): void {
+    if (this.recommendations.length) {
+      // Navigate to first recommended lesson
+      this.toastr.success(this.currentLang === 'ar' ? 'بدء الدرس الموصى به' : 'Starting recommended lesson');
+      // TODO: navigate to lesson by recommendations[0].lesson_id
+      return;
+    }
+    if (this.aiIntroPack) {
+      this.toastr.success(this.currentLang === 'ar' ? 'بدء الدرس التمهيدي' : 'Starting intro pack');
+      // TODO: navigate to lesson by aiIntroPack.lesson_id
     }
   }
 

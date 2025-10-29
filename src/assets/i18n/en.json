@@ -85,6 +85,12 @@
         "viewProgress": "View Progress",
         "viewAchievements": "View Achievements"
       },
+      "info": {
+        "language": "Language",
+        "country": "Country",
+        "stage": "Stage",
+        "notSet": "Not set"
+      },
       "actions": {
         "quickAction": "Quick Action",
         "viewCourses": "View Courses",
@@ -95,6 +101,35 @@
         "takeQuizSub": "Start a new quiz or continue existing ones",
         "viewGrades": "View Grades",
         "viewGradesSub": "Check your academic performance"
+      },
+      "firstRun": {
+        "welcomeTitle": "Welcome, {{name}}! Ready to start?",
+        "joinTeacherClass": "Join your teacher's class",
+        "joinTeacherClassSub": "Enter your class code",
+        "classCodePlaceholder": "Enter class code here",
+        "join": "Join",
+        "startLessonNow": "Start a lesson now",
+        "startLessonNowSub": "Estimated time: {{minutes}} minutes",
+        "start": "Start",
+        "exploreTopics": "Explore topics",
+        "exploreTopicsSub": "Math | Computing | Languages | Science",
+        "open": "Open",
+        "generateTailoredLesson": "Generate a tailored lesson",
+        "noRecommendations": "No recommendations found",
+        "tryAlso": "Try also..."
+      },
+      "assistant": {
+        "title": "AI Assistant",
+        "smartSuggestions": "Smart Suggestions",
+        "suggestion1": "Give me a 10-minute starter lesson for {{stage}}",
+        "suggestion2": "Quick placement quiz",
+        "suggestion3": "Show lessons popular in {{country}}",
+        "startLessonSuggestion": "Make me a 10-minute starter lesson for Grade {{grade}} in {{language}}",
+        "makeFlashcards": "Turn this into flashcards",
+        "simplerExplanation": "Want a simpler explanation?",
+        "practiceQuestion": "Give a practice question like the exam",
+        "generateForStage": "Shall I generate a quick starter for {{stage}} in {{locale}}?",
+        "placeholder": "Ask anything..."
       },
       "highlights": {
         "title": "Today's Highlights",
@@ -133,6 +168,13 @@
         "card4Title": "Environmental Science",
         "card4Desc": "Explore environmental issues and sustainable solutions.",
         "enrollNow": "Enroll Now"
+      },
+      "cta": {
+        "joinClass": "Join your teacher's class",
+        "joinClassSub": "Enter class code",
+        "startNow": "Start a lesson now",
+        "explore": "Explore topics",
+        "exploreSub": "Math | Computing | Languages | Science"
       }
     },
     "courses": {

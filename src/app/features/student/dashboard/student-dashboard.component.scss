@@ -266,6 +266,20 @@ body {
             margin-bottom: 24px;
         }
 
+        .info-pill-compact {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(8px);
+        }
+
         .welcome-stats {
             display: flex;
             gap: 16px;
@@ -355,6 +369,49 @@ body {
             height: 200px;
             pointer-events: none;
         }
+
+        /* First-run CTAs */
+        .first-run-ctas {
+            background: white;
+            border-radius: 5px;
+            padding: 18px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-md);
+        }
+        .first-run-ctas .cta-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+        }
+        .first-run-ctas .cta-card {
+            background: linear-gradient(180deg, #ffffff, #fafbff);
+            border: 1px solid #eef2ff;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .first-run-ctas .cta-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .first-run-ctas .cta-card.loading { opacity: .7; pointer-events: none; }
+        .first-run-ctas .cta-icon { font-size: 26px; margin-bottom: 8px; }
+        .first-run-ctas .cta-title { font-weight: 800; font-size: 16px; margin-bottom: 4px; color: #0f172a; }
+        .first-run-ctas .cta-sub { font-size: 13px; color: #475569; }
+
+        /* Simple Modal */
+        .modal-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 1010;
+        }
+        .modal {
+            position: fixed; inset: 0; display: grid; place-items: center; z-index: 1020;
+        }
+        .modal > div { background: #fff; width: min(460px, 92vw); border-radius: 12px; box-shadow: var(--shadow-2xl); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
+        .modal-body { padding: 16px; }
+        .modal-footer { padding: 12px 16px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; }
+        .modal .close { background: transparent; border: none; font-size: 22px; line-height: 1; cursor: pointer; }
+        .modal input[type="text"] { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+        .modal .btn { background: #1368CE; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
 
         .decoration-circle {
             position: absolute;

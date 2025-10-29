@@ -14,6 +14,11 @@
           <div class="welcome-text">
             <h1 class="welcome-title">👋 {{ 'student.dashboard.welcome' | translate }}, {{ userName }}!</h1>
             <p class="welcome-subtitle">{{ 'student.dashboard.subtitle' | translate }}</p>
+            <div class="info-pill-compact">
+              <span>🌐 {{ 'student.dashboard.info.language' | translate }}: {{ displayLang }}</span>
+              <span>· 🗺️ {{ 'student.dashboard.info.country' | translate }}: {{ countryName }}</span>
+              <span>· 🎓 {{ 'student.dashboard.info.stage' | translate }}: {{ stageName }}</span>
+            </div>
             <div class="welcome-stats">
               <span class="stat-badge">📚 {{ 'student.dashboard.badges.enrolledCourses' | translate:{count: stats.totalCourses} }}</span>
               <span class="stat-badge">🎯 {{ 'student.dashboard.badges.activeCourses' | translate:{count: stats.activeCourses} }}</span>
@@ -38,8 +43,44 @@
       </div>
     </section>
 
+    <!-- First-Run Info + Never-Empty CTAs -->
+    <section class="first-run-ctas glass-card">
+      <div class="cta-row">
+        <!-- Join your teacher's class -->
+        <div class="cta-card" (click)="openJoinClass()">
+          <div class="cta-icon">🔑</div>
+          <div class="cta-title">{{ 'student.dashboard.cta.joinClass' | translate }}</div>
+          <div class="cta-sub">{{ 'student.dashboard.cta.joinClassSub' | translate }}</div>
+        </div>
+
+        <!-- Start a lesson now -->
+        <div class="cta-card" [class.loading]="loadingStartNow" (click)="startNow()">
+          <div class="cta-icon">🚀</div>
+          <div class="cta-title">
+            {{ 'student.dashboard.cta.startNow' | translate }}
+          </div>
+          <div class="cta-sub" *ngIf="recommendations.length">
+            {{ recommendations[0]?.title }} · {{ recommendations[0]?.est_minutes }} {{ 'general.min' | translate }}
+          </div>
+          <div class="cta-sub" *ngIf="!recommendations.length && aiIntroPack">
+            {{ aiIntroPack?.title }} · {{ aiIntroPack?.est_minutes }} {{ 'general.min' | translate }}
+          </div>
+          <div class="cta-sub" *ngIf="loadingStartNow">
+            {{ 'general.loading' | translate }}...
+          </div>
+        </div>
+
+        <!-- Explore topics -->
+        <div class="cta-card" (click)="onViewCourses()">
+          <div class="cta-icon">🧭</div>
+          <div class="cta-title">{{ 'student.dashboard.cta.explore' | translate }}</div>
+          <div class="cta-sub">{{ 'student.dashboard.cta.exploreSub' | translate }}</div>
+        </div>
+      </div>
+    </section>
+
     <!-- KPI Cards Section -->
-    <section class="kpi-section">
+    <section class="kpi-section" *ngIf="hasEnrollments">
       <div class="kpi-card">
         <div class="kpi-header">
           <div class="kpi-icon kpi-icon-1">📚</div>
@@ -86,7 +127,7 @@
     </section>
 
     <!-- Quick Actions Section -->
-    <section class="actions-section">
+    <section class="actions-section" *ngIf="hasEnrollments">
       <div class="action-card action-1 glass-card" (click)="onViewCourses()">
         <span class="action-step">{{ 'student.dashboard.actions.quickAction' | translate }}</span>
         <div class="action-icon">📚</div>
@@ -113,7 +154,7 @@
     </section>
 
     <!-- Today's Highlights -->
-    <section class="highlights-section glass-card">
+    <section class="highlights-section glass-card" *ngIf="hasEnrollments">
       <h2 class="section-title">{{ 'student.dashboard.highlights.title' | translate }}</h2>
       <div class="highlight-item">
         <div class="highlight-icon">📚</div>
@@ -142,7 +183,7 @@
     </section>
 
     <!-- Recent Activity -->
-    <section class="activity-section glass-card">
+    <section class="activity-section glass-card" *ngIf="hasEnrollments">
       <h2 class="section-title">{{ 'student.dashboard.activity.title' | translate }}</h2>
 
       <div class="activity-item">
@@ -178,7 +219,7 @@
     </section>
 
     <!-- Library -->
-    <section class="library-section">
+    <section class="library-section" *ngIf="hasEnrollments">
       <h2 class="section-title">{{ 'student.dashboard.library.title' | translate }}</h2>
       <div class="library-carousel">
         <div class="library-card glass-card">
@@ -228,6 +269,21 @@
     <div *ngIf="loading" class="loading-overlay">
       <div class="loading-spinner"></div>
       <p class="loading-text">{{ 'general.loading' | translate }}...</p>
+    </div>
+
+    <!-- Join Class Modal -->
+    <div class="modal-backdrop" *ngIf="showJoinClassModal" (click)="closeJoinClass()"></div>
+    <div class="modal" *ngIf="showJoinClassModal">
+      <div class="modal-header">
+        <h3>{{ 'student.dashboard.cta.joinClass' | translate }}</h3>
+        <button class="close" (click)="closeJoinClass()">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" [(ngModel)]="classCodeInput" placeholder="ABC123" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn" (click)="submitJoinClass()">{{ 'general.join' | translate }}</button>
+      </div>
     </div>
   </div>
 </section>

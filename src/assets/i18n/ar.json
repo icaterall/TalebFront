@@ -37,7 +37,7 @@
     "student": "طالب",
     "sidebar": {
       "dashboard": "لوحة التحكم",
-      "courses": "الدورات",
+      "courses": "الدروس",
       "assignments": "المهام",
       "quizzes": "الاختبارات",
       "grades": "الدرجات",
@@ -58,8 +58,8 @@
       "welcome": "مرحباً",
       "subtitle": "مستعد لمتابعة رحلة التعلم الخاصة بك؟",
       "updateProfile": "تحديث الملف الشخصي",
-      "totalCourses": "إجمالي الدورات",
-      "activeCourses": "الدورات النشطة",
+      "totalCourses": "إجمالي الدروس",
+      "activeCourses": "الدروس النشطة",
       "completedLessons": "الدروس المكتملة",
       "totalPoints": "إجمالي النقاط",
       "quickActions": "الإجراءات السريعة",
@@ -70,13 +70,13 @@
       "tipText": "أكمل ملفك الشخصي لفتح جميع الميزات والحصول على توصيات مخصصة!",
       "tryNow": "تحديث الآن",
       "badges": {
-        "enrolledCourses": "الدورات المسجلة",
-        "activeCourses": "الدورات النشطة",
+        "enrolledCourses": "الدروس المسجلة",
+        "activeCourses": "الدروس النشطة",
         "totalPoints": "إجمالي النقاط"
       },
       "kpi": {
-        "totalCourses": "إجمالي الدورات",
-        "activeCourses": "الدورات النشطة",
+        "totalCourses": "إجمالي الدروس",
+        "activeCourses": "الدروس النشطة",
         "completedLessons": "الدروس المكتملة",
         "totalPoints": "إجمالي النقاط",
         "viewAllCourses": "عرض جميع الدورات",
@@ -84,16 +84,51 @@
         "viewProgress": "عرض التقدم",
         "viewAchievements": "عرض الإنجازات"
       },
+      "info": {
+        "language": "اللغة",
+        "country": "الدولة",
+        "stage": "المرحلة",
+        "notSet": "غير محددة"
+      },
       "actions": {
         "quickAction": "إجراء سريع",
-        "viewCourses": "عرض الدورات",
-        "viewCoursesSub": "تصفح جميع الدورات المسجلة",
+        "viewCourses": "عرض الدروس",
+        "viewCoursesSub": "تصفح جميع الدروس المسجلة",
         "viewAssignments": "عرض الواجبات",
         "viewAssignmentsSub": "تحقق من الواجبات المعلقة",
         "takeQuiz": "أخذ اختبار",
         "takeQuizSub": "ابدأ اختبار جديد أو أكمل الموجود",
         "viewGrades": "عرض الدرجات",
         "viewGradesSub": "تحقق من أدائك الأكاديمي"
+      },
+      "firstRun": {
+        "welcomeTitle": "مرحباً، {{name}}! هل أنت مستعد للبدء؟",
+        "joinTeacherClass": "انضم إلى صف معلمك",
+        "joinTeacherClassSub": "أدخل رمز الصف",
+        "classCodePlaceholder": "أدخل رمز الصف هنا",
+        "join": "انضم",
+        "startLessonNow": "ابدأ درساً الآن",
+        "startLessonNowSub": "الوقت المقدر: {{minutes}} دقائق",
+        "start": "ابدأ",
+        "exploreTopics": "استكشف المواضيع",
+        "exploreTopicsSub": "الرياضيات | الحوسبة | اللغات | العلوم",
+        "open": "افتح",
+        "generateTailoredLesson": "إنشاء درس مخصص",
+        "noRecommendations": "لم يتم العثور على توصيات",
+        "tryAlso": "جرب أيضاً..."
+      },
+      "assistant": {
+        "title": "المساعد بالذكاء الاصطناعي",
+        "smartSuggestions": "اقتراحات ذكية",
+        "suggestion1": "أعطني درس تمهيدي لمدة 10 دقائق للصف {{stage}}",
+        "suggestion2": "اختبار تحديد المستوى السريع",
+        "suggestion3": "أظهر الدروس الشائعة في {{country}}",
+        "startLessonSuggestion": "أنشئ لي درس تمهيدي لمدة 10 دقائق للصف {{grade}} باللغة {{language}}",
+        "makeFlashcards": "حول هذا إلى بطاقات تعليمية",
+        "simplerExplanation": "هل تريد شرحاً أبسط؟",
+        "practiceQuestion": "أعطني سؤال تمرين مثل الامتحان",
+        "generateForStage": "هل تريد مني إنشاء درس تمهيدي سريع للصف {{stage}} بلغة {{locale}}؟",
+        "placeholder": "اسأل أي شيء..."
       },
       "highlights": {
         "title": "أبرز أحداث اليوم",
@@ -114,14 +149,14 @@
         "withScore": "بدرجة",
         "submittedAssignment": "سلم الواجب",
         "assignmentName": "مشروع العلوم",
-        "enrolledCourse": "سجل في الدورة",
+        "enrolledCourse": "سجل في الدرس",
         "courseName": "الفيزياء المتقدمة",
         "time2min": "منذ دقيقتين",
         "time1hour": "منذ ساعة",
         "timeYesterday": "أمس"
       },
       "library": {
-        "title": "الدورات المقترحة",
+        "title": "الدروس المقترحة",
         "plays": "{{count}} طالب مسجل",
         "card1Title": "الرياضيات المتقدمة",
         "card1Desc": "إتقان المفاهيم الرياضية المتقدمة وتقنيات حل المشكلات.",
@@ -132,6 +167,13 @@
         "card4Title": "علوم البيئة",
         "card4Desc": "استكشف قضايا البيئة والحلول المستدامة.",
         "enrollNow": "سجل الآن"
+      },
+      "cta": {
+        "joinClass": "انضم إلى صف معلمك",
+        "joinClassSub": "أدخل رمز الصف",
+        "startNow": "ابدأ درساً الآن",
+        "explore": "استكشف المواضيع",
+        "exploreSub": "الرياضيات | الحوسبة | اللغات | العلوم"
       }
     }
   },
@@ -1199,7 +1241,7 @@
     "b2": "ذكاء اصطناعي للتحليلات والتخصيص",
     "b3": "لوحات تحكم متعددة الأدوار",
     "b4": "وضع منخفض لاستهلاك البيانات",
-    "search_placeholder": "ابحث عن الدورات أو المقررات أو المواضيع",
+    "search_placeholder": "ابحث عن الدروس أو المقررات أو المواضيع",
         "headline_l1": "لكل طالب،",
     "headline_l2": "في كل صفّ.",
     "headline_l3": "نتائج حقيقية.",
@@ -1272,7 +1314,7 @@
   "topstrip": { "students": "للطلاب", "instructors": "للمعلّمين", "institutions": "للمؤسسات" },
   "header": { "explore": "استكشف", "online_degrees": "درجات عبر الإنترنت", "careers": "الوظائف" },
   "drawer": {
-  "browse_courses": "تصفح الدورات المجانية",
+  "browse_courses": "تصفح الدروس المجانية",
   "for_businesses": "للأعمال",
   "for_universities": "للجامعات",
   "for_governments": "للحكومات",

@@ -121,7 +121,7 @@
   --control-min-h: 44px;   /* accessible tap target */
   --control-pad-y: 0.5rem;
   --control-pad-x: 0.75rem;
-  --radius: 0.25rem;       /* 4px - consistent across all elements */
+  --radius: 5px;       /* 5px - consistent across all elements */
   --radius-lg: 0.5rem;
   --radius-pill: 50rem;
 }
@@ -152,12 +152,12 @@
 
 .glass-pill {
   @extend .glass;
-  border-radius: 24px;
+  border-radius: 5px;
 }
 
 .glass-card {
   @extend .glass;
-  border-radius: 24px;
+  border-radius: 5px;
 }
 
 /* ===== “Liquid” accent blobs (soft, animated) ===== */
@@ -230,7 +230,7 @@ html[dir="ltr"] body { direction: ltr; text-align: left; }
 :focus-visible {
   outline: 2px solid color-mix(in srgb, var(--primary), transparent 35%);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 /* Typography */
@@ -969,9 +969,9 @@ html[dir="rtl"] .toast-close-button {
 }
 
 /* ============================================
-   GLOBAL BORDER-RADIUS ENFORCEMENT - 4px
+   GLOBAL BORDER-RADIUS ENFORCEMENT - 5px
    ============================================ */
-/* Ensure all buttons, inputs, selects, and cards use 4px border-radius */
+/* Ensure all buttons, inputs, selects, and cards use 5px border-radius */
 button:not(.rounded-circle):not(.rounded-pill),
 .btn:not(.rounded-circle):not(.rounded-pill),
 input[type="text"],
@@ -990,8 +990,19 @@ select,
 .card,
 .modal,
 .dropdown-menu,
-.badge:not(.rounded-pill) {
-  border-radius: 4px !important;
+.badge:not(.rounded-pill),
+.glass-card,
+.glass-pill,
+.modal > div,
+.kpi-card,
+.action-card,
+.first-run-ctas,
+.first-run-ctas .cta-card,
+.info-pill-compact,
+.kpi-btn,
+.stat-badge,
+.tip-action {
+  border-radius: 5px !important;
 }
 
 /* ============================================
