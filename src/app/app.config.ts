@@ -36,10 +36,14 @@ function getStartupLang(): 'ar' | 'en' {
 }
 
 function initI18n(i18n: I18nService) { 
-  console.time('appInit-i18n');
-  return i18n.init().finally(() => {
-    console.timeEnd('appInit-i18n');
-  });
+  return () => {
+    console.time('appInit-i18n');
+    const promise = i18n.init();
+    promise.finally(() => {
+      console.timeEnd('appInit-i18n');
+    });
+    return promise;
+  };
 }
 
 const isServer = typeof window === 'undefined';
