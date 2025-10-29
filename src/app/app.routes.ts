@@ -22,10 +22,6 @@ export const appRoutes: Routes = [
     path: 'auth/reset-password/:token',
     loadComponent: () => import('./features/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
   },
-  {
-    path: 'training-demo',
-    loadChildren: () => import('./training-demo/training-demo.module').then(m => m.TrainingDemoModule),
-  },
   
   // Protected routes (with guards)
   {

@@ -15,7 +15,7 @@ This guide explains how to deploy and test the Outlook Add-in for signature trai
 - **Contains**: Office.js integration and button handler
 
 ### 3. Task Pane Component
-- **Location**: `src/app/training-demo/pages/outlook-addin/`
+- **Location**: Removed (training-demo module has been removed)
 - **Purpose**: The actual training interface
 - **Features**: Email body fetching, signature grading, feedback display
 
