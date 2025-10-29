@@ -83,12 +83,12 @@ export class I18nService {
   /** Called via APP_INITIALIZER. Promise makes Angular wait before first paint. */
   async init(): Promise<void> {
     try {
-      // Priority: session value → browser language → inline boot value → default 'ar'
+      // Priority: inline boot value → saved → default 'ar' (ignore browser language)
       const saved = this.readSaved();
-      const browser = this.readBrowserLang();
       const inline = this.readInlineStartup();
       
-      const initial: Lang = saved ?? browser ?? inline ?? 'ar';
+      // Always default to Arabic, only use saved if it's explicitly set
+      const initial: Lang = inline ?? (saved || 'ar');
       
    
 

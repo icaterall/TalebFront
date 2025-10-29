@@ -130,8 +130,19 @@
           }
           
           document.documentElement.classList.add('preinit');
+          
+          // Check if user has explicitly chosen a language before
           var saved = sessionStorage.getItem('anataleb.lang');
-          var lang = (saved === 'en' || saved === 'ar') ? saved : 'ar'; // Default to Arabic
+          var userChoseLang = localStorage.getItem('userChoseLang'); // Track if user manually changed
+          
+          // Default to Arabic unless user explicitly chose English
+          var lang = 'ar'; // Always default to Arabic
+          if (saved === 'en' && userChoseLang === 'true') {
+            lang = 'en'; // Only use English if user explicitly chose it
+          } else if (saved === 'ar') {
+            lang = 'ar';
+          }
+          
           var dir  = (lang === 'ar') ? 'rtl' : 'ltr';
           var el   = document.documentElement;
           el.setAttribute('lang', lang);
