@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { Injectable, OnInit } from '@angular/core';
+import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot, NavigationEnd } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { filter } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -12,14 +13,26 @@ export class LandingPageGuard implements CanActivate {
     private router: Router
   ) {}
 
+  private redirectCount = 0;
+  private readonly MAX_REDIRECTS = 5;
+
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): boolean {
+    // Circuit breaker: prevent infinite redirect loops
+    this.redirectCount++;
+    if (this.redirectCount > this.MAX_REDIRECTS) {
+      console.error('⚠️ Too many redirects detected in LandingPageGuard, allowing access to prevent loop');
+      this.redirectCount = 0;
+      return true;
+    }
+
     const user = this.authService.getCurrentUser();
     
     // If not authenticated, allow access to landing page
     if (!user) {
+      this.redirectCount = 0; // Reset on successful path
       return true;
     }
 

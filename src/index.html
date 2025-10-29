@@ -300,8 +300,24 @@
       // Fallback timeout to prevent infinite loading
       setTimeout(function() {
         if (!hasRevealed) {
-          console.warn('App ready timeout - revealing anyway');
-          reveal();
+          console.warn('⚠️ 8 second timeout reached, app may be stuck in redirect loop');
+          console.warn('Attempting emergency cache clear and reload...');
+          
+          // Emergency: Clear auth data that might be causing loops
+          try {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('anataleb.lang');
+            sessionStorage.clear();
+            console.log('✅ Emergency cache clear completed');
+          } catch(e) {
+            console.error('Failed to clear cache:', e);
+          }
+          
+          // Force reveal after emergency clear
+          setTimeout(function() {
+            reveal();
+          }, 1000);
         }
       }, 8000); // Increased timeout for slow connections
     </script>

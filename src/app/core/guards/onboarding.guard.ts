@@ -10,11 +10,21 @@ export class OnboardingGuard implements CanActivate {
   private authService = inject(AuthService);
   private onboardingState = inject(OnboardingStateService);
   private router = inject(Router);
+  private redirectCount = 0;
+  private readonly MAX_REDIRECTS = 5;
 
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): boolean | import('@angular/router').UrlTree {
+    // Circuit breaker: prevent infinite redirect loops
+    this.redirectCount++;
+    if (this.redirectCount > this.MAX_REDIRECTS) {
+      console.error('⚠️ Too many redirects detected in OnboardingGuard, allowing access to prevent loop');
+      this.redirectCount = 0;
+      return true;
+    }
+
     const user = this.authService.getCurrentUser();
 
     // Debug: Log user state
