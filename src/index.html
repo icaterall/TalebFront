@@ -23,6 +23,7 @@
         position:fixed; 
         inset:0; 
         display:flex; 
+        flex-direction: column;
         align-items:center; 
         justify-content:center;
         background:#fff; 
@@ -39,13 +40,46 @@
       #preloader.removed {
         display: none;
       }
+      
+      /* Loading text */
+      #preloader .loading-text {
+        margin-top: 16px;
+        color: #2563EB;
+        font-size: 16px;
+        font-weight: 600;
+      }
     </style>
 
     
-    <!-- Set lang/dir BEFORE any render -->
+    <!-- Set lang/dir BEFORE any render and handle cache clearing -->
     <script>
       (function () {
         try {
+          // Check if we need to clear all data (for production stuck state fix)
+          var shouldClearCache = sessionStorage.getItem('anataleb.clearCache');
+          
+          if (shouldClearCache === 'true') {
+            try {
+              // Clear all cookies
+              document.cookie.split(";").forEach(function(c) {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+              });
+              
+              // Clear sessionStorage
+              sessionStorage.clear();
+              
+              // Clear localStorage
+              localStorage.clear();
+              
+              // Remove the flag itself
+              sessionStorage.removeItem('anataleb.clearCache');
+              
+              console.log('✅ All cookies, localStorage, and sessionStorage cleared');
+            } catch(err) {
+              console.error('Error clearing cache:', err);
+            }
+          }
+          
           document.documentElement.classList.add('preinit');
           var saved = sessionStorage.getItem('anataleb.lang');
           var lang = (saved === 'en' || saved === 'ar') ? saved : 'ar'; // Default to Arabic
@@ -64,12 +98,36 @@
         } catch(e) {}
       })();
     </script>
+    
+    <!-- Cache clearing helper for production issues -->
+    <script>
+      // Add this function to window for manual clearing if needed
+      window.clearAnatalebCache = function() {
+        sessionStorage.setItem('anataleb.clearCache', 'true');
+        console.log('🔄 Cache clearing flag set. Refresh the page to clear all data.');
+        alert('Cache clearing enabled. The page will reload and clear all cookies, localStorage, and sessionStorage.');
+        setTimeout(function() {
+          window.location.reload(true);
+        }, 500);
+      };
+      
+      // Add keyboard shortcut: Ctrl+Shift+K to clear cache
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+          e.preventDefault();
+          if (confirm('Clear all cookies, localStorage, and sessionStorage and reload?')) {
+            window.clearAnatalebCache();
+          }
+        }
+      });
+    </script>
   </head>
   <body>
-    <!-- Tiny branded preloader -->
-<div id="preloader" role="status" aria-live="polite" aria-label="Loading">
-  <span class="spinner" aria-hidden="true"></span>
-  <span class="sr-only"></span>
+    <!-- Branded preloader with spinner and text -->
+<div id="preloader" role="status" aria-live="polite" aria-label="Loading AnaTaleb">
+  <div class="spinner" aria-hidden="true"></div>
+  <div class="loading-text">Loading AnaTaleb...</div>
+  <span class="sr-only">Loading, please wait</span>
 </div>
 
     <app-root></app-root>
@@ -99,15 +157,23 @@
       };
       
       // Listen for the ready event
+      var minDisplayTime = 1200; // Minimum display time: 1.2 seconds
+      var startTime = Date.now();
+      
       window.addEventListener('AnatalebReady', function(){
         // Wait for fonts to be ready before revealing
+        var elapsed = Date.now() - startTime;
+        var remainingTime = Math.max(0, minDisplayTime - elapsed);
+        
         if (document.fonts && document.fonts.ready) {
           document.fonts.ready.then(function() {
-            // Extra delay to ensure content is painted
-            setTimeout(reveal, 100);
-          }).catch(reveal);
+            // Extra delay to ensure content is painted and meet minimum display time
+            setTimeout(reveal, Math.max(300, remainingTime));
+          }).catch(function() {
+            setTimeout(reveal, Math.max(300, remainingTime));
+          });
         } else { 
-          setTimeout(reveal, 100);
+          setTimeout(reveal, Math.max(300, remainingTime));
         }
       });
       
@@ -117,7 +183,7 @@
           console.warn('App ready timeout - revealing anyway');
           reveal();
         }
-      }, 4000); // Increased timeout for lazy-loaded routes
+      }, 5000); // Increased timeout for lazy-loaded routes
     </script>
   </body>
 </html>

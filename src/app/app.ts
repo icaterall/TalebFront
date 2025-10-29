@@ -37,7 +37,7 @@ export class App implements OnInit {
               setTimeout(() => {
                 console.log('Dispatching AnatalebReady event');
                 window.dispatchEvent(new Event('AnatalebReady'));
-              }, 300);
+              }, 800); // Increased delay to show loading spinner longer
             });
           });
         });
