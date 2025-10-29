@@ -147,6 +147,27 @@
       })();
     </script>
     
+    <!-- Performance monitoring and debugging -->
+    <script>
+      // Performance timing markers
+      console.time('page-load-start');
+      performance.mark('anataleb-load-start');
+      
+      // Monitor long tasks
+      if ('PerformanceObserver' in window) {
+        try {
+          var observer = new PerformanceObserver(function(list) {
+            for (var entry of list.getEntries()) {
+              if (entry.duration > 50) {
+                console.warn('⚠️ Long task detected:', entry.duration + 'ms');
+              }
+            }
+          });
+          observer.observe({ entryTypes: ['longtask', 'measure', 'navigation'] });
+        } catch(e) {}
+      }
+    </script>
+    
     <!-- Cache clearing helper for production issues -->
     <script>
       // Add this function to window for manual clearing if needed

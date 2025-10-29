@@ -1,5 +1,5 @@
 // src/app/app.config.ts
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, ErrorHandler } from '@angular/core';
 import { PreloadAllModules, provideRouter, withInMemoryScrolling, withPreloading, withViewTransitions } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -16,17 +16,39 @@ import { environment } from '../environments/environment';
 import { langInterceptor } from './core/interceptors/lang.interceptor';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 
+// Global error handler to prevent hanging
+class GlobalErrorHandler implements ErrorHandler {
+  handleError(error: any): void {
+    console.error('❌ Global error:', error);
+    // Dispatch ready event even on error to prevent infinite loading
+    if (typeof window !== 'undefined' && !window['anatalebReadySent']) {
+      window['anatalebReadySent'] = true;
+      console.log('⚠️ Error detected, forcing app reveal to prevent hang');
+      window.dispatchEvent(new Event('AnatalebReady'));
+    }
+  }
+}
+
 function getStartupLang(): 'ar' | 'en' {
   const w = typeof window !== 'undefined' ? (window as any) : undefined;
   const v = w?.__ANATALEB_STARTUP_LANG__;
   return (v === 'en' || v === 'ar') ? v : 'ar'; // Default to Arabic
 }
-function initI18n(i18n: I18nService) { return () => i18n.init(); }
+
+function initI18n(i18n: I18nService) { 
+  console.time('appInit-i18n');
+  return i18n.init().finally(() => {
+    console.timeEnd('appInit-i18n');
+  });
+}
 
 const isServer = typeof window === 'undefined';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Global error handler to prevent infinite hangs
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
+    
     provideRouter(
       appRoutes,
       withViewTransitions(),
