@@ -48,6 +48,31 @@
         font-size: 16px;
         font-weight: 600;
       }
+      
+      /* Clear cache button (shown after 3 seconds if stuck) */
+      #preloader .clear-cache-btn {
+        margin-top: 24px;
+        padding: 10px 20px;
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s ease-in;
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+      }
+      
+      #preloader .clear-cache-btn:hover {
+        background: #b91c1c;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+      }
+      
+      #preloader.show-clear-btn .clear-cache-btn {
+        opacity: 1;
+      }
     </style>
 
     
@@ -120,6 +145,21 @@
           }
         }
       });
+      
+      // Show clear cache button after 3 seconds if loading takes too long
+      var preloader = document.getElementById('preloader');
+      setTimeout(function() {
+        if (preloader && !preloader.classList.contains('hide')) {
+          preloader.classList.add('show-clear-btn');
+        }
+      }, 3000);
+      
+      // Clear cache and reload function
+      window.clearCacheAndReload = function() {
+        sessionStorage.setItem('anataleb.clearCache', 'true');
+        console.log('🔄 Clearing cache and reloading...');
+        window.location.reload(true);
+      };
     </script>
   </head>
   <body>
@@ -127,6 +167,9 @@
 <div id="preloader" role="status" aria-live="polite" aria-label="Loading AnaTaleb">
   <div class="spinner" aria-hidden="true"></div>
   <div class="loading-text">Loading AnaTaleb...</div>
+  <button class="clear-cache-btn" onclick="clearCacheAndReload()" type="button">
+    Clear Cache & Reload
+  </button>
   <span class="sr-only">Loading, please wait</span>
 </div>
 
@@ -181,7 +224,19 @@
       setTimeout(function() {
         if (!hasRevealed) {
           console.warn('App ready timeout - revealing anyway');
-          reveal();
+          // If stuck for 5 seconds, try clearing cache and reloading
+          if (sessionStorage.getItem('anataleb.retryCount') === null) {
+            sessionStorage.setItem('anataleb.retryCount', '1');
+            sessionStorage.setItem('anataleb.clearCache', 'true');
+            console.warn('⚠️ App stuck in loading. Clearing cache and reloading...');
+            setTimeout(function() {
+              window.location.reload(true);
+            }, 1000);
+          } else {
+            // Already tried once, just reveal the app
+            sessionStorage.removeItem('anataleb.retryCount');
+            reveal();
+          }
         }
       }, 5000); // Increased timeout for lazy-loaded routes
     </script>
