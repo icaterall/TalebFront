@@ -1,0 +1,33 @@
+<section class="starter-page">
+  <h1>🚀 {{ currentLang === 'ar' ? 'ابدأ درسًا الآن' : 'Start a lesson now' }}</h1>
+
+  <div class="card" *ngIf="!loading">
+    <ng-container *ngIf="recommendations.length; else aiBlock">
+      <h2>{{ recommendations[0]?.title }}</h2>
+      <div class="chips">
+        <span class="chip">{{ recommendations[0]?.est_minutes }} {{ currentLang === 'ar' ? 'دقائق' : 'min' }}</span>
+      </div>
+      <div class="btns">
+        <button class="btn primary" (click)="onStartNow()">{{ currentLang === 'ar' ? 'ابدأ الآن' : 'Start now' }}</button>
+      </div>
+    </ng-container>
+
+    <ng-template #aiBlock>
+      <p>{{ currentLang === 'ar' ? 'لا توجد دورات محلية بعد. سأُنشئ لك بداية مخصصة لمدة 10 دقائق.' : 'No local courses yet. I’ll create a tailored 10-minute starter for you.' }}</p>
+      <div class="btns">
+        <button class="btn primary" (click)="onStartNow()">{{ currentLang === 'ar' ? 'ابدأ الآن' : 'Start now' }}</button>
+        <button class="btn outline" (click)="onChangeTopic()">{{ currentLang === 'ar' ? 'غيّر الموضوع' : 'Change topic' }}</button>
+        <button class="btn outline" (click)="onQuickPlacement()">{{ currentLang === 'ar' ? 'اختبار تحديد سريع' : 'Take quick placement' }}</button>
+      </div>
+
+      <div class="assistant">
+        <div class="title">🤖 {{ currentLang === 'ar' ? 'مساعدك' : 'Your assistant' }}</div>
+        <div class="prompts">
+          <button class="chip">{{ currentLang === 'ar' ? 'أنشئ بداية لمدة 10 دقائق' : 'Create a 10-minute starter' }}</button>
+          <button class="chip">{{ currentLang === 'ar' ? 'اختبار تحديد المستوى السريع' : 'Quick placement quiz' }}</button>
+          <button class="chip">{{ currentLang === 'ar' ? 'اقترح ثلاثة مواضيع شائعة' : 'Suggest three popular topics' }}</button>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</section>

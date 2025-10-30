@@ -1,0 +1,13 @@
+.starter-page { padding: 16px; }
+.card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px; }
+.chips { display:flex; gap:8px; margin:8px 0; }
+.chip { background:#eef2ff; color:#1e40af; border-radius:999px; padding:4px 8px; font-size:12px; }
+.btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.btn { padding:8px 14px; border-radius:6px; border:2px solid transparent; cursor:pointer; }
+.btn.primary { background:#1368CE; color:#fff; }
+.btn.outline { background:transparent; color:#1368CE; border-color:#1368CE; }
+.assistant { margin-top:14px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:10px; }
+.assistant .title { font-weight:700; margin-bottom:6px; }
+.assistant .prompts { display:flex; flex-wrap:wrap; gap:8px; }
+.assistant .chip { background:#fff; border:1px solid #e5e7eb; }
+

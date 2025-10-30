@@ -8,6 +8,8 @@ import { RecommendationsService, Recommendation } from '../../../core/services/r
 import { AIIntroService, AIIntroPack } from '../../../core/services/ai-intro.service';
 import { GeographyService } from '../../../core/services/geography.service';
 import { EducationService } from '../../../core/services/education.service';
+import { PlacementService } from '../../../core/services/placement.service';
+import { AssistantService } from '../../../core/services/assistant.service';
 
 import { AuthService, User } from '../../../core/services/auth.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
@@ -31,6 +33,8 @@ export class StudentDashboardComponent implements OnInit {
   private readonly aiIntroService = inject(AIIntroService);
   private readonly geographyService = inject(GeographyService);
   private readonly educationService = inject(EducationService);
+  private readonly placementService = inject(PlacementService);
+  private readonly assistantService = inject(AssistantService);
 
   user: User | null = null;
   loading = false;
@@ -299,6 +303,57 @@ export class StudentDashboardComponent implements OnInit {
     if (this.aiIntroPack) {
       this.toastr.success(this.currentLang === 'ar' ? 'بدء الدرس التمهيدي' : 'Starting intro pack');
       // TODO: navigate to lesson by aiIntroPack.lesson_id
+    }
+  }
+
+  goToStarter(): void {
+    this.router.navigateByUrl('/student/starter');
+  }
+
+  openChangeTopic(): void {
+    // Minimal: regenerate intro pack with a different topic hint (placeholder)
+    if (!this.user) return;
+    const profile: any = this.user;
+    const countryId = profile?.country_id || 1;
+    const stageId = profile?.education_stage_id ?? profile?.stage_id ?? 0;
+    const stateId = profile?.state_id;
+    const locale = this.currentLang;
+    this.loadingStartNow = true;
+    this.aiIntroService.generateIntroPack({ country_id: countryId, state_id: stateId, stage_id: stageId, locale })
+      .subscribe({
+        next: (ai) => { this.aiIntroPack = ai?.lesson || null; this.loadingStartNow = false; },
+        error: () => { this.loadingStartNow = false; }
+      });
+  }
+
+  openQuickPlacement(): void {
+    // Minimal stub: call placement score and then refresh intro pack with level hint (not implemented backend yet)
+    this.placementService.score([]).subscribe({
+      next: (r) => {
+        this.toastr.info(this.currentLang === 'ar' ? `مستواك: ${r.level}` : `Your level: ${r.level}`);
+        this.openChangeTopic();
+      },
+      error: () => this.toastr.error(this.currentLang === 'ar' ? 'فشل التقييم' : 'Placement failed')
+    });
+  }
+
+  applyPrompt(type: 'starter'|'placement'|'topics'): void {
+    switch (type) {
+      case 'starter':
+        this.startNow();
+        break;
+      case 'placement':
+        this.openQuickPlacement();
+        break;
+      case 'topics':
+        this.assistantService.suggest({ stage_name: this.stageName, country_name: this.countryName, locale: this.currentLang })
+          .subscribe({
+            next: (res) => {
+              const tips = res?.chips || [];
+              if (tips.length) this.toastr.info(tips.join(' · '));
+            }
+          });
+        break;
     }
   }
 

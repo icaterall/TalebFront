@@ -53,21 +53,30 @@
           <div class="cta-sub">{{ 'student.dashboard.cta.joinClassSub' | translate }}</div>
         </div>
 
-        <!-- Start a lesson now -->
-        <div class="cta-card" [class.loading]="loadingStartNow" (click)="startNow()">
+        <!-- Start a lesson now (minimal; details moved to /student/starter) -->
+        <div class="cta-card" [class.loading]="loadingStartNow" (click)="goToStarter()">
           <div class="cta-icon">🚀</div>
-          <div class="cta-title">
-            {{ 'student.dashboard.cta.startNow' | translate }}
-          </div>
-          <div class="cta-sub" *ngIf="recommendations.length">
-            {{ recommendations[0]?.title }} · {{ recommendations[0]?.est_minutes }} {{ 'general.min' | translate }}
-          </div>
-          <div class="cta-sub" *ngIf="!recommendations.length && aiIntroPack">
-            {{ aiIntroPack?.title }} · {{ aiIntroPack?.est_minutes }} {{ 'general.min' | translate }}
-          </div>
-          <div class="cta-sub" *ngIf="loadingStartNow">
-            {{ 'general.loading' | translate }}...
-          </div>
+          <div class="cta-title">{{ 'student.dashboard.cta.startNow' | translate }}</div>
+
+          <!-- When we have native recommendations -->
+          <ng-container *ngIf="recommendations.length; else aiStarter">
+            <div class="cta-sub">
+              {{ recommendations[0]?.title }} · {{ recommendations[0]?.est_minutes }} {{ 'general.min' | translate }}
+            </div>
+          </ng-container>
+
+          <!-- AI fallback when zero recommendations -->
+          <ng-template #aiStarter>
+            <div class="cta-sub">
+              {{ currentLang === 'ar' ? 'لا توجد دورات محلية بعد. سأُنشئ لك بداية مخصصة لمدة 10 دقائق.' : 'No local courses yet. I’ll create a tailored 10-minute starter for you.' }}
+            </div>
+            <div class="chips-row">
+              <span class="chip">{{ stageName }}</span>
+              <span class="chip">{{ countryName }}</span>
+              <span class="chip">{{ displayLang }}</span>
+            </div>
+            <!-- No buttons or assistant UI on the dashboard card; click navigates to /student/starter -->
+          </ng-template>
         </div>
 
         <!-- Explore topics -->
