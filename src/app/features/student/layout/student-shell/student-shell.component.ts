@@ -35,6 +35,7 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.checkScreenSize();
+    this.updateBodyScrollLock();
   }
 
   ngAfterViewInit(): void {
@@ -42,7 +43,8 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Cleanup if needed
+    // Ensure body scroll is re-enabled on destroy
+    document.body.classList.remove('no-scroll');
   }
 
   @HostListener('window:resize', ['$event'])
@@ -57,13 +59,25 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isMobile) {
       this.menuOpen = false;
     }
+    this.updateBodyScrollLock();
   }
 
   toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
+    this.updateBodyScrollLock();
   }
 
   closeMenu(): void {
     this.menuOpen = false;
+    this.updateBodyScrollLock();
+  }
+
+  private updateBodyScrollLock(): void {
+    const shouldLock = this.isMobile && this.menuOpen;
+    if (shouldLock) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
   }
 }
