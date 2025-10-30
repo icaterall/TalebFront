@@ -26,6 +26,17 @@
   margin-right: 8px;
   cursor: pointer;
   flex-shrink: 0;
+  position: relative; /* enable larger invisible hit area */
+
+  /* Invisible hit area to improve tap target without visual change */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    bottom: -10px;
+    left: -10px;
+    right: -10px;
+  }
 
   svg {
     width: 24px;
@@ -44,6 +55,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* Meet mobile accessibility target size */
+    min-width: 44px;
+    min-height: 44px;
+    /* Keep icon visually 24px while hit area larger */
+    svg { width: 24px; height: 24px; }
   }
 }
 

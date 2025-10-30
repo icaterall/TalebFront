@@ -269,15 +269,24 @@ body {
         .info-pill-compact {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             background: rgba(255,255,255,0.15);
             border: 1px solid rgba(255,255,255,0.25);
             color: #fff;
-            padding: 6px 10px;
+            padding: 8px 14px;
             border-radius: 999px;
-            font-size: 13px;
+            font-size: 15px;
+            line-height: 1.35;
             margin-bottom: 16px;
             backdrop-filter: blur(8px);
+        }
+
+        @media (max-width: 500px) {
+            .info-pill-compact {
+                font-size: 10px;
+                padding: 7px 12px;
+                gap: 8px;
+            }
         }
 
         .welcome-stats {
