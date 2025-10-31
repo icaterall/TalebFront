@@ -169,6 +169,7 @@
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
+    overflow-x: hidden; // ensure no horizontal scroll inside card
 
     @media (max-width: 1450px) {
       padding: 15px 28px 20px 28px;
@@ -233,24 +234,35 @@
   padding: 0 8px;
   width: 100%;
   box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: hidden;
 
   @media (max-width: 1450px) {
     gap: 16px;
     padding: 0 4px;
   }
 
+  // Keep in one row and stretched until 769px
   @media (max-width: 768px) {
     gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap; // prevent wrapping so steps stretch
+    justify-content: stretch;
   }
 
+  // Start compacting below 670px
   @media (max-width: 670px) {
     gap: 0px;
+    flex-wrap: wrap; // allow wrap on very small screens
+    justify-content: center;
   }
 
   @media (max-width: 490px) {
     gap: 0px;
+  }
+
+  // Extra small phones
+  @media (max-width: 414px) {
+    gap: 0px; // ensure no extra spacing between steps
   }
 }
 
@@ -264,19 +276,26 @@
   min-width: 0; // Prevent overflow
 
   @media (max-width: 1450px) {
-    flex: 0 1 auto;
+    flex: 1; // keep stretching on medium screens
   }
 
+  // Keep stretching until 769px width
   @media (max-width: 768px) {
-    flex: 0 1 120px;
+    flex: 1;
   }
 
+  // Compact sizes below 670px
   @media (max-width: 670px) {
     flex: 0 1 100px;
   }
 
   @media (max-width: 490px) {
     flex: 0 1 85px;
+  }
+
+  // Extra small phones
+  @media (max-width: 414px) {
+    flex: 0 1 75px;
   }
 
   &:not(:last-child)::after {
@@ -289,7 +308,8 @@
     background: #E2E8F0;
     z-index: 0;
 
-    @media (max-width: 768px) {
+    // Keep lines visible until 769px; only hide when wrapping below 670px
+    @media (max-width: 670px) {
       display: none;
     }
   }
@@ -405,6 +425,10 @@
   color: #1E293B;
   text-transform: uppercase;
   letter-spacing: 0.6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: clamp(90px, 12vw, 140px);
 
   @media (max-width: 1450px) {
     font-size: 12px;
@@ -414,6 +438,7 @@
   @media (max-width: 768px) {
     font-size: 11px;
     letter-spacing: 0.3px;
+    max-width: clamp(80px, 18vw, 110px);
   }
 
   @media (max-width: 670px) {
@@ -424,6 +449,7 @@
   @media (max-width: 490px) {
     font-size: 10px;
     letter-spacing: 0.2px;
+    max-width: clamp(70px, 28vw, 100px);
   }
 }
 
@@ -546,29 +572,43 @@
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: clamp(8px, 2vw, 16px); // responsive gap
+  gap: clamp(8px, 2vw, 16px);
   margin-bottom: 15px;
   justify-items: stretch;
   font-weight: 500;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
 
   @media (max-width: 1450px) {
     gap: clamp(6px, 1.5vw, 14px);
   }
 
+  @media (max-width: 1200px) {
+    gap: clamp(5px, 1.2vw, 12px);
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(4px, 1vw, 10px);
+  }
+
   @media (max-width: 768px) {
-    gap: clamp(5px, 1.2vw, 10px);
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(4px, 1vw, 8px);
   }
 
   @media (max-width: 670px) {
-    grid-template-columns: repeat(3, 1fr);
     gap: 3px;
-    justify-items: center;
   }
 
   @media (max-width: 490px) {
     gap: 2px;
+  }
+
+  @media (max-width: 380px) {
+    gap: 1px;
   }
 }
 
@@ -576,18 +616,21 @@
   background: white;
   border: 1px solid #E2E8F0;
   border-radius: 5px;
-  padding: 5px; // slightly smaller
+  padding: clamp(8px, 1.5vw, 16px);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: clamp(6px, 1vw, 10px);
   position: relative;
   width: 100%;
   max-width: 100%;
+  min-width: 0; // Prevent flex overflow
   aspect-ratio: 1 / 1; // square box
+  box-sizing: border-box;
+  overflow: hidden;
 
   &::before {
     content: '';
@@ -625,46 +668,118 @@
   }
 
   .cat-icon {
-    font-size: 48px; // slightly smaller
+    font-size: clamp(32px, 4vw, 48px);
     position: relative;
     z-index: 1;
     transition: transform 0.25s;
+    line-height: 1;
+    flex-shrink: 0;
   }
+
   .cat-name {
-    font-size: clamp(12px, 2.6vw, 14px);
+    font-size: clamp(10px, 2vw, 14px);
     text-align: center;
+    line-height: 1.3;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+    padding: 0 2px;
+    box-sizing: border-box;
   }
 
+  // Large screens (>1450px)
+  @media (min-width: 1451px) {
+    padding: 16px;
+    .cat-icon {
+      font-size: 48px;
+    }
+    .cat-name {
+      font-size: 14px;
+    }
+  }
+
+  // Medium-large screens (1200px - 1450px)
   @media (max-width: 1450px) {
-    padding: 12px;
+    padding: clamp(10px, 1.2vw, 14px);
     .cat-icon {
-      font-size: 42px;
+      font-size: clamp(38px, 3.5vw, 44px);
     }
     .cat-name {
-      font-size: clamp(11px, 2.2vw, 13px);
+      font-size: clamp(11px, 1.8vw, 13px);
     }
   }
 
+  // Medium screens (900px - 1200px)
+  @media (max-width: 1200px) {
+    padding: clamp(8px, 1vw, 12px);
+    gap: clamp(5px, 0.8vw, 8px);
+    .cat-icon {
+      font-size: clamp(36px, 3vw, 42px);
+    }
+    .cat-name {
+      font-size: clamp(10px, 1.6vw, 12px);
+    }
+  }
+
+  // Tablet (768px - 900px)
+  @media (max-width: 900px) {
+    padding: clamp(8px, 0.9vw, 10px);
+    gap: clamp(4px, 0.7vw, 6px);
+    .cat-icon {
+      font-size: clamp(34px, 2.8vw, 40px);
+    }
+    .cat-name {
+      font-size: clamp(10px, 1.5vw, 11px);
+    }
+  }
+
+  // Small tablet (670px - 768px)
   @media (max-width: 768px) {
-    padding: 10px;
+    padding: clamp(6px, 0.8vw, 10px);
+    gap: clamp(4px, 0.6vw, 6px);
     .cat-icon {
-      font-size: 40px;
+      font-size: clamp(32px, 2.5vw, 38px);
     }
     .cat-name {
-      font-size: clamp(11px, 2vw, 12px);
+      font-size: clamp(10px, 1.4vw, 11px);
     }
   }
 
+  // Perfect range (490px - 670px) - KEEP AS IS
   @media (max-width: 670px) {
     padding: 2px;
-    .cat-icon { font-size: 36px; }
-    .cat-name { font-size: 12px; }
+    gap: 4px;
+    .cat-icon {
+      font-size: 36px;
+    }
+    .cat-name {
+      font-size: 12px;
+    }
   }
 
+  // Small mobile (380px - 490px)
   @media (max-width: 490px) {
     padding: 2px;
-    .cat-icon { font-size: 32px; }
-    .cat-name { font-size: 11px; }
+    gap: 3px;
+    .cat-icon {
+      font-size: clamp(28px, 7vw, 32px);
+    }
+    .cat-name {
+      font-size: clamp(9px, 2.2vw, 11px);
+    }
+  }
+
+  // Extra small mobile (< 380px)
+  @media (max-width: 380px) {
+    padding: 1px;
+    gap: 2px;
+    .cat-icon {
+      font-size: clamp(24px, 6vw, 28px);
+    }
+    .cat-name {
+      font-size: clamp(8px, 2vw, 10px);
+    }
   }
 }
 
@@ -789,6 +904,10 @@
   margin-top: 32px;
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -812,6 +931,7 @@
   justify-content: center;
   gap: 10px;
   min-height: 60px;
+  min-width: 0; // allow shrinking in flex
 
   .btn-icon {
     font-size: 24px;
@@ -844,6 +964,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  min-width: 0; // allow shrinking in flex
 
   &:hover {
     background: #F8FAFC;
