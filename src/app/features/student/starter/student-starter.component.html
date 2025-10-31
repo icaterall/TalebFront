@@ -1,33 +1,136 @@
-<section class="starter-page">
-  <h1>🚀 {{ currentLang === 'ar' ? 'ابدأ درسًا الآن' : 'Start a lesson now' }}</h1>
-
-  <div class="card" *ngIf="!loading">
-    <ng-container *ngIf="recommendations.length; else aiBlock">
-      <h2>{{ recommendations[0]?.title }}</h2>
-      <div class="chips">
-        <span class="chip">{{ recommendations[0]?.est_minutes }} {{ currentLang === 'ar' ? 'دقائق' : 'min' }}</span>
+<div class="starter-page" [dir]="isRTL ? 'rtl' : 'ltr'">
+  
+  <!-- Vibrant Hero Header with Gradient -->
+  <div class="hero-header">
+    <div class="decorative-shapes">
+      <div class="shape-pattern"></div>
+      <div class="shape-circle-1"></div>
+      <div class="shape-circle-2"></div>
+    </div>
+    
+    <div class="hero-content">
+      <div class="badge-group">
+        <span class="badge">🎓 {{ student?.education_stage_name || student?.stage_name || (currentLang === 'ar' ? 'المرحلة' : 'Stage') }}</span>
+        <span class="badge">🌍 {{ student?.country_name || (currentLang === 'ar' ? 'الدولة' : 'Country') }}</span>
       </div>
-      <div class="btns">
-        <button class="btn primary" (click)="onStartNow()">{{ currentLang === 'ar' ? 'ابدأ الآن' : 'Start now' }}</button>
-      </div>
-    </ng-container>
+      <h1>{{ currentLang === 'ar' ? '✨ أنشئ درسك مع الذكاء الاصطناعي' : '✨ Create Your Course with AI' }}</h1>
+      <p class="hero-subtitle">
+        {{ currentLang === 'ar' 
+          ? 'اختر موضوعًا واحدًا وسيساعدك الذكاء الاصطناعي في بناء درس احترافي خطوة بخطوة.'
+          : 'Pick one topic and AI will help you build a professional course step by step.' }}
+      </p>
+    </div>
+  </div>
 
-    <ng-template #aiBlock>
-      <p>{{ currentLang === 'ar' ? 'لا توجد دورات محلية بعد. سأُنشئ لك بداية مخصصة لمدة 10 دقائق.' : 'No local courses yet. I’ll create a tailored 10-minute starter for you.' }}</p>
-      <div class="btns">
-        <button class="btn primary" (click)="onStartNow()">{{ currentLang === 'ar' ? 'ابدأ الآن' : 'Start now' }}</button>
-        <button class="btn outline" (click)="onChangeTopic()">{{ currentLang === 'ar' ? 'غيّر الموضوع' : 'Change topic' }}</button>
-        <button class="btn outline" (click)="onQuickPlacement()">{{ currentLang === 'ar' ? 'اختبار تحديد سريع' : 'Take quick placement' }}</button>
-      </div>
-
-      <div class="assistant">
-        <div class="title">🤖 {{ currentLang === 'ar' ? 'مساعدك' : 'Your assistant' }}</div>
-        <div class="prompts">
-          <button class="chip">{{ currentLang === 'ar' ? 'أنشئ بداية لمدة 10 دقائق' : 'Create a 10-minute starter' }}</button>
-          <button class="chip">{{ currentLang === 'ar' ? 'اختبار تحديد المستوى السريع' : 'Quick placement quiz' }}</button>
-          <button class="chip">{{ currentLang === 'ar' ? 'اقترح ثلاثة مواضيع شائعة' : 'Suggest three popular topics' }}</button>
+  <!-- Category Selection Card (overlaps hero) -->
+  <div class="category-card-wrapper">
+    <div class="category-card">
+      
+      <!-- Selected Category Display -->
+      <div class="selected-display" *ngIf="selectedCategory">
+        <div class="selected-badge">
+          <span class="selected-icon">{{ selectedCategory.icon }}</span>
+          <div class="selected-info">
+            <span class="selected-label">{{ currentLang === 'ar' ? 'الموضوع المختار' : 'Selected Category' }}</span>
+            <span class="selected-name">{{ getCategoryName(selectedCategory) }}</span>
+          </div>
+          <button class="change-btn" (click)="selectedCategory = null; selectedCategoryId = null">
+            {{ currentLang === 'ar' ? 'تغيير' : 'Change' }}
+          </button>
         </div>
       </div>
-    </ng-template>
+
+      <!-- Category Selection -->
+      <div *ngIf="!selectedCategory">
+        <div class="card-header">
+          <h2>📚 {{ currentLang === 'ar' ? 'اختر الموضوع' : 'Choose Your Category' }}</h2>
+          <p>{{ currentLang === 'ar' ? 'الأكثر صلة بمرحلتك الدراسية' : 'Most relevant for your education stage' }}</p>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div class="categories-grid" *ngIf="loading">
+          <div class="cat-box skeleton" *ngFor="let i of [1,2,3,4,5,6]"></div>
+        </div>
+
+        <!-- Smart Six Categories -->
+        <div class="categories-grid" *ngIf="!loading && smartSix.length > 0">
+          <button 
+            *ngFor="let cat of smartSix"
+            class="cat-box"
+            (click)="selectCategory(cat)">
+            <span class="cat-icon">{{ cat.icon }}</span>
+            <span class="cat-name">{{ getCategoryName(cat) }}</span>
+            <span class="cat-arrow">→</span>
+          </button>
+        </div>
+
+        <!-- Search Other Categories -->
+        <div class="search-section">
+          <div class="search-header">
+            <span class="search-icon">🔍</span>
+            <h3>{{ currentLang === 'ar' ? 'أو ابحث عن موضوع آخر' : 'Or search for another category' }}</h3>
+          </div>
+          <ng-select
+            [items]="allCategories"
+            [bindLabel]="currentLang === 'ar' ? 'name_ar' : 'name_en'"
+            bindValue="id"
+            [searchable]="true"
+            [clearable]="true"
+            [placeholder]="currentLang === 'ar' ? 'ابحث عن موضوع...' : 'Search for a category...'"
+            [(ngModel)]="selectedCategoryId"
+            (change)="onNgSelectChange()">
+            <ng-template ng-option-tmp let-item="item">
+              <div class="select-option">
+                <span class="opt-icon">{{ item.icon }}</span>
+                <span class="opt-name">{{ getCategoryName(item) }}</span>
+              </div>
+            </ng-template>
+          </ng-select>
+        </div>
+      </div>
+    </div>
   </div>
-</section>
+
+  <!-- Action Buttons -->
+  <div class="action-section">
+    <button 
+      class="btn-continue" 
+      [disabled]="!canContinue"
+      (click)="continue()">
+      <span class="btn-icon">✨</span>
+      <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
+    </button>
+    
+    <button class="btn-skip" (click)="skipToTopMatch()" *ngIf="!selectedCategory && smartSix.length > 0">
+      {{ currentLang === 'ar' ? 'تخطي (اختيار تلقائي)' : 'Skip (Auto-pick)' }}
+    </button>
+  </div>
+
+  <!-- Info Preview -->
+  <div class="info-preview" *ngIf="selectedCategory">
+    <h3>{{ currentLang === 'ar' ? 'ما سنبنيه معًا:' : 'What we\'ll build together:' }}</h3>
+    <div class="preview-grid">
+      <div class="preview-item">
+        <span class="preview-icon">📋</span>
+        <span>{{ currentLang === 'ar' ? 'اسم وموضوع الدرس' : 'Course name & subject' }}</span>
+      </div>
+      <div class="preview-item">
+        <span class="preview-icon">📚</span>
+        <span>{{ currentLang === 'ar' ? '3-5 وحدات تعليمية' : '3–5 learning units' }}</span>
+      </div>
+      <div class="preview-item">
+        <span class="preview-icon">📝</span>
+        <span>{{ currentLang === 'ar' ? 'محتوى تفاعلي' : 'Interactive content' }}</span>
+      </div>
+      <div class="preview-item">
+        <span class="preview-icon">🎯</span>
+        <span>{{ currentLang === 'ar' ? 'اختبارات قصيرة' : 'Quick quizzes' }}</span>
+      </div>
+      <div class="preview-item">
+        <span class="preview-icon">🎬</span>
+        <span>{{ currentLang === 'ar' ? 'اقتراحات وسائط' : 'Media suggestions' }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+

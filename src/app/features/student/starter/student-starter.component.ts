@@ -1,89 +1,131 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
-import { RecommendationsService, Recommendation } from '../../../core/services/recommendations.service';
-import { AIIntroService, AIIntroPack } from '../../../core/services/ai-intro.service';
-import { PlacementService } from '../../../core/services/placement.service';
-import { AssistantService } from '../../../core/services/assistant.service';
-import { UniversalAuthService } from '../../../core/services/universal-auth.service';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { I18nService } from '../../../core/services/i18n.service';
+import { UniversalAuthService } from '../../../core/services/universal-auth.service';
+import { AiBuilderService, CourseDraft } from '../../../core/services/ai-builder.service';
+import { HttpClient } from '@angular/common/http';
+
+interface Category {
+  id: number;
+  name_en: string;
+  name_ar: string;
+  icon: string;
+  sort_order?: number;
+}
 
 @Component({
   selector: 'app-student-starter',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule],
   templateUrl: './student-starter.component.html',
   styleUrls: ['./student-starter.component.scss']
 })
 export class StudentStarterComponent implements OnInit {
   private readonly router = inject(Router);
-  private readonly toastr = inject(ToastrService);
-  private readonly recs = inject(RecommendationsService);
-  private readonly ai = inject(AIIntroService);
-  private readonly placement = inject(PlacementService);
-  private readonly assistant = inject(AssistantService);
-  private readonly auth = inject(UniversalAuthService);
   private readonly i18n = inject(I18nService);
+  private readonly universalAuth = inject(UniversalAuthService);
+  private readonly ai = inject(AiBuilderService);
+  private readonly http = inject(HttpClient);
 
   loading = false;
-  user: any = null;
-  recommendations: Recommendation[] = [];
-  aiIntroPack: AIIntroPack | null = null;
+  smartSix: Category[] = [];
+  allCategories: Category[] = [];
+  selectedCategory: Category | null = null;
+  selectedCategoryId: number | null = null;
 
-  get currentLang() { return this.i18n.current; }
+  student: any = null;
+  
+  get currentLang(): 'ar' | 'en' { return this.i18n.current; }
+  get isRTL(): boolean { return this.currentLang === 'ar'; }
+  get canContinue(): boolean { return this.selectedCategory !== null; }
 
   ngOnInit(): void {
-    if (!this.auth.validateAccess('Student')) return;
-    this.user = this.auth.getCurrentUser();
-    this.loadData();
+    if (!this.universalAuth.validateAccess('Student')) return;
+    this.student = this.universalAuth.getCurrentUser();
+    this.loadSmartSix();
+    this.loadAllCategories();
   }
 
-  private loadData(): void {
-    if (!this.user) return;
-    const profile: any = this.user;
-    const country_id = profile?.country_id || 1;
-    const state_id = profile?.state_id;
-    const stage_id = profile?.education_stage_id ?? profile?.stage_id ?? 0;
-    const locale = this.currentLang;
+  private loadSmartSix(): void {
+    const stage_id = this.student?.education_stage_id ?? this.student?.stage_id;
+    if (!stage_id) return;
+
     this.loading = true;
-    this.recs.getRecommendations({ country_id, state_id, stage_id, locale, limit: 3 }).subscribe({
-      next: (res) => {
-        this.recommendations = res?.recommendations || [];
-        if (!this.recommendations.length) {
-          this.ai.generateIntroPack({ country_id, state_id, stage_id, locale }).subscribe({
-            next: (ai) => { this.aiIntroPack = ai?.lesson || null; this.loading = false; },
-            error: () => { this.loading = false; }
-          });
-        } else {
+    this.http.get<{categories: Category[]}>(`/api/v1/categories/suggestions/${stage_id}`)
+      .subscribe({
+        next: (res) => {
+          this.smartSix = res.categories || [];
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Failed to load Smart Six categories:', err);
+          this.smartSix = [];
           this.loading = false;
         }
-      },
-      error: () => { this.loading = false; }
-    });
+      });
   }
 
-  onStartNow(): void {
-    if (this.recommendations.length) {
-      this.toastr.success(this.currentLang === 'ar' ? 'بدء الدرس الموصى به' : 'Starting recommended lesson');
-      return;
+  private loadAllCategories(): void {
+    this.http.get<{categories: Category[]}>('/api/v1/categories')
+      .subscribe({
+        next: (res) => {
+          this.allCategories = res.categories || [];
+        },
+        error: (err) => {
+          console.error('Failed to load all categories:', err);
+          this.allCategories = [];
+        }
+      });
+  }
+
+  selectCategory(category: Category): void {
+    this.selectedCategory = category;
+    this.selectedCategoryId = category.id;
+  }
+
+  onNgSelectChange(): void {
+    if (this.selectedCategoryId) {
+      this.selectedCategory = this.allCategories.find(cat => cat.id === this.selectedCategoryId) || null;
+    } else {
+      this.selectedCategory = null;
     }
-    if (this.aiIntroPack) {
-      this.toastr.success(this.currentLang === 'ar' ? 'بدء الدرس التمهيدي' : 'Starting intro pack');
+  }
+
+  isSelected(category: Category): boolean {
+    return this.selectedCategory?.id === category.id;
+  }
+
+  skipToTopMatch(): void {
+    if (this.smartSix.length > 0) {
+      this.selectedCategory = this.smartSix[0];
+      this.selectedCategoryId = this.smartSix[0].id;
+      this.continue();
     }
   }
 
-  onChangeTopic(): void {
-    this.loadData();
+  continue(): void {
+    if (!this.canContinue || !this.selectedCategory) return;
+
+    const draft: Partial<CourseDraft> = {
+      version: 1,
+      stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
+      country_id: this.student?.country_id,
+      locale: this.currentLang,
+      category_id: this.selectedCategory.id,
+      category_name: this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en,
+      last_saved_at: new Date().toISOString()
+    };
+
+    this.ai.saveDraft(draft);
+    this.router.navigateByUrl('/student/wizard/name');
   }
 
-  onQuickPlacement(): void {
-    this.placement.score([]).subscribe({
-      next: (r) => { this.toastr.info(this.currentLang === 'ar' ? `مستواك: ${r.level}` : `Your level: ${r.level}`); this.loadData(); },
-      error: () => this.toastr.error(this.currentLang === 'ar' ? 'فشل التقييم' : 'Placement failed')
-    });
+  getCategoryName(cat: Category): string {
+    return this.currentLang === 'ar' ? cat.name_ar : cat.name_en;
   }
 }
-
 
