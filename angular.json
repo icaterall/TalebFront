@@ -94,7 +94,8 @@
               "buildTarget": "anataleb-frontend:build:production"
             },
             "development": {
-              "buildTarget": "anataleb-frontend:build:development"
+              "buildTarget": "anataleb-frontend:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

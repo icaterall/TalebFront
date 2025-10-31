@@ -41,13 +41,11 @@ export const STUDENT_ROUTES: Routes = [
       {
         path: 'profile',
         loadComponent: () => import('./profile/student-profile.component').then(m => m.StudentProfileComponent),
-      }
-      ,
+      },
       {
         path: 'starter',
         loadComponent: () => import('./starter/student-starter.component').then(m => m.StudentStarterComponent),
-      }
-      ,
+      },
       {
         path: 'wizard/:step',
         loadComponent: () => import('./wizard/course-wizard.component').then(m => m.CourseWizardComponent),

@@ -10,8 +10,8 @@
     
     <div class="hero-content">
       <div class="badge-group">
-        <span class="badge">🎓 {{ student?.education_stage_name || student?.stage_name || (currentLang === 'ar' ? 'المرحلة' : 'Stage') }}</span>
-        <span class="badge">🌍 {{ student?.country_name || (currentLang === 'ar' ? 'الدولة' : 'Country') }}</span>
+        <span class="badge">🎓 {{ stageName }}</span>
+        <span class="badge">🌍 {{ countryName }}</span>
       </div>
       <h1>{{ currentLang === 'ar' ? '✨ أنشئ درسك مع الذكاء الاصطناعي' : '✨ Create Your Course with AI' }}</h1>
       <p class="hero-subtitle">
@@ -22,10 +22,44 @@
     </div>
   </div>
 
-  <!-- Category Selection Card (overlaps hero) -->
-  <div class="category-card-wrapper">
-    <div class="category-card">
-      
+  <!-- Wizard Card Overlapping Hero -->
+  <div class="wizard-card">
+    <div class="wizard-card-inner">
+    <!-- Wizard Progress -->
+    <div class="wizard-progress">
+      <div class="progress-step" [ngClass]="{'completed': !!selectedCategory, 'current': !selectedCategory}">
+        <div class="step-circle">
+          <ng-container *ngIf="selectedCategory; else stepOne">
+            <span class="check-icon">✔</span>
+          </ng-container>
+          <ng-template #stepOne>1</ng-template>
+        </div>
+        <div class="step-labels">
+          <span class="step-name">{{ currentLang === 'ar' ? 'التصنيف' : 'Category' }}</span>
+        </div>
+      </div>
+      <div class="progress-step pending">
+        <div class="step-circle">2</div>
+        <div class="step-labels">
+          <span class="step-name">{{ currentLang === 'ar' ? 'أساسيات المقرر' : 'Course Basics' }}</span>
+        </div>
+      </div>
+      <div class="progress-step pending">
+        <div class="step-circle">3</div>
+        <div class="step-labels">
+          <span class="step-name">{{ currentLang === 'ar' ? 'بناء الوحدة الأولى' : 'Build First Unit' }}</span>
+        </div>
+      </div>
+      <div class="progress-step pending">
+        <div class="step-circle">4</div>
+        <div class="step-labels">
+          <span class="step-name">{{ currentLang === 'ar' ? 'مراجعة ونشر' : 'Review & Publish' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wizard Body -->
+    <div class="wizard-body">
       <!-- Selected Category Display -->
       <div class="selected-display" *ngIf="selectedCategory">
         <div class="selected-badge">
@@ -41,7 +75,7 @@
       </div>
 
       <!-- Category Selection -->
-      <div *ngIf="!selectedCategory">
+      <div *ngIf="!selectedCategory" class="search-section">
         <div class="card-header">
           <h2>📚 {{ currentLang === 'ar' ? 'اختر الموضوع' : 'Choose Your Category' }}</h2>
           <p>{{ currentLang === 'ar' ? 'الأكثر صلة بمرحلتك الدراسية' : 'Most relevant for your education stage' }}</p>
@@ -54,7 +88,7 @@
 
         <!-- Smart Six Categories -->
         <div class="categories-grid" *ngIf="!loading && smartSix.length > 0">
-          <button 
+          <button
             *ngFor="let cat of smartSix"
             class="cat-box"
             (click)="selectCategory(cat)">
@@ -65,70 +99,69 @@
         </div>
 
         <!-- Search Other Categories -->
-        <div class="search-section">
-          <div class="search-header">
-            <span class="search-icon">🔍</span>
-            <h3>{{ currentLang === 'ar' ? 'أو ابحث عن موضوع آخر' : 'Or search for another category' }}</h3>
-          </div>
-          <ng-select
-            [items]="allCategories"
-            [bindLabel]="currentLang === 'ar' ? 'name_ar' : 'name_en'"
-            bindValue="id"
-            [searchable]="true"
-            [clearable]="true"
-            [placeholder]="currentLang === 'ar' ? 'ابحث عن موضوع...' : 'Search for a category...'"
-            [(ngModel)]="selectedCategoryId"
-            (change)="onNgSelectChange()">
-            <ng-template ng-option-tmp let-item="item">
-              <div class="select-option">
-                <span class="opt-icon">{{ item.icon }}</span>
-                <span class="opt-name">{{ getCategoryName(item) }}</span>
-              </div>
-            </ng-template>
-          </ng-select>
+        <div class="search-header">
+          <span class="search-icon">🔍</span>
+          <h3>{{ currentLang === 'ar' ? 'أو ابحث عن موضوع آخر' : 'Or search for another category' }}</h3>
         </div>
+        <ng-select
+          [items]="allCategories"
+          [bindLabel]="currentLang === 'ar' ? 'name_ar' : 'name_en'"
+          bindValue="id"
+          [searchable]="true"
+          [clearable]="true"
+          [placeholder]="currentLang === 'ar' ? 'ابحث عن موضوع...' : 'Search for a category...'"
+          [(ngModel)]="selectedCategoryId"
+          (change)="onNgSelectChange()">
+          <ng-template ng-option-tmp let-item="item">
+            <div class="select-option">
+              <span class="opt-icon">{{ item.icon }}</span>
+              <span class="opt-name">{{ getCategoryName(item) }}</span>
+            </div>
+          </ng-template>
+        </ng-select>
       </div>
     </div>
-  </div>
 
-  <!-- Action Buttons -->
-  <div class="action-section">
-    <button 
-      class="btn-continue" 
-      [disabled]="!canContinue"
-      (click)="continue()">
-      <span class="btn-icon">✨</span>
-      <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
-    </button>
-    
-    <button class="btn-skip" (click)="skipToTopMatch()" *ngIf="!selectedCategory && smartSix.length > 0">
-      {{ currentLang === 'ar' ? 'تخطي (اختيار تلقائي)' : 'Skip (Auto-pick)' }}
-    </button>
+    <!-- Action Buttons -->
+    <div class="wizard-actions">
+      <button 
+        class="btn-continue" 
+        [disabled]="!canContinue"
+        (click)="continue()">
+        <span class="btn-icon">🤖</span>
+        <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
+      </button>
+      
+      <button class="btn-skip" (click)="skipToTopMatch()" *ngIf="!selectedCategory && smartSix.length > 0">
+        {{ currentLang === 'ar' ? 'تخطي (اختيار تلقائي)' : 'Skip (Auto-pick)' }}
+      </button>
+    </div>
+    </div>
   </div>
 
   <!-- Info Preview -->
   <div class="info-preview" *ngIf="selectedCategory">
-    <h3>{{ currentLang === 'ar' ? 'ما سنبنيه معًا:' : 'What we\'ll build together:' }}</h3>
+    <h3>{{ currentLang === 'ar' ? 'خطوات بناء المقرر:' : 'Course Building Steps:' }}</h3>
     <div class="preview-grid">
       <div class="preview-item">
-        <span class="preview-icon">📋</span>
-        <span>{{ currentLang === 'ar' ? 'اسم وموضوع الدرس' : 'Course name & subject' }}</span>
-      </div>
-      <div class="preview-item">
-        <span class="preview-icon">📚</span>
-        <span>{{ currentLang === 'ar' ? '3-5 وحدات تعليمية' : '3–5 learning units' }}</span>
+        <span class="preview-icon">✅</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 1: التصنيف' : 'Step 1: Category' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'اختيار التصنيف الرئيسي (مكتمل)' : 'Pick main category (completed)' }}</span>
       </div>
       <div class="preview-item">
         <span class="preview-icon">📝</span>
-        <span>{{ currentLang === 'ar' ? 'محتوى تفاعلي' : 'Interactive content' }}</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 2: أساسيات المقرر' : 'Step 2: Course Basics' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'اسم المقرر، موضوع اختياري، و3-5 وحدات' : 'Name, optional subject, and 3-5 units' }}</span>
       </div>
       <div class="preview-item">
         <span class="preview-icon">🎯</span>
-        <span>{{ currentLang === 'ar' ? 'اختبارات قصيرة' : 'Quick quizzes' }}</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 3: بناء الوحدة الأولى' : 'Step 3: Build First Unit' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'أهداف، محتوى مختصر، واختبار من 3 أسئلة' : 'Objectives, brief content, and 3-question quiz' }}</span>
       </div>
       <div class="preview-item">
-        <span class="preview-icon">🎬</span>
-        <span>{{ currentLang === 'ar' ? 'اقتراحات وسائط' : 'Media suggestions' }}</span>
+        <span class="preview-icon">🚀</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 4: مراجعة ونشر' : 'Step 4: Review & Publish' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'تحديد الرؤية والنشر مع قسم اختياري' : 'Set visibility and publish with optional section' }}</span>
       </div>
     </div>
   </div>

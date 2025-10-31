@@ -9,11 +9,11 @@ export interface CourseDraft {
   locale?: string;
   category_id?: number;
   category_name?: string;
-  title?: string;
+  name?: string;
   subject_slug?: string;
-  units?: { id: string; name: string; order: number }[];
+  units?: { id: string; name: string; order?: number }[];
   objectives?: string[];
-  sections?: Record<string, { blocks: any[] }>;
+  sections?: any[];
   quiz?: any[];
   cover_image_url?: string;
   last_saved_at?: string;
@@ -31,6 +31,10 @@ export class AiBuilderService {
     } catch {
       return { version: 1 };
     }
+  }
+
+  getDraft(): CourseDraft {
+    return this.readDraft();
   }
 
   saveDraft(patch: Partial<CourseDraft>): void {

@@ -1,5 +1,241 @@
-<div class="wizard-placeholder">
-  <h1>AI Course Wizard</h1>
-  <p>This wizard screen is under construction.</p>
-</div>
+<div class="wizard-page" [dir]="isRTL ? 'rtl' : 'ltr'">
+  <!-- Hero Header with Gradient -->
+  <div class="hero-header" [ngClass]="'step-' + (currentStep === 'basics' ? '2' : currentStep === 'unit' ? '3' : '4')">
+    <div class="decorative-shapes">
+      <div class="shape pattern-1"></div>
+      <div class="shape pattern-2"></div>
+    </div>
+    <div class="hero-content">
+      <h1>
+        {{ currentStep === 'basics' ? (currentLang === 'ar' ? 'أساسيات المقرر' : 'Course Basics') : 
+           currentStep === 'unit' ? (currentLang === 'ar' ? 'إنشاء الوحدة الأولى' : 'Build First Unit') :
+           (currentLang === 'ar' ? 'مراجعة ونشر' : 'Review & Publish') }}
+      </h1>
+      <p>
+        {{ currentStep === 'basics' ? (currentLang === 'ar' ? 'اسم المقرر والموضوع والوحدات' : 'Course name, subject, and units') : 
+           currentStep === 'unit' ? (currentLang === 'ar' ? 'الأهداف والمحتوى والاختبار' : 'Objectives, content, and quiz') :
+           (currentLang === 'ar' ? 'تأكيد والنشر' : 'Confirm and publish') }}
+      </p>
+    </div>
+  </div>
 
+  <!-- Wizard Card Container -->
+  <div class="wizard-container">
+    <!-- Wizard Steps Indicator -->
+    <div class="wizard-steps">
+      <div class="step" [ngClass]="getStepStatus(1).toLowerCase()">
+        <span class="step-number">1</span>
+        <span class="step-label">{{ currentLang === 'ar' ? 'التصنيف' : 'Category' }}</span>
+        <span class="step-status">{{ getStepStatus(1) === 'Completed' ? '✓' : '' }}</span>
+      </div>
+      <div class="step-line"></div>
+      
+      <div class="step" [ngClass]="getStepStatus(2).toLowerCase()">
+        <span class="step-number">2</span>
+        <span class="step-label">{{ currentLang === 'ar' ? 'أساسيات' : 'Basics' }}</span>
+        <span class="step-status">{{ getStepStatus(2) === 'Completed' ? '✓' : '' }}</span>
+      </div>
+      <div class="step-line"></div>
+      
+      <div class="step" [ngClass]="getStepStatus(3).toLowerCase()">
+        <span class="step-number">3</span>
+        <span class="step-label">{{ currentLang === 'ar' ? 'الوحدة' : 'Unit' }}</span>
+        <span class="step-status">{{ getStepStatus(3) === 'Completed' ? '✓' : '' }}</span>
+      </div>
+      <div class="step-line"></div>
+      
+      <div class="step" [ngClass]="getStepStatus(4).toLowerCase()">
+        <span class="step-number">4</span>
+        <span class="step-label">{{ currentLang === 'ar' ? 'نشر' : 'Publish' }}</span>
+        <span class="step-status">{{ getStepStatus(4) === 'Completed' ? '✓' : '' }}</span>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="wizard-content">
+
+      <!-- Step 2: Course Basics -->
+      <div *ngIf="currentStep === 'basics'" class="step-content">
+        <div class="section">
+          <h2>{{ currentLang === 'ar' ? 'اسم المقرر' : 'Course Name' }}</h2>
+          
+          <!-- Suggested Titles -->
+          <div class="suggested-block" *ngIf="!step2.editMode">
+            <button 
+              class="btn-suggest"
+              (click)="suggestTitles()"
+              [disabled]="step2.titleLoading">
+              {{ step2.titleLoading ? '...' : (currentLang === 'ar' ? 'اقترح أسماء' : 'Suggest Titles') }}
+            </button>
+            
+            <div class="titles-chips" *ngIf="step2.suggestedTitles.length > 0">
+              <button 
+                *ngFor="let title of step2.suggestedTitles"
+                class="chip"
+                (click)="selectTitle(title)">
+                {{ title }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Manual Input or Selected Title -->
+          <div class="input-group">
+            <input 
+              type="text" 
+              [(ngModel)]="step2.courseTitle"
+              [placeholder]="currentLang === 'ar' ? 'أدخل اسم المقرر أو اختر من الاقتراحات' : 'Enter course name or select from suggestions'"
+              (focus)="step2.editMode = true"
+              (blur)="step2.editMode = step2.courseTitle === '' ? false : true"
+              class="input">
+          </div>
+        </div>
+
+        <!-- Subject Tag (Optional) -->
+        <div class="section">
+          <h2>{{ currentLang === 'ar' ? 'الموضوع (اختياري)' : 'Subject (Optional)' }}</h2>
+          <input 
+            type="text" 
+            [(ngModel)]="step2.subjectTag"
+            [placeholder]="currentLang === 'ar' ? 'مثال: الفيزياء' : 'E.g. Physics'"
+            class="input">
+        </div>
+
+        <!-- Unit Map -->
+        <div class="section">
+          <h2>{{ currentLang === 'ar' ? 'خريطة الوحدات' : 'Unit Map' }}</h2>
+          
+          <button 
+            class="btn-suggest"
+            (click)="suggestUnits()"
+            [disabled]="!step2.courseTitle || step2.unitLoading">
+            {{ step2.unitLoading ? '...' : (currentLang === 'ar' ? 'اقترح وحدات' : 'Suggest Units') }}
+          </button>
+
+          <div class="units-list" *ngIf="step2.units.length > 0">
+            <div 
+              *ngFor="let unit of step2.units; let i = index"
+              class="unit-item">
+              <span class="unit-number">{{ i + 1 }}</span>
+              <input 
+                type="text" 
+                [(ngModel)]="unit.name"
+                class="unit-input">
+            </div>
+          </div>
+
+          <p class="hint" *ngIf="step2.units.length === 0">
+            {{ currentLang === 'ar' ? 'اضغط "اقترح وحدات" لتولد وحدات بناءً على اسم المقرر' : 'Click "Suggest Units" to generate units based on the course name' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 3: Build First Unit -->
+      <div *ngIf="currentStep === 'unit'" class="step-content">
+        <div class="section">
+          <h2>{{ currentLang === 'ar' ? 'الأهداف التعليمية' : 'Learning Objectives' }}</h2>
+          <div class="objectives-list">
+            <div class="objective-item" *ngFor="let obj of step3.objectives; let i = index">
+              <textarea 
+                [(ngModel)]="step3.objectives[i]"
+                [placeholder]="currentLang === 'ar' ? 'الهدف ' + (i+1) : 'Objective ' + (i+1)"
+                class="textarea"></textarea>
+            </div>
+          </div>
+          <button 
+            class="btn-add"
+            (click)="step3.objectives.push('')"
+            *ngIf="step3.objectives.length < 3">
+            {{ currentLang === 'ar' ? 'إضافة هدف' : 'Add Objective' }}
+          </button>
+        </div>
+
+        <div class="section">
+          <h2>{{ currentLang === 'ar' ? 'محتوى الوحدة' : 'Unit Content' }}</h2>
+          <p class="hint">
+            {{ currentLang === 'ar' ? 'أضف محتوى بسيط (نصوص وأمثلة)' : 'Add simple content (text and examples)' }}
+          </p>
+        </div>
+
+        <div class="section">
+          <h2>{{ currentLang === 'ar' ? 'اختبار سريع' : 'Quick Quiz' }}</h2>
+          <p class="hint">
+            {{ currentLang === 'ar' ? '3 أسئلة متعددة الخيارات (سهل، متوسط، صعب)' : '3 multiple-choice questions (easy, medium, hard)' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 4: Review & Publish -->
+      <div *ngIf="currentStep === 'review'" class="step-content">
+        <div class="review-section">
+          <h2>{{ currentLang === 'ar' ? 'ملخص المقرر' : 'Course Summary' }}</h2>
+          
+          <div class="review-item">
+            <span class="label">{{ currentLang === 'ar' ? 'اسم المقرر:' : 'Course Name:' }}</span>
+            <span class="value">{{ step2.courseTitle }}</span>
+          </div>
+          
+          <div class="review-item">
+            <span class="label">{{ currentLang === 'ar' ? 'التصنيف:' : 'Category:' }}</span>
+            <span class="value">{{ draft?.category_name }}</span>
+          </div>
+
+          <div class="review-item">
+            <span class="label">{{ currentLang === 'ar' ? 'الوحدات:' : 'Units:' }}</span>
+            <div class="units-summary">
+              <div *ngFor="let unit of step2.units" class="unit-summary-item">
+                • {{ unit.name }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h2>{{ currentLang === 'ar' ? 'الرؤية والتوافق' : 'Visibility & Availability' }}</h2>
+          
+          <div class="form-group">
+            <label>{{ currentLang === 'ar' ? 'من يمكنه رؤية هذا المقرر؟' : 'Who can see this course?' }}</label>
+            <select [(ngModel)]="step4.visibility" class="select">
+              <option value="public">{{ currentLang === 'ar' ? 'عام (للجميع)' : 'Public (Everyone)' }}</option>
+              <option value="restricted">{{ currentLang === 'ar' ? 'مقيد (بنفس المرحلة والدولة)' : 'Restricted (Same stage & country)' }}</option>
+              <option value="private">{{ currentLang === 'ar' ? 'خاص (أنت فقط)' : 'Private (You only)' }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="step4.createSection">
+              {{ currentLang === 'ar' ? 'إنشاء قسم ليبدأ الطلاب فوراً' : 'Create a section so students can start immediately' }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="wizard-actions">
+      <button 
+        class="btn-back"
+        (click)="goBack()">
+        {{ currentLang === 'ar' ? 'رجوع' : 'Back' }}
+      </button>
+
+      <button 
+        class="btn-continue"
+        *ngIf="currentStep !== 'review'"
+        [disabled]="(currentStep === 'basics' && (!step2.courseTitle || step2.units.length === 0)) || (currentStep === 'unit' && step3.objectives.length === 0)"
+        (click)="currentStep === 'basics' ? continueToStep3() : continueToStep4()">
+        <span class="btn-icon">🤖</span>
+        <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
+      </button>
+
+      <button 
+        class="btn-publish"
+        *ngIf="currentStep === 'review'"
+        [disabled]="step4.publishing"
+        (click)="publishCourse()">
+        <span class="btn-icon">🚀</span>
+        <span>{{ step4.publishing ? (currentLang === 'ar' ? 'جاري النشر...' : 'Publishing...') : (currentLang === 'ar' ? 'نشر المقرر' : 'Publish Course') }}</span>
+      </button>
+    </div>
+  </div>
+</div>

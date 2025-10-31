@@ -7,6 +7,8 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { AiBuilderService, CourseDraft } from '../../../core/services/ai-builder.service';
+import { GeographyService } from '../../../core/services/geography.service';
+import { EducationService } from '../../../core/services/education.service';
 import { HttpClient } from '@angular/common/http';
 
 interface Category {
@@ -30,7 +32,10 @@ export class StudentStarterComponent implements OnInit {
   private readonly universalAuth = inject(UniversalAuthService);
   private readonly ai = inject(AiBuilderService);
   private readonly http = inject(HttpClient);
+  private readonly geographyService = inject(GeographyService);
+  private readonly educationService = inject(EducationService);
 
+  // Step 1: Category Selection
   loading = false;
   smartSix: Category[] = [];
   allCategories: Category[] = [];
@@ -39,15 +44,66 @@ export class StudentStarterComponent implements OnInit {
 
   student: any = null;
   
+  // Localized labels pulled from backend
+  localizedCountryName: string | null = null;
+  localizedStageName: string | null = null;
+
   get currentLang(): 'ar' | 'en' { return this.i18n.current; }
   get isRTL(): boolean { return this.currentLang === 'ar'; }
   get canContinue(): boolean { return this.selectedCategory !== null; }
 
+  get countryName(): string {
+    if (this.localizedCountryName) return this.localizedCountryName;
+    const c = (this.student as any)?.country_name;
+    if (typeof c === 'string' && c.trim()) return c;
+    return this.currentLang === 'ar' ? 'الدولة' : 'Country';
+  }
+
+  get stageName(): string {
+    if (this.localizedStageName) return this.localizedStageName;
+    const s = (this.student as any)?.education_stage_name ?? (this.student as any)?.stage_name;
+    if (typeof s === 'string' && s.trim()) return s;
+    return this.currentLang === 'ar' ? 'غير محددة' : 'Not set';
+  }
+
   ngOnInit(): void {
     if (!this.universalAuth.validateAccess('Student')) return;
     this.student = this.universalAuth.getCurrentUser();
+    this.loadLocalizedProfileBits();
     this.loadSmartSix();
     this.loadAllCategories();
+  }
+
+  private loadLocalizedProfileBits(): void {
+    if (!this.student) return;
+    
+    const user = this.student as any;
+    const countryId: number | undefined = user?.country_id;
+    const stageId: number | undefined = user?.education_stage_id ?? user?.stage_id;
+
+    if (countryId) {
+      this.geographyService.getCountries().subscribe({
+        next: (res) => {
+          const match = (res?.countries || []).find(c => c.id === countryId);
+          if (match?.name) this.localizedCountryName = match.name;
+        },
+        error: () => {}
+      });
+    }
+
+    if (stageId) {
+      this.educationService.getAllStages().subscribe({
+        next: (res) => {
+          const match = (res?.stages || []).find(s => s.id === stageId);
+          if (match?.name) {
+            this.localizedStageName = match.name;
+          } else {
+            this.localizedStageName = null;
+          }
+        },
+        error: () => {}
+      });
+    }
   }
 
   private loadSmartSix(): void {
@@ -95,10 +151,6 @@ export class StudentStarterComponent implements OnInit {
     }
   }
 
-  isSelected(category: Category): boolean {
-    return this.selectedCategory?.id === category.id;
-  }
-
   skipToTopMatch(): void {
     if (this.smartSix.length > 0) {
       this.selectedCategory = this.smartSix[0];
@@ -110,6 +162,7 @@ export class StudentStarterComponent implements OnInit {
   continue(): void {
     if (!this.canContinue || !this.selectedCategory) return;
 
+    // Step 1 Complete: Save category to draft
     const draft: Partial<CourseDraft> = {
       version: 1,
       stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
@@ -121,7 +174,9 @@ export class StudentStarterComponent implements OnInit {
     };
 
     this.ai.saveDraft(draft);
-    this.router.navigateByUrl('/student/wizard/name');
+    
+    // Move to Step 2: Course Basics (Name, Subject, Unit Map)
+    this.router.navigateByUrl('/student/wizard/basics');
   }
 
   getCategoryName(cat: Category): string {

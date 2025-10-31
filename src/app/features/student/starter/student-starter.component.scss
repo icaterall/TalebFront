@@ -3,13 +3,14 @@
   min-height: 100vh;
   background: #F5F7FA;
   padding-bottom: 60px;
+  overflow-x: hidden; // prevent horizontal scroll
 }
 
 // Hero Header with Gradient (like course card)
 .hero-header {
   position: relative;
   background: linear-gradient(135deg, #73adef 0%, #1b2a84 100%);
-  padding: 15px 0px;
+  padding: 15px 20px;
   margin-bottom: 12px;
   overflow: hidden;
 
@@ -60,7 +61,7 @@
 }
 
 .hero-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
@@ -110,65 +111,63 @@
   }
 }
 
-// Category Card Wrapper (overlaps hero)
-.category-card-wrapper {
-  max-width: 1200px;
+// Wizard Card (overlaps hero)
+.wizard-card {
+  position: relative;
+  max-width: 1400px;
   margin: 0 auto 32px;
   padding: 0 24px;
-  position: relative;
   z-index: 10;
 
   @media (max-width: 768px) {
     padding: 0 20px;
   }
-}
 
-.category-card {
-  position: relative;
-  background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 50%, #FEFCE8 100%);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    padding: 28px 20px;
-    border-radius: 16px;
-  }
-
-  // Animated shapes in background
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.08;
-    z-index: 0;
-  }
-
-  &::before {
-    width: 320px;
-    height: 320px;
-    background: #1368CE;
-    top: -100px;
-    right: -80px;
-    animation: float-shape-1 15s ease-in-out infinite;
-  }
-
-  &::after {
-    width: 220px;
-    height: 220px;
-    background: #7C3AED;
-    bottom: -60px;
-    left: -40px;
-    animation: float-shape-2 12s ease-in-out infinite;
-  }
-
-  // All content above shapes
-  > * {
+  .wizard-card-inner {
     position: relative;
-    z-index: 1;
+    background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 50%, #FEFCE8 100%);
+    border-radius: 5px;
+    padding: 15px 40px 20px 40px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+
+    @media (max-width: 768px) {
+      padding: 28px 20px;
+      border-radius: 5px;
+    }
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.08;
+      z-index: 0;
+    }
+
+    &::before {
+      width: 320px;
+      height: 320px;
+      background: #1368CE;
+      top: -100px;
+      right: -80px;
+      animation: float-shape-1 15s ease-in-out infinite;
+    }
+
+    &::after {
+      width: 220px;
+      height: 220px;
+      background: #7C3AED;
+      bottom: -60px;
+      left: -40px;
+      animation: float-shape-2 12s ease-in-out infinite;
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
   }
 }
 
@@ -184,6 +183,137 @@
   66% { transform: translate(-12px, 8px) scale(0.92); }
 }
 
+// Wizard Progress Steps
+.wizard-progress {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+  padding: 0 8px;
+
+  @media (max-width: 768px) {
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+.progress-step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    flex: 0 1 140px;
+  }
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 22px;
+    right: -50%;
+    width: 100%;
+    height: 4px;
+    background: #E2E8F0;
+    z-index: 0;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &.completed:not(:last-child)::after {
+    background: #22C55E;
+  }
+
+  &.current:not(:last-child)::after {
+    background: linear-gradient(90deg, #2563EB 0%, #60A5FA 100%);
+  }
+}
+
+.step-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #64748B;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s;
+
+  .check-icon {
+    font-size: 18px;
+    color: white;
+  }
+}
+
+.progress-step.completed .step-circle {
+  background: #22C55E;
+  color: white;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+}
+
+.progress-step.current .step-circle {
+  background: #2563EB;
+  color: white;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+}
+
+.step-labels {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.step-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #475569;
+  background: #F1F5F9;
+  margin-top: 4px;
+
+  &.completed {
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+  }
+
+  &.current {
+    background: #DBEAFE;
+    color: #1D4ED8;
+    border: 1px solid #93C5FD;
+  }
+
+  &.pending {
+    background: #F8FAFC;
+    color: #94A3B8;
+    border: 1px solid #E2E8F0;
+  }
+}
+
 // Selected Display
 .selected-display {
   margin-bottom: 24px;
@@ -192,7 +322,7 @@
 .selected-badge {
   background: white;
   border: 3px solid #10B981;
-  border-radius: 16px;
+  border-radius: 5px;
   padding: 20px 24px;
   display: flex;
   align-items: center;
@@ -229,7 +359,7 @@
     background: white;
     color: #EF4444;
     border: 2px solid #EF4444;
-    border-radius: 999px;
+    border-radius: 5px;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -246,6 +376,7 @@
 // Card Header
 .card-header {
   margin-bottom: 28px;
+  border-radius: 5px;
 
   h2 {
     font-size: 28px;
@@ -268,29 +399,37 @@
 // Categories Grid
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: clamp(8px, 2vw, 16px); // responsive gap
+  margin-bottom: 15px;
+  justify-items: stretch;
+  font-weight: 500;
+  width: 100%;
+  box-sizing: border-box;
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+  @media (max-width: 670px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    justify-items: center;
   }
 }
 
 .cat-box {
   background: white;
-  border: 2px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 32px 20px;
+  border: 1px solid #E2E8F0;
+  border-radius: 5px;
+  padding: 5px; // slightly smaller
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px;
   position: relative;
-  min-height: 160px;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1 / 1; // square box
 
   &::before {
     content: '';
@@ -301,7 +440,7 @@
     bottom: 0;
     background: linear-gradient(135deg, #1368CE 0%, #0EA5E9 100%);
     opacity: 0;
-    border-radius: 14px;
+    border-radius: 5px;
     transition: opacity 0.25s;
   }
 
@@ -314,13 +453,8 @@
       opacity: 0.05;
     }
 
-    .cat-arrow {
-      transform: translateX(6px);
-      opacity: 1;
-    }
-
     .cat-icon {
-      transform: scale(1.1);
+      transform: scale(1.06);
     }
   }
 
@@ -333,31 +467,32 @@
   }
 
   .cat-icon {
-    font-size: 60px;
+    font-size: 48px; // slightly smaller
     position: relative;
     z-index: 1;
     transition: transform 0.25s;
   }
 
-  .cat-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #0F172A;
-    text-align: center;
-    position: relative;
-    z-index: 1;
+  @media (max-width: 670px) {
+    padding: 12px;
+    .cat-icon { font-size: 40px; }
+  }
+}
+
+// Hide the arrow on category boxes
+.cat-arrow {
+  display: none !important;
+}
+
+[dir="rtl"] {
+  .cat-arrow {
+    display: none !important; // also hide in RTL
   }
 
-  .cat-arrow {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    font-size: 24px;
-    color: #1368CE;
-    opacity: 0;
-    transition: all 0.25s;
-    z-index: 1;
-    font-weight: 700;
+  // Ensure step connector lines render correctly in RTL
+  .progress-step:not(:last-child)::after {
+    left: -50%;
+    right: auto;
   }
 }
 
@@ -371,7 +506,7 @@
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   border: 2px dashed #CBD5E1;
-  border-radius: 12px;
+  border-radius: 5px;
   padding: 24px;
 
   .search-header {
@@ -460,16 +595,13 @@
   }
 }
 
-// Action Section
-.action-section {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
+// Wizard Actions inside card
+.wizard-actions {
+  margin-top: 32px;
   display: flex;
   gap: 16px;
 
   @media (max-width: 768px) {
-    padding: 0 20px;
     flex-direction: column;
   }
 }
@@ -534,7 +666,7 @@
 
 // Info Preview
 .info-preview {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 32px auto 0;
   padding: 0 24px;
 
@@ -562,28 +694,38 @@
 
 .preview-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   padding: 18px 20px;
   background: white;
   border-radius: 12px;
   border: 1px solid #E2E8F0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.2s;
+  min-height: 120px;
 
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #3B82F6;
   }
 
   .preview-icon {
-    font-size: 32px;
+    font-size: 28px;
+    margin-bottom: 4px;
   }
 
-  span:last-child {
-    font-size: 15px;
-    font-weight: 600;
-    color: #475569;
+  .preview-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1F2937;
+    margin-bottom: 4px;
+  }
+
+  .preview-desc {
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.5;
   }
 }
 
@@ -597,5 +739,11 @@
 
   .cat-box:hover .cat-arrow {
     transform: scaleX(-1) translateX(6px);
+  }
+
+  // Ensure step connector lines render correctly in RTL
+  .progress-step:not(:last-child)::after {
+    left: -50%;
+    right: auto;
   }
 }
