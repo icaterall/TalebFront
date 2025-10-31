@@ -7,8 +7,6 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { AiBuilderService, CourseDraft } from '../../../core/services/ai-builder.service';
-import { GeographyService } from '../../../core/services/geography.service';
-import { EducationService } from '../../../core/services/education.service';
 import { HttpClient } from '@angular/common/http';
 
 interface Category {
@@ -32,8 +30,6 @@ export class StudentStarterComponent implements OnInit {
   private readonly universalAuth = inject(UniversalAuthService);
   private readonly ai = inject(AiBuilderService);
   private readonly http = inject(HttpClient);
-  private readonly geographyService = inject(GeographyService);
-  private readonly educationService = inject(EducationService);
 
   // Step 1: Category Selection
   loading = false;
@@ -43,6 +39,7 @@ export class StudentStarterComponent implements OnInit {
   selectedCategoryId: number | null = null;
 
   student: any = null;
+  profileLoaded = false;
   
   // Localized labels pulled from backend
   localizedCountryName: string | null = null;
@@ -69,46 +66,57 @@ export class StudentStarterComponent implements OnInit {
   ngOnInit(): void {
     if (!this.universalAuth.validateAccess('Student')) return;
     this.student = this.universalAuth.getCurrentUser();
-    this.loadLocalizedProfileBits();
-    this.loadSmartSix();
+    
+    // Load profile first, then fetch categories based on profile data
+    this.loadProfileFromBackend();
     this.loadAllCategories();
   }
 
-  private loadLocalizedProfileBits(): void {
-    if (!this.student) return;
-    
-    const user = this.student as any;
-    const countryId: number | undefined = user?.country_id;
-    const stageId: number | undefined = user?.education_stage_id ?? user?.stage_id;
-
-    if (countryId) {
-      this.geographyService.getCountries().subscribe({
+  private loadProfileFromBackend(): void {
+    this.loading = true;
+    this.http.get<any>('/api/v1/auth/me', { withCredentials: true })
+      .subscribe({
         next: (res) => {
-          const match = (res?.countries || []).find(c => c.id === countryId);
-          if (match?.name) this.localizedCountryName = match.name;
-        },
-        error: () => {}
-      });
-    }
-
-    if (stageId) {
-      this.educationService.getAllStages().subscribe({
-        next: (res) => {
-          const match = (res?.stages || []).find(s => s.id === stageId);
-          if (match?.name) {
-            this.localizedStageName = match.name;
-          } else {
-            this.localizedStageName = null;
+          if (res && res.user) {
+            // Update student data from backend response
+            this.student = {
+              ...this.student,
+              ...res.user
+            };
+            
+            // Extract localized names
+            this.localizedCountryName = res.user.localized_country_name || null;
+            this.localizedStageName = res.user.localized_stage_name || null;
+            
+            this.profileLoaded = true;
+            
+            // Now that we have the profile, fetch categories based on stage_id
+            this.loadSmartSix();
           }
         },
-        error: () => {}
+        error: (err) => {
+          console.error('Failed to load profile:', err);
+          this.loading = false;
+          
+          // Handle 401 errors gracefully - user may need to re-authenticate
+          if (err.status === 401) {
+            this.universalAuth.forceLogout('Session expired. Please login again.');
+          } else {
+            // Fallback to localStorage data if API fails
+            this.profileLoaded = true;
+            this.loadSmartSix();
+          }
+        }
       });
-    }
   }
 
   private loadSmartSix(): void {
     const stage_id = this.student?.education_stage_id ?? this.student?.stage_id;
-    if (!stage_id) return;
+    if (!stage_id) {
+      console.warn('No stage_id found in user profile');
+      this.loading = false;
+      return;
+    }
 
     this.loading = true;
     this.http.get<{categories: Category[]}>(`/api/v1/categories/suggestions/${stage_id}`)
