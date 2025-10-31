@@ -8,6 +8,7 @@ import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { AiBuilderService, CourseDraft } from '../../../core/services/ai-builder.service';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 interface Category {
   id: number;
@@ -30,6 +31,7 @@ export class StudentStarterComponent implements OnInit {
   private readonly universalAuth = inject(UniversalAuthService);
   private readonly ai = inject(AiBuilderService);
   private readonly http = inject(HttpClient);
+  private readonly baseUrl = environment.apiUrl;
 
   // Step 1: Category Selection
   loading = false;
@@ -74,7 +76,7 @@ export class StudentStarterComponent implements OnInit {
 
   private loadProfileFromBackend(): void {
     this.loading = true;
-    this.http.get<any>('/api/v1/auth/me', { withCredentials: true })
+    this.http.get<any>(`${this.baseUrl}/auth/me`)
       .subscribe({
         next: (res) => {
           if (res && res.user) {
@@ -119,7 +121,7 @@ export class StudentStarterComponent implements OnInit {
     }
 
     this.loading = true;
-    this.http.get<{categories: Category[]}>(`/api/v1/categories/suggestions/${stage_id}`)
+    this.http.get<{categories: Category[]}>(`${this.baseUrl}/categories/suggestions/${stage_id}`)
       .subscribe({
         next: (res) => {
           this.smartSix = res.categories || [];
@@ -134,7 +136,7 @@ export class StudentStarterComponent implements OnInit {
   }
 
   private loadAllCategories(): void {
-    this.http.get<{categories: Category[]}>('/api/v1/categories')
+    this.http.get<{categories: Category[]}>(`${this.baseUrl}/categories`)
       .subscribe({
         next: (res) => {
           this.allCategories = res.categories || [];
