@@ -11,6 +11,12 @@ export interface CourseDraft {
   category_name?: string;
   name?: string;
   subject_slug?: string;
+  mode?: 'curriculum' | 'general'; // curriculum or general skills
+  context?: {
+    stage_id?: number;
+    country_id?: number;
+    term?: number; // 1 or 2
+  };
   units?: { id: string; name: string; order?: number }[];
   objectives?: string[];
   sections?: any[];
@@ -47,8 +53,12 @@ export class AiBuilderService {
     localStorage.removeItem(this.key);
   }
 
-  getTitles(payload: { stage_id: number; country_id: number; locale: string; topic_hint?: string }): Observable<{ titles: string[]; cached?: boolean }>{
-    return this.http.post<{ titles: string[]; cached?: boolean }>(`/api/v1/ai/titles`, { student: payload });
+  getTitles(payload: { category_id: number; stage_id?: number; country_id?: number; locale: string; term?: number; mode?: 'curriculum' | 'general'; category_name?: string; date?: string }): Observable<{ titles: { title: string; rationale: string }[]; cached?: boolean }>{
+    return this.http.post<{ titles: { title: string; rationale: string }[]; cached?: boolean }>(`/api/v1/ai/titles`, payload);
+  }
+
+  getUnits(payload: { category_id: number; course_name?: string; stage_id?: number; country_id?: number; locale?: string }): Observable<{ units: { name: string; order: number }[] }> {
+    return this.http.post<{ units: { name: string; order: number }[] }>(`/api/v1/ai/units`, payload);
   }
 }
 

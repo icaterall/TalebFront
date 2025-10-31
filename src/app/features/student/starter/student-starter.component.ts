@@ -38,12 +38,28 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   private languageChangeSubscription?: Subscription;
 
+  // Step Management
+  currentStep: number = 1; // 1 = Category, 2 = Course Basics
+
   // Step 1: Category Selection
   loading = false;
   smartSix: Category[] = [];
   allCategories: Category[] = [];
   selectedCategory: Category | null = null;
   selectedCategoryId: number | null = null;
+
+  // Step 2: Course Basics
+  courseName: string = '';
+  courseTitleSuggestions: { title: string; rationale: string }[] = [];
+  loadingTitles: boolean = false;
+  currentTerm: number = 1; // 1 or 2, detected from date
+  courseMode: 'curriculum' | 'general' = 'curriculum';
+  subjectSlug: string = '';
+  subjectSlugSuggestions: string[] = ['physics', 'algebra', 'geometry', 'calculus', 'programming', 'biology', 'chemistry', 'history', 'literature', 'language'];
+  units: { id: string; name: string; order: number }[] = [];
+  loadingUnits: boolean = false;
+  editingUnitId: string | null = null;
+  editingUnitName: string = '';
 
   student: any = null;
   profileLoaded = false;
@@ -54,7 +70,22 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   get currentLang(): 'ar' | 'en' { return this.i18n.current; }
   get isRTL(): boolean { return this.currentLang === 'ar'; }
-  get canContinue(): boolean { return this.selectedCategory !== null; }
+  get canContinue(): boolean {
+    if (this.currentStep === 1) {
+      // In Step 1, require category AND course name (min 3 chars)
+      return this.selectedCategory !== null && this.courseName.trim().length >= 3;
+    }
+    if (this.currentStep === 2) {
+      return this.courseName.trim().length >= 3 && 
+             this.subjectSlug.trim().length > 0 &&
+             this.units.length >= 3 && 
+             this.units.length <= 7;
+    }
+    return false;
+  }
+
+  get showStep1(): boolean { return this.currentStep === 1; }
+  get showStep2(): boolean { return this.currentStep === 2; }
 
   get countryName(): string {
     // Always use localized name from backend (based on current Accept-Language header)
@@ -98,9 +129,41 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (!this.universalAuth.validateAccess('Student')) return;
     this.student = this.universalAuth.getCurrentUser();
     
+    // Detect current term from date (Term 1: Sept-Feb, Term 2: Mar-Aug)
+    this.currentTerm = this.detectTerm();
+    
+    // Load existing draft to restore state
+    const draft = this.ai.getDraft();
+    if (draft.category_id) {
+      this.currentStep = 2; // If category is selected, go to step 2
+      this.selectedCategoryId = draft.category_id;
+      this.selectedCategory = this.allCategories.find(c => c.id === draft.category_id) || null;
+      
+      // Restore step 2 data
+      if (draft.name) this.courseName = draft.name;
+      if (draft.subject_slug) this.subjectSlug = draft.subject_slug;
+      if (draft.mode) this.courseMode = draft.mode;
+      if (draft.context?.term) this.currentTerm = draft.context.term;
+      if (draft.units && draft.units.length > 0) {
+        this.units = draft.units.map(u => ({
+          id: u.id || `unit-${Date.now()}-${Math.random()}`,
+          name: u.name,
+          order: u.order || 1
+        }));
+      }
+    }
+    
     // Load profile first, then fetch categories based on profile data
     this.loadProfileFromBackend();
     this.loadAllCategories();
+    
+    // If on step 2 and have category, load suggestions
+    if (this.currentStep === 2 && this.selectedCategory) {
+      this.loadTitleSuggestions();
+      if (this.units.length === 0) {
+        this.loadUnitSuggestions();
+      }
+    }
     
     // Subscribe to language changes from I18nService to reload profile
     // Skip the first emission (current value) and only react to actual changes
@@ -220,42 +283,318 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   selectCategory(category: Category): void {
     this.selectedCategory = category;
     this.selectedCategoryId = category.id;
+    
+    // Determine mode: curriculum if has stage/country, otherwise general
+    const hasStage = !!(this.student?.education_stage_id ?? this.student?.stage_id);
+    const hasCountry = !!this.student?.country_id;
+    this.courseMode = (hasStage && hasCountry) ? 'curriculum' : 'general';
+    
+    // Save immediately when category changes
+    const draft: Partial<CourseDraft> = {
+      category_id: category.id,
+      category_name: this.currentLang === 'ar' ? category.name_ar : category.name_en,
+      mode: this.courseMode,
+      context: {
+        stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
+        country_id: this.student?.country_id,
+        term: this.currentTerm
+      },
+      last_saved_at: new Date().toISOString()
+    };
+    this.ai.saveDraft(draft);
+    
+    // Load AI title suggestions immediately after category selection
+    this.loadTitleSuggestions();
+  }
+
+  clearCategorySelection(): void {
+    this.selectedCategory = null;
+    this.selectedCategoryId = null;
+    this.courseName = '';
+    this.courseTitleSuggestions = [];
+    this.loadingTitles = false;
+    
+    // Clear category from draft
+    const draft = this.ai.getDraft();
+    delete draft.category_id;
+    delete draft.category_name;
+    this.ai.saveDraft(draft);
   }
 
   onNgSelectChange(): void {
     if (this.selectedCategoryId) {
-      this.selectedCategory = this.allCategories.find(cat => cat.id === this.selectedCategoryId) || null;
+      const category = this.allCategories.find(cat => cat.id === this.selectedCategoryId);
+      if (category) {
+        this.selectCategory(category);
+      } else {
+        this.selectedCategory = null;
+      }
     } else {
-      this.selectedCategory = null;
+      this.clearCategorySelection();
     }
   }
 
-  skipToTopMatch(): void {
-    if (this.smartSix.length > 0) {
-      this.selectedCategory = this.smartSix[0];
-      this.selectedCategoryId = this.smartSix[0].id;
-      this.continue();
+  onCourseNameChange(): void {
+    // Auto-save on change
+    if (this.courseName.trim().length >= 3) {
+      this.saveDraftStep2();
     }
+  }
+
+  onSubjectSlugChange(): void {
+    // Auto-save on change
+    if (this.subjectSlug.trim().length > 0) {
+      this.saveDraftStep2();
+    }
+  }
+
+  // Detect term from date: Term 1 (Sept-Feb), Term 2 (Mar-Aug)
+  private detectTerm(date: Date = new Date()): number {
+    const month = date.getMonth() + 1; // 1-12
+    // Term 1: September (9) to February (2)
+    // Term 2: March (3) to August (8)
+    return (month >= 9 || month <= 2) ? 1 : 2;
+  }
+
+  // Toggle between curriculum and general skills mode
+  toggleCourseMode(): void {
+    this.courseMode = this.courseMode === 'curriculum' ? 'general' : 'curriculum';
+    if (this.selectedCategory) {
+      this.loadTitleSuggestions();
+    }
+    this.saveDraftStep2();
+  }
+
+  // Toggle term (Term 1 <-> Term 2)
+  toggleTerm(): void {
+    this.currentTerm = this.currentTerm === 1 ? 2 : 1;
+    if (this.selectedCategory) {
+      this.loadTitleSuggestions();
+    }
+    this.saveDraftStep2();
   }
 
   continue(): void {
-    if (!this.canContinue || !this.selectedCategory) return;
+    if (this.currentStep === 1) {
+      if (!this.canContinue || !this.selectedCategory || this.courseName.trim().length < 3) return;
 
-    // Step 1 Complete: Save category to draft
-    const draft: Partial<CourseDraft> = {
-      version: 1,
-      stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
-      country_id: this.student?.country_id,
-      locale: this.currentLang,
+      // Step 1 Complete: Save category and course name to draft
+      const draft: Partial<CourseDraft> = {
+        version: 1,
+        stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
+        country_id: this.student?.country_id,
+        locale: this.currentLang,
+        category_id: this.selectedCategory.id,
+        category_name: this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en,
+        name: this.courseName.trim(),
+        mode: this.courseMode,
+        context: {
+          stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
+          country_id: this.student?.country_id,
+          term: this.currentTerm
+        },
+        last_saved_at: new Date().toISOString()
+      };
+
+      this.ai.saveDraft(draft);
+      
+      // Move to Step 2: Course Basics (Subject, Unit Map)
+      this.currentStep = 2;
+      this.loadUnitSuggestions();
+      this.cdr.detectChanges();
+    } else if (this.currentStep === 2) {
+      if (!this.canContinue) return;
+
+      // Step 2 Complete: Save course basics to draft
+      const draft: Partial<CourseDraft> = {
+        name: this.courseName.trim(),
+        subject_slug: this.subjectSlug.trim(),
+        units: this.units.map((u, idx) => ({
+          id: u.id,
+          name: u.name.trim(),
+          order: u.order || idx + 1
+        })),
+        last_saved_at: new Date().toISOString()
+      };
+
+      this.ai.saveDraft(draft);
+      
+      // Move to Step 3: Build First Unit
+      this.router.navigateByUrl('/student/wizard/unit');
+    }
+  }
+
+  goBack(): void {
+    if (this.currentStep === 2) {
+      // Go back to Step 1
+      this.currentStep = 1;
+      this.cdr.detectChanges();
+    } else if (this.currentStep === 1) {
+      // Navigate away or cancel
+      this.router.navigateByUrl('/student/dashboard');
+    }
+  }
+
+  loadTitleSuggestions(): void {
+    if (!this.selectedCategory || !this.student) return;
+    
+    this.loadingTitles = true;
+    const payload = {
       category_id: this.selectedCategory.id,
-      category_name: this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en,
-      last_saved_at: new Date().toISOString()
+      stage_id: this.courseMode === 'curriculum' ? (this.student?.education_stage_id ?? this.student?.stage_id) : undefined,
+      country_id: this.courseMode === 'curriculum' ? this.student?.country_id : undefined,
+      locale: this.currentLang,
+      term: this.courseMode === 'curriculum' ? this.currentTerm : undefined,
+      mode: this.courseMode,
+      category_name: this.getCategoryName(this.selectedCategory),
+      date: new Date().toISOString() // Pass current date for term detection
     };
 
-    this.ai.saveDraft(draft);
+    console.log('Loading title suggestions with payload:', payload);
+
+    this.ai.getTitles(payload).subscribe({
+      next: (res) => {
+        this.courseTitleSuggestions = res.titles || [];
+        this.loadingTitles = false;
+        this.cdr.detectChanges();
+        console.log('Title suggestions loaded:', this.courseTitleSuggestions.length);
+      },
+      error: (err) => {
+        console.error('Failed to load title suggestions:', err);
+        this.loadingTitles = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  selectTitleSuggestion(titleCard: { title: string; rationale: string }): void {
+    this.courseName = titleCard.title;
+    this.saveDraftStep2();
+    // Regenerate unit suggestions based on selected title
+    if (this.selectedCategory) {
+      this.loadUnitSuggestions();
+    }
+  }
+
+  loadUnitSuggestions(): void {
+    if (!this.selectedCategory || !this.student) return;
     
-    // Move to Step 2: Course Basics (Name, Subject, Unit Map)
-    this.router.navigateByUrl('/student/wizard/basics');
+    this.loadingUnits = true;
+    const payload = {
+      category_id: this.selectedCategory.id,
+      course_name: this.courseName || undefined,
+      stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
+      country_id: this.student?.country_id,
+      locale: this.currentLang
+    };
+
+    this.ai.getUnits(payload).subscribe({
+      next: (res) => {
+        if (res.units && res.units.length > 0) {
+          this.units = res.units.map((u, idx) => ({
+            id: `unit-${Date.now()}-${idx}`,
+            name: u.name,
+            order: u.order || idx + 1
+          }));
+        }
+        this.loadingUnits = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load unit suggestions:', err);
+        this.loadingUnits = false;
+      }
+    });
+  }
+
+  addUnit(): void {
+    if (this.units.length >= 7) return; // Soft max
+    
+    const newUnit = {
+      id: `unit-${Date.now()}`,
+      name: this.currentLang === 'ar' ? 'وحدة جديدة' : 'New Unit',
+      order: this.units.length + 1
+    };
+    
+    this.units.push(newUnit);
+    this.startEditingUnit(newUnit.id);
+    this.saveDraftStep2();
+  }
+
+  removeUnit(unitId: string): void {
+    this.units = this.units.filter(u => u.id !== unitId);
+    // Reorder remaining units
+    this.units.forEach((u, idx) => u.order = idx + 1);
+    this.saveDraftStep2();
+  }
+
+  startEditingUnit(unitId: string): void {
+    const unit = this.units.find(u => u.id === unitId);
+    if (unit) {
+      this.editingUnitId = unitId;
+      this.editingUnitName = unit.name;
+    }
+  }
+
+  saveUnitEdit(unitId: string): void {
+    const unit = this.units.find(u => u.id === unitId);
+    if (unit && this.editingUnitName.trim()) {
+      unit.name = this.editingUnitName.trim();
+      this.editingUnitId = null;
+      this.editingUnitName = '';
+      this.saveDraftStep2();
+    }
+  }
+
+  cancelUnitEdit(): void {
+    this.editingUnitId = null;
+    this.editingUnitName = '';
+  }
+
+  moveUnitUp(index: number): void {
+    if (index === 0) return;
+    [this.units[index], this.units[index - 1]] = [this.units[index - 1], this.units[index]];
+    this.units.forEach((u, idx) => u.order = idx + 1);
+    this.saveDraftStep2();
+  }
+
+  moveUnitDown(index: number): void {
+    if (index === this.units.length - 1) return;
+    [this.units[index], this.units[index + 1]] = [this.units[index + 1], this.units[index]];
+    this.units.forEach((u, idx) => u.order = idx + 1);
+    this.saveDraftStep2();
+  }
+
+  private saveDraftStep2(): void {
+    const draft: Partial<CourseDraft> = {
+      name: this.courseName.trim() || undefined,
+      subject_slug: this.subjectSlug.trim() || undefined,
+      mode: this.courseMode,
+      context: {
+        stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
+        country_id: this.student?.country_id,
+        term: this.currentTerm
+      },
+      units: this.units.map((u, idx) => ({
+        id: u.id,
+        name: u.name,
+        order: u.order || idx + 1
+      })),
+      last_saved_at: new Date().toISOString()
+    };
+    this.ai.saveDraft(draft);
+  }
+
+  // Check if should show mode toggle (no stage/country)
+  get shouldShowModeToggle(): boolean {
+    const hasStage = !!(this.student?.education_stage_id ?? this.student?.stage_id);
+    const hasCountry = !!this.student?.country_id;
+    return !hasStage || !hasCountry;
+  }
+
+  get termLabel(): string {
+    const termText = this.currentLang === 'ar' ? `الفصل الدراسي ${this.currentTerm}` : `Term ${this.currentTerm}`;
+    return termText;
   }
 
   getCategoryName(cat: Category): string {
