@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,6 +9,8 @@ import { UniversalAuthService } from '../../../core/services/universal-auth.serv
 import { AiBuilderService, CourseDraft } from '../../../core/services/ai-builder.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { Subscription } from 'rxjs';
+import { skip } from 'rxjs/operators';
 
 interface Category {
   id: number;
@@ -25,13 +27,16 @@ interface Category {
   templateUrl: './student-starter.component.html',
   styleUrls: ['./student-starter.component.scss']
 })
-export class StudentStarterComponent implements OnInit {
+export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
   private readonly universalAuth = inject(UniversalAuthService);
   private readonly ai = inject(AiBuilderService);
   private readonly http = inject(HttpClient);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly baseUrl = environment.apiUrl;
+  
+  private languageChangeSubscription?: Subscription;
 
   // Step 1: Category Selection
   loading = false;
@@ -52,16 +57,40 @@ export class StudentStarterComponent implements OnInit {
   get canContinue(): boolean { return this.selectedCategory !== null; }
 
   get countryName(): string {
-    if (this.localizedCountryName) return this.localizedCountryName;
-    const c = (this.student as any)?.country_name;
-    if (typeof c === 'string' && c.trim()) return c;
+    // Always use localized name from backend (based on current Accept-Language header)
+    if (this.localizedCountryName && this.localizedCountryName.trim()) {
+      return this.localizedCountryName;
+    }
+    // Fallback to raw names based on current language
+    const student = this.student as any;
+    if (this.currentLang === 'ar' && student?.country_name_ar) {
+      return student.country_name_ar;
+    }
+    if (student?.country_name_en) {
+      return student.country_name_en;
+    }
+    if (student?.country_name) {
+      return student.country_name;
+    }
     return this.currentLang === 'ar' ? 'الدولة' : 'Country';
   }
 
   get stageName(): string {
-    if (this.localizedStageName) return this.localizedStageName;
-    const s = (this.student as any)?.education_stage_name ?? (this.student as any)?.stage_name;
-    if (typeof s === 'string' && s.trim()) return s;
+    // Always use localized name from backend (based on current Accept-Language header)
+    if (this.localizedStageName && this.localizedStageName.trim()) {
+      return this.localizedStageName;
+    }
+    // Fallback to raw names based on current language
+    const student = this.student as any;
+    if (this.currentLang === 'ar' && student?.stage_name_ar) {
+      return student.stage_name_ar;
+    }
+    if (student?.stage_name_en) {
+      return student.stage_name_en;
+    }
+    if (student?.education_stage_name || student?.stage_name) {
+      return student.education_stage_name || student.stage_name;
+    }
     return this.currentLang === 'ar' ? 'غير محددة' : 'Not set';
   }
 
@@ -72,25 +101,65 @@ export class StudentStarterComponent implements OnInit {
     // Load profile first, then fetch categories based on profile data
     this.loadProfileFromBackend();
     this.loadAllCategories();
+    
+    // Subscribe to language changes from I18nService to reload profile
+    // Skip the first emission (current value) and only react to actual changes
+    this.languageChangeSubscription = this.i18n.lang$.pipe(skip(1)).subscribe(lang => {
+      console.log('Language changed to:', lang, '- Reloading profile with localized country/stage names');
+      // Use a delay to ensure Accept-Language header is updated via interceptor
+      // The interceptor reads from storage, which should be updated by now
+      setTimeout(() => {
+        this.loadProfileFromBackend();
+      }, 500); // Increased delay to ensure storage is updated
+    });
+    
+    // Also listen for window events (for compatibility)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('languageChanged', ((event: CustomEvent<{ lang: string }>) => {
+        const { lang } = event.detail;
+        console.log('Language changed via window event to:', lang, '- Reloading profile with localized country/stage names');
+        setTimeout(() => {
+          this.loadProfileFromBackend();
+        }, 500); // Match the delay from the observable subscription
+      }) as EventListener);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.languageChangeSubscription) {
+      this.languageChangeSubscription.unsubscribe();
+    }
   }
 
   private loadProfileFromBackend(): void {
     this.loading = true;
-    this.http.get<any>(`${this.baseUrl}/auth/me`)
+    // Use /profile/me endpoint which returns localized country and stage names
+    // The Accept-Language header is automatically added by langInterceptor
+    console.log('Loading profile with language:', this.currentLang);
+    this.http.get<any>(`${this.baseUrl}/profile/me`)
       .subscribe({
         next: (res) => {
-          if (res && res.user) {
+          if (res) {
+            console.log('Profile loaded - localized_country_name:', res.localized_country_name, 'localized_stage_name:', res.localized_stage_name);
+            
             // Update student data from backend response
             this.student = {
               ...this.student,
-              ...res.user
+              ...res
             };
             
-            // Extract localized names
-            this.localizedCountryName = res.user.localized_country_name || null;
-            this.localizedStageName = res.user.localized_stage_name || null;
+            // Extract localized names (these are based on current Accept-Language header)
+            // Backend returns name_ar when Accept-Language is 'ar', name_en otherwise
+            this.localizedCountryName = res.localized_country_name || null;
+            this.localizedStageName = res.localized_stage_name || null;
+            
+            console.log('Updated localized names - country:', this.localizedCountryName, 'stage:', this.localizedStageName);
             
             this.profileLoaded = true;
+            this.loading = false;
+            
+            // Force change detection to update the view with new localized names
+            this.cdr.detectChanges();
             
             // Now that we have the profile, fetch categories based on stage_id
             this.loadSmartSix();

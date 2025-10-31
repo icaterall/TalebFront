@@ -6,8 +6,16 @@ import { PLATFORM_ID } from '@angular/core';
 
 function readStorage(key: string): 'ar' | 'en' | null {
   try {
-    const s = sessionStorage.getItem(key) || localStorage.getItem(key);
-    return s === 'en' || s === 'ar' ? s : null;
+    // Check both storages - prioritize localStorage as it's more persistent
+    // but sessionStorage might be updated first in some cases
+    const fromLocal = localStorage.getItem(key);
+    const fromSession = sessionStorage.getItem(key);
+    const s = fromLocal || fromSession;
+    if (s === 'en' || s === 'ar') {
+      console.log('LangInterceptor - Reading from storage:', s, '(local:', fromLocal, ', session:', fromSession, ')');
+      return s;
+    }
+    return null;
   } catch { return null; }
 }
 
@@ -25,12 +33,14 @@ export const langInterceptor: HttpInterceptorFn = (req, next) => {
   let lang: 'ar' | 'en' = 'ar';
 
   if (isBrowser) {
-    // priority: <html lang> → storage → default
-    const attr = doc?.documentElement?.getAttribute('lang');
-    if (attr === 'en' || attr === 'ar') lang = attr;
-    else {
-      const stored = readStorage('anataleb.lang');
-      if (stored) lang = stored;
+    // priority: storage → <html lang> → default
+    // Storage is updated synchronously, so it's more reliable than DOM attribute
+    const stored = readStorage('anataleb.lang');
+    if (stored) {
+      lang = stored;
+    } else {
+      const attr = doc?.documentElement?.getAttribute('lang');
+      if (attr === 'en' || attr === 'ar') lang = attr;
     }
   }
 
@@ -41,5 +51,6 @@ export const langInterceptor: HttpInterceptorFn = (req, next) => {
 
   // 4) Clone with the header
   const cloned = req.clone({ setHeaders: { 'Accept-Language': lang } });
+  console.log('LangInterceptor - Setting Accept-Language header to:', lang, 'for URL:', req.url);
   return next(cloned);
 };

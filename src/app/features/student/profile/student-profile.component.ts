@@ -265,6 +265,9 @@ export class StudentProfileComponent implements OnInit {
           this.authService.getRefreshToken()!
         );
         
+        // Trigger immediate profile sync to ensure data is up to date
+        this.authService.triggerProfileSync();
+        
         // Show success message
         this.toastr.success(
           this.currentLang === 'ar'

@@ -493,11 +493,11 @@
 
 .selected-badge {
   background: white;
-  border: 3px solid #10B981;
-  border-radius: 5px;
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
+    border: 1px solid #10B981;
+    border-radius: 5px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
   gap: 16px;
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
 
@@ -547,7 +547,7 @@
 
 // Card Header
 .card-header {
-  margin-bottom: 28px;
+  margin-bottom: 15px;
   border-radius: 5px;
 
   h2 {
@@ -631,6 +631,8 @@
   aspect-ratio: 1 / 1; // square box
   box-sizing: border-box;
   overflow: hidden;
+  will-change: transform, box-shadow; // smoother hover without layout shift
+  transform: translateZ(0); // create its own stacking context to avoid jank
 
   &::before {
     content: '';
@@ -647,15 +649,15 @@
 
   &:hover {
     border-color: #1368CE;
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 16px 32px rgba(19, 104, 206, 0.25);
+    transform: translate3d(0, -3px, 0) scale(.95);
+    box-shadow: 0 2px 4px rgba(19, 104, 206, 0.2);
 
     &::before {
       opacity: 0.05;
     }
 
     .cat-icon {
-      transform: scale(1.06);
+      transform: scale(1.04);
     }
   }
 
@@ -744,6 +746,12 @@
     .cat-name {
       font-size: clamp(10px, 1.4vw, 11px);
     }
+
+    // Softer hover on touch-sized screens to prevent big jumps
+    &:hover {
+      transform: translate3d(0, -2px, 0) scale(1.005);
+      box-shadow: 0 8px 18px rgba(19, 104, 206, 0.18);
+    }
   }
 
   // Perfect range (490px - 670px) - KEEP AS IS
@@ -755,6 +763,12 @@
     }
     .cat-name {
       font-size: 12px;
+    }
+
+    // Minimal lift on very small screens
+    &:hover {
+      transform: translate3d(0, -1px, 0) scale(1.003);
+      box-shadow: 0 6px 14px rgba(19, 104, 206, 0.16);
     }
   }
 

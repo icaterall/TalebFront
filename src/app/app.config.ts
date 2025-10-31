@@ -67,7 +67,7 @@ export const appConfig: ApplicationConfig = {
       lang: getStartupLang(),
       fallbackLang: 'ar'
     }),
-    { provide: APP_INITIALIZER, useFactory: initI18n, deps: [I18nService], multi: true },
+  { provide: APP_INITIALIZER, useFactory: initI18n, deps: [I18nService], multi: true },
 
     ...(isServer ? [provideNoopAnimations()] : [provideAnimations()]),
     importProvidersFrom(ToastrModule.forRoot({

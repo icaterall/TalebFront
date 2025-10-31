@@ -1,7 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, interval, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -51,12 +51,151 @@ export class AuthService {
   private readonly baseUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private profileSyncInterval?: Subscription;
+  private readonly SYNC_INTERVAL_MS = 5 * 60 * 1000; // Sync every 5 minutes
+  private isSyncing = false;
 
   constructor(
     private http: HttpClient,
     private router: Router
   ) {
     this.loadStoredUser();
+    this.startProfileSync();
+    this.listenToLanguageChanges();
+  }
+
+  /**
+   * Listen for language changes and reload profile with localized names
+   */
+  private listenToLanguageChanges(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('languageChanged', ((event: CustomEvent<{ lang: string; previousLang: string }>) => {
+        const { lang } = event.detail;
+        console.log('Language changed to:', lang, '- Reloading profile with localized country/stage names');
+        
+        // Reload profile with new language preference
+        // This ensures country and stage names are fetched in the selected language
+        if (this.isAuthenticated()) {
+          // Use a delay to ensure Accept-Language header is updated via interceptor
+          // The interceptor reads from storage which should be updated by now
+          setTimeout(() => {
+            console.log('Triggering profile sync after language change to:', lang);
+            this.syncProfileFromBackend().catch(err => {
+              console.error('Failed to reload profile after language change:', err);
+            });
+          }, 500); // Increased delay to ensure storage is updated
+        }
+      }) as EventListener);
+    }
+  }
+
+  /**
+   * Start automatic profile synchronization
+   */
+  private startProfileSync(): void {
+    // Sync on app init if user is logged in
+    if (this.isAuthenticated()) {
+      this.syncProfileFromBackend().catch(err => {
+        console.error('Initial profile sync failed:', err);
+      });
+    }
+
+    // Set up periodic syncing
+    this.profileSyncInterval = interval(this.SYNC_INTERVAL_MS).subscribe(() => {
+      if (this.isAuthenticated() && !this.isSyncing) {
+        this.syncProfileFromBackend().catch(err => {
+          console.error('Periodic profile sync failed:', err);
+        });
+      }
+    });
+  }
+
+  /**
+   * Stop automatic profile synchronization
+   */
+  private stopProfileSync(): void {
+    if (this.profileSyncInterval) {
+      this.profileSyncInterval.unsubscribe();
+      this.profileSyncInterval = undefined;
+    }
+  }
+
+  /**
+   * Compare two user objects and detect changes
+   */
+  private detectUserChanges(oldUser: User, newUser: User): { hasChanges: boolean; changedFields: string[] } {
+    const changedFields: string[] = [];
+    const fieldsToCheck: (keyof User)[] = [
+      'name', 'email', 'profile_photo', 'profile_photo_url', 'gender', 'dob',
+      'locale', 'education_stage_id', 'country_id', 'state_id', 'onboarding_step',
+      'is_verified', 'email_verified_at', 'role', 'institution_id', 'institution_role',
+      'institution_verified', 'last_login_at'
+    ];
+
+    fieldsToCheck.forEach(field => {
+      const oldValue = oldUser[field];
+      const newValue = newUser[field];
+      
+      // Normalize null/undefined for comparison
+      const oldVal = oldValue === null || oldValue === undefined ? null : oldValue;
+      const newVal = newValue === null || newValue === undefined ? null : newValue;
+      
+      // Detect changes (including null/undefined changes)
+      if (oldVal !== newVal) {
+        changedFields.push(field);
+      }
+    });
+
+    return {
+      hasChanges: changedFields.length > 0,
+      changedFields
+    };
+  }
+
+  /**
+   * Sync user profile from backend and update if changes detected
+   */
+  async syncProfileFromBackend(): Promise<void> {
+    if (this.isSyncing || !this.isAuthenticated()) {
+      return;
+    }
+
+    this.isSyncing = true;
+    try {
+      const response = await firstValueFrom(this.refreshUserData());
+      if (!response || !response.user) {
+        return;
+      }
+
+      const currentUser = this.getCurrentUser();
+      const newUser = response.user;
+
+      if (!currentUser) {
+        // No current user, just store the new one
+        this.updateCurrentUser(newUser);
+        return;
+      }
+
+      // Compare and update if changes detected
+      const { hasChanges, changedFields } = this.detectUserChanges(currentUser, newUser);
+
+      if (hasChanges) {
+        console.log('User profile changes detected:', changedFields);
+        this.updateCurrentUser(newUser);
+        
+        // Dispatch change event for other services
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('userProfileUpdated', { 
+            detail: { changedFields, user: newUser } 
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to sync profile from backend:', error);
+      // Don't throw - allow silent failure for background sync
+    } finally {
+      this.isSyncing = false;
+    }
   }
 
   /**
@@ -81,10 +220,25 @@ export class AuthService {
       try {
         const user = JSON.parse(storedUser);
         this.currentUserSubject.next(user);
+        this.persistLocaleToStorage(user?.locale);
       } catch (error) {
         console.error('Error parsing stored user:', error);
         localStorage.removeItem('currentUser');
       }
+    }
+  }
+
+  private persistLocaleToStorage(locale?: string | null): void {
+    if (!locale) {
+      return;
+    }
+
+    const normalized = locale === 'ar' ? 'ar' : 'en';
+
+    try {
+      localStorage.setItem('anataleb.lang', normalized);
+    } catch (error) {
+      console.error('Failed to persist locale preference:', error);
     }
   }
 
@@ -128,6 +282,19 @@ export class AuthService {
     localStorage.setItem('accessToken', token);
     localStorage.setItem('refreshToken', refreshToken);
     this.currentUserSubject.next(user);
+    this.persistLocaleToStorage(user.locale);
+    
+    // Dispatch custom event for language sync (avoid circular dependency)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('userLocaleChanged', { detail: { locale: user.locale } }));
+    }
+
+    // Trigger profile sync after a short delay to ensure backend has latest data
+    setTimeout(() => {
+      this.syncProfileFromBackend().catch(err => {
+        console.error('Post-login profile sync failed:', err);
+      });
+    }, 2000); // Wait 2 seconds after login to allow backend processing
 
   }
 
@@ -138,6 +305,12 @@ export class AuthService {
 
     localStorage.setItem('currentUser', JSON.stringify(user));
     this.currentUserSubject.next(user);
+    this.persistLocaleToStorage(user.locale);
+    
+    // Dispatch custom event for language sync (avoid circular dependency)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('userLocaleChanged', { detail: { locale: user.locale } }));
+    }
 
   }
 
@@ -150,17 +323,20 @@ export class AuthService {
 
   /**
    * Update current user data from backend response
+   * @deprecated Use syncProfileFromBackend() instead for automatic change detection
    */
   updateUserFromBackend(): void {
-    this.refreshUserData().subscribe({
-      next: (response) => {
-        if (response.user) {
-          this.updateCurrentUser(response.user);
-        }
-      },
-      error: (error) => {
-        console.error('Failed to refresh user data:', error);
-      }
+    this.syncProfileFromBackend().catch(err => {
+      console.error('Failed to refresh user data:', err);
+    });
+  }
+
+  /**
+   * Manually trigger profile sync (useful after profile updates)
+   */
+  triggerProfileSync(): void {
+    this.syncProfileFromBackend().catch(err => {
+      console.error('Manual profile sync failed:', err);
     });
   }
 
@@ -168,6 +344,7 @@ export class AuthService {
    * Clear authentication data
    */
   private clearAuthData(): void {
+    this.stopProfileSync();
     localStorage.removeItem('currentUser');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -327,6 +504,10 @@ export class AuthService {
     return this.http.get<{ user: User }>(`${this.baseUrl}/auth/me`);
   }
 
+  updateUserLocale(locale: 'ar' | 'en'): Observable<{ locale: string }> {
+    return this.http.put<{ locale: string }>(`${this.baseUrl}/profile/locale`, { locale });
+  }
+
   /**
    * Refresh access token using refresh token
    */
@@ -345,6 +526,7 @@ export class AuthService {
    * Logout
    */
   logout(): void {
+    this.stopProfileSync();
     this.clearAuthData();
     // Also clear onboarding state
     localStorage.removeItem('onboardingState');
@@ -405,7 +587,7 @@ export class AuthService {
           next: (response) => {
             const newToken = response.token || response.accessToken;
             if (newToken && response.user && response.refreshToken) {
-              this.storeAuthData(response.user, newToken, response.refreshToken);
+        this.storeAuthData(response.user, newToken, response.refreshToken);
            
             } else {
             

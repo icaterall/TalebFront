@@ -88,14 +88,13 @@
 
         <!-- Smart Six Categories -->
         <div class="categories-grid" *ngIf="!loading && smartSix.length > 0">
-          <button
+          <div
             *ngFor="let cat of smartSix"
             class="cat-box"
             (click)="selectCategory(cat)">
             <span class="cat-icon">{{ cat.icon }}</span>
             <span class="cat-name">{{ getCategoryName(cat) }}</span>
-            <span class="cat-arrow">→</span>
-          </button>
+          </div>
         </div>
 
         <!-- Search Other Categories -->

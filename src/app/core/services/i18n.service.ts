@@ -19,6 +19,18 @@ export class I18nService {
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Listen for user locale changes (avoid circular dependency with AuthService)
+    if (this.isBrowser) {
+      window.addEventListener('userLocaleChanged', ((event: CustomEvent<{ locale: string }>) => {
+        const locale = event.detail?.locale;
+        if (locale === 'ar' || locale === 'en') {
+          this.syncWithUserLocale().catch(err => {
+            console.error('Failed to sync language with user locale:', err);
+          });
+        }
+      }) as EventListener);
+    }
   }
 
   /** SSR-safe: only read localStorage in the browser */
@@ -27,6 +39,20 @@ export class I18nService {
     try {
       const v = localStorage.getItem(this.STORAGE_KEY);
       return v === 'ar' || v === 'en' ? v : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Read persisted user locale from cached user profile */
+  private readUserLocale(): Lang | null {
+    if (!this.isBrowser) return null;
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      if (!storedUser) return null;
+      const user = JSON.parse(storedUser);
+      const locale = user?.locale;
+      return locale === 'en' ? 'en' : locale === 'ar' ? 'ar' : null;
     } catch {
       return null;
     }
@@ -83,32 +109,29 @@ export class I18nService {
   /** Called via APP_INITIALIZER. Promise makes Angular wait before first paint. */
   async init(): Promise<void> {
     try {
-      // Priority: inline boot value → saved → default 'ar' (ignore browser language)
-      const saved = this.readSaved();
+      // Priority: user profile → inline boot value → saved → browser → fallback 'ar'
+      const userLocale = this.readUserLocale();
       const inline = this.readInlineStartup();
-      
-      // Always default to Arabic, only use saved if it's explicitly set
-      const initial: Lang = inline ?? (saved || 'ar');
-      
-   
+      const saved = this.readSaved();
+      const browserLang = this.readBrowserLang();
+
+      const initial: Lang = userLocale ?? inline ?? saved ?? browserLang ?? 'ar';
 
       this._lang$.next(initial);
       this.apply(initial);
-      this.translate.setDefaultLang('ar'); // Set fallback
-      
-      // Set the default language first
-      this.translate.setDefaultLang('ar');
-  
-      
-      // Then use the initial language
-      this.translate.use(initial);
-  
+      // Set default language to the initial language, with 'ar' as ultimate fallback
+      this.translate.setDefaultLang(initial);
 
-      // On the browser, wait for translations to load to avoid flicker.
-      // On the server, skip waiting for HTTP to avoid window/DOM issues.
       if (this.isBrowser) {
+        // Ensure storage reflects the language being used
+        try {
+          localStorage.setItem(this.STORAGE_KEY, initial);
+        } catch {
+          // Ignore storage errors (Safari private mode, etc.)
+        }
         await firstValueFrom(this.translate.use(initial));
-  
+      } else {
+        this.translate.use(initial);
       }
     } catch (error) {
       console.error('I18nService initialization failed:', error);
@@ -119,40 +142,45 @@ export class I18nService {
   async setLang(lang: Lang): Promise<void> {
     if (lang !== 'ar' && lang !== 'en') return;
     
+    const previousLang = this._lang$.value; // Save previous language BEFORE updating
     console.log('Setting language to:', lang); // Debug log
-    console.log('Current language before change:', this._lang$.value);
+    console.log('Current language before change:', previousLang);
     
-    // Update the BehaviorSubject
+    // Save to storage FIRST (before updating BehaviorSubject)
+    // This ensures the interceptor reads the correct language immediately
+    if (this.isBrowser) {
+      try { 
+        localStorage.setItem(this.STORAGE_KEY, lang);
+        console.log('Language saved to storage:', lang); // Debug log
+        
+        // Also update sessionStorage as a backup (langInterceptor checks both)
+        sessionStorage.setItem(this.STORAGE_KEY, lang);
+      } catch (e) {
+        console.error('Failed to save language to storage:', e);
+      }
+    }
+    
+    // Update the BehaviorSubject AFTER storage is updated
     this._lang$.next(lang);
     
     // Apply the language and direction changes
     this.apply(lang);
     
     // Update translation service
-    console.log('Loading translations for:', lang);
-    await firstValueFrom(this.translate.use(lang));
-    console.log('Translations loaded for:', lang);
+  console.log('Loading translations for:', lang);
+  await firstValueFrom(this.translate.use(lang));
+  console.log('Translations loaded for:', lang);
+  console.log('Translation service current lang:', this.translate.currentLang);
+  console.log('Translation service default lang:', this.translate.defaultLang);
     
-    // Verify the translation service has the correct language
-    console.log('Translation service current lang:', this.translate.currentLang);
-    console.log('Translation service default lang:', this.translate.defaultLang);
-    
-    // Test a translation to see if it's working
-    const testTranslation = this.translate.instant('student.student');
-    console.log('Test translation result for student.student:', testTranslation);
-    
-    // Test sidebar translation
-    const sidebarTest = this.translate.instant('student.sidebar.dashboard');
-    console.log('Test translation result for student.sidebar.dashboard:', sidebarTest);
-    
-    // Save to storage
+    // Dispatch event after a short delay to ensure DOM and storage are fully updated
+    // This ensures country and stage names are reloaded in the new language
     if (this.isBrowser) {
-      try { 
-        localStorage.setItem(this.STORAGE_KEY, lang);
-        console.log('Language saved to storage:', lang); // Debug log
-      } catch (e) {
-        console.error('Failed to save language to storage:', e);
-      }
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('languageChanged', { 
+          detail: { lang, previousLang } 
+        }));
+      }, 100); // 100ms delay to ensure all updates are applied
     }
   }
 
@@ -187,5 +215,20 @@ export class I18nService {
     // Force reload the translation files
     await firstValueFrom(this.translate.reloadLang(currentLang));
     console.log('Translations reloaded for:', currentLang);
+  }
+
+  /** Sync language with user's locale preference (called after user data is loaded) */
+  async syncWithUserLocale(): Promise<void> {
+    const userLocale = this.readUserLocale();
+    if (!userLocale) {
+      // No user logged in, keep current language
+      return;
+    }
+    
+    const currentLang = this._lang$.value;
+    if (userLocale !== currentLang) {
+      console.log(`Syncing language from user preference: ${userLocale} (was ${currentLang})`);
+      await this.setLang(userLocale);
+    }
   }
 }

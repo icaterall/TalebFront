@@ -5,6 +5,7 @@ import { I18nService } from '../../../../core/services/i18n.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { getProfilePhotoUrl } from '../../../../core/utils/profile-photo.util';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-student-header',
@@ -81,8 +82,25 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
 
   async toggleLanguage(): Promise<void> {
     const newLang = this.i18n.current === 'ar' ? 'en' : 'ar';
-    await this.i18n.setLang(newLang);
-    // Reposition menu if it's open
+    try {
+      await this.i18n.setLang(newLang);
+      localStorage.setItem('anataleb.lang', newLang);
+
+      const response = await firstValueFrom(this.authService.updateUserLocale(newLang));
+      const persistedLocale = response?.locale ?? newLang;
+
+      const currentUser = this.authService.getCurrentUser();
+      if (currentUser) {
+        const updatedUser = { ...currentUser, locale: persistedLocale };
+        this.authService.updateCurrentUser(updatedUser);
+        this.user = updatedUser;
+      } else if (this.user) {
+        this.user = { ...this.user, locale: persistedLocale };
+      }
+    } catch (error) {
+      console.error('Failed to update language preference', error);
+    }
+
     if (this.showProfileMenu) {
       this.adjustMenuPosition();
     }
