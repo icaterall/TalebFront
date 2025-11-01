@@ -27,9 +27,9 @@
     <div class="wizard-card-inner">
     <!-- Wizard Progress -->
     <div class="wizard-progress">
-      <div class="progress-step" [ngClass]="{'completed': currentStep > 1, 'current': currentStep === 1}">
+      <div class="progress-step" [ngClass]="{'completed': step2Locked || currentStep > 1, 'current': currentStep === 1 && !step2Locked}">
         <div class="step-circle">
-          <ng-container *ngIf="currentStep > 1; else stepOne">
+          <ng-container *ngIf="step2Locked || currentStep > 1; else stepOne">
             <span class="check-icon">✔</span>
           </ng-container>
           <ng-template #stepOne>1</ng-template>
@@ -67,8 +67,25 @@
     <div class="wizard-body">
       <!-- Step 1: Category Selection -->
       <div *ngIf="showStep1" class="step-content step1-content">
-        <!-- Selected Category Display -->
-        <div class="selected-display" *ngIf="selectedCategory">
+        <!-- Read-only Summary (shown when step2Locked is true) -->
+        <div class="read-only-summary" *ngIf="step2Locked && selectedCategory" [dir]="isRTL ? 'rtl' : 'ltr'">
+          <div class="summary-item">
+            <span class="summary-label">{{ currentLang === 'ar' ? 'التصنيف:' : 'Category:' }}</span>
+            <span class="summary-icon">{{ selectedCategory.icon }}</span>
+            <span class="summary-value">{{ getCategoryName(selectedCategory) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المقرر:' : 'Course Name:' }}</span>
+            <span class="summary-value">{{ courseName }}</span>
+          </div>
+          <div class="summary-item" *ngIf="selectedTopic || subjectSlug">
+            <span class="summary-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
+            <span class="summary-value">{{ selectedTopic || subjectSlug }}</span>
+          </div>
+        </div>
+
+        <!-- Selected Category Display (Box style with Change button - shown in Step 1) -->
+        <div class="selected-display" *ngIf="selectedCategory && !step2Locked">
           <div class="selected-badge">
             <span class="selected-icon">{{ selectedCategory.icon }}</span>
             <div class="selected-info">
@@ -82,16 +99,15 @@
         </div>
 
         <!-- Course Title Section (Shows after category selection) -->
-        <div class="course-title-section" *ngIf="selectedCategory">
-
-          <!-- Loading Spinner -->
-          <div class="loading-container" *ngIf="loadingTitles">
+        <div class="course-title-section" *ngIf="selectedCategory && !step2Locked">
+          <!-- Loading Spinner - hidden when locked -->
+          <div class="loading-container" *ngIf="!step2Locked && loadingTitles">
             <div class="spinner"></div>
             <p class="loading-text">{{ currentLang === 'ar' ? 'جاري تحميل اقتراحات الأسماء...' : 'Loading course name suggestions...' }}</p>
           </div>
 
-          <!-- AI Title Suggestions (Cards) -->
-          <div class="title-cards-container" *ngIf="!loadingTitles && courseTitleSuggestions.length > 0">
+          <!-- AI Title Suggestions (Cards) - hidden when locked - shown at top -->
+          <div class="title-cards-container" *ngIf="!step2Locked && !loadingTitles && courseTitleSuggestions.length > 0">
             <div class="title-cards-grid">
               <div
                 *ngFor="let titleCard of courseTitleSuggestions"
@@ -109,28 +125,121 @@
             </div>
           </div>
 
-          <!-- Custom Name Input -->
-          <div class="custom-name-section">
+          <!-- Course Name Input with AI Generate Button -->
+          <div class="field-group course-name-input-group" *ngIf="!step2Locked">
             <label class="field-label">
               {{ currentLang === 'ar' ? 'اسم المقرر' : 'Course Name' }}
               <span class="required">*</span>
             </label>
-            <input
-              type="text"
-              class="course-name-input"
-              [(ngModel)]="courseName"
-              (input)="onCourseNameChange()"
-              [placeholder]="currentLang === 'ar' ? 'أدخل اسم المقرر أو اختر من الاقتراحات أعلاه...' : 'Enter course name or select from suggestions above...'"
-              maxlength="80"
-              [class.error]="courseName.trim().length > 0 && courseName.trim().length < 3" />
+            <div class="course-name-input-row">
+              <input
+                type="text"
+                class="course-name-input"
+                [(ngModel)]="courseName"
+                (input)="onCourseNameChange()"
+                [placeholder]="currentLang === 'ar' ? 'أدخل اسم المقرر...' : 'Enter course name...'"
+                maxlength="80" />
+              <button
+                type="button"
+                class="btn-generate-ai"
+                *ngIf="!loadingTitles && courseTitleSuggestions.length === 0"
+                (click)="loadTitleSuggestions()"
+                [disabled]="loadingTitles">
+                <span class="ai-icon">🤖</span>
+                <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'Generate with AI' }}</span>
+              </button>
+            </div>
             <div class="field-help">
-              {{ currentLang === 'ar' ? 'قصير وواضح، بدون رموز تعبيرية، حد أقصى 80 حرفًا' : 'Short and clear, no emojis in official name, max 80 characters' }}
+              <span *ngIf="courseTitleSuggestions.length === 0">
+                {{ currentLang === 'ar' ? 'اكتب اسم المقرر يدوياً أو انقر على الزر لإنشاء اقتراحات بالذكاء الاصطناعي' : 'Type the course name manually or click the button to generate suggestions with AI' }}
+              </span>
+              <span *ngIf="courseTitleSuggestions.length > 0">
+                {{ currentLang === 'ar' ? 'اختر عنواناً من الاقتراحات أعلاه أو اكتب اسم المقرر يدوياً' : 'Select a title from suggestions above or type the course name manually' }}
+              </span>
             </div>
           </div>
+
+          <!-- Topic Selection (shown when title card is selected in Step 1) -->
+          <!-- Show topic field only if AI was not used (manual course name entry) -->
+          <div class="field-group" *ngIf="courseName && !step2Locked && courseTitleSuggestions.length === 0">
+            <label class="field-label" *ngIf="!selectedTopic">
+              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              <span class="required">*</span>
+            </label>
+
+            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
+            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
+              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
+            </div>
+
+            <!-- Manual Topic Input (shown when no AI was used) -->
+            <div class="topics-section" *ngIf="courseName && !step2Locked && !selectedTopic">
+              <div class="topic-input-wrapper">
+                <input
+                  type="text"
+                  class="topic-input-manual"
+                  [(ngModel)]="subjectSlug"
+                  (input)="onSubjectSlugChange()"
+                  [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                  maxlength="100" />
+              </div>
+              <div class="field-help">
+                {{ currentLang === 'ar' ? 'اكتب اسم الوحدة يدوياً' : 'Enter the topic name manually' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Topic Selection Cards (shown when AI title card is selected) -->
+          <div class="field-group" *ngIf="courseName && !step2Locked && courseTitleSuggestions.length > 0 && availableTopics.length > 0">
+            <label class="field-label" *ngIf="!selectedTopic">
+              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              <span class="required">*</span>
+            </label>
+
+            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
+            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
+              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
+            </div>
+
+            <!-- Topic Selection Cards (shown until Continue is clicked) -->
+            <div class="topics-section" *ngIf="courseName && !step2Locked && availableTopics.length > 0">
+              <div class="topics-grid">
+                <div
+                  *ngFor="let topic of availableTopics; let i = index"
+                  class="topic-card"
+                  [class.selected]="selectedTopic === topic && editingTopic !== topic"
+                  [class.editing]="editingTopic === topic"
+                  (click)="selectTopic(topic)">
+                  <ng-container *ngIf="editingTopic === topic; else topicDisplayStep1">
+                    <input
+                      type="text"
+                      class="topic-input"
+                      [(ngModel)]="editingTopicValue"
+                      (click)="$event.stopPropagation()"
+                      (keyup.enter)="saveTopicEdit()"
+                      (keyup.escape)="cancelTopicEdit()"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                      (blur)="saveTopicEdit()" />
+                  </ng-container>
+                  <ng-template #topicDisplayStep1>
+                    <div class="topic-content">
+                      <span class="topic-text">{{ topic }}</span>
+                    </div>
+                  </ng-template>
+                </div>
+              </div>
+              <div class="field-help">
+                {{ currentLang === 'ar' ? 'اختر وحدة واحدة أو انقر للتعديل' : 'Select one topic or click to edit' }}
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Category Selection -->
-        <div *ngIf="!selectedCategory" class="search-section">
+        <!-- Category Selection (hidden when step2Locked) -->
+        <div *ngIf="!selectedCategory && !step2Locked" class="search-section">
         <div class="card-header">
           <h2>📚 {{ currentLang === 'ar' ? 'اختر الموضوع' : 'Choose Your Category' }}</h2>
           <p>{{ currentLang === 'ar' ? 'الأكثر صلة بمرحلتك الدراسية' : 'Most relevant for your education stage' }}</p>
@@ -186,70 +295,32 @@
           </button>
         </div>
 
-        <!-- Category Info -->
-        <div class="selected-display" *ngIf="selectedCategory">
-          <div class="selected-badge">
-            <span class="selected-icon">{{ selectedCategory.icon }}</span>
-            <div class="selected-info">
-              <span class="selected-label">{{ currentLang === 'ar' ? 'الموضوع المختار' : 'Selected Category' }}</span>
-              <span class="selected-name">{{ getCategoryName(selectedCategory) }}</span>
+        <!-- Category Info - Always show if category is selected -->
+        <div class="category-info-wrapper" *ngIf="selectedCategory">
+          <div class="field-group category-display-group">
+            <div class="inline-field-display" [dir]="isRTL ? 'rtl' : 'ltr'">
+              <span class="inline-label">{{ currentLang === 'ar' ? 'التصنيف:' : 'Category:' }}</span>
+              <span class="inline-icon">{{ selectedCategory.icon }}</span>
+              <span class="inline-value">{{ getCategoryName(selectedCategory) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Context Chips and Mode Toggle -->
-        <div class="context-section">
-          <!-- Mode Toggle (if no stage/country) -->
-          <div class="mode-toggle-container" *ngIf="shouldShowModeToggle">
-            <label class="mode-toggle-label">{{ currentLang === 'ar' ? 'نوع المقرر:' : 'Course Type:' }}</label>
-            <div class="mode-toggle">
-              <button
-                class="mode-btn"
-                [class.active]="courseMode === 'curriculum'"
-                (click)="toggleCourseMode()">
-                {{ currentLang === 'ar' ? 'منهج مدرسي' : 'School Curriculum' }}
-              </button>
-              <button
-                class="mode-btn"
-                [class.active]="courseMode === 'general'"
-                (click)="toggleCourseMode()">
-                {{ currentLang === 'ar' ? 'مهارات عامة' : 'General Skills' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Context Chips -->
-          <div class="context-chips">
-            <div class="context-chip" *ngIf="courseMode === 'curriculum' && stageName">
-              <span class="chip-icon">🎓</span>
-          
-              <span class="chip-value">{{ stageName }}</span>
-            </div>
-            <div class="context-chip" *ngIf="courseMode === 'curriculum' && countryName">
-              <span class="chip-icon">🌍</span>
-           
-              <span class="chip-value">{{ countryName }}</span>
-            </div>
-            <div class="context-chip" *ngIf="courseMode === 'curriculum'">
-              <span class="chip-icon">📅</span>
-            
-              <span class="chip-value">{{ termLabel }}</span>
-              <button class="chip-toggle" (click)="toggleTerm()" title="Toggle term">
-                <span class="toggle-icon">↔</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- A) Name your course -->
+        <!-- A) Course Name -->
         <div class="field-group">
-          <label class="field-label">
-            {{ currentLang === 'ar' ? 'اسم المقرر' : 'Name your course' }}
+          <label class="field-label" *ngIf="!courseName">
+            {{ currentLang === 'ar' ? 'اسم المقرر' : 'Course Name' }}
             <span class="required">*</span>
           </label>
 
+          <!-- Stored Course Name (one line with underline) -->
+          <div class="inline-field-display" *ngIf="courseName" [dir]="isRTL ? 'rtl' : 'ltr'">
+            <span class="inline-label">{{ currentLang === 'ar' ? 'اسم المقرر:' : 'Course Name:' }}</span>
+            <span class="inline-value underlined">{{ courseName }}</span>
+          </div>
+
           <!-- AI Title Suggestions (Cards) -->
-          <div class="title-cards-container" *ngIf="courseTitleSuggestions.length > 0">
+          <div class="title-cards-container" *ngIf="!courseName && courseTitleSuggestions.length > 0">
             <div class="title-cards-grid">
               <div
                 *ngFor="let titleCard of courseTitleSuggestions"
@@ -271,105 +342,101 @@
             {{ currentLang === 'ar' ? 'جاري تحميل الاقتراحات...' : 'Loading suggestions...' }}
           </div>
 
-          <!-- Custom Name Input -->
-          <div class="custom-name-section">
-            <div class="custom-name-label">{{ currentLang === 'ar' ? 'أو اكتب اسمًا مخصصًا:' : 'Or type a custom name:' }}</div>
-            <input
-              type="text"
-              class="course-name-input"
-              [(ngModel)]="courseName"
-              (input)="onCourseNameChange()"
-              [placeholder]="currentLang === 'ar' ? 'أدخل اسم المقرر...' : 'Enter course name...'"
-              maxlength="80"
-              [class.error]="courseName.trim().length > 0 && courseName.trim().length < 3" />
-            <div class="field-help">
-              {{ currentLang === 'ar' ? 'قصير وواضح، بدون رموز تعبيرية، حد أقصى 80 حرفًا' : 'Short and clear, no emojis in official name, max 80 characters' }}
+          <!-- Topic Selection -->
+          <!-- Show topic field only if AI was not used (manual course name entry) -->
+          <div class="field-group" *ngIf="courseName && courseTitleSuggestions.length === 0">
+            <label class="field-label" *ngIf="!selectedTopic">
+              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              <span class="required">*</span>
+            </label>
+
+            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
+            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
+              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
             </div>
-          </div>
-        </div>
 
-        <!-- B) Pick a subject tag -->
-        <div class="field-group">
-          <label class="field-label">
-            {{ currentLang === 'ar' ? 'اختر علامة الموضوع' : 'Pick a subject tag' }}
-            <span class="required">*</span>
-          </label>
-          <ng-select
-            [(ngModel)]="subjectSlug"
-            (change)="onSubjectSlugChange()"
-            [items]="subjectSlugSuggestions"
-            [searchable]="true"
-            [clearable]="false"
-            [placeholder]="currentLang === 'ar' ? 'اختر أو ابحث عن موضوع...' : 'Select or search for subject...'">
-          </ng-select>
-          <div class="field-help">
-            {{ currentLang === 'ar' ? 'مثال: physics, algebra, programming' : 'Example: physics, algebra, programming' }}
-          </div>
-        </div>
-
-        <!-- C) Plan your units -->
-        <div class="field-group">
-          <label class="field-label">
-            {{ currentLang === 'ar' ? 'خطط لوحداتك' : 'Plan your units' }}
-            <span class="required">*</span>
-          </label>
-          <div class="units-info">
-            <span class="units-count">{{ currentLang === 'ar' ? 'عدد الوحدات:' : 'Units:' }} {{ units.length }} / 7</span>
-            <span class="units-requirement">{{ currentLang === 'ar' ? '(3-7 وحدات مطلوبة)' : '(3-7 units required)' }}</span>
-          </div>
-
-          <!-- Units List -->
-          <div class="units-list" *ngIf="units.length > 0">
-            <div *ngFor="let unit of units; let i = index" class="unit-card" [attr.data-order]="unit.order">
-              <div class="unit-order">{{ unit.order }}</div>
-              <div class="unit-content">
-                <ng-container *ngIf="editingUnitId === unit.id; else unitDisplay">
-                  <input
-                    type="text"
-                    class="unit-name-edit"
-                    [(ngModel)]="editingUnitName"
-                    (keyup.enter)="saveUnitEdit(unit.id)"
-                    (keyup.escape)="cancelUnitEdit()"
-                    [placeholder]="currentLang === 'ar' ? 'اسم الوحدة...' : 'Unit name...'" />
-                  <div class="unit-actions">
-                    <button class="unit-btn save-btn" (click)="saveUnitEdit(unit.id)">
-                      {{ currentLang === 'ar' ? 'حفظ' : 'Save' }}
-                    </button>
-                    <button class="unit-btn cancel-btn" (click)="cancelUnitEdit()">
-                      {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-                    </button>
-                  </div>
-                </ng-container>
-                <ng-template #unitDisplay>
-                  <span class="unit-name" (click)="startEditingUnit(unit.id)">{{ unit.name }}</span>
-                  <div class="unit-actions">
-                    <button class="unit-btn move-btn" (click)="moveUnitUp(i)" [disabled]="i === 0" title="Move up">
-                      ↑
-                    </button>
-                    <button class="unit-btn move-btn" (click)="moveUnitDown(i)" [disabled]="i === units.length - 1" title="Move down">
-                      ↓
-                    </button>
-                    <button class="unit-btn remove-btn" (click)="removeUnit(unit.id)" title="Remove">
-                      ✕
-                    </button>
-                  </div>
-                </ng-template>
+            <!-- Manual Topic Input (shown when no AI was used) -->
+            <div class="topics-section" *ngIf="courseName && !step2Locked && !selectedTopic">
+              <div class="topic-input-wrapper">
+                <input
+                  type="text"
+                  class="topic-input-manual"
+                  [(ngModel)]="subjectSlug"
+                  (input)="onSubjectSlugChange()"
+                  [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                  maxlength="100" />
+              </div>
+              <div class="field-help">
+                {{ currentLang === 'ar' ? 'اكتب اسم الوحدة يدوياً' : 'Enter the topic name manually' }}
               </div>
             </div>
           </div>
 
-          <!-- Loading Units -->
-          <div class="loading-units" *ngIf="loadingUnits">
-            {{ currentLang === 'ar' ? 'جاري تحميل الوحدات المقترحة...' : 'Loading suggested units...' }}
+          <!-- Topic Selection Cards (shown when AI title card is selected) -->
+          <div class="field-group" *ngIf="courseName && courseTitleSuggestions.length > 0 && availableTopics.length > 0">
+            <label class="field-label" *ngIf="!selectedTopic">
+              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              <span class="required">*</span>
+            </label>
+
+            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
+            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
+              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
+            </div>
+
+            <!-- Topic Selection Cards (shown until Continue is clicked) -->
+            <div class="topics-section" *ngIf="courseName && !step2Locked && availableTopics.length > 0">
+              <div class="topics-grid">
+                <div
+                  *ngFor="let topic of availableTopics; let i = index"
+                  class="topic-card"
+                  [class.selected]="selectedTopic === topic && editingTopic !== topic"
+                  [class.editing]="editingTopic === topic"
+                  (click)="selectTopic(topic)">
+                  <ng-container *ngIf="editingTopic === topic; else topicDisplay">
+                    <input
+                      type="text"
+                      class="topic-input"
+                      [(ngModel)]="editingTopicValue"
+                      (click)="$event.stopPropagation()"
+                      (keyup.enter)="saveTopicEdit()"
+                      (keyup.escape)="cancelTopicEdit()"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                      (blur)="saveTopicEdit()" />
+                  </ng-container>
+                  <ng-template #topicDisplay>
+                    <div class="topic-content">
+                      <span class="topic-text">{{ topic }}</span>
+                    </div>
+                  </ng-template>
+                </div>
+              </div>
+              <div class="field-help">
+                {{ currentLang === 'ar' ? 'اختر وحدة واحدة أو انقر للتعديل' : 'Select one topic or click to edit' }}
+              </div>
+            </div>
           </div>
 
-          <!-- Add Unit Button -->
-          <button class="btn-add-unit" (click)="addUnit()" [disabled]="units.length >= 7">
-            <span class="btn-icon">+</span>
-            {{ currentLang === 'ar' ? 'إضافة وحدة' : 'Add Unit' }}
-            <span class="btn-hint" *ngIf="units.length >= 7">({{ currentLang === 'ar' ? 'الحد الأقصى' : 'Max' }})</span>
-          </button>
-        </div>
+          <!-- Fallback Topic Input (if no topics from title card) -->
+          <div class="field-group" *ngIf="courseName && availableTopics.length === 0 && !selectedTopic && !editingTopic">
+            <label class="field-label">
+              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              <span class="required">*</span>
+            </label>
+            <ng-select
+              [(ngModel)]="subjectSlug"
+              (change)="onSubjectSlugChange()"
+              [items]="subjectSlugSuggestions"
+              [searchable]="true"
+              [clearable]="false"
+              [placeholder]="currentLang === 'ar' ? 'اختر أو ابحث عن وحدة...' : 'Select or search for topic...'">
+            </ng-select>
+            <div class="field-help">
+              {{ currentLang === 'ar' ? 'مثال: physics, algebra, programming' : 'Example: physics, algebra, programming' }}
+            </div>
+          </div>
       </div>
     </div>
 
@@ -377,19 +444,52 @@
     <div class="wizard-actions">
       <button 
         class="btn-back"
-        *ngIf="currentStep > 1"
-        (click)="goBack()">
-        <span class="btn-icon">←</span>
+        *ngIf="currentStep === 2 || step2Locked"
+        (click)="goBack()"
+        [dir]="isRTL ? 'rtl' : 'ltr'">
+        <span class="btn-icon">{{ isRTL ? '→' : '←' }}</span>
         <span>{{ currentLang === 'ar' ? 'رجوع' : 'Back' }}</span>
       </button>
       
       <button 
         class="btn-continue" 
         [disabled]="!canContinue"
+        *ngIf="step2Locked"
         (click)="continue()">
         <span class="btn-icon">🤖</span>
         <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
       </button>
+      
+      <button 
+        class="btn-continue" 
+        [disabled]="!canContinue || step2Locked"
+        *ngIf="!step2Locked"
+        (click)="continue()">
+        <span class="btn-icon">🤖</span>
+        <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
+      </button>
+    </div>
+
+    <!-- Warning Modal -->
+    <div class="modal-overlay" *ngIf="showWarningModal" (click)="cancelGoBack()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ currentLang === 'ar' ? '⚠️ تحذير' : '⚠️ Warning' }}</h3>
+        </div>
+        <div class="modal-body">
+          <p>{{ currentLang === 'ar' 
+            ? 'سيتم حذف جميع البيانات المدخلة. هل أنت متأكد أنك تريد العودة؟ ستحتاج إلى البدء من جديد.' 
+            : 'All entered data will be deleted. Are you sure you want to go back? You will need to start from scratch.' }}</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="cancelGoBack()">
+            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+          </button>
+          <button class="btn-confirm" (click)="confirmGoBack()">
+            {{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}
+          </button>
+        </div>
+      </div>
     </div>
     </div>
   </div>
@@ -406,7 +506,7 @@
       <div class="preview-item">
         <span class="preview-icon">📝</span>
         <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 2: أساسيات المقرر' : 'Step 2: Course Basics' }}</span>
-        <span class="preview-desc">{{ currentLang === 'ar' ? 'اسم المقرر، موضوع اختياري، و3-5 وحدات' : 'Name, optional subject, and 3-5 units' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'اسم المقرر والوحدة' : 'Name and topic' }}</span>
       </div>
       <div class="preview-item">
         <span class="preview-icon">🎯</span>

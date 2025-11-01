@@ -202,6 +202,7 @@
                   [clearable]="false"
                   [loading]="loadingStates"
                   [disabled]="!studentForm.countryId || loadingStates"
+                  (change)="onStateOrStageChange()"
                   bindLabel="name"
                   bindValue="id"
                   [items]="states">
@@ -224,6 +225,8 @@
                   [searchable]="true"
                   [clearable]="false"
                   [loading]="loadingEducationStages"
+                  [disabled]="!studentForm.stateId || loadingEducationStages"
+                  (change)="onStateOrStageChange()"
                   bindLabel="name"
                   bindValue="id"
                   [items]="educationStages">
@@ -245,6 +248,64 @@
                   <option value="en">{{ 'studentRegistration.english' | translate }}</option>
 
                 </select>
+              </div>
+            </div>
+
+            <!-- Institution Selection -->
+            <div class="form-row" *ngIf="studentForm.stateId && studentForm.educationStageId">
+              <div class="form-group full-width">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <label for="institution" style="margin: 0; padding: 0;">{{ 'studentRegistration.institution' | translate }} <span class="required">*</span></label>
+                  
+                  <!-- Checkbox for custom institution in same row -->
+                  <label class="checkbox-label" style="display: flex; align-items: center; cursor: pointer; margin: 0;">
+                    <input
+                      type="checkbox"
+                      id="customInstitutionCheckbox"
+                      name="customInstitutionCheckbox"
+                      [(ngModel)]="showCustomInstitution"
+                      (change)="onCustomInstitutionToggle()"
+                      style="margin-right: 8px; cursor: pointer;">
+                    <span>{{ 'studentRegistration.didntFindInstitution' | translate }}</span>
+                  </label>
+                </div>
+
+                <!-- Institution Dropdown (hidden when checkbox is checked) -->
+                <ng-select
+                  *ngIf="!showCustomInstitution"
+                  id="institution"
+                  [(ngModel)]="studentForm.institutionId"
+                  name="institution"
+                  [placeholder]="'studentRegistration.selectInstitution' | translate"
+                  [searchable]="true"
+                  [clearable]="false"
+                  [loading]="loadingInstitutions"
+                  [disabled]="!studentForm.stateId || !studentForm.educationStageId || loadingInstitutions"
+                  (change)="onInstitutionChange()"
+                  bindLabel="name"
+                  bindValue="id"
+                  [items]="institutions"
+                  style="width: 100%;">
+                </ng-select>
+
+                <!-- Custom Institution Input (shown when checkbox is checked) -->
+                <input
+                  *ngIf="showCustomInstitution"
+                  type="text"
+                  id="customInstitution"
+                  name="customInstitution"
+                  [(ngModel)]="studentForm.customInstitutionName"
+                  class="form-input"
+                  style="width: 100%;"
+                  [placeholder]="'studentRegistration.enterInstitutionName' | translate"
+                  required>
+
+                <div class="error-message" *ngIf="studentFormErrors.institution">
+                  {{ studentFormErrors.institution }}
+                </div>
+                <div class="error-message" *ngIf="studentFormErrors.customInstitution">
+                  {{ studentFormErrors.customInstitution }}
+                </div>
               </div>
             </div>
             

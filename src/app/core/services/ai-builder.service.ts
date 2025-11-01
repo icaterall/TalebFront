@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 
 export interface CourseDraft {
   version: number;
+  user_id?: number; // Current user ID - assigned when saving
   stage_id?: number;
   country_id?: number;
   locale?: string;
@@ -29,35 +30,52 @@ export interface CourseDraft {
 @Injectable({ providedIn: 'root' })
 export class AiBuilderService {
   private http = inject(HttpClient);
-  private readonly key = 'anataleb.courseDraft';
   private readonly baseUrl = environment.apiUrl;
+  
+  // Generate key based on user ID to keep drafts per user
+  private getKey(userId?: number): string {
+    if (userId) {
+      return `anataleb.courseDraft.${userId}`;
+    }
+    return 'anataleb.courseDraft';
+  }
 
-  readDraft(): CourseDraft {
+  readDraft(userId?: number): CourseDraft {
     try {
-      const raw = localStorage.getItem(this.key);
+      const key = this.getKey(userId);
+      const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) as CourseDraft : { version: 1 };
     } catch {
       return { version: 1 };
     }
   }
 
-  getDraft(): CourseDraft {
-    return this.readDraft();
+  getDraft(userId?: number): CourseDraft {
+    return this.readDraft(userId);
   }
 
-  saveDraft(patch: Partial<CourseDraft>): void {
-    const current = this.readDraft();
-    const merged: CourseDraft = { ...current, ...patch, last_saved_at: new Date().toISOString() } as CourseDraft;
-    localStorage.setItem(this.key, JSON.stringify(merged));
+  saveDraft(patch: Partial<CourseDraft>, userId?: number): void {
+    const key = this.getKey(userId || patch.user_id);
+    const current = this.readDraft(userId || patch.user_id);
+    const merged: CourseDraft = { 
+      ...current, 
+      ...patch, 
+      user_id: userId || patch.user_id || current.user_id,
+      last_saved_at: new Date().toISOString() 
+    } as CourseDraft;
+    localStorage.setItem(key, JSON.stringify(merged));
   }
 
-  clearDraft(): void {
-    localStorage.removeItem(this.key);
+  clearDraft(userId?: number): void {
+    const key = this.getKey(userId);
+    localStorage.removeItem(key);
+    // Also clear default key for backward compatibility
+    localStorage.removeItem('anataleb.courseDraft');
   }
 
-  getTitles(payload: { category_id: number; stage_id?: number; country_id?: number; locale: string; term?: number; mode?: 'curriculum' | 'general'; category_name?: string; date?: string }): Observable<{ titles: { title: string; rationale: string }[]; cached?: boolean; provider?: string }>{
+  getTitles(payload: { category_id: number; stage_id?: number; country_id?: number; locale: string; term?: number; mode?: 'curriculum' | 'general'; category_name?: string; date?: string }): Observable<{ titles: { title: string; rationale?: string; topics?: string[] }[]; cached?: boolean; provider?: string }>{
     // Use OpenAI GPT-4o mini
-    return this.http.post<{ titles: { title: string; rationale: string }[]; cached?: boolean; provider?: string }>(`${this.baseUrl}/ai/titles`, payload);
+    return this.http.post<{ titles: { title: string; rationale?: string; topics?: string[] }[]; cached?: boolean; provider?: string }>(`${this.baseUrl}/ai/titles`, payload);
   }
 
   getUnits(payload: { category_id: number; course_name?: string; stage_id?: number; country_id?: number; locale?: string }): Observable<{ units: { name: string; order: number }[] }> {

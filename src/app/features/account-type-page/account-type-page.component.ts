@@ -12,6 +12,8 @@ import { ToastrService } from 'ngx-toastr';
 import { FooterComponent } from '../../shared/footer/footer.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Subscription } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { getUserInitials } from '../../shared/utils/user-initials.util';
 import { getProfilePhotoUrl } from '../../core/utils/profile-photo.util';
 
@@ -33,6 +35,8 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
   private readonly educationService = inject(EducationService);
   private readonly toastr = inject(ToastrService);
   private readonly el = inject(ElementRef);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = environment.apiUrl;
   
   private userSubscription?: Subscription;
 
@@ -79,6 +83,8 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     countryId: null as number | null,
     stateId: null as number | null,
     educationStageId: null as number | null,
+    institutionId: null as number | null,
+    customInstitutionName: '',
     gender: '',
     locale: 'ar'
   };
@@ -90,12 +96,16 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
   countries: any[] = [];
   states: any[] = [];
   educationStages: any[] = [];
+  institutions: any[] = [];
+  aiSuggestedInstitutions: any[] = []; // Track AI-suggested institutions for backend storage
   isSubmitting = false;
+  showCustomInstitution = false;
 
   // Loading states
   loadingCountries = false;
   loadingStates = false;
   loadingEducationStages = false;
+  loadingInstitutions = false;
 
   // Header: current user info
   user: User | null = null;
@@ -728,6 +738,14 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     // Clear state selection and states list
     this.studentForm.stateId = null;
     this.states = [];
+    // Clear education stage selection (stage depends on state, but keep stages loaded)
+    this.studentForm.educationStageId = null;
+    // Don't clear educationStages - keep them loaded even when disabled
+    // Clear institution selection
+    this.studentForm.institutionId = null;
+    this.institutions = [];
+    this.aiSuggestedInstitutions = [];
+    this.showCustomInstitution = false;
     
     if (this.studentForm.countryId) {
       console.log('Loading states for country:', this.studentForm.countryId);
@@ -752,6 +770,90 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle state or stage selection change - load institutions
+   */
+  onStateOrStageChange() {
+    // If state changed, clear education stage selection (but keep stages loaded)
+    if (!this.studentForm.stateId) {
+      this.studentForm.educationStageId = null;
+      // Don't clear educationStages - keep them loaded even when disabled
+    }
+    
+    // Clear institution selection
+    this.studentForm.institutionId = null;
+    this.studentForm.customInstitutionName = '';
+    this.institutions = [];
+    this.aiSuggestedInstitutions = [];
+    this.showCustomInstitution = false;
+    
+    // Load institutions only when both state and stage are selected
+    if (this.studentForm.stateId && this.studentForm.educationStageId) {
+      this.loadInstitutions();
+    }
+  }
+
+  /**
+   * Load institutions by state and stage
+   */
+  loadInstitutions() {
+    if (!this.studentForm.stateId || !this.studentForm.educationStageId) {
+      return;
+    }
+
+    this.loadingInstitutions = true;
+    const locale = this.studentForm.locale || this.currentLang;
+    
+    this.http.get<{ success: boolean; data: any[] }>(
+      `${this.baseUrl}/institutions/by-state-stage`,
+      {
+        params: {
+          state_id: this.studentForm.stateId!.toString(),
+          stage_id: this.studentForm.educationStageId!.toString(),
+          locale: locale
+        }
+      }
+    ).subscribe({
+      next: (response) => {
+        console.log('Institutions loaded:', response.data.length);
+        // Don't add "Didn't find my institution" option - it's now a checkbox
+        this.institutions = response.data;
+        
+        // Store AI-suggested institutions separately for backend submission
+        this.aiSuggestedInstitutions = response.data.filter((inst: any) => inst.is_ai_suggested === true);
+        
+        this.loadingInstitutions = false;
+      },
+      error: (error) => {
+        console.error('Error loading institutions:', error);
+        this.toastr.error('Failed to load institutions');
+        this.loadingInstitutions = false;
+      }
+    });
+  }
+
+  /**
+   * Handle institution selection change
+   */
+  onInstitutionChange() {
+    // Clear custom institution name when selecting from dropdown
+    this.studentForm.customInstitutionName = '';
+  }
+
+  /**
+   * Handle custom institution checkbox toggle
+   */
+  onCustomInstitutionToggle() {
+    if (this.showCustomInstitution) {
+      // Checkbox checked - clear dropdown selection and focus on input
+      this.studentForm.institutionId = null;
+      this.studentForm.customInstitutionName = '';
+    } else {
+      // Checkbox unchecked - clear custom institution name
+      this.studentForm.customInstitutionName = '';
+    }
+  }
+
+  /**
    * Submit student registration form
    */
   async submitStudentForm() {
@@ -766,6 +868,40 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     try {
+      let institutionId = this.studentForm.institutionId;
+
+      // If custom institution (checkbox checked), create it first
+      if (this.showCustomInstitution && this.studentForm.customInstitutionName) {
+        try {
+          const locale = this.studentForm.locale || this.currentLang;
+          const createResponse = await this.http.post<{ success: boolean; data: any }>(
+            `${this.baseUrl}/institutions/custom`,
+            {
+              name: this.studentForm.customInstitutionName,
+              state_id: this.studentForm.stateId,
+              stage_id: this.studentForm.educationStageId
+            },
+            {
+              headers: {
+                'Accept-Language': locale
+              }
+            }
+          ).toPromise();
+
+          if (createResponse?.success && createResponse.data?.id) {
+            institutionId = createResponse.data.id;
+            console.log('Custom institution created:', institutionId);
+          } else {
+            throw new Error('Failed to create custom institution');
+          }
+        } catch (createError: any) {
+          console.error('Error creating custom institution:', createError);
+          this.toastr.error('Failed to create institution. Please try again.');
+          this.isSubmitting = false;
+          return;
+        }
+      }
+
       // Prepare submission data
       const submissionData = {
         name: this.studentForm.fullName,
@@ -773,10 +909,13 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
         country_id: this.studentForm.countryId!,
         state_id: this.studentForm.stateId,
         education_stage_id: this.studentForm.educationStageId!,
+        institution_id: institutionId,
         gender: this.studentForm.gender,
         locale: this.studentForm.locale,
         profile_photo_url: null, // No profile photo at this stage
-        role: 'Student'
+        role: 'Student',
+        // Send AI-suggested institutions if any were loaded
+        ai_suggested_institutions: this.aiSuggestedInstitutions.length > 0 ? this.aiSuggestedInstitutions : undefined
       };
 
       // Submit to backend
@@ -848,6 +987,24 @@ export class AccountTypePageComponent implements OnInit, OnDestroy {
     if (!this.studentForm.educationStageId) {
       this.studentFormErrors.educationStage = 'Education stage is required';
       isValid = false;
+    }
+
+    // Validate institution
+    if (!this.showCustomInstitution) {
+      // Validate dropdown selection
+      if (this.studentForm.institutionId === null || this.studentForm.institutionId === undefined) {
+        this.studentFormErrors.institution = 'Institution is required';
+        isValid = false;
+      }
+    } else {
+      // Validate custom institution name if checkbox is checked
+      if (!this.studentForm.customInstitutionName || this.studentForm.customInstitutionName.trim().length === 0) {
+        this.studentFormErrors.customInstitution = 'Institution name is required';
+        isValid = false;
+      } else if (this.studentForm.customInstitutionName.trim().length < 2) {
+        this.studentFormErrors.customInstitution = 'Institution name must be at least 2 characters';
+        isValid = false;
+      }
     }
 
     return isValid;

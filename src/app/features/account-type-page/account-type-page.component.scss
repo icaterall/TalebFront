@@ -703,6 +703,14 @@
 
     &.full-width {
       grid-column: 1 / -1;
+      
+      ::ng-deep ng-select {
+        width: 100%;
+        
+        .ng-select {
+          width: 100%;
+        }
+      }
     }
 
     label {

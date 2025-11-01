@@ -923,6 +923,16 @@
   max-width: 100%;
   box-sizing: border-box;
 
+  // RTL support
+  [dir="rtl"] & {
+    flex-direction: row-reverse;
+  }
+
+  // LTR support (explicit)
+  [dir="ltr"] & {
+    flex-direction: row;
+  }
+
   @media (max-width: 768px) {
     flex-direction: column;
   }
@@ -1070,6 +1080,13 @@
   align-items: center;
 }
 
+.category-info-wrapper {
+  display: block !important;
+  visibility: visible !important;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
 .change-category-link {
   background: none;
   border: none;
@@ -1096,8 +1113,16 @@
 
 // Field Groups (Step 2)
 .field-group {
-  margin-bottom: 32px;
+  margin-bottom: 0px;
   width: 100%;
+  
+  &.category-display-group {
+    margin-bottom: 20px;
+    margin-top: 16px;
+    padding-top: 8px;
+    display: block !important;
+    visibility: visible !important;
+  }
 
   .field-label {
     display: block;
@@ -1123,9 +1148,26 @@
   }
 }
 
+// Course Name Input Group
+.course-name-input-group {
+  margin-bottom: 24px;
+}
+
+.course-name-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
 // Course Name Input
 .course-name-input {
-  width: 100%;
+  flex: 1;
   padding: 16px 20px;
   font-size: 18px;
   font-weight: 500;
@@ -1148,6 +1190,59 @@
 
   &::placeholder {
     color: #94A3B8;
+  }
+}
+
+// Generate with AI Button
+.btn-generate-ai {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
+  }
+
+  .ai-icon {
+    font-size: 20px;
+  }
+
+  .btn-text {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+    
+    .btn-text {
+      font-size: 15px;
+    }
   }
 }
 
@@ -1666,6 +1761,17 @@
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // Responsive adjustments for Step 2
 @media (max-width: 768px) {
   .field-group {
@@ -1683,6 +1789,15 @@
   .course-name-input {
     padding: 14px 16px;
     font-size: 16px;
+  }
+
+  .btn-generate-ai {
+    padding: 14px 20px;
+    font-size: 15px;
+
+    .btn-text {
+      font-size: 15px;
+    }
   }
 
   .suggestions-chips {
@@ -1753,6 +1868,501 @@
 
   .units-list {
     direction: rtl;
+  }
+}
+
+// Topics Section
+.topics-section {
+  margin-top: 24px;
+  
+  .field-label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #1a1a1a;
+  }
+}
+
+.topics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.topic-card {
+  position: relative;
+  padding: 16px;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    border-color: #73adef;
+    background: #f8fafc;
+  }
+  
+  &.selected {
+    border-color: #73adef;
+    background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+    box-shadow: 0 4px 12px rgba(115, 173, 239, 0.2);
+    
+    &:hover {
+      .topic-hint {
+        opacity: 1;
+      }
+    }
+  }
+  
+  &.editing {
+    border-color: #73adef;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(115, 173, 239, 0.3);
+  }
+}
+
+// Manual Topic Input Wrapper
+.topic-input-wrapper {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.topic-input-manual {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1F2937;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: #94A3B8;
+  }
+}
+
+.topic-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #73adef;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #1a1a1a;
+  outline: none;
+  
+  &:focus {
+    border-color: #1b2a84;
+    box-shadow: 0 0 0 3px rgba(115, 173, 239, 0.1);
+  }
+}
+
+.topic-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+}
+
+.topic-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.topic-hint {
+  display: block !important;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(115, 173, 239, 0.2);
+  font-size: 12px;
+  color: #73adef;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+  width: 100%;
+  
+  .topic-card.selected:hover & {
+    opacity: 1;
+  }
+}
+
+// Read-only Summary (shown when step2Locked)
+.read-only-summary {
+  margin: 24px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%); // Green gradient background
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.15); // Green-tinted shadow
+  border: 2px solid #86EFAC; // Green border
+  position: relative;
+  z-index: 10; // Ensure it stays on top during loading states
+  animation: fadeInUp 0.4s ease-out; // Smooth fade-in animation
+  transition: all 0.3s ease; // Smooth transitions for any changes
+  text-align: start; // Respect RTL/LTR
+
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #BBF7D0; // Light green border
+
+    &:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .summary-label {
+      font-weight: 700;
+      font-size: 16px;
+      color: #065F46; // Dark green text
+      white-space: nowrap;
+    }
+
+    .summary-icon {
+      font-size: 24px;
+      line-height: 1;
+      filter: drop-shadow(0 1px 2px rgba(16, 185, 129, 0.3)); // Green shadow for icon
+      flex-shrink: 0; // Prevent icon from shrinking
+    }
+
+    .summary-value {
+      font-size: 16px;
+      font-weight: 500;
+      color: #047857; // Medium green text
+      flex: 1;
+      text-align: start;
+      min-width: 0; // Allow text to wrap if needed
+
+      &.underlined {
+        text-decoration: underline;
+        text-underline-offset: 6px;
+        text-decoration-color: rgba(16, 185, 129, 0.4); // Green underline
+      }
+    }
+  }
+
+  // RTL support
+  &[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+    
+    .summary-item {
+      flex-direction: row;
+      direction: rtl;
+      justify-content: flex-start;
+      align-items: center;
+      
+      // In RTL, visual order (right to left): Icon → Label → Value
+      .summary-icon {
+        order: 1; // Icon appears rightmost (first in RTL flow)
+        margin-left: 0px; // Space after icon (to the left in RTL)
+        margin-right: 0;
+        flex-shrink: 0;
+      }
+      
+      .summary-label {
+        order: 2; // Label appears middle
+        text-align: right;
+        margin-left: 12px; // Space after label (to the left in RTL)
+        margin-right: 8px; // Space before label (to the right in RTL)
+        flex-shrink: 0;
+      }
+      
+      .summary-value {
+        order: 3; // Value appears leftmost (last in RTL flow)
+        text-align: right;
+        margin-right: 0;
+        margin-left: 0;
+        flex: 1;
+        min-width: 0;
+        direction: rtl; // Ensure RTL for Arabic text
+      }
+    }
+  }
+
+  // LTR support (explicit)
+  &[dir="ltr"] {
+    .summary-item {
+      flex-direction: row;
+      direction: ltr;
+      
+      .summary-label {
+        text-align: left;
+        margin-right: 12px;
+        margin-left: 0;
+      }
+      
+      .summary-icon {
+        margin-left: 0;
+        margin-right: 8px;
+      }
+      
+      .summary-value {
+        text-align: left;
+        margin-left: 0;
+        margin-right: auto;
+        flex: 1;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    margin: 20px 0;
+
+    .summary-item {
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+
+      .summary-label {
+        font-size: 15px;
+      }
+
+      .summary-value {
+        font-size: 15px;
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Course Name Display (plain text, not editable)
+.course-name-display {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  padding: 12px 0;
+  margin-top: 8px;
+  line-height: 1.5;
+  
+  [dir="rtl"] & {
+    text-align: right;
+  }
+  
+  [dir="ltr"] & {
+    text-align: left;
+  }
+}
+
+// Topic Display (plain text, not editable)
+.topic-display {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  padding: 12px 0;
+  margin-top: 8px;
+  line-height: 1.5;
+  
+  [dir="rtl"] & {
+    text-align: right;
+  }
+  
+  [dir="ltr"] & {
+    text-align: left;
+  }
+}
+
+// Inline Field Display (Category, Course Name, Topic - all in one line)
+.inline-field-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  
+  // Set direction based on locale
+  [dir="rtl"] & {
+    flex-direction: row;
+    direction: rtl;
+  }
+  
+  [dir="ltr"] & {
+    flex-direction: row;
+    direction: ltr;
+  }
+}
+
+.inline-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  white-space: nowrap;
+  
+  [dir="rtl"] & {
+    text-align: right;
+  }
+  
+  [dir="ltr"] & {
+    text-align: left;
+  }
+}
+
+.inline-icon {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.inline-value {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  
+  &.underlined {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(26, 26, 26, 0.12);
+  }
+  
+  [dir="rtl"] & {
+    text-align: right;
+    direction: rtl;
+  }
+  
+  [dir="ltr"] & {
+    text-align: left;
+    direction: ltr;
+  }
+}
+
+// Warning Modal
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  
+  [dir="rtl"] & {
+    direction: rtl;
+  }
+}
+
+.modal-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+}
+
+.modal-body {
+  padding: 24px;
+  
+  p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #475569;
+  }
+}
+
+.modal-actions {
+  padding: 16px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid #e5e7eb;
+  
+  [dir="rtl"] & {
+    flex-direction: row-reverse;
+  }
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+  
+  &:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+}
+
+.btn-confirm {
+  background: #dc2626;
+  color: white;
+  
+  &:hover {
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// RTL Support for Topics
+[dir="rtl"] {
+  .topics-grid {
+    direction: rtl;
+  }
+  
+  .topic-text,
+  .topic-hint {
+    text-align: center;
   }
 }
 
