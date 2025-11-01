@@ -57,14 +57,8 @@
         <div class="cta-card" [class.loading]="loadingStartNow" (click)="goToStarter()">
           <div class="cta-icon">🚀</div>
           <div class="cta-title">{{ 'student.dashboard.cta.startNow' | translate }}</div>
-
-          <!-- When we have native recommendations -->
-          <ng-container *ngIf="recommendations.length; else aiStarter">
-            <div class="cta-sub">
-              {{ recommendations[0]?.title }} · {{ recommendations[0]?.est_minutes }} {{ 'general.min' | translate }}
-            </div>
-          </ng-container>
-
+          <div class="cta-sub">{{ 'student.dashboard.cta.createCourseByAI' | translate }}</div>
+       
           <!-- AI fallback when zero recommendations -->
           <ng-template #aiStarter>
             <div class="cta-sub">

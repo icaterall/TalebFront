@@ -94,6 +94,24 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   get showStep1(): boolean { return this.currentStep === 1; }
   get showStep2(): boolean { return this.currentStep === 2; }
+  
+  get showSummarySkeleton(): boolean {
+    // Show skeleton when we have a draft but data is still loading/restoring
+    if (this.step2Locked) return false; // Don't show skeleton if summary is already shown
+    
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    const hasDraft = !!(draft?.category_id && draft?.name && draft.name.trim().length >= 3);
+    
+    if (!hasDraft) return false; // No draft, don't show skeleton
+    
+    // Show skeleton if:
+    // 1. We have a draft that should show read-only summary
+    // 2. But step2Locked is not set yet (data is being restored)
+    // 3. And either categories are loading OR category hasn't been found in allCategories yet
+    const categoryLoading = this.loading || (!!draft.category_id && !this.selectedCategory);
+    return categoryLoading;
+  }
 
   get countryName(): string {
     // Always use localized name from backend (based on current Accept-Language header)
@@ -638,47 +656,36 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   selectTopic(topic: string): void {
-    // If already editing this topic, clicking again saves it and exits edit mode
+    // If already editing this topic, don't do anything on click (buttons handle actions)
     if (this.editingTopic === topic) {
-      this.saveTopicEdit();
-      this.cdr.detectChanges();
       return;
     }
     
-    // If switching to a different topic while editing, cancel current edit and start editing the new topic
+    // If switching to a different topic while editing, cancel current edit
     if (this.editingTopic && this.editingTopic !== topic) {
-      // Cancel current edit (don't save) - just reset editing state
+      // Cancel current edit (don't save)
       this.editingTopic = null;
       this.editingTopicValue = '';
-      
-      // Start editing the new topic
-      this.editingTopic = topic;
-      this.editingTopicValue = topic;
-      this.selectedTopic = topic;
-      this.subjectSlug = topic;
-      this.cdr.detectChanges();
-      
-      // Focus the input after view update
-      setTimeout(() => {
-        const input = document.querySelector('.topic-input') as HTMLInputElement;
-        if (input) {
-          input.focus();
-          input.select();
-        }
-      }, 0);
-      return;
     }
     
-    // First click on a topic (no current editing): Enable editing mode immediately
+    // Just select the topic (edit icon will handle editing)
+    this.selectedTopic = topic;
+    this.subjectSlug = topic;
+    this.editingTopic = null; // Make sure we're not editing
+    this.editingTopicValue = '';
+    this.saveDraftStep2();
+    this.cdr.detectChanges();
+  }
+  
+  enterTopicEdit(topic: string): void {
+    // Enter edit mode for the selected topic
     this.editingTopic = topic;
     this.editingTopicValue = topic;
-    this.selectedTopic = topic; // Pre-select it
-    this.subjectSlug = topic;
     this.cdr.detectChanges();
     
     // Focus the input after view update
     setTimeout(() => {
-      const input = document.querySelector('.topic-input') as HTMLInputElement;
+      const input = document.querySelector(`.topic-input[data-topic="${topic}"]`) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();

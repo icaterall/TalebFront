@@ -172,6 +172,7 @@
       "cta": {
         "joinClass": "Join your teacher's class",
         "joinClassSub": "Enter class code",
+        "createCourseByAI": "Create a course by AI",
         "startNow": "Start a lesson now",
         "explore": "Explore topics",
         "exploreSub": "Math | Computing | Languages | Science"

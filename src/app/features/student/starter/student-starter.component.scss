@@ -819,6 +819,86 @@
   100% { background-position: 200% 0; }
 }
 
+// Skeleton for Read-only Summary
+.read-only-summary-skeleton {
+  opacity: 0.7;
+  
+  .skeleton-text {
+    display: inline-block;
+    height: 20px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 50%, #F1F5F9 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    pointer-events: none;
+    vertical-align: middle;
+  }
+  
+  .skeleton-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 50%, #F1F5F9 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  
+  .summary-item {
+    gap: 12px;
+    
+    &:nth-child(1) {
+      .summary-label.skeleton-text {
+        width: 90px; // Category label
+      }
+      .summary-icon.skeleton-icon {
+        width: 24px;
+        height: 24px;
+      }
+      .summary-value.skeleton-text {
+        width: 140px; // Category value
+      }
+    }
+    
+    &:nth-child(2) {
+      .summary-label.skeleton-text {
+        width: 130px; // Course Name label
+      }
+      .summary-value.skeleton-text {
+        width: 220px; // Course Name value
+      }
+    }
+    
+    &:nth-child(3) {
+      .summary-label.skeleton-text {
+        width: 70px; // Topic label
+      }
+      .summary-value.skeleton-text {
+        width: 190px; // Topic value
+      }
+    }
+  }
+  
+  &[dir="rtl"] {
+    .summary-item {
+      flex-direction: row;
+      direction: rtl;
+      
+      .skeleton-text {
+        margin-left: 0;
+        margin-right: 12px;
+      }
+      
+      .summary-value.skeleton-text {
+        margin-right: 0;
+        margin-left: auto;
+      }
+    }
+  }
+}
+
 // Search Section
 .search-section {
   background: rgba(255, 255, 255, 0.7);
@@ -915,26 +995,37 @@
 
 // Wizard Actions inside card
 .wizard-actions {
-  margin-top: 32px;
+  margin-top: 20px;
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  direction: ltr; // Default LTR
+  flex-direction: row; // Default: Back on left, Continue on right
 
-  // RTL support
-  [dir="rtl"] & {
-    flex-direction: row-reverse;
+  // RTL support - Back button on right (before Continue in RTL reading order)
+  &[dir="rtl"] {
+    direction: rtl;
+    flex-direction: row; // Keep natural order in RTL: Back (right) → Continue (left)
+    justify-content: flex-start; // Align to start (right in RTL)
   }
 
   // LTR support (explicit)
-  [dir="ltr"] & {
-    flex-direction: row;
+  &[dir="ltr"] {
+    direction: ltr;
+    flex-direction: row; // Back on left, Continue on right
   }
 
   @media (max-width: 768px) {
     flex-direction: column;
+    
+    // In RTL, on mobile, Back button should be on top
+    &[dir="rtl"] {
+      flex-direction: column;
+      // In RTL mobile, Back appears first (top) which is correct
+    }
   }
 }
 
@@ -1824,7 +1915,11 @@
   }
 
   .wizard-actions {
-    flex-direction: column-reverse; // Back button on top on mobile
+    flex-direction: column; // Default: Continue on top on mobile
+    
+    &[dir="rtl"] {
+      flex-direction: column-reverse; // In RTL: Back button on top on mobile
+    }
     
     .btn-continue {
       width: 100%;
@@ -1914,18 +2009,14 @@
     border-color: #73adef;
     background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
     box-shadow: 0 4px 12px rgba(115, 173, 239, 0.2);
-    
-    &:hover {
-      .topic-hint {
-        opacity: 1;
-      }
-    }
   }
   
   &.editing {
-    border-color: #73adef;
-    background: #ffffff;
-    box-shadow: 0 4px 12px rgba(115, 173, 239, 0.3);
+    border-color: #2563EB;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+    cursor: default;
+    padding: 12px;
   }
 }
 
@@ -1958,6 +2049,100 @@
   }
 }
 
+.topic-edit-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  
+  .topic-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #2563EB;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #1a1a1a;
+    outline: none;
+    min-width: 0;
+    
+    &:focus {
+      border-color: #1D4ED8;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+  }
+  
+  .topic-edit-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  
+  .topic-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    
+    .topic-action-icon {
+      font-size: 16px;
+      line-height: 1;
+      font-weight: 700;
+    }
+    
+    &.topic-cancel-btn {
+      background: #FEE2E2;
+      color: #DC2626;
+      
+      &:hover {
+        background: #FECACA;
+        transform: scale(1.05);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+    
+    &.topic-confirm-btn {
+      background: #D1FAE5;
+      color: #059669;
+      
+      &:hover {
+        background: #A7F3D0;
+        transform: scale(1.05);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+    
+    &.topic-edit-btn {
+      background: rgba(115, 173, 239, 0.15);
+      color: #73adef;
+      
+      &:hover {
+        background: rgba(115, 173, 239, 0.25);
+        color: #2563EB;
+        transform: scale(1.05);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+}
+
 .topic-input {
   width: 100%;
   padding: 8px 12px;
@@ -1974,20 +2159,13 @@
   }
 }
 
-.topic-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 100%;
-}
-
 .topic-text {
   font-size: 14px;
   font-weight: 500;
   color: #1a1a1a;
-  text-align: center;
+  text-align: left;
+  flex: 1;
+  padding: 0;
 }
 
 .topic-hint {
