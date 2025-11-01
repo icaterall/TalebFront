@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { QuillModule } from 'ngx-quill';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { AiBuilderService, CourseDraft } from '../../../core/services/ai-builder.service';
@@ -23,7 +24,7 @@ interface Category {
 @Component({
   selector: 'app-student-starter',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule],
+  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule, QuillModule],
   templateUrl: './student-starter.component.html',
   styleUrls: ['./student-starter.component.scss']
 })
@@ -42,6 +43,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   currentStep: number = 1; // 1 = Category, 2 = Course Basics
   step2Locked: boolean = false; // Track if Step 2 inputs are locked after continue
   showWarningModal: boolean = false; // Track warning modal visibility
+  showContentTypeModal: boolean = false; // Track content type modal visibility
+  selectedContentType: 'video' | 'resources' | 'text' | 'audio' | 'quiz' | null = null; // Track selected content type
+  showTextEditor: boolean = false; // Track text editor visibility
+  textContent: string = ''; // Store text editor content
+  generatingWithAI: boolean = false; // Track AI generation status
 
   // Step 1: Category Selection
   loading = false;
@@ -94,6 +100,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   get showStep1(): boolean { return this.currentStep === 1; }
   get showStep2(): boolean { return this.currentStep === 2; }
+  
+  getSectionDisplayName(sectionName: string): string {
+    // Format as "Section 1" in bold, followed by section name
+    // The HTML template will handle the bold styling
+    return sectionName;
+  }
+  
+  getSectionNumberLabel(): string {
+    // Returns "Section 1" or "القسم 1"
+    return this.currentLang === 'ar' ? 'القسم 1' : 'Section 1';
+  }
   
   get showSummarySkeleton(): boolean {
     // Show skeleton when we have a draft but data is still loading/restoring
@@ -566,6 +583,154 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // User cancelled - just close modal
     this.showWarningModal = false;
   }
+
+  // Content Type Modal Methods
+  openContentTypeModal(contentType: 'video' | 'resources' | 'text' | 'audio' | 'quiz'): void {
+    // For text content, open editor directly instead of modal
+    if (contentType === 'text') {
+      this.showTextEditor = true;
+      this.selectedContentType = 'text';
+      this.cdr.detectChanges();
+      return;
+    }
+    
+    // For other content types, show the AI/Manual choice modal
+    this.selectedContentType = contentType;
+    this.showContentTypeModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeContentTypeModal(): void {
+    this.showContentTypeModal = false;
+    this.selectedContentType = null;
+    this.cdr.detectChanges();
+  }
+
+  getContentTypeModalTitle(): string {
+    if (!this.selectedContentType) return '';
+    
+    const titles = {
+      video: this.currentLang === 'ar' ? 'إضافة فيديو' : 'Add Video',
+      resources: this.currentLang === 'ar' ? 'إضافة موارد' : 'Add Resources',
+      text: this.currentLang === 'ar' ? 'إضافة درس نصي' : 'Add Text Lesson',
+      audio: this.currentLang === 'ar' ? 'إضافة صوت' : 'Add Audio',
+      quiz: this.currentLang === 'ar' ? 'إضافة اختبار وواجبات' : 'Add Quiz & Assignments'
+    };
+    
+    return titles[this.selectedContentType];
+  }
+
+  getContentTypeModalDescription(): string {
+    if (!this.selectedContentType) return '';
+    
+    const descriptions = {
+      video: this.currentLang === 'ar' 
+        ? 'اختر طريقة إنشاء المحتوى للفيديو' 
+        : 'Choose how to create video content',
+      resources: this.currentLang === 'ar' 
+        ? 'اختر طريقة إنشاء المحتوى للموارد' 
+        : 'Choose how to create resources content',
+      text: this.currentLang === 'ar' 
+        ? 'اختر طريقة إنشاء المحتوى للدرس النصي' 
+        : 'Choose how to create text lesson content',
+      audio: this.currentLang === 'ar' 
+        ? 'اختر طريقة إنشاء المحتوى للصوت' 
+        : 'Choose how to create audio content',
+      quiz: this.currentLang === 'ar' 
+        ? 'اختر طريقة إنشاء المحتوى للاختبار والواجبات' 
+        : 'Choose how to create quiz and assignment content'
+    };
+    
+    return descriptions[this.selectedContentType];
+  }
+
+  selectCreationMode(mode: 'ai' | 'manual'): void {
+    // TODO: Implement creation mode logic
+    // This will navigate to the appropriate content creation page
+    console.log(`Selected ${mode} mode for ${this.selectedContentType}`);
+    
+    // Close modal
+    this.closeContentTypeModal();
+    
+    // Here you would typically navigate to the content creation page
+    // For now, we'll just log the action
+    // Example: this.router.navigate(['/student/content/create'], { queryParams: { type: this.selectedContentType, mode } });
+  }
+
+  // Text Editor Methods
+  closeTextEditor(): void {
+    this.showTextEditor = false;
+    this.selectedContentType = null;
+    this.cdr.detectChanges();
+  }
+
+  generateTextWithAI(): void {
+    if (this.generatingWithAI) return;
+    
+    this.generatingWithAI = true;
+    
+    // Prepare context data
+    const grade = this.stageName || '';
+    const country = this.countryName || '';
+    const course_name = this.courseName || '';
+    const category = this.selectedCategory 
+      ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
+      : '';
+    const section = this.selectedTopic || this.subjectSlug || '';
+    
+    const payload = {
+      grade,
+      country,
+      course_name,
+      category,
+      section,
+      locale: this.currentLang
+    };
+    
+    console.log('Generating text content with AI...', payload);
+    
+    // Call backend API
+    this.http.post<{ content: string }>(`${this.baseUrl}/ai/content/text`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Language': this.currentLang === 'ar' ? 'ar' : 'en'
+      }
+    }).subscribe({
+      next: (response) => {
+        this.textContent = response.content || '<p>No content generated.</p>';
+        this.generatingWithAI = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('AI text generation error:', error);
+        this.textContent = `<p>${this.currentLang === 'ar' ? 'فشل في إنشاء المحتوى. يرجى المحاولة مرة أخرى.' : 'Failed to generate content. Please try again.'}</p>`;
+        this.generatingWithAI = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  saveTextContent(): void {
+    // TODO: Save text content to draft/localStorage
+    console.log('Saving text content:', this.textContent);
+    this.closeTextEditor();
+  }
+
+  // Quill Editor Configuration
+  quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'script': 'sub'}, { 'script': 'super' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'direction': 'rtl' }, { 'direction': 'ltr' }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link', 'image', 'video'],
+      ['clean']
+    ]
+  };
 
   loadTitleSuggestions(): void {
     if (!this.selectedCategory || !this.student) return;

@@ -79,8 +79,77 @@
             <span class="summary-value">{{ courseName }}</span>
           </div>
           <div class="summary-item" *ngIf="selectedTopic || subjectSlug">
-            <span class="summary-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
-            <span class="summary-value">{{ selectedTopic || subjectSlug }}</span>
+            <span class="summary-label">{{ currentLang === 'ar' ? 'القسم 1:' : 'Section 1:' }}</span>
+            <span class="summary-value">
+             
+              <span class="section-name">{{ getSectionDisplayName(selectedTopic || subjectSlug) }}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Add Content to Section (shown when step2Locked is true) -->
+        <div class="add-content-section" *ngIf="step2Locked && selectedCategory" [dir]="isRTL ? 'rtl' : 'ltr'">
+          <h3 class="section-title">{{ currentLang === 'ar' ? 'أضف محتوى إلى هذا القسم' : 'Add Content to This Section' }}</h3>
+          <div class="content-type-grid">
+            <button 
+              type="button"
+              class="content-type-btn"
+              (click)="openContentTypeModal('text')"
+              [attr.aria-label]="currentLang === 'ar' ? 'إضافة درس نصي' : 'Add Text Lesson'">
+              <div class="content-type-header">
+                <span class="content-icon">✍️</span>
+                <span class="content-type-label">{{ currentLang === 'ar' ? 'درس نصي' : 'Text Lesson' }}</span>
+              </div>
+              <span class="content-type-desc">{{ currentLang === 'ar' ? 'محتوى نصي غني' : 'Rich text content' }}</span>
+            </button>
+            
+            <button 
+              type="button"
+              class="content-type-btn"
+              (click)="openContentTypeModal('resources')"
+              [attr.aria-label]="currentLang === 'ar' ? 'إضافة موارد' : 'Add Resources'">
+              <div class="content-type-header">
+                <span class="content-icon">📄</span>
+                <span class="content-type-label">{{ currentLang === 'ar' ? 'موارد' : 'Resources' }}</span>
+              </div>
+              <span class="content-type-desc">{{ currentLang === 'ar' ? 'ملفات وروابط' : 'Files & links' }}</span>
+            </button>
+            
+            <button 
+              type="button"
+              class="content-type-btn"
+              (click)="openContentTypeModal('video')"
+              [attr.aria-label]="currentLang === 'ar' ? 'إضافة فيديو' : 'Add Video'">
+              <div class="content-type-header">
+                <span class="content-icon">🎥</span>
+                <span class="content-type-label">{{ currentLang === 'ar' ? 'فيديو' : 'Video' }}</span>
+              </div>
+              <span class="content-type-desc">{{ currentLang === 'ar' ? 'YouTube أو ملف' : 'YouTube or file' }}</span>
+            </button>
+            
+            <button 
+              type="button"
+              class="content-type-btn"
+              (click)="openContentTypeModal('audio')"
+              [attr.aria-label]="currentLang === 'ar' ? 'إضافة صوت' : 'Add Audio'">
+              <div class="content-type-header">
+                <span class="content-icon">🔊</span>
+                <span class="content-type-label">{{ currentLang === 'ar' ? 'صوت' : 'Audio' }}</span>
+              </div>
+              <span class="content-type-desc">{{ currentLang === 'ar' ? 'MP3/WAV' : 'MP3/WAV' }}</span>
+            </button>
+            
+            <button 
+              type="button"
+              class="content-type-btn"
+              (click)="openContentTypeModal('quiz')"
+              [attr.aria-label]="currentLang === 'ar' ? 'إضافة اختبار وواجبات' : 'Add Quiz & Assignments'">
+              <div class="content-type-header">
+                <span class="content-icon">✅</span>
+                <span class="content-type-label">{{ currentLang === 'ar' ? 'اختبار وواجبات' : 'Quiz & Assignments' }}</span>
+              </div>
+              <span class="content-type-desc">{{ currentLang === 'ar' ? 'اختبارات وتقييم' : 'Quizzes & grading' }}</span>
+            </button>
           </div>
         </div>
 
@@ -180,14 +249,17 @@
           <!-- Show topic field only if AI was not used (manual course name entry) -->
           <div class="field-group" *ngIf="courseName && !step2Locked && courseTitleSuggestions.length === 0">
             <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
               <span class="required">*</span>
             </label>
 
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
+              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
+              <span class="inline-value underlined">
+                <span class="section-number">{{ getSectionNumberLabel() }}</span>
+                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
+              </span>
             </div>
 
             <!-- Manual Topic Input (shown when no AI was used) -->
@@ -198,11 +270,11 @@
                   class="topic-input-manual"
                   [(ngModel)]="subjectSlug"
                   (input)="onSubjectSlugChange()"
-                  [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                  [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
                   maxlength="100" />
               </div>
               <div class="field-help">
-                {{ currentLang === 'ar' ? 'اكتب اسم الوحدة يدوياً' : 'Enter the topic name manually' }}
+                {{ currentLang === 'ar' ? 'اكتب اسم القسم يدوياً' : 'Enter the section name manually' }}
               </div>
             </div>
           </div>
@@ -210,14 +282,17 @@
           <!-- Topic Selection Cards (shown when AI title card is selected) -->
           <div class="field-group" *ngIf="courseName && !step2Locked && courseTitleSuggestions.length > 0 && availableTopics.length > 0">
             <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
               <span class="required">*</span>
             </label>
 
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
+              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
+              <span class="inline-value underlined">
+                <span class="section-number">{{ getSectionNumberLabel() }}</span>
+                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
+              </span>
             </div>
 
             <!-- Topic Selection Cards (shown until Continue is clicked) -->
@@ -239,11 +314,14 @@
                         (click)="$event.stopPropagation()"
                         (keyup.enter)="saveTopicEdit()"
                         (keyup.escape)="cancelTopicEdit()"
-                        [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                        [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
                         (blur)="$event.stopPropagation()" />
                     </ng-container>
                     <ng-template #topicDisplayStep1>
-                      <span class="topic-text">{{ topic }}</span>
+                      <span class="topic-text">
+                        <span class="section-number">{{ getSectionNumberLabel() }}</span>
+                        <span class="section-name">{{ topic }}</span>
+                      </span>
                     </ng-template>
                     <div class="topic-edit-actions">
                       <ng-container *ngIf="editingTopic === topic; else editIconTemplate">
@@ -268,7 +346,7 @@
                           type="button"
                           class="topic-action-btn topic-edit-btn"
                           (click)="$event.stopPropagation(); enterTopicEdit(topic)"
-                          [attr.aria-label]="currentLang === 'ar' ? 'تعديل الوحدة' : 'Edit topic'">
+                          [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit section'">
                           <span class="topic-action-icon">✏️</span>
                         </button>
                       </ng-template>
@@ -277,7 +355,7 @@
                 </div>
               </div>
               <div class="field-help">
-                {{ currentLang === 'ar' ? 'انقر للاختيار، ثم انقر على أيقونة التعديل للتعديل' : 'Click to select, then click the edit icon to edit' }}
+                {{ currentLang === 'ar' ? 'انقر للاختيار، ثم انقر على أيقونة التعديل للتعديل' : 'Click to select a section, then click the edit icon to edit' }}
               </div>
             </div>
           </div>
@@ -392,14 +470,17 @@
           <!-- Show topic field only if AI was not used (manual course name entry) -->
           <div class="field-group" *ngIf="courseName && courseTitleSuggestions.length === 0">
             <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
               <span class="required">*</span>
             </label>
 
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
+              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
+              <span class="inline-value underlined">
+                <span class="section-number">{{ getSectionNumberLabel() }}</span>
+                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
+              </span>
             </div>
 
             <!-- Manual Topic Input (shown when no AI was used) -->
@@ -410,11 +491,11 @@
                   class="topic-input-manual"
                   [(ngModel)]="subjectSlug"
                   (input)="onSubjectSlugChange()"
-                  [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                  [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
                   maxlength="100" />
               </div>
               <div class="field-help">
-                {{ currentLang === 'ar' ? 'اكتب اسم الوحدة يدوياً' : 'Enter the topic name manually' }}
+                {{ currentLang === 'ar' ? 'اكتب اسم القسم يدوياً' : 'Enter the section name manually' }}
               </div>
             </div>
           </div>
@@ -422,14 +503,17 @@
           <!-- Topic Selection Cards (shown when AI title card is selected) -->
           <div class="field-group" *ngIf="courseName && courseTitleSuggestions.length > 0 && availableTopics.length > 0">
             <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
               <span class="required">*</span>
             </label>
 
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'الوحدة:' : 'Topic:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
+              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
+              <span class="inline-value underlined">
+                <span class="section-number">{{ getSectionNumberLabel() }}</span>
+                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
+              </span>
             </div>
 
             <!-- Topic Selection Cards (shown until Continue is clicked) -->
@@ -449,18 +533,21 @@
                       (click)="$event.stopPropagation()"
                       (keyup.enter)="saveTopicEdit()"
                       (keyup.escape)="cancelTopicEdit()"
-                      [placeholder]="currentLang === 'ar' ? 'أدخل الوحدة...' : 'Enter topic...'"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
                       (blur)="saveTopicEdit()" />
                   </ng-container>
                   <ng-template #topicDisplay>
                     <div class="topic-content">
-                      <span class="topic-text">{{ topic }}</span>
+                      <span class="topic-text">
+                        <span class="section-number">{{ getSectionNumberLabel() }}</span>
+                        <span class="section-name">{{ topic }}</span>
+                      </span>
                     </div>
                   </ng-template>
                 </div>
               </div>
               <div class="field-help">
-                {{ currentLang === 'ar' ? 'انقر للاختيار، ثم انقر على أيقونة التعديل للتعديل' : 'Click to select, then click the edit icon to edit' }}
+                {{ currentLang === 'ar' ? 'انقر للاختيار، ثم انقر على أيقونة التعديل للتعديل' : 'Click to select a section, then click the edit icon to edit' }}
               </div>
             </div>
           </div>
@@ -468,7 +555,7 @@
           <!-- Fallback Topic Input (if no topics from title card) -->
           <div class="field-group" *ngIf="courseName && availableTopics.length === 0 && !selectedTopic && !editingTopic">
             <label class="field-label">
-              {{ currentLang === 'ar' ? 'الوحدة' : 'Topic' }}
+              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
               <span class="required">*</span>
             </label>
             <ng-select
@@ -533,6 +620,84 @@
           <button class="btn-confirm" (click)="confirmGoBack()">
             {{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text Editor Modal -->
+    <div class="modal-overlay" *ngIf="showTextEditor" (click)="closeTextEditor()">
+      <div class="modal-content text-editor-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ currentLang === 'ar' ? '✍️ إنشاء درس نصي' : '✍️ Create Text Lesson' }}</h3>
+          <button type="button" class="modal-close-btn" (click)="closeTextEditor()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="editor-toolbar">
+            <button 
+              type="button"
+              class="btn-generate-ai"
+              [disabled]="generatingWithAI"
+              (click)="generateTextWithAI()">
+              <span class="btn-icon">🤖</span>
+              <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'Generate by AI' }}</span>
+              <span class="btn-hint">{{ currentLang === 'ar' ? '(سوف يستغرق 1-2 دقيقة)' : '(Will take 1-2 minutes)' }}</span>
+            </button>
+            <div class="ai-generating" *ngIf="generatingWithAI">
+              <span class="spinner"></span>
+              <span>{{ currentLang === 'ar' ? 'جاري الإنشاء...' : 'Generating...' }}</span>
+            </div>
+          </div>
+          
+          <div class="editor-container" [dir]="isRTL ? 'rtl' : 'ltr'">
+            <quill-editor
+              [(ngModel)]="textContent"
+              [modules]="quillModules"
+              [placeholder]="currentLang === 'ar' ? 'ابدأ بكتابة محتوى الدرس النصي هنا...' : 'Start writing your text lesson content here...'"
+              [styles]="{ height: '400px' }"
+              [bounds]="'self'">
+            </quill-editor>
+          </div>
+          
+          <div class="editor-actions">
+            <button type="button" class="btn-cancel" (click)="closeTextEditor()">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button type="button" class="btn-save" (click)="saveTextContent()">
+              {{ currentLang === 'ar' ? 'حفظ' : 'Save' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Type Creation Modal (AI-assisted or Manual) -->
+    <div class="modal-overlay" *ngIf="showContentTypeModal" (click)="closeContentTypeModal()">
+      <div class="modal-content content-type-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ getContentTypeModalTitle() }}</h3>
+          <button type="button" class="modal-close-btn" (click)="closeContentTypeModal()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-description">{{ getContentTypeModalDescription() }}</p>
+          <div class="creation-options">
+            <button 
+              type="button"
+              class="creation-option-btn ai-option"
+              (click)="selectCreationMode('ai')">
+              <span class="option-icon">🤖</span>
+              <span class="option-label">{{ currentLang === 'ar' ? 'مساعد بالذكاء الاصطناعي' : 'AI-assisted' }}</span>
+              <span class="option-desc">{{ currentLang === 'ar' ? 'استخدم الذكاء الاصطناعي لإنشاء المحتوى تلقائياً' : 'Use AI to automatically generate content' }}</span>
+            </button>
+            
+            <button 
+              type="button"
+              class="creation-option-btn manual-option"
+              (click)="selectCreationMode('manual')">
+              <span class="option-icon">✍️</span>
+              <span class="option-label">{{ currentLang === 'ar' ? 'يدوي' : 'Manual' }}</span>
+              <span class="option-desc">{{ currentLang === 'ar' ? 'قم بإنشاء المحتوى بنفسك خطوة بخطوة' : 'Create content yourself step by step' }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
