@@ -457,7 +457,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.courseTitleSuggestions = res.titles || [];
         this.loadingTitles = false;
         this.cdr.detectChanges();
-        console.log('Title suggestions loaded:', this.courseTitleSuggestions.length);
+        console.log(`Title suggestions loaded (provider: ${res.provider || 'openai'}):`, this.courseTitleSuggestions.length);
       },
       error: (err) => {
         console.error('Failed to load title suggestions:', err);

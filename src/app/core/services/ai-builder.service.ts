@@ -55,8 +55,9 @@ export class AiBuilderService {
     localStorage.removeItem(this.key);
   }
 
-  getTitles(payload: { category_id: number; stage_id?: number; country_id?: number; locale: string; term?: number; mode?: 'curriculum' | 'general'; category_name?: string; date?: string }): Observable<{ titles: { title: string; rationale: string }[]; cached?: boolean }>{
-    return this.http.post<{ titles: { title: string; rationale: string }[]; cached?: boolean }>(`${this.baseUrl}/ai/titles`, payload);
+  getTitles(payload: { category_id: number; stage_id?: number; country_id?: number; locale: string; term?: number; mode?: 'curriculum' | 'general'; category_name?: string; date?: string }): Observable<{ titles: { title: string; rationale: string }[]; cached?: boolean; provider?: string }>{
+    // Use OpenAI GPT-4o mini
+    return this.http.post<{ titles: { title: string; rationale: string }[]; cached?: boolean; provider?: string }>(`${this.baseUrl}/ai/titles`, payload);
   }
 
   getUnits(payload: { category_id: number; course_name?: string; stage_id?: number; country_id?: number; locale?: string }): Observable<{ units: { name: string; order: number }[] }> {
