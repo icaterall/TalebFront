@@ -83,49 +83,6 @@
 
         <!-- Course Title Section (Shows after category selection) -->
         <div class="course-title-section" *ngIf="selectedCategory">
-          <!-- Context Chips and Mode Toggle -->
-          <div class="context-section">
-            <!-- Mode Toggle (if no stage/country) -->
-            <div class="mode-toggle-container" *ngIf="shouldShowModeToggle">
-              <label class="mode-toggle-label">{{ currentLang === 'ar' ? 'نوع المقرر:' : 'Course Type:' }}</label>
-              <div class="mode-toggle">
-                <button
-                  class="mode-btn"
-                  [class.active]="courseMode === 'curriculum'"
-                  (click)="toggleCourseMode()">
-                  {{ currentLang === 'ar' ? 'منهج مدرسي' : 'School Curriculum' }}
-                </button>
-                <button
-                  class="mode-btn"
-                  [class.active]="courseMode === 'general'"
-                  (click)="toggleCourseMode()">
-                  {{ currentLang === 'ar' ? 'مهارات عامة' : 'General Skills' }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Context Chips -->
-            <div class="context-chips">
-              <div class="context-chip" *ngIf="courseMode === 'curriculum' && stageName">
-                <span class="chip-icon">🎓</span>
-             
-                <span class="chip-value">{{ stageName }}</span>
-              </div>
-              <div class="context-chip" *ngIf="courseMode === 'curriculum' && countryName">
-                <span class="chip-icon">🌍</span>
-        
-                <span class="chip-value">{{ countryName }}</span>
-              </div>
-              <div class="context-chip" *ngIf="courseMode === 'curriculum'">
-                <span class="chip-icon">📅</span>
-             
-                <span class="chip-value">{{ termLabel }}</span>
-                <button class="chip-toggle" (click)="toggleTerm()" title="Toggle term">
-                  <span class="toggle-icon">↔</span>
-                </button>
-              </div>
-            </div>
-          </div>
 
           <!-- Loading Spinner -->
           <div class="loading-container" *ngIf="loadingTitles">

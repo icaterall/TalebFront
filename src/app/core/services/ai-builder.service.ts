@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface CourseDraft {
   version: number;
@@ -29,6 +30,7 @@ export interface CourseDraft {
 export class AiBuilderService {
   private http = inject(HttpClient);
   private readonly key = 'anataleb.courseDraft';
+  private readonly baseUrl = environment.apiUrl;
 
   readDraft(): CourseDraft {
     try {
@@ -54,11 +56,11 @@ export class AiBuilderService {
   }
 
   getTitles(payload: { category_id: number; stage_id?: number; country_id?: number; locale: string; term?: number; mode?: 'curriculum' | 'general'; category_name?: string; date?: string }): Observable<{ titles: { title: string; rationale: string }[]; cached?: boolean }>{
-    return this.http.post<{ titles: { title: string; rationale: string }[]; cached?: boolean }>(`/api/v1/ai/titles`, payload);
+    return this.http.post<{ titles: { title: string; rationale: string }[]; cached?: boolean }>(`${this.baseUrl}/ai/titles`, payload);
   }
 
   getUnits(payload: { category_id: number; course_name?: string; stage_id?: number; country_id?: number; locale?: string }): Observable<{ units: { name: string; order: number }[] }> {
-    return this.http.post<{ units: { name: string; order: number }[] }>(`/api/v1/ai/units`, payload);
+    return this.http.post<{ units: { name: string; order: number }[] }>(`${this.baseUrl}/ai/units`, payload);
   }
 }
 
