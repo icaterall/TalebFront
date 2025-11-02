@@ -3,6 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface ContentItem {
+  id: string;
+  type: 'text' | 'video' | 'resources' | 'audio' | 'quiz';
+  title: string;
+  content?: string; // For text content
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface CourseDraft {
   version: number;
   user_id?: number; // Current user ID - assigned when saving
@@ -24,6 +33,7 @@ export interface CourseDraft {
   sections?: any[];
   quiz?: any[];
   cover_image_url?: string;
+  content_items?: ContentItem[]; // Store all content items for the course
   last_saved_at?: string;
 }
 

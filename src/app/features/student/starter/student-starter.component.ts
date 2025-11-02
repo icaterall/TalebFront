@@ -7,7 +7,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { QuillModule } from 'ngx-quill';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
-import { AiBuilderService, CourseDraft } from '../../../core/services/ai-builder.service';
+import { AiBuilderService, CourseDraft, ContentItem } from '../../../core/services/ai-builder.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
@@ -51,6 +51,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   generatingWithAI: boolean = false; // Track AI generation status
   showAIHintModal: boolean = false; // Track AI hint modal visibility
   aiHint: string = ''; // Store optional AI hint
+  
+  // Content Management
+  contentItems: ContentItem[] = []; // Store all content items
+  editingCourseName: boolean = false; // Track if editing course name
+  editingSection: boolean = false; // Track if editing section
+  editingCourseNameValue: string = ''; // Temp value for editing course name
+  editingSectionValue: string = ''; // Temp value for editing section
+  viewingContentItem: ContentItem | null = null; // Track which content item is being viewed
 
   // Step 1: Category Selection
   loading = false;
@@ -276,6 +284,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
             // Force change detection to update the view with new localized names
             this.cdr.detectChanges();
             
+            // Always restore content items after profile loads
+            this.restoreContentItemsFromStorage();
+            
             // Now that we have the profile, fetch categories based on stage_id
             this.loadSmartSix();
           }
@@ -288,6 +299,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           if (err.status === 401) {
             this.universalAuth.forceLogout('Session expired. Please login again.');
           } else {
+            // Always restore content items even on error
+            this.restoreContentItemsFromStorage();
+            
             // Fallback to localStorage data if API fails
             this.profileLoaded = true;
             this.loadSmartSix();
@@ -323,6 +337,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const userId = this.student?.id || this.student?.user_id;
     const draft = this.ai.getDraft(userId);
     
+    // Always restore content items from localStorage first
+    this.restoreContentItemsFromStorage();
+    
     this.http.get<{categories: Category[]}>(`${this.baseUrl}/categories`)
       .subscribe({
         next: (res) => {
@@ -337,11 +354,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
             }
           }
           
+          // Ensure content items are restored again after categories load (in case draft changed)
+          this.restoreContentItemsFromStorage();
+          
           // If draft has both category and course name, restore locked state
           if (draft?.name && draft.name.trim().length >= 3) {
             this.step2Locked = true;
             this.currentStep = 1; // Stay on Step 1 but show read-only summary
           }
+          
+          // Always restore content items from localStorage if they exist
+          this.restoreContentItemsFromStorage();
           
           // Data is fully loaded now, hide skeleton
           this.loadingSummaryData = false;
@@ -350,6 +373,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         error: (err) => {
           console.error('Failed to load all categories:', err);
           this.allCategories = [];
+          
+          // Even on error, ensure content items are restored from localStorage
+          this.restoreContentItemsFromStorage();
+          
           // Even on error, stop showing skeleton
           this.loadingSummaryData = false;
           this.cdr.detectChanges();
@@ -760,15 +787,206 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // TODO: Save text content and subsection title to draft/localStorage
-    console.log('Saving text content:', {
-      title: this.subsectionTitle,
-      content: this.textContent
-    });
+    const userId = this.student?.id || this.student?.user_id;
     
-    // Here you would save both subsectionTitle and textContent to your draft/localStorage
-    // For now, we'll just close the editor
+    // If viewing an existing content item, update it
+    if (this.viewingContentItem && this.viewingContentItem.id) {
+      this.updateContentItem(
+        this.viewingContentItem.id,
+        this.subsectionTitle.trim(),
+        this.textContent
+      );
+    } else {
+      // Create new content item
+      const contentItem: ContentItem = {
+        id: `content-${Date.now()}`,
+        type: 'text',
+        title: this.subsectionTitle.trim(),
+        content: this.textContent,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Add to content items array
+      this.contentItems.push(contentItem);
+      
+      // Save to localStorage
+      const draft = this.ai.getDraft(userId);
+      this.ai.saveDraft({
+        ...draft,
+        content_items: this.contentItems
+      }, userId);
+      
+      console.log('Saved text content to localStorage:', contentItem);
+    }
+    
+    // Reset viewing item and close editor
+    this.viewingContentItem = null;
     this.closeTextEditor();
+    this.cdr.detectChanges();
+  }
+  
+  // Edit Course Name
+  startEditingCourseName(): void {
+    this.editingCourseName = true;
+    this.editingCourseNameValue = this.courseName;
+  }
+  
+  saveCourseNameEdit(): void {
+    if (this.editingCourseNameValue.trim()) {
+      this.courseName = this.editingCourseNameValue.trim();
+      this.saveDraftStep2();
+      this.editingCourseName = false;
+      this.editingCourseNameValue = '';
+      this.cdr.detectChanges();
+    }
+  }
+  
+  cancelCourseNameEdit(): void {
+    this.editingCourseName = false;
+    this.editingCourseNameValue = '';
+  }
+  
+  // Edit Section
+  startEditingSection(): void {
+    this.editingSection = true;
+    this.editingSectionValue = this.selectedTopic || this.subjectSlug || '';
+  }
+  
+  saveSectionEdit(): void {
+    if (this.editingSectionValue.trim()) {
+      this.selectedTopic = this.editingSectionValue.trim();
+      this.subjectSlug = this.editingSectionValue.trim();
+      this.saveDraftStep2();
+      this.editingSection = false;
+      this.editingSectionValue = '';
+      this.cdr.detectChanges();
+    }
+  }
+  
+  cancelSectionEdit(): void {
+    this.editingSection = false;
+    this.editingSectionValue = '';
+  }
+  
+  // View Content Item
+  viewContentItem(item: ContentItem): void {
+    this.viewingContentItem = item;
+    if (item.type === 'text') {
+      // Open text editor with this content
+      this.subsectionTitle = item.title;
+      this.textContent = item.content || '<p></p>';
+      this.showTextEditor = true;
+      this.cdr.detectChanges();
+    }
+    // TODO: Handle other content types (video, resources, audio, quiz)
+  }
+  
+  // Update content item when editing existing content
+  updateContentItem(itemId: string, title: string, content: string): void {
+    const index = this.contentItems.findIndex(item => item.id === itemId);
+    if (index >= 0) {
+      this.contentItems[index] = {
+        ...this.contentItems[index],
+        title: title.trim(),
+        content: content,
+        updatedAt: new Date().toISOString()
+      };
+      
+      const userId = this.student?.id || this.student?.user_id;
+      const draft = this.ai.getDraft(userId);
+      this.ai.saveDraft({
+        ...draft,
+        content_items: this.contentItems
+      }, userId);
+      
+      this.cdr.detectChanges();
+    }
+  }
+  
+  // Delete Content Item
+  deleteContentItem(itemId: string): void {
+    this.contentItems = this.contentItems.filter(item => item.id !== itemId);
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    this.ai.saveDraft({
+      ...draft,
+      content_items: this.contentItems
+    }, userId);
+    this.cdr.detectChanges();
+  }
+  
+  // Move Content Item Up
+  moveContentItemUp(index: number): void {
+    if (index === 0) return;
+    const items = [...this.contentItems];
+    [items[index], items[index - 1]] = [items[index - 1], items[index]];
+    this.contentItems = items;
+    this.saveContentItemsOrder();
+    this.cdr.detectChanges();
+  }
+  
+  // Move Content Item Down
+  moveContentItemDown(index: number): void {
+    if (index === this.contentItems.length - 1) return;
+    const items = [...this.contentItems];
+    [items[index], items[index + 1]] = [items[index + 1], items[index]];
+    this.contentItems = items;
+    this.saveContentItemsOrder();
+    this.cdr.detectChanges();
+  }
+  
+  // Save content items order to localStorage
+  private saveContentItemsOrder(): void {
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    this.ai.saveDraft({
+      ...draft,
+      content_items: this.contentItems
+    }, userId);
+  }
+  
+  // Always retrieve content items from localStorage
+  private restoreContentItemsFromStorage(): void {
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    
+    if (draft?.content_items && Array.isArray(draft.content_items) && draft.content_items.length > 0) {
+      this.contentItems = [...draft.content_items]; // Create a new array to avoid reference issues
+      console.log('Restored content items from localStorage:', this.contentItems.length, 'items');
+    } else {
+      // Only reset if empty or not set
+      if (!this.contentItems || this.contentItems.length === 0) {
+        this.contentItems = [];
+      }
+    }
+  }
+  
+  // Track by function for content items
+  trackByContentId(index: number, item: ContentItem): string {
+    return item.id;
+  }
+  
+  // Get plain text preview (one line, no HTML styling)
+  getTextPreview(htmlContent: string): string {
+    if (!htmlContent) return '';
+    
+    // Create a temporary element to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    // Get all text content, removing HTML tags
+    let text = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Remove extra whitespace and newlines
+    text = text.replace(/\s+/g, ' ').trim();
+    
+    // Return first line (truncate at 100 characters for preview)
+    if (text.length > 100) {
+      return text.substring(0, 100) + '...';
+    }
+    
+    return text;
   }
 
   // Quill Editor Configuration

@@ -2191,7 +2191,7 @@
   margin: 24px 0;
   padding: 24px;
   background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%); // Green gradient background
-  border-radius: 5px;
+  border-radius: 12px;
   box-shadow: 0 2px 12px rgba(16, 185, 129, 0.15); // Green-tinted shadow
   border: 2px solid #86EFAC; // Green border
   position: relative;
@@ -2203,9 +2203,9 @@
   .summary-item {
     display: flex;
     align-items: center;
-    gap: 2px;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
     border-bottom: 1px solid #BBF7D0; // Light green border
 
     &:last-child {
@@ -2219,13 +2219,16 @@
       font-size: 16px;
       color: #065F46; // Dark green text
       white-space: nowrap;
+      flex-shrink: 0;
+      margin: 0;
     }
 
     .summary-icon {
-      font-size: 24px;
+      font-size: 20px;
       line-height: 1;
       filter: drop-shadow(0 1px 2px rgba(16, 185, 129, 0.3)); // Green shadow for icon
       flex-shrink: 0; // Prevent icon from shrinking
+      margin: 0 0 0 8px; // Space after label (right side in RTL, left in LTR)
     }
 
     .summary-value {
@@ -2239,6 +2242,18 @@
       flex-direction: row;
       align-items: center;
       gap: 8px;
+      margin: 0;
+      
+      .inline-edit-input {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .summary-action-buttons {
+        flex-shrink: 0;
+        margin-left: 8px;
+        margin-right: 0;
+      }
 
       &.underlined {
         text-decoration: underline;
@@ -2269,30 +2284,36 @@
       justify-content: flex-start;
       align-items: center;
       
-      // In RTL, visual order (right to left): Icon → Label → Value
+      // In RTL, visual order (right to left): Label → Icon/Buttons → Value
+      .summary-label {
+        order: 1; // Label appears first (rightmost in RTL flow)
+        text-align: right;
+        margin-right: 0;
+        margin-left: 0;
+        flex-shrink: 0;
+      }
+      
       .summary-icon {
-        order: 1; // Icon appears rightmost (first in RTL flow)
-        margin-left: 0px; // Space after icon (to the left in RTL)
+        order: 2; // Icon appears after label
+        margin-left: 8px; // Space after label (to the left in RTL)
         margin-right: 0;
         flex-shrink: 0;
       }
       
-      .summary-label {
-        order: 2; // Label appears middle
-        text-align: right;
-        margin-left: 12px; // Space after label (to the left in RTL)
-        margin-right: 8px; // Space before label (to the right in RTL)
-        flex-shrink: 0;
-      }
-      
       .summary-value {
-        order: 3; // Value appears leftmost (last in RTL flow)
+        order: 2; // Value appears after label
         text-align: right;
         margin-right: 0;
         margin-left: 0;
         flex: 1;
         min-width: 0;
         direction: rtl; // Ensure RTL for Arabic text
+        
+        .summary-action-buttons {
+          order: 999; // Buttons appear at the end of value (leftmost in RTL)
+          margin-left: 0;
+          margin-right: 8px;
+        }
       }
     }
   }
@@ -2305,13 +2326,13 @@
       
       .summary-label {
         text-align: left;
-        margin-right: 12px;
+        margin-right: 0;
         margin-left: 0;
       }
       
       .summary-icon {
-        margin-left: 0;
-        margin-right: 8px;
+        margin-left: 8px; // Space after label
+        margin-right: 0;
       }
       
       .summary-value {
@@ -2319,6 +2340,11 @@
         margin-left: 0;
         margin-right: auto;
         flex: 1;
+        
+        .summary-action-buttons {
+          margin-left: 8px;
+          margin-right: 0;
+        }
       }
     }
   }
@@ -2344,6 +2370,140 @@
     }
   }
 }
+
+// Summary Action Buttons Container (where edit icon and action buttons appear - at end of value)
+.summary-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+// Inline Edit Styles for Summary Items
+.summary-edit-btn {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  color: #047857;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  
+  &:hover {
+    opacity: 1;
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.5);
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.inline-edit-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #86EFAC;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #065F46;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  min-width: 0;
+  width: 100%;
+  
+  &::placeholder {
+    color: #94a3b8;
+    opacity: 0.6;
+    font-weight: 400;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    background: #ffffff;
+  }
+  
+  // RTL support
+  &[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  &[dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+  }
+}
+
+.inline-edit-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  
+  .inline-edit-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+    &.inline-edit-save {
+      background: #ffffff;
+      color: #10B981;
+      border-color: #86EFAC;
+      
+      &:hover {
+        background: #10B981;
+        color: white;
+        border-color: #10B981;
+        transform: scale(1.1);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+    
+    &.inline-edit-cancel {
+      background: #ffffff;
+      color: #ef4444;
+      border-color: #fecaca;
+      
+      &:hover {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+        transform: scale(1.1);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+}
+
+// RTL support for inline edit - buttons already positioned correctly via order
+// No additional margin needed as they follow the label naturally
 
 // Course Name Display (plain text, not editable)
 .course-name-display {
@@ -2620,6 +2780,273 @@
         text-align: left;
         direction: ltr;
       }
+    }
+  }
+}
+
+// Content Items Section
+.content-items-section {
+  margin-top: 32px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  
+  .section-title {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-align: start;
+  }
+  
+  .content-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .content-item-card {
+    display: flex;
+    gap: 12px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    transition: all 0.2s ease;
+    position: relative;
+    
+    &:hover {
+      border-color: #2563EB;
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+    
+    // Reorder Controls Section
+    .content-item-reorder {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 4px;
+      background: rgba(37, 99, 235, 0.05);
+      border-radius: 8px;
+      flex-shrink: 0;
+      min-width: 60px;
+      
+      .reorder-btn {
+        width: 28px;
+        height: 28px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #2563EB;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        padding: 0;
+        
+        &:hover:not(:disabled) {
+          background: #2563EB;
+          color: white;
+          border-color: #2563EB;
+          transform: scale(1.1);
+        }
+        
+        &:active:not(:disabled) {
+          transform: scale(0.95);
+        }
+        
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+          background: #f1f5f9;
+        }
+      }
+    }
+    
+    // Content Item Body
+    .content-item-body {
+      flex: 1;
+      cursor: pointer;
+      min-width: 0;
+      
+      .content-item-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        
+        .content-item-icon {
+          font-size: 24px;
+          flex-shrink: 0;
+        }
+        
+        .content-item-title-wrapper {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+          
+          .content-item-title {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+          }
+          
+          .content-item-type-badge {
+            font-size: 11px;
+            font-weight: 500;
+            color: #64748b;
+            background: rgba(100, 116, 139, 0.1);
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-transform: capitalize;
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+        }
+        
+        .content-item-delete {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          font-size: 18px;
+          color: #ef4444;
+          padding: 4px 8px;
+          opacity: 0.6;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+          border-radius: 4px;
+          
+          &:hover {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.1);
+            transform: scale(1.1);
+          }
+        }
+      }
+      
+      .content-item-meta {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 0;
+        
+        .content-item-date {
+          opacity: 0.7;
+        }
+      }
+      
+      .content-item-preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.5;
+        padding: 6px 0;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 8px;
+        min-height: 0;
+        
+        .preview-text {
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-style: italic;
+          opacity: 0.8;
+          min-width: 0;
+          text-align: start;
+        }
+        
+        .preview-date {
+          font-size: 11px;
+          opacity: 0.7;
+          flex-shrink: 0;
+          white-space: nowrap;
+          font-style: normal;
+          margin-left: auto; // Push date to the very end in LTR
+        }
+      }
+    }
+    
+    // Responsive adjustments
+    @media (max-width: 768px) {
+      flex-direction: row;
+      padding: 10px;
+      gap: 10px;
+      
+      .content-item-reorder {
+        min-width: 50px;
+        padding: 6px 3px;
+        
+        .reorder-btn {
+          width: 24px;
+          height: 24px;
+          font-size: 10px;
+        }
+      }
+    }
+    
+    @media (max-width: 490px) {
+      padding: 8px;
+      gap: 8px;
+      
+      .content-item-reorder {
+        min-width: 45px;
+      }
+    }
+  }
+  
+  // RTL support
+  &[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+    
+    .content-item-card {
+      flex-direction: row-reverse; // Reorder controls on the right in RTL
+      
+      .content-item-header {
+        flex-direction: row-reverse;
+      }
+      
+      .content-item-preview {
+        flex-direction: row-reverse;
+        text-align: right;
+        
+        .preview-text {
+          text-align: right;
+        }
+        
+        .preview-date {
+          margin-left: 0;
+          margin-right: auto; // Push date to the very end in RTL
+        }
+      }
+    }
+  }
+  
+  // LTR support
+  &[dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+    
+    .content-item-card {
+      flex-direction: row; // Reorder controls on the left in LTR
     }
   }
 }
