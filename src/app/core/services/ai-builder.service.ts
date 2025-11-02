@@ -10,6 +10,17 @@ export interface ContentItem {
   content?: string; // For text content
   createdAt: string;
   updatedAt?: string;
+  section_id?: string; // Link content to section
+}
+
+export interface Section {
+  id: string;
+  number: number; // Section number (1, 2, 3, etc.)
+  name: string;
+  content_items: ContentItem[];
+  isCollapsed?: boolean; // Fold/unfold state
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CourseDraft {
@@ -30,10 +41,10 @@ export interface CourseDraft {
   };
   units?: { id: string; name: string; order?: number }[];
   objectives?: string[];
-  sections?: any[];
+  sections?: Section[]; // Store all sections for the course
   quiz?: any[];
   cover_image_url?: string;
-  content_items?: ContentItem[]; // Store all content items for the course
+  content_items?: ContentItem[]; // Legacy: store all content items for the course (deprecated, use sections[].content_items)
   last_saved_at?: string;
 }
 

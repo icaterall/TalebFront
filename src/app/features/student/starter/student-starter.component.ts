@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,7 +7,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { QuillModule } from 'ngx-quill';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
-import { AiBuilderService, CourseDraft, ContentItem } from '../../../core/services/ai-builder.service';
+import { AiBuilderService, CourseDraft, ContentItem, Section } from '../../../core/services/ai-builder.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
@@ -54,13 +54,33 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   showAIHintModal: boolean = false; // Track AI hint modal visibility
   aiHint: string = ''; // Store optional AI hint
   
-  // Content Management
-  contentItems: ContentItem[] = []; // Store all content items
+  // Section Management
+  sections: Section[] = []; // Store all sections
+  activeSectionId: string | null = null; // Currently active/selected section
+  
+  // Content Management (legacy - will migrate to sections)
+  contentItems: ContentItem[] = []; // Store all content items for backward compatibility
+  viewingContentItem: ContentItem | null = null; // Track which content item is being viewed
+  
+  // Editing States
   editingCourseName: boolean = false; // Track if editing course name
   editingSection: boolean = false; // Track if editing section
   editingCourseNameValue: string = ''; // Temp value for editing course name
   editingSectionValue: string = ''; // Temp value for editing section
-  viewingContentItem: ContentItem | null = null; // Track which content item is being viewed
+  editingSectionId: string | null = null; // Track which section is being edited
+  
+  // Section Menu
+  showSectionMenu: boolean = false; // Track section menu visibility
+  menuSectionId: string | null = null; // Track which section's menu is open
+  
+  // Delete Section
+  showDeleteSectionModal: boolean = false; // Track delete section modal visibility
+  sectionToDelete: Section | null = null; // Track which section is being deleted
+  
+  // Undo Toast
+  showUndoToast: boolean = false; // Track undo toast visibility
+  deletedSection: Section | null = null; // Store deleted section for undo
+  undoToastTimeout: any = null; // Timeout for auto-hiding undo toast
 
   // Step 1: Category Selection
   loading = false;
@@ -227,6 +247,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.loadProfileFromBackend();
     this.loadAllCategories();
     
+    // Initialize sections from draft (after data is loaded)
+    setTimeout(() => {
+      this.initializeSections();
+    }, 500);
+    
     // Subscribe to language changes from I18nService to reload profile
     // Skip the first emission (current value) and only react to actual changes
     this.languageChangeSubscription = this.i18n.lang$.pipe(skip(1)).subscribe(lang => {
@@ -263,7 +288,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     console.log('Loading profile with language:', this.currentLang);
     this.http.get<any>(`${this.baseUrl}/profile/me`)
       .subscribe({
-        next: (res) => {
+      next: (res) => {
           if (res) {
             console.log('Profile loaded - localized_country_name:', res.localized_country_name, 'localized_stage_name:', res.localized_stage_name);
             
@@ -795,8 +820,26 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     const userId = this.student?.id || this.student?.user_id;
     
+    // Determine active section (use activeSectionId or first section)
+    const activeSection = this.getActiveSection() || this.sections[0];
+    
     // If viewing an existing content item, update it
     if (this.viewingContentItem && this.viewingContentItem.id) {
+      if (activeSection) {
+        // Update in active section
+        const itemIndex = activeSection.content_items.findIndex(item => item.id === this.viewingContentItem!.id);
+        if (itemIndex >= 0) {
+          activeSection.content_items[itemIndex] = {
+            ...activeSection.content_items[itemIndex],
+            title: this.subsectionTitle.trim(),
+            content: this.textContent,
+            updatedAt: new Date().toISOString()
+          };
+          activeSection.updatedAt = new Date().toISOString();
+        }
+      }
+      
+      // Also update in legacy contentItems for backward compatibility
       this.updateContentItem(
         this.viewingContentItem.id,
         this.subsectionTitle.trim(),
@@ -809,11 +852,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         type: 'text',
         title: this.subsectionTitle.trim(),
         content: this.textContent,
+        section_id: activeSection?.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       
-      // Add to content items array
+      // Add to active section if exists
+      if (activeSection) {
+        activeSection.content_items.push(contentItem);
+        activeSection.updatedAt = new Date().toISOString();
+        this.saveSections();
+      }
+      
+      // Also add to legacy contentItems for backward compatibility
       this.contentItems.push(contentItem);
       
       // Save to localStorage
@@ -822,8 +873,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         ...draft,
         content_items: this.contentItems
       }, userId);
-      
-      console.log('Saved text content to localStorage:', contentItem);
     }
     
     // Reset viewing item and close editor
@@ -854,24 +903,46 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   // Edit Section
-  startEditingSection(): void {
+  startEditingSection(sectionId?: string): void {
     this.editingSection = true;
-    this.editingSectionValue = this.selectedTopic || this.subjectSlug || '';
+    if (sectionId) {
+      this.editingSectionId = sectionId;
+      const section = this.sections.find(s => s.id === sectionId);
+      this.editingSectionValue = section?.name || '';
+    } else {
+      // Legacy: edit first section from selectedTopic/subjectSlug
+      this.editingSectionValue = this.selectedTopic || this.subjectSlug || '';
+    }
   }
   
   saveSectionEdit(): void {
     if (this.editingSectionValue.trim()) {
-      this.selectedTopic = this.editingSectionValue.trim();
-      this.subjectSlug = this.editingSectionValue.trim();
-      this.saveDraftStep2();
-      this.editingSection = false;
-      this.editingSectionValue = '';
-      this.cdr.detectChanges();
+      if (this.editingSectionId) {
+        // Update specific section
+        this.updateSectionName();
+      } else {
+        // Legacy: update first section or selectedTopic
+        this.selectedTopic = this.editingSectionValue.trim();
+        this.subjectSlug = this.editingSectionValue.trim();
+        
+        // Also update first section if it exists
+        if (this.sections.length > 0) {
+          this.sections[0].name = this.editingSectionValue.trim();
+          this.sections[0].updatedAt = new Date().toISOString();
+          this.saveSections();
+        }
+        
+        this.saveDraftStep2();
+        this.editingSection = false;
+        this.editingSectionValue = '';
+        this.cdr.detectChanges();
+      }
     }
   }
   
   cancelSectionEdit(): void {
     this.editingSection = false;
+    this.editingSectionId = null;
     this.editingSectionValue = '';
   }
   
@@ -936,7 +1007,22 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   // Move Content Item Up
-  moveContentItemUp(index: number): void {
+  moveContentItemUp(index: number, sectionId?: string): void {
+    // If sectionId provided, move within section
+    if (sectionId) {
+      const section = this.sections.find(s => s.id === sectionId);
+      if (section && index > 0 && index < section.content_items.length) {
+        const items = [...section.content_items];
+        [items[index], items[index - 1]] = [items[index - 1], items[index]];
+        section.content_items = items;
+        section.updatedAt = new Date().toISOString();
+        this.saveSections();
+        this.cdr.detectChanges();
+        return;
+      }
+    }
+    
+    // Legacy: move in contentItems
     if (index === 0) return;
     const items = [...this.contentItems];
     [items[index], items[index - 1]] = [items[index - 1], items[index]];
@@ -946,7 +1032,22 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   // Move Content Item Down
-  moveContentItemDown(index: number): void {
+  moveContentItemDown(index: number, sectionId?: string): void {
+    // If sectionId provided, move within section
+    if (sectionId) {
+      const section = this.sections.find(s => s.id === sectionId);
+      if (section && index < section.content_items.length - 1) {
+        const items = [...section.content_items];
+        [items[index], items[index + 1]] = [items[index + 1], items[index]];
+        section.content_items = items;
+        section.updatedAt = new Date().toISOString();
+        this.saveSections();
+        this.cdr.detectChanges();
+        return;
+      }
+    }
+    
+    // Legacy: move in contentItems
     if (index === this.contentItems.length - 1) return;
     const items = [...this.contentItems];
     [items[index], items[index + 1]] = [items[index + 1], items[index]];
@@ -984,6 +1085,328 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Track by function for content items
   trackByContentId(index: number, item: ContentItem): string {
     return item.id;
+  }
+  
+  // Track by function for sections
+  trackBySectionId(index: number, section: Section): string {
+    return section.id;
+  }
+  
+  // ============ SECTION MANAGEMENT METHODS ============
+  
+  // Initialize or migrate sections from existing data
+  private initializeSections(): void {
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    
+    // If sections already exist in draft, restore them
+    if (draft.sections && draft.sections.length > 0) {
+      this.sections = draft.sections.map(s => ({
+        ...s,
+        isCollapsed: this.getSectionCollapseState(s.id) ?? s.isCollapsed ?? false
+      }));
+      return;
+    }
+    
+    // Migrate from legacy contentItems or create first section
+    if (this.selectedTopic || this.subjectSlug) {
+      const sectionName = this.selectedTopic || this.subjectSlug || '';
+      const firstSection: Section = {
+        id: `section-${Date.now()}`,
+        number: 1,
+        name: sectionName,
+        content_items: draft.content_items || this.contentItems || [],
+        isCollapsed: this.getSectionCollapseState(`section-1`) ?? false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      this.sections = [firstSection];
+      this.activeSectionId = firstSection.id;
+      this.saveSections();
+    }
+  }
+  
+  // Add New Section
+  addNewSection(): void {
+    const newSectionNumber = this.sections.length + 1;
+    const newSection: Section = {
+      id: `section-${Date.now()}`,
+      number: newSectionNumber,
+      name: `${this.currentLang === 'ar' ? 'القسم' : 'Section'} ${newSectionNumber}`,
+      content_items: [],
+      isCollapsed: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.sections.push(newSection);
+    this.activeSectionId = newSection.id;
+    this.saveSections();
+    this.cdr.detectChanges();
+  }
+  
+  // Toggle Section Fold/Unfold
+  toggleSectionFold(sectionId: string): void {
+    const section = this.sections.find(s => s.id === sectionId);
+    if (section) {
+      section.isCollapsed = !section.isCollapsed;
+      this.setSectionCollapseState(sectionId, section.isCollapsed);
+      this.saveSections();
+      this.cdr.detectChanges();
+    }
+  }
+  
+  // Get Section Collapse State from localStorage
+  private getSectionCollapseState(sectionId: string): boolean | null {
+    try {
+      const key = `section_collapse_${sectionId}`;
+      const value = localStorage.getItem(key);
+      return value === 'true';
+    } catch {
+      return null;
+    }
+  }
+  
+  // Set Section Collapse State in localStorage
+  private setSectionCollapseState(sectionId: string, isCollapsed: boolean): void {
+    try {
+      const key = `section_collapse_${sectionId}`;
+      localStorage.setItem(key, String(isCollapsed));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+  
+  // Open Section Menu
+  openSectionMenu(sectionId: string, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.menuSectionId = sectionId;
+    this.showSectionMenu = true;
+  }
+  
+  // Close Section Menu
+  closeSectionMenu(): void {
+    this.showSectionMenu = false;
+    this.menuSectionId = null;
+  }
+  
+  // Rename Section
+  renameSection(sectionId: string): void {
+    const section = this.sections.find(s => s.id === sectionId);
+    if (section) {
+      this.editingSectionId = sectionId;
+      this.editingSectionValue = section.name;
+      this.editingSection = true;
+      this.closeSectionMenu();
+      this.cdr.detectChanges();
+    }
+  }
+  
+  // Duplicate Section
+  duplicateSection(sectionId: string): void {
+    const section = this.sections.find(s => s.id === sectionId);
+    if (!section) return;
+    
+    const newSectionNumber = this.sections.length + 1;
+    const duplicatedSection: Section = {
+      id: `section-${Date.now()}`,
+      number: newSectionNumber,
+      name: `${section.name} (${this.currentLang === 'ar' ? 'نسخة' : 'Copy'})`,
+      content_items: section.content_items.map(item => ({
+        ...item,
+        id: `content-${Date.now()}-${Math.random()}`,
+        section_id: `section-${Date.now()}`
+      })),
+      isCollapsed: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.sections.push(duplicatedSection);
+    this.closeSectionMenu();
+    this.saveSections();
+    this.cdr.detectChanges();
+  }
+  
+  // Delete Section
+  deleteSection(sectionId: string): void {
+    const section = this.sections.find(s => s.id === sectionId);
+    if (!section) return;
+    
+    this.sectionToDelete = section;
+    this.showDeleteSectionModal = true;
+    this.closeSectionMenu();
+    this.cdr.detectChanges();
+  }
+  
+  // Confirm Delete Section
+  confirmDeleteSection(): void {
+    if (!this.sectionToDelete) return;
+    
+    // Store deleted section for undo
+    this.deletedSection = { ...this.sectionToDelete };
+    const deletedIndex = this.sections.findIndex(s => s.id === this.sectionToDelete!.id);
+    
+    // Remove section
+    this.sections = this.sections.filter(s => s.id !== this.sectionToDelete!.id);
+    
+    // Renumber remaining sections
+    this.sections.forEach((section, index) => {
+      section.number = index + 1;
+    });
+    
+    // If deleted section was active, select first section or null
+    if (this.activeSectionId === this.sectionToDelete.id) {
+      this.activeSectionId = this.sections.length > 0 ? this.sections[0].id : null;
+    }
+    
+    this.saveSections();
+    this.showDeleteSectionModal = false;
+    this.sectionToDelete = null;
+    
+    // Show undo toast
+    this.showUndoToast = true;
+    this.undoToastTimeout = setTimeout(() => {
+      this.hideUndoToast();
+    }, 5000); // Auto-hide after 5 seconds
+    
+    this.cdr.detectChanges();
+  }
+  
+  // Undo Delete Section
+  undoDeleteSection(): void {
+    if (!this.deletedSection) return;
+    
+    // Restore section
+    this.sections.push(this.deletedSection);
+    this.sections.sort((a, b) => a.number - b.number);
+    
+    this.saveSections();
+    this.hideUndoToast();
+    this.cdr.detectChanges();
+  }
+  
+  // Hide Undo Toast
+  hideUndoToast(): void {
+    this.showUndoToast = false;
+    if (this.undoToastTimeout) {
+      clearTimeout(this.undoToastTimeout);
+      this.undoToastTimeout = null;
+    }
+    this.deletedSection = null;
+    this.cdr.detectChanges();
+  }
+  
+  // Save Sections to localStorage
+  private saveSections(): void {
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    this.ai.saveDraft({
+      ...draft,
+      sections: this.sections
+    }, userId);
+  }
+  
+  // Update Section Name (from edit)
+  updateSectionName(): void {
+    if (!this.editingSectionId || !this.editingSectionValue.trim()) return;
+    
+    const section = this.sections.find(s => s.id === this.editingSectionId);
+    if (section) {
+      section.name = this.editingSectionValue.trim();
+      section.updatedAt = new Date().toISOString();
+      
+      // Also update selectedTopic/subjectSlug if this is the first section
+      if (section.number === 1) {
+        this.selectedTopic = section.name;
+        this.subjectSlug = section.name;
+      }
+      
+      this.saveSections();
+      this.saveDraftStep2();
+      this.editingSection = false;
+      this.editingSectionId = null;
+      this.editingSectionValue = '';
+      this.cdr.detectChanges();
+    }
+  }
+  
+  // Get Section by ID
+  getSection(sectionId: string): Section | undefined {
+    return this.sections.find(s => s.id === sectionId);
+  }
+  
+  // Get Active Section
+  getActiveSection(): Section | undefined {
+    if (!this.activeSectionId) return undefined;
+    return this.sections.find(s => s.id === this.activeSectionId);
+  }
+  
+  // Keyboard Shortcuts
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardShortcuts(event: KeyboardEvent): void {
+    // Close menu on Escape
+    if (event.key === 'Escape' && this.showSectionMenu) {
+      this.closeSectionMenu();
+      return;
+    }
+    
+    // N = Add Section (only if step2Locked and not in input/textarea)
+    if (event.key === 'n' && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      const target = event.target as HTMLElement;
+      if (this.step2Locked && 
+          target.tagName !== 'INPUT' && 
+          target.tagName !== 'TEXTAREA' && 
+          !target.isContentEditable) {
+        event.preventDefault();
+        this.addNewSection();
+      }
+    }
+    
+    // Backspace on selected header → open delete dialog
+    if (event.key === 'Backspace' && !event.ctrlKey && !event.metaKey) {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('section-content-header') || 
+          target.closest('.section-content-header')) {
+        event.preventDefault();
+        const header = target.closest('.section-content-header');
+        if (header) {
+          const sectionId = header.getAttribute('data-section-id');
+          if (sectionId) {
+            this.deleteSection(sectionId);
+          }
+        }
+      }
+    }
+    
+    // Enter on header → fold/unfold
+    if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('section-content-header') || 
+          target.closest('.section-content-header')) {
+        event.preventDefault();
+        const header = target.closest('.section-content-header');
+        if (header) {
+          const sectionId = header.getAttribute('data-section-id');
+          if (sectionId) {
+            this.toggleSectionFold(sectionId);
+          }
+        }
+      }
+    }
+  }
+  
+  // Close menu when clicking outside
+  @HostListener('document:click', ['$event'])
+  handleDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (this.showSectionMenu && 
+        !target.closest('.section-menu-wrapper') && 
+        !target.closest('.section-menu-dropdown')) {
+      this.closeSectionMenu();
+    }
   }
   
   // Get plain text preview (one line, no HTML styling)
