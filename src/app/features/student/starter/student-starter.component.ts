@@ -47,10 +47,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   selectedContentType: 'video' | 'resources' | 'text' | 'audio' | 'quiz' | null = null; // Track selected content type
   showTextEditor: boolean = false; // Track text editor visibility
   textContent: string = ''; // Store text editor content
+  subsectionTitle: string = ''; // Store subsection title
   generatingWithAI: boolean = false; // Track AI generation status
+  showAIHintModal: boolean = false; // Track AI hint modal visibility
+  aiHint: string = ''; // Store optional AI hint
 
   // Step 1: Category Selection
   loading = false;
+  loadingSummaryData: boolean = false; // Track if summary data is being loaded from localStorage
   smartSix: Category[] = [];
   allCategories: Category[] = [];
   selectedCategory: Category | null = null;
@@ -113,21 +117,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   get showSummarySkeleton(): boolean {
-    // Show skeleton when we have a draft but data is still loading/restoring
-    if (this.step2Locked) return false; // Don't show skeleton if summary is already shown
+    // Show skeleton when data is being loaded/restored from localStorage or backend
+    if (this.loadingSummaryData) return true; // Always show skeleton when loading summary data
     
+    // Also show skeleton if we have a draft but haven't fully loaded the category yet
     const userId = this.student?.id || this.student?.user_id;
     const draft = this.ai.getDraft(userId);
     const hasDraft = !!(draft?.category_id && draft?.name && draft.name.trim().length >= 3);
     
     if (!hasDraft) return false; // No draft, don't show skeleton
+    if (this.step2Locked && this.selectedCategory) return false; // Data fully loaded, don't show skeleton
     
-    // Show skeleton if:
-    // 1. We have a draft that should show read-only summary
-    // 2. But step2Locked is not set yet (data is being restored)
-    // 3. And either categories are loading OR category hasn't been found in allCategories yet
-    const categoryLoading = this.loading || (!!draft.category_id && !this.selectedCategory);
-    return categoryLoading;
+    // Show skeleton if we have a draft but category hasn't been found in allCategories yet
+    return hasDraft && !this.selectedCategory && this.allCategories.length > 0;
   }
 
   get countryName(): string {
@@ -175,13 +177,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Detect current term from date (Term 1: Sept-Feb, Term 2: Mar-Aug)
     this.currentTerm = this.detectTerm();
     
+    // Set loading state for summary data
+    this.loadingSummaryData = true;
+    
     // Load existing draft to restore state (using user ID)
     const userId = this.student?.id || this.student?.user_id;
     const draft = this.ai.getDraft(userId);
     if (draft.category_id) {
       // Keep on Step 1 but restore locked state if Step 1 was completed
       this.selectedCategoryId = draft.category_id;
-      this.selectedCategory = this.allCategories.find(c => c.id === draft.category_id) || null;
+      // Don't try to find category yet - allCategories might not be loaded
+      // This will be done in loadAllCategories after categories are fetched
       
       // Restore step 1 and step 2 data
       if (draft.name) {
@@ -328,21 +334,25 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
             this.selectedCategory = this.allCategories.find(c => c.id === draft.category_id) || null;
             if (this.selectedCategory) {
               this.selectedCategoryId = draft.category_id;
-              
-              // If draft has both category and course name, restore locked state
-              if (draft.name && draft.name.trim().length >= 3) {
-                this.step2Locked = true;
-                this.currentStep = 1; // Stay on Step 1 but show read-only summary
-              }
-              
-              // Force change detection to update view
-              this.cdr.detectChanges();
             }
           }
+          
+          // If draft has both category and course name, restore locked state
+          if (draft?.name && draft.name.trim().length >= 3) {
+            this.step2Locked = true;
+            this.currentStep = 1; // Stay on Step 1 but show read-only summary
+          }
+          
+          // Data is fully loaded now, hide skeleton
+          this.loadingSummaryData = false;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Failed to load all categories:', err);
           this.allCategories = [];
+          // Even on error, stop showing skeleton
+          this.loadingSummaryData = false;
+          this.cdr.detectChanges();
         }
       });
   }
@@ -661,11 +671,32 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   closeTextEditor(): void {
     this.showTextEditor = false;
     this.selectedContentType = null;
+    this.subsectionTitle = '';
+    this.textContent = '';
     this.cdr.detectChanges();
   }
 
   generateTextWithAI(): void {
     if (this.generatingWithAI) return;
+    
+    // Validate that subsection title is provided
+    if (!this.subsectionTitle || this.subsectionTitle.trim().length < 4) {
+      return;
+    }
+    
+    // Show hint modal first
+    this.aiHint = '';
+    this.showAIHintModal = true;
+  }
+  
+  proceedWithAIGeneration(withHint: boolean = false): void {
+    // Close hint modal
+    this.showAIHintModal = false;
+    
+    // If user skipped hint, clear it
+    if (!withHint) {
+      this.aiHint = '';
+    }
     
     this.generatingWithAI = true;
     
@@ -677,15 +708,23 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
       : '';
     const section = this.selectedTopic || this.subjectSlug || '';
+    const title = this.subsectionTitle.trim();
+    const hint = this.aiHint.trim() || undefined; // Only include if provided
     
-    const payload = {
+    const payload: any = {
       grade,
       country,
       course_name,
       category,
       section,
+      title,
       locale: this.currentLang
     };
+    
+    // Add hint only if provided
+    if (hint) {
+      payload.hint = hint;
+    }
     
     console.log('Generating text content with AI...', payload);
     
@@ -709,10 +748,26 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
     });
   }
+  
+  cancelAIHint(): void {
+    this.showAIHintModal = false;
+    this.aiHint = '';
+  }
 
   saveTextContent(): void {
-    // TODO: Save text content to draft/localStorage
-    console.log('Saving text content:', this.textContent);
+    // Validate that subsection title is provided
+    if (!this.subsectionTitle || !this.subsectionTitle.trim()) {
+      return;
+    }
+    
+    // TODO: Save text content and subsection title to draft/localStorage
+    console.log('Saving text content:', {
+      title: this.subsectionTitle,
+      content: this.textContent
+    });
+    
+    // Here you would save both subsectionTitle and textContent to your draft/localStorage
+    // For now, we'll just close the editor
     this.closeTextEditor();
   }
 

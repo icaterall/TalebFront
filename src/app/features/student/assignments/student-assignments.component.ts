@@ -47,7 +47,7 @@ import { TranslateModule } from '@ngx-translate/core';
       text-align: center;
       padding: 64px 32px;
       background: white;
-      border-radius: 12px;
+      border-radius: 5px;
       border: 1px solid #e2e8f0;
     }
     

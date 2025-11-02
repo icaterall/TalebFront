@@ -81,8 +81,7 @@
           <div class="summary-item" *ngIf="selectedTopic || subjectSlug">
             <span class="summary-label">{{ currentLang === 'ar' ? 'القسم 1:' : 'Section 1:' }}</span>
             <span class="summary-value">
-             
-              <span class="section-name">{{ getSectionDisplayName(selectedTopic || subjectSlug) }}</span>
+              <span class="section-name">{{ selectedTopic || subjectSlug }}</span>
             </span>
           </div>
         </div>
@@ -256,10 +255,7 @@
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
               <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">
-                <span class="section-number">{{ getSectionNumberLabel() }}</span>
-                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
-              </span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
             </div>
 
             <!-- Manual Topic Input (shown when no AI was used) -->
@@ -289,10 +285,7 @@
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
               <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">
-                <span class="section-number">{{ getSectionNumberLabel() }}</span>
-                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
-              </span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
             </div>
 
             <!-- Topic Selection Cards (shown until Continue is clicked) -->
@@ -318,10 +311,7 @@
                         (blur)="$event.stopPropagation()" />
                     </ng-container>
                     <ng-template #topicDisplayStep1>
-                      <span class="topic-text">
-                        <span class="section-number">{{ getSectionNumberLabel() }}</span>
-                        <span class="section-name">{{ topic }}</span>
-                      </span>
+                      <span class="topic-text">{{ topic }}</span>
                     </ng-template>
                     <div class="topic-edit-actions">
                       <ng-container *ngIf="editingTopic === topic; else editIconTemplate">
@@ -477,10 +467,7 @@
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
               <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">
-                <span class="section-number">{{ getSectionNumberLabel() }}</span>
-                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
-              </span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
             </div>
 
             <!-- Manual Topic Input (shown when no AI was used) -->
@@ -510,10 +497,7 @@
             <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
             <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
               <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">
-                <span class="section-number">{{ getSectionNumberLabel() }}</span>
-                <span class="section-name">{{ getSectionDisplayName(selectedTopic) }}</span>
-              </span>
+              <span class="inline-value underlined">{{ selectedTopic }}</span>
             </div>
 
             <!-- Topic Selection Cards (shown until Continue is clicked) -->
@@ -538,10 +522,7 @@
                   </ng-container>
                   <ng-template #topicDisplay>
                     <div class="topic-content">
-                      <span class="topic-text">
-                        <span class="section-number">{{ getSectionNumberLabel() }}</span>
-                        <span class="section-name">{{ topic }}</span>
-                      </span>
+                      <span class="topic-text">{{ topic }}</span>
                     </div>
                   </ng-template>
                 </div>
@@ -624,6 +605,40 @@
       </div>
     </div>
 
+    <!-- AI Hint Modal (shown above text editor modal) -->
+    <div class="modal-overlay ai-hint-overlay" *ngIf="showAIHintModal" (click)="cancelAIHint()" style="z-index: 10001;">
+      <div class="modal-content ai-hint-modal" (click)="$event.stopPropagation()" style="z-index: 10001;">
+        <div class="modal-header">
+          <h3>{{ currentLang === 'ar' ? '🤖 تلميح للذكاء الاصطناعي' : '🤖 AI Hint (Optional)' }}</h3>
+          <button type="button" class="modal-close-btn" (click)="cancelAIHint()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="hint-field">
+            <label class="field-label">{{ currentLang === 'ar' ? 'أضف تلميحاً (اختياري)' : 'Add a hint (optional)' }}</label>
+            <textarea 
+              class="hint-input"
+              [(ngModel)]="aiHint"
+              [placeholder]="currentLang === 'ar' ? 'مثال: ركز على الأساسيات، استخدم أمثلة عملية، اجعل المحتوى مناسباً للمبتدئين...' : 'Example: Focus on fundamentals, use practical examples, make content suitable for beginners...'"
+              [dir]="isRTL ? 'rtl' : 'ltr'"
+              rows="4"
+              maxlength="500"></textarea>
+            <div class="field-help">
+              {{ currentLang === 'ar' ? 'أضف أي توجيهات أو متطلبات إضافية لتحسين جودة المحتوى المولّد' : 'Add any additional guidance or requirements to improve the quality of generated content' }}
+            </div>
+          </div>
+          
+          <div class="hint-actions">
+            <button type="button" class="btn-skip" (click)="proceedWithAIGeneration(false)">
+              {{ currentLang === 'ar' ? 'تجاهل والمتابعة' : 'Skip & Continue' }}
+            </button>
+            <button type="button" class="btn-continue" (click)="proceedWithAIGeneration(true)">
+              {{ currentLang === 'ar' ? 'متابعة بالتلميح' : 'Continue with Hint' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Text Editor Modal -->
     <div class="modal-overlay" *ngIf="showTextEditor" (click)="closeTextEditor()">
       <div class="modal-content text-editor-modal" (click)="$event.stopPropagation()">
@@ -632,11 +647,23 @@
           <button type="button" class="modal-close-btn" (click)="closeTextEditor()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
         </div>
         <div class="modal-body">
+          <div class="subsection-title-field">
+            <label class="field-label">{{ currentLang === 'ar' ? 'العنوان *' : 'Title *' }}</label>
+            <input 
+              type="text" 
+              class="subsection-title-input"
+              [(ngModel)]="subsectionTitle"
+              [placeholder]="currentLang === 'ar' ? 'أدخل العنوان...' : 'Enter title...'"
+              [dir]="isRTL ? 'rtl' : 'ltr'"
+              maxlength="200">
+            <div class="field-help">{{ currentLang === 'ar' ? 'مثال: مقدمة، المفاهيم الأساسية، التطبيقات العملية' : 'Example: Introduction, Core Concepts, Practical Applications' }}</div>
+          </div>
+          
           <div class="editor-toolbar">
             <button 
               type="button"
               class="btn-generate-ai"
-              [disabled]="generatingWithAI"
+              [disabled]="generatingWithAI || !subsectionTitle || subsectionTitle.trim().length < 4"
               (click)="generateTextWithAI()">
               <span class="btn-icon">🤖</span>
               <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'Generate by AI' }}</span>
@@ -648,13 +675,14 @@
             </div>
           </div>
           
-          <div class="editor-container" [dir]="isRTL ? 'rtl' : 'ltr'">
+          <div class="editor-container" [dir]="isRTL ? 'rtl' : 'ltr'" [class.quill-rtl]="isRTL">
             <quill-editor
               [(ngModel)]="textContent"
               [modules]="quillModules"
               [placeholder]="currentLang === 'ar' ? 'ابدأ بكتابة محتوى الدرس النصي هنا...' : 'Start writing your text lesson content here...'"
               [styles]="{ height: '400px' }"
-              [bounds]="'self'">
+              [bounds]="'self'"
+              [format]="'html'">
             </quill-editor>
           </div>
           
@@ -662,7 +690,7 @@
             <button type="button" class="btn-cancel" (click)="closeTextEditor()">
               {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
             </button>
-            <button type="button" class="btn-save" (click)="saveTextContent()">
+            <button type="button" class="btn-save" [disabled]="!subsectionTitle.trim()" (click)="saveTextContent()">
               {{ currentLang === 'ar' ? 'حفظ' : 'Save' }}
             </button>
           </div>
