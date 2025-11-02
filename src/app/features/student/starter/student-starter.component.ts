@@ -43,6 +43,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   currentStep: number = 1; // 1 = Category, 2 = Course Basics
   step2Locked: boolean = false; // Track if Step 2 inputs are locked after continue
   showWarningModal: boolean = false; // Track warning modal visibility
+  warningModalType: 'goBack' | 'deleteContent' | null = null; // Track warning modal type
+  itemToDelete: string | null = null; // Track which content item is being deleted
   showContentTypeModal: boolean = false; // Track content type modal visibility
   selectedContentType: 'video' | 'resources' | 'text' | 'audio' | 'quiz' | null = null; // Track selected content type
   showTextEditor: boolean = false; // Track text editor visibility
@@ -565,6 +567,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (this.currentStep === 2) {
       // If Step 2 is locked, show warning modal
       if (this.step2Locked) {
+        this.warningModalType = 'goBack';
         this.showWarningModal = true;
       } else {
         // If not locked, just go back without warning
@@ -612,6 +615,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   confirmGoBack(): void {
     // User confirmed - clear everything and go back
     this.showWarningModal = false;
+    this.warningModalType = null;
     this.currentStep = 1;
     this.clearStep2Data();
   }
@@ -619,6 +623,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   cancelGoBack(): void {
     // User cancelled - just close modal
     this.showWarningModal = false;
+    this.warningModalType = null;
+    this.itemToDelete = null;
   }
 
   // Content Type Modal Methods
@@ -904,15 +910,28 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
   }
   
-  // Delete Content Item
+  // Delete Content Item - Show warning modal first
   deleteContentItem(itemId: string): void {
-    this.contentItems = this.contentItems.filter(item => item.id !== itemId);
+    this.itemToDelete = itemId;
+    this.warningModalType = 'deleteContent';
+    this.showWarningModal = true;
+  }
+  
+  // Confirm deletion after warning
+  confirmDeleteContent(): void {
+    if (!this.itemToDelete) return;
+    
+    this.contentItems = this.contentItems.filter(item => item.id !== this.itemToDelete);
     const userId = this.student?.id || this.student?.user_id;
     const draft = this.ai.getDraft(userId);
     this.ai.saveDraft({
       ...draft,
       content_items: this.contentItems
     }, userId);
+    
+    this.showWarningModal = false;
+    this.warningModalType = null;
+    this.itemToDelete = null;
     this.cdr.detectChanges();
   }
   

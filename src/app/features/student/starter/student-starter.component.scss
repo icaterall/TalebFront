@@ -2621,20 +2621,191 @@
   }
 }
 
-// Add Content to Section
-.add-content-section {
+// Section Content Wrapper (combines content items and add content)
+.section-content-wrapper {
   margin-top: 32px;
   padding: 24px;
   background: #ffffff;
-  border-radius: 5px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   
+  .section-content-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e5e7eb;
+    
+    .section-content-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      
+      .section-number {
+        font-weight: 700;
+        color: #2563EB;
+        white-space: nowrap;
+      }
+      
+      .section-name-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        font-weight: 500;
+        color: #1a1a1a;
+        
+        .section-name-input {
+          flex: 1;
+          min-width: 200px;
+          padding: 8px 12px;
+          border: 2px solid #86EFAC;
+          border-radius: 8px;
+          font-size: 18px;
+          font-weight: 500;
+          color: #065F46;
+          background: #ffffff;
+          transition: all 0.2s ease;
+          
+          &:focus {
+            outline: none;
+            border-color: #10B981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+          }
+          
+          &[dir="rtl"] {
+            direction: rtl;
+            text-align: right;
+          }
+          
+          &[dir="ltr"] {
+            direction: ltr;
+            text-align: left;
+          }
+        }
+      }
+      
+      .section-title-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+        margin-left: 8px;
+        
+        .section-edit-btn {
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          padding: 6px 10px;
+          opacity: 0.7;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+          color: #047857;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
+          height: 32px;
+          
+          &:hover {
+            opacity: 1;
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+            transform: scale(1.05);
+          }
+        }
+        
+        .section-edit-actions {
+          display: flex;
+          gap: 4px;
+          
+          .section-action-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            
+            &.section-save-btn {
+              background: #ffffff;
+              color: #10B981;
+              border-color: #86EFAC;
+              
+              &:hover {
+                background: #10B981;
+                color: white;
+                border-color: #10B981;
+                transform: scale(1.1);
+              }
+            }
+            
+            &.section-cancel-btn {
+              background: #ffffff;
+              color: #ef4444;
+              border-color: #fecaca;
+              
+              &:hover {
+                background: #ef4444;
+                color: white;
+                border-color: #ef4444;
+                transform: scale(1.1);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // RTL support
+  &[dir="rtl"] {
+    .section-content-title {
+      direction: rtl;
+      text-align: right;
+      
+      .section-title-actions {
+        margin-left: 0;
+        margin-right: 8px;
+      }
+    }
+  }
+  
+  // LTR support
+  &[dir="ltr"] {
+    .section-content-title {
+      direction: ltr;
+      text-align: left;
+      
+      .section-title-actions {
+        margin-left: 8px;
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+// Add Content to Section
+.add-content-section {
+  margin-top: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  
   .section-title {
-    margin: 0 0 24px 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a1a1a;
-    text-align: start;
+    display: none; // Hide as we now use section-content-title
   }
   
   .content-type-grid {
@@ -2784,20 +2955,17 @@
   }
 }
 
-// Content Items Section
+// Content Items Section (now inside section-content-wrapper)
 .content-items-section {
-  margin-top: 32px;
-  padding: 24px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-top: 0;
+  margin-bottom: 24px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
   
   .section-title {
-    margin: 0 0 20px 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a1a1a;
-    text-align: start;
+    display: none; // Hide as we now use section-content-title
   }
   
   .content-items-list {
@@ -2953,6 +3121,7 @@
       .content-item-preview {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
         font-size: 13px;
         color: #64748b;
@@ -2979,6 +3148,7 @@
           flex-shrink: 0;
           white-space: nowrap;
           font-style: normal;
+          order: 999; // Ensure date appears at the end
           margin-left: auto; // Push date to the very end in LTR
         }
       }
@@ -3025,16 +3195,19 @@
       }
       
       .content-item-preview {
-        flex-direction: row-reverse;
+        flex-direction: row;
+        justify-content: space-between;
         text-align: right;
         
         .preview-text {
           text-align: right;
+          order: 1;
         }
         
         .preview-date {
+          order: 999; // Ensure date appears at the end (leftmost in RTL)
           margin-left: 0;
-          margin-right: auto; // Push date to the very end in RTL
+          margin-right: 0; // Remove auto margin, use order instead
         }
       }
     }

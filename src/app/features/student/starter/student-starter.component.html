@@ -42,7 +42,7 @@
         <div class="step-circle">
           <ng-container *ngIf="currentStep > 2; else stepTwo">
             <span class="check-icon">✔</span>
-          </ng-container>
+    </ng-container>
           <ng-template #stepTwo>2</ng-template>
         </div>
         <div class="step-labels">
@@ -97,105 +97,109 @@
               </div>
             </span>
           </div>
-          <div class="summary-item" *ngIf="selectedTopic || subjectSlug">
-            <span class="summary-label">{{ currentLang === 'ar' ? 'القسم 1:' : 'Section 1:' }}</span>
-            <span class="summary-value">
-              <span *ngIf="!editingSection">{{ selectedTopic || subjectSlug }}</span>
-              <input 
-                *ngIf="editingSection"
-                type="text"
-                class="inline-edit-input"
-                [(ngModel)]="editingSectionValue"
-                (keyup.enter)="saveSectionEdit()"
-                (keyup.escape)="cancelSectionEdit()"
-                [placeholder]="currentLang === 'ar' ? 'اسم القسم' : 'Section Name'"
-                [dir]="isRTL ? 'rtl' : 'ltr'"
-                maxlength="200">
-              <div class="summary-action-buttons">
-                <button *ngIf="!editingSection" type="button" class="summary-edit-btn" (click)="startEditingSection()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'">✏️</button>
-                <div *ngIf="editingSection" class="inline-edit-actions">
-                  <button type="button" class="inline-edit-btn inline-edit-cancel" (click)="cancelSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
-                  <button type="button" class="inline-edit-btn inline-edit-save" (click)="saveSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
-                </div>
-              </div>
-            </span>
-          </div>
         </div>
 
-        <!-- Content Items List (shown when content items exist) -->
-        <div class="content-items-section" *ngIf="step2Locked && contentItems.length > 0" [dir]="isRTL ? 'rtl' : 'ltr'">
-          <h3 class="section-title">{{ currentLang === 'ar' ? 'المحتويات المضافة' : 'Added Content' }}</h3>
-          <div class="content-items-list">
-            <div 
-              *ngFor="let item of contentItems; let i = index; trackBy: trackByContentId" 
-              class="content-item-card"
-              [attr.aria-label]="currentLang === 'ar' ? 'محتوى: ' + item.title : 'Content: ' + item.title">
-              <!-- Reorder Controls -->
-              <div class="content-item-reorder" *ngIf="contentItems.length > 1">
-                <button 
-                  type="button"
-                  class="reorder-btn reorder-up"
-                  [disabled]="i === 0"
-                  (click)="$event.stopPropagation(); moveContentItemUp(i)"
-                  [attr.aria-label]="currentLang === 'ar' ? 'نقل لأعلى' : 'Move up'"
-                  [title]="currentLang === 'ar' ? 'نقل لأعلى' : 'Move up'">
-                  ▲
-                </button>
-                <button 
-                  type="button"
-                  class="reorder-btn reorder-down"
-                  [disabled]="i === contentItems.length - 1"
-                  (click)="$event.stopPropagation(); moveContentItemDown(i)"
-                  [attr.aria-label]="currentLang === 'ar' ? 'نقل لأسفل' : 'Move down'"
-                  [title]="currentLang === 'ar' ? 'نقل لأسفل' : 'Move down'">
-                  ▼
-                </button>
+        <!-- Section Content (Content Items + Add Content - combined) -->
+        <div class="section-content-wrapper" *ngIf="step2Locked && selectedCategory && (selectedTopic || subjectSlug)" [dir]="isRTL ? 'rtl' : 'ltr'">
+          <!-- Section Title (Editable) -->
+          <div class="section-content-header">
+            <h2 class="section-content-title">
+              <span class="section-number">{{ currentLang === 'ar' ? 'القسم 1:' : 'Section 1:' }}</span>
+              <span class="section-name-value">
+                <span *ngIf="!editingSection">{{ selectedTopic || subjectSlug }}</span>
+                <input 
+                  *ngIf="editingSection"
+                  type="text"
+                  class="section-name-input"
+                  [(ngModel)]="editingSectionValue"
+                  (keyup.enter)="saveSectionEdit()"
+                  (keyup.escape)="cancelSectionEdit()"
+                  [placeholder]="currentLang === 'ar' ? 'اسم القسم' : 'Section Name'"
+                  [dir]="isRTL ? 'rtl' : 'ltr'"
+                  maxlength="200">
+              </span>
+              <div class="section-title-actions">
+                <button *ngIf="!editingSection" type="button" class="section-edit-btn" (click)="startEditingSection()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'">✏️</button>
+                <div *ngIf="editingSection" class="section-edit-actions">
+                  <button type="button" class="section-action-btn section-cancel-btn" (click)="cancelSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
+                  <button type="button" class="section-action-btn section-save-btn" (click)="saveSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
+                </div>
               </div>
-              
-              <!-- Content Item Body -->
-              <div class="content-item-body" (click)="viewContentItem(item)">
-                <div class="content-item-header">
-                  <span class="content-item-icon">
-                    <span *ngIf="item.type === 'text'">✍️</span>
-                    <span *ngIf="item.type === 'video'">🎥</span>
-                    <span *ngIf="item.type === 'resources'">📄</span>
-                    <span *ngIf="item.type === 'audio'">🔊</span>
-                    <span *ngIf="item.type === 'quiz'">✅</span>
-                  </span>
-                  <div class="content-item-title-wrapper">
-                    <span class="content-item-title">{{ item.title }}</span>
-                    <span class="content-item-type-badge">{{ currentLang === 'ar' ? 
-                      (item.type === 'text' ? 'درس نصي' : 
-                       item.type === 'video' ? 'فيديو' : 
-                       item.type === 'resources' ? 'موارد' : 
-                       item.type === 'audio' ? 'صوت' : 'اختبار') 
-                      : item.type }}</span>
-                  </div>
+            </h2>
+          </div>
+
+          <!-- Content Items List (shown when content items exist) -->
+          <div class="content-items-section" *ngIf="contentItems.length > 0">
+            <div class="content-items-list">
+              <div 
+                *ngFor="let item of contentItems; let i = index; trackBy: trackByContentId" 
+                class="content-item-card"
+                [attr.aria-label]="currentLang === 'ar' ? 'محتوى: ' + item.title : 'Content: ' + item.title">
+                <!-- Reorder Controls -->
+                <div class="content-item-reorder" *ngIf="contentItems.length > 1">
                   <button 
                     type="button"
-                    class="content-item-delete"
-                    (click)="$event.stopPropagation(); deleteContentItem(item.id)"
-                    [attr.aria-label]="currentLang === 'ar' ? 'حذف المحتوى' : 'Delete content'">
-                    ✕
+                    class="reorder-btn reorder-up"
+                    [disabled]="i === 0"
+                    (click)="$event.stopPropagation(); moveContentItemUp(i)"
+                    [attr.aria-label]="currentLang === 'ar' ? 'نقل لأعلى' : 'Move up'"
+                    [title]="currentLang === 'ar' ? 'نقل لأعلى' : 'Move up'">
+                    ▲
+                  </button>
+                  <button 
+                    type="button"
+                    class="reorder-btn reorder-down"
+                    [disabled]="i === contentItems.length - 1"
+                    (click)="$event.stopPropagation(); moveContentItemDown(i)"
+                    [attr.aria-label]="currentLang === 'ar' ? 'نقل لأسفل' : 'Move down'"
+                    [title]="currentLang === 'ar' ? 'نقل لأسفل' : 'Move down'">
+                    ▼
                   </button>
                 </div>
-                <!-- Text Content Preview with Date (one line, plain text) -->
-                <div class="content-item-preview" *ngIf="item.type === 'text' && item.content">
-                  <span class="preview-text">{{ getTextPreview(item.content) }}</span>
-                  <span class="preview-date">{{ item.updatedAt || item.createdAt | date:'short' }}</span>
-                </div>
-                <!-- Date only for non-text content -->
-                <div class="content-item-meta" *ngIf="item.type !== 'text'">
-                  <span class="content-item-date">{{ item.updatedAt || item.createdAt | date:'short' }}</span>
+                
+                <!-- Content Item Body -->
+                <div class="content-item-body" (click)="viewContentItem(item)">
+                  <div class="content-item-header">
+                    <span class="content-item-icon">
+                      <span *ngIf="item.type === 'text'">✍️</span>
+                      <span *ngIf="item.type === 'video'">🎥</span>
+                      <span *ngIf="item.type === 'resources'">📄</span>
+                      <span *ngIf="item.type === 'audio'">🔊</span>
+                      <span *ngIf="item.type === 'quiz'">✅</span>
+                    </span>
+                    <div class="content-item-title-wrapper">
+                      <span class="content-item-title">{{ item.title }}</span>
+                      <span class="content-item-type-badge">{{ currentLang === 'ar' ? 
+                        (item.type === 'text' ? 'درس نصي' : 
+                         item.type === 'video' ? 'فيديو' : 
+                         item.type === 'resources' ? 'موارد' : 
+                         item.type === 'audio' ? 'صوت' : 'اختبار') 
+                        : item.type }}</span>
+                    </div>
+                    <button 
+                      type="button"
+                      class="content-item-delete"
+                      (click)="$event.stopPropagation(); deleteContentItem(item.id)"
+                      [attr.aria-label]="currentLang === 'ar' ? 'حذف المحتوى' : 'Delete content'">
+                      ✕
+                    </button>
+                  </div>
+                  <!-- Text Content Preview with Date (one line, plain text) -->
+                  <div class="content-item-preview" *ngIf="item.type === 'text' && item.content">
+                    <span class="preview-text">{{ getTextPreview(item.content) }}</span>
+                    <span class="preview-date">{{ item.updatedAt || item.createdAt | date:'short' }}</span>
+                  </div>
+                  <!-- Date only for non-text content -->
+                  <div class="content-item-meta" *ngIf="item.type !== 'text'">
+                    <span class="content-item-date">{{ item.updatedAt || item.createdAt | date:'short' }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Add Content to Section (shown when step2Locked is true) -->
-        <div class="add-content-section" *ngIf="step2Locked && selectedCategory" [dir]="isRTL ? 'rtl' : 'ltr'">
-          <h3 class="section-title">{{ currentLang === 'ar' ? 'أضف محتوى إلى هذا القسم' : 'Add Content to This Section' }}</h3>
+          <!-- Add Content to Section -->
+          <div class="add-content-section">
           <div class="content-type-grid">
             <button 
               type="button"
@@ -256,6 +260,7 @@
               </div>
               <span class="content-type-desc">{{ currentLang === 'ar' ? 'اختبارات وتقييم' : 'Quizzes & grading' }}</span>
             </button>
+          </div>
           </div>
         </div>
 
@@ -665,7 +670,7 @@
     <div class="wizard-actions" [dir]="isRTL ? 'rtl' : 'ltr'">
       <button 
         class="btn-back"
-        *ngIf="currentStep === 2 || step2Locked"
+        *ngIf="(currentStep === 2 || step2Locked) && contentItems.length === 0"
         (click)="goBack()">
         <span class="btn-icon">{{ isRTL ? '→' : '←' }}</span>
         <span>{{ currentLang === 'ar' ? 'رجوع' : 'Back' }}</span>
@@ -697,15 +702,18 @@
           <h3>{{ currentLang === 'ar' ? '⚠️ تحذير' : '⚠️ Warning' }}</h3>
         </div>
         <div class="modal-body">
-          <p>{{ currentLang === 'ar' 
+          <p *ngIf="warningModalType === 'goBack'">{{ currentLang === 'ar' 
             ? 'سيتم حذف جميع البيانات المدخلة. هل أنت متأكد أنك تريد العودة؟ ستحتاج إلى البدء من جديد.' 
             : 'All entered data will be deleted. Are you sure you want to go back? You will need to start from scratch.' }}</p>
+          <p *ngIf="warningModalType === 'deleteContent'">{{ currentLang === 'ar' 
+            ? 'هل أنت متأكد أنك تريد حذف هذا المحتوى؟ لا يمكن التراجع عن هذا الإجراء.' 
+            : 'Are you sure you want to delete this content? This action cannot be undone.' }}</p>
         </div>
         <div class="modal-actions">
           <button class="btn-cancel" (click)="cancelGoBack()">
             {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
           </button>
-          <button class="btn-confirm" (click)="confirmGoBack()">
+          <button class="btn-confirm" (click)="warningModalType === 'goBack' ? confirmGoBack() : confirmDeleteContent()">
             {{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}
           </button>
         </div>
