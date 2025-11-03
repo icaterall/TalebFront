@@ -820,6 +820,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   openContentTypeModal(contentType: 'video' | 'resources' | 'text' | 'audio' | 'quiz'): void {
     // For text content, open editor directly instead of modal
     if (contentType === 'text') {
+      // Reset state for creating a new content item
+      this.viewingContentItem = null;
+      this.subsectionTitle = '';
+      this.textContent = '';
+      this.currentEditor = null;
       this.showTextEditor = true;
       this.selectedContentType = 'text';
       this.cdr.detectChanges();
@@ -897,6 +902,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.selectedContentType = null;
     this.subsectionTitle = '';
     this.textContent = '';
+    // Reset viewingContentItem to ensure clean state for next creation
+    this.viewingContentItem = null;
     this.cdr.detectChanges();
   }
 
