@@ -118,6 +118,46 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   // CKEditor
   public Editor = DecoupledEditor;
+  
+  public editorConfig = {
+    toolbar: {
+      items: [
+        'heading',
+        '|',
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        '|',
+        'fontSize',
+        'fontFamily',
+        'fontColor',
+        'fontBackgroundColor',
+        '|',
+        'bulletedList',
+        'numberedList',
+        '|',
+        'alignment',
+        '|',
+        'outdent',
+        'indent',
+        '|',
+        'link',
+        'imageUpload',
+        'insertTable',
+        '|',
+        'blockQuote',
+        'codeBlock',
+        '|',
+        'undo',
+        'redo'
+      ]
+    },
+    alignment: {
+      options: ['left', 'center', 'right', 'justify']
+    },
+    language: 'en'
+  };
 
   get currentLang(): 'ar' | 'en' { return this.i18n.current; }
   get isRTL(): boolean { return this.currentLang === 'ar'; }
@@ -352,13 +392,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Function to enforce direction
     const enforceDirection = () => {
       const direction = this.isRTL ? 'rtl' : 'ltr';
-      const textAlign = this.isRTL ? 'right' : 'left';
       
-      // Force set direction on editable element
+      // Force set direction on editable element (but NOT text-align, let alignment plugin handle it)
       if (element) {
         element.setAttribute('dir', direction);
         element.style.direction = direction;
-        element.style.textAlign = textAlign;
+        // Don't set textAlign here - let CKEditor alignment plugin handle it
         // Override lang if it conflicts
         if (this.isRTL && element.getAttribute('lang') === 'en') {
           element.setAttribute('lang', 'ar');
@@ -366,12 +405,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           element.setAttribute('lang', 'en');
         }
         
-        // Force direction on all child elements
+        // Force direction on all child elements (but NOT text-align)
         const childElements = element.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span');
         childElements.forEach((el: Element) => {
           const htmlEl = el as HTMLElement;
           htmlEl.style.direction = direction;
-          htmlEl.style.textAlign = textAlign;
+          // Don't force textAlign - let alignment plugin handle it
         });
       }
       

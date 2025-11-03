@@ -936,6 +936,7 @@
           <div class="editor-container" [attr.dir]="isRTL ? 'rtl' : 'ltr'">
             <ckeditor 
               [editor]="Editor"
+              [config]="editorConfig"
               [(ngModel)]="textContent"
               (ready)="onReady($event)">
             </ckeditor>

@@ -3701,78 +3701,68 @@
 
     // CKEditor content RTL/LTR support - forced styles
     ::ng-deep {
-      // RTL support based on HTML direction - FORCE even if element has dir="ltr"
+      // RTL support based on HTML direction - Only set direction, NOT text-align (let alignment plugin handle it)
       html[dir="rtl"] {
         .ck.ck-editor__editable_inline,
         .ck.ck-editor__editable_inline[dir="ltr"],
         .ck.ck-editor__editable_inline[dir="rtl"] {
           direction: rtl !important;
-          text-align: right !important;
         }
 
         .ck.ck-editor__editable,
         .ck.ck-editor__editable[dir="ltr"],
         .ck.ck-editor__editable[dir="rtl"] {
           direction: rtl !important;
-          text-align: right !important;
 
+          // Only set direction on child elements, NOT text-align (let alignment plugin handle alignment)
           p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
             direction: rtl !important;
-            text-align: right !important;
           }
         }
       }
 
-      // LTR support based on HTML direction
+      // LTR support based on HTML direction - Only set direction, NOT text-align
       html[dir="ltr"] {
         .ck.ck-editor__editable_inline,
         .ck.ck-editor__editable_inline[dir="ltr"],
         .ck.ck-editor__editable_inline[dir="rtl"] {
           direction: ltr !important;
-          text-align: left !important;
         }
 
         .ck.ck-editor__editable,
         .ck.ck-editor__editable[dir="ltr"],
         .ck.ck-editor__editable[dir="rtl"] {
           direction: ltr !important;
-          text-align: left !important;
 
+          // Only set direction on child elements, NOT text-align (let alignment plugin handle alignment)
           p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
             direction: ltr !important;
-            text-align: left !important;
           }
         }
       }
 
-      // Also target when editor element itself has dir attribute (fallback)
+      // Also target when editor element itself has dir attribute (fallback) - Only direction
       .ck.ck-editor__editable_inline[dir='rtl'] {
         direction: rtl !important;
-        text-align: right !important;
       }
 
       .ck.ck-editor__editable_inline[dir='ltr'] {
         direction: ltr !important;
-        text-align: left !important;
       }
 
       .ck.ck-editor__editable[dir='rtl'] {
         direction: rtl !important;
-        text-align: right !important;
 
         p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
           direction: rtl !important;
-          text-align: right !important;
         }
       }
 
       .ck.ck-editor__editable[dir='ltr'] {
         direction: ltr !important;
-        text-align: left !important;
 
         p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
           direction: ltr !important;
-          text-align: left !important;
         }
       }
     }
