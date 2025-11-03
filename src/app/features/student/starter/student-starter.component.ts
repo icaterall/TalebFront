@@ -389,62 +389,27 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const element = editor.ui.getEditableElement()!;
     const parent = element.parentElement!;
     
-    // Function to enforce direction
-    const enforceDirection = () => {
-      const direction = this.isRTL ? 'rtl' : 'ltr';
-      
-      // Force set direction on editable element (but NOT text-align, let alignment plugin handle it)
-      if (element) {
-        element.setAttribute('dir', direction);
-        element.style.direction = direction;
-        // Don't set textAlign here - let CKEditor alignment plugin handle it
-        // Override lang if it conflicts
-        if (this.isRTL && element.getAttribute('lang') === 'en') {
-          element.setAttribute('lang', 'ar');
-        } else if (!this.isRTL && element.getAttribute('lang') === 'ar') {
-          element.setAttribute('lang', 'en');
-        }
-        
-        // Force direction on all child elements (but NOT text-align)
-        const childElements = element.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span');
-        childElements.forEach((el: Element) => {
-          const htmlEl = el as HTMLElement;
-          htmlEl.style.direction = direction;
-          // Don't force textAlign - let alignment plugin handle it
-        });
-      }
-      
-      // Set direction on toolbar
-      const toolbar = editor.ui.view.toolbar.element;
-      if (toolbar) {
-        toolbar.setAttribute('dir', direction);
-        toolbar.style.direction = direction;
-      }
-    };
+    const direction = this.isRTL ? 'rtl' : 'ltr';
     
-    // Enforce direction immediately
-    enforceDirection();
+    // Set direction ONCE immediately - CSS will handle the rest via html[dir] selectors
+    // Don't fight with CKEditor during edits - let CSS handle it to prevent glitches
+    element.setAttribute('dir', direction);
     
-    // Enforce direction after a short delay (in case CKEditor resets it)
-    setTimeout(enforceDirection, 100);
-    setTimeout(enforceDirection, 500);
+    // Override lang if it conflicts
+    if (this.isRTL) {
+      element.setAttribute('lang', 'ar');
+    } else {
+      element.setAttribute('lang', 'en');
+    }
     
-    // Listen to editor changes and re-enforce direction
-    editor.model.document.on('change', () => {
-      setTimeout(enforceDirection, 0);
-    });
+    // Set direction on toolbar
+    const toolbar = editor.ui.view.toolbar.element;
+    if (toolbar) {
+      toolbar.setAttribute('dir', direction);
+    }
     
-    // Also use interval to continuously enforce (in case CKEditor keeps resetting)
-    const directionInterval = setInterval(() => {
-      if (element && element.getAttribute('dir') !== (this.isRTL ? 'rtl' : 'ltr')) {
-        enforceDirection();
-      }
-    }, 1000);
-    
-    // Clear interval when editor is destroyed
-    editor.on('destroy', () => {
-      clearInterval(directionInterval);
-    });
+    // CSS handles direction via html[dir] selectors - no JavaScript observers needed
+    // This prevents glitches when clicking to edit
 
     parent.insertBefore(
       editor.ui.view.toolbar.element!,

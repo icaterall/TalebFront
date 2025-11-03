@@ -3700,6 +3700,7 @@
     }
 
     // CKEditor content RTL/LTR support - forced styles
+    // Use CSS to prevent glitches by enforcing direction immediately
     ::ng-deep {
       // RTL support based on HTML direction - Only set direction, NOT text-align (let alignment plugin handle it)
       html[dir="rtl"] {
@@ -3707,12 +3708,17 @@
         .ck.ck-editor__editable_inline[dir="ltr"],
         .ck.ck-editor__editable_inline[dir="rtl"] {
           direction: rtl !important;
+          // Prevent glitch by using will-change and contain
+          will-change: direction;
+          contain: layout style;
         }
 
         .ck.ck-editor__editable,
         .ck.ck-editor__editable[dir="ltr"],
         .ck.ck-editor__editable[dir="rtl"] {
           direction: rtl !important;
+          will-change: direction;
+          contain: layout style;
 
           // Only set direction on child elements, NOT text-align (let alignment plugin handle alignment)
           p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
@@ -3727,12 +3733,16 @@
         .ck.ck-editor__editable_inline[dir="ltr"],
         .ck.ck-editor__editable_inline[dir="rtl"] {
           direction: ltr !important;
+          will-change: direction;
+          contain: layout style;
         }
 
         .ck.ck-editor__editable,
         .ck.ck-editor__editable[dir="ltr"],
         .ck.ck-editor__editable[dir="rtl"] {
           direction: ltr !important;
+          will-change: direction;
+          contain: layout style;
 
           // Only set direction on child elements, NOT text-align (let alignment plugin handle alignment)
           p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
@@ -3744,14 +3754,20 @@
       // Also target when editor element itself has dir attribute (fallback) - Only direction
       .ck.ck-editor__editable_inline[dir='rtl'] {
         direction: rtl !important;
+        will-change: direction;
+        contain: layout style;
       }
 
       .ck.ck-editor__editable_inline[dir='ltr'] {
         direction: ltr !important;
+        will-change: direction;
+        contain: layout style;
       }
 
       .ck.ck-editor__editable[dir='rtl'] {
         direction: rtl !important;
+        will-change: direction;
+        contain: layout style;
 
         p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
           direction: rtl !important;
@@ -3760,6 +3776,8 @@
 
       .ck.ck-editor__editable[dir='ltr'] {
         direction: ltr !important;
+        will-change: direction;
+        contain: layout style;
 
         p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
           direction: ltr !important;
