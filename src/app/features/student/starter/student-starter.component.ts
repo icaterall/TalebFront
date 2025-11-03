@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { QuillModule } from 'ngx-quill';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { AiBuilderService, CourseDraft, ContentItem, Section } from '../../../core/services/ai-builder.service';
@@ -24,7 +23,7 @@ interface Category {
 @Component({
   selector: 'app-student-starter',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule, QuillModule],
+  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule],
   templateUrl: './student-starter.component.html',
   styleUrls: ['./student-starter.component.scss']
 })
@@ -1431,21 +1430,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return text;
   }
 
-  // Quill Editor Configuration
-  quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'direction': 'rtl' }, { 'direction': 'ltr' }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'align': [] }],
-      ['link', 'image', 'video'],
-      ['clean']
-    ]
-  };
 
   loadTitleSuggestions(): void {
     if (!this.selectedCategory || !this.student) return;

@@ -933,15 +933,14 @@
             </div>
           </div>
           
-          <div class="editor-container" [dir]="isRTL ? 'rtl' : 'ltr'" [class.quill-rtl]="isRTL">
-            <quill-editor
+          <div class="editor-container" [attr.dir]="isRTL ? 'rtl' : 'ltr'">
+            <textarea
+              class="text-editor"
               [(ngModel)]="textContent"
-              [modules]="quillModules"
               [placeholder]="currentLang === 'ar' ? 'ابدأ بكتابة محتوى الدرس النصي هنا...' : 'Start writing your text lesson content here...'"
-              [styles]="{ height: '400px' }"
-              [bounds]="'self'"
-              [format]="'html'">
-            </quill-editor>
+              [attr.dir]="isRTL ? 'rtl' : 'ltr'"
+              rows="15">
+            </textarea>
           </div>
           
           <div class="editor-actions">
