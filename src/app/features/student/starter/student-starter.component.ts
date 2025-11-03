@@ -391,25 +391,73 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     const direction = this.isRTL ? 'rtl' : 'ltr';
     
-    // Set direction ONCE immediately - CSS will handle the rest via html[dir] selectors
-    // Don't fight with CKEditor during edits - let CSS handle it to prevent glitches
-    element.setAttribute('dir', direction);
+    // Function to enforce direction - only update if needed to prevent glitches
+    const enforceDirection = () => {
+      const currentDir = element.getAttribute('dir');
+      if (currentDir !== direction) {
+        element.setAttribute('dir', direction);
+        element.style.direction = direction;
+      }
+      
+      // Override lang if it conflicts
+      if (this.isRTL) {
+        const currentLang = element.getAttribute('lang');
+        if (currentLang !== 'ar') {
+          element.setAttribute('lang', 'ar');
+        }
+      } else {
+        const currentLang = element.getAttribute('lang');
+        if (currentLang !== 'en') {
+          element.setAttribute('lang', 'en');
+        }
+      }
+      
+      // Set direction on toolbar
+      const toolbar = editor.ui.view.toolbar.element;
+      if (toolbar) {
+        const toolbarDir = toolbar.getAttribute('dir');
+        if (toolbarDir !== direction) {
+          toolbar.setAttribute('dir', direction);
+          toolbar.style.direction = direction;
+        }
+      }
+    };
     
-    // Override lang if it conflicts
-    if (this.isRTL) {
-      element.setAttribute('lang', 'ar');
-    } else {
-      element.setAttribute('lang', 'en');
-    }
+    // Set direction immediately
+    enforceDirection();
     
-    // Set direction on toolbar
-    const toolbar = editor.ui.view.toolbar.element;
-    if (toolbar) {
-      toolbar.setAttribute('dir', direction);
-    }
+    // Use a very passive observer that only fixes direction when it's actually wrong
+    // Use a longer debounce to prevent glitches
+    let debounceTimer: any = null;
+    const observer = new MutationObserver(() => {
+      // Clear any pending update
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      
+      // Only check after a delay to batch updates and prevent glitches
+      debounceTimer = setTimeout(() => {
+        const currentDir = element.getAttribute('dir');
+        if (currentDir !== direction) {
+          enforceDirection();
+        }
+        debounceTimer = null;
+      }, 200); // Longer delay to prevent glitches
+    });
     
-    // CSS handles direction via html[dir] selectors - no JavaScript observers needed
-    // This prevents glitches when clicking to edit
+    // Observe only the editable element for dir attribute changes
+    observer.observe(element, {
+      attributes: true,
+      attributeFilter: ['dir', 'lang']
+    });
+    
+    // Clean up observer and timer when editor is destroyed
+    editor.on('destroy', () => {
+      observer.disconnect();
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    });
 
     parent.insertBefore(
       editor.ui.view.toolbar.element!,
