@@ -934,13 +934,11 @@
           </div>
           
           <div class="editor-container" [attr.dir]="isRTL ? 'rtl' : 'ltr'">
-            <textarea
-              class="text-editor"
+            <ckeditor 
+              [editor]="Editor"
               [(ngModel)]="textContent"
-              [placeholder]="currentLang === 'ar' ? 'ابدأ بكتابة محتوى الدرس النصي هنا...' : 'Start writing your text lesson content here...'"
-              [attr.dir]="isRTL ? 'rtl' : 'ltr'"
-              rows="15">
-            </textarea>
+              (ready)="onReady($event)">
+            </ckeditor>
           </div>
           
           <div class="editor-actions">

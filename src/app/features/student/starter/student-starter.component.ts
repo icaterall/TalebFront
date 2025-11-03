@@ -11,7 +11,9 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { skip } from 'rxjs/operators';
-
+import DecoupledEditor from '@ckeditor/ckeditor5-build-decoupled-document';
+import { CKEditor5CustomUploadAdapter } from './custom-uploader';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 interface Category {
   id: number;
   name_en: string;
@@ -23,7 +25,7 @@ interface Category {
 @Component({
   selector: 'app-student-starter',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule],
+  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule,CKEditorModule],
   templateUrl: './student-starter.component.html',
   styleUrls: ['./student-starter.component.scss']
 })
@@ -113,6 +115,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Localized labels pulled from backend
   localizedCountryName: string | null = null;
   localizedStageName: string | null = null;
+
+  // CKEditor
+  public Editor = DecoupledEditor;
 
   get currentLang(): 'ar' | 'en' { return this.i18n.current; }
   get isRTL(): boolean { return this.currentLang === 'ar'; }
@@ -336,6 +341,22 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       });
   }
 
+  public onReady( editor: DecoupledEditor ): void {
+    editor.plugins.get( 'FileRepository' ).createUploadAdapter = ( loader: any ) => {
+      return new CKEditor5CustomUploadAdapter( loader);
+   };
+   
+    const element = editor.ui.getEditableElement()!;
+    const parent = element.parentElement!;
+
+    parent.insertBefore(
+      editor.ui.view.toolbar.element!,
+      element
+    );
+  }
+
+
+  
   private loadSmartSix(): void {
     const stage_id = this.student?.education_stage_id ?? this.student?.stage_id;
     if (!stage_id) {
