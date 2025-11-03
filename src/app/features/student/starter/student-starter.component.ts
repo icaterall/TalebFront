@@ -348,9 +348,22 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
    
     const element = editor.ui.getEditableElement()!;
     const parent = element.parentElement!;
+    
+    // Set RTL/LTR direction for editor content
+    const direction = this.isRTL ? 'rtl' : 'ltr';
+    element.setAttribute('dir', direction);
+    element.style.direction = direction;
+    element.style.textAlign = this.isRTL ? 'right' : 'left';
+    
+    // Set direction on toolbar
+    const toolbar = editor.ui.view.toolbar.element;
+    if (toolbar) {
+      toolbar.setAttribute('dir', direction);
+      toolbar.style.direction = direction;
+    }
 
     parent.insertBefore(
-      editor.ui.view.toolbar.element!,
+      toolbar!,
       element
     );
   }

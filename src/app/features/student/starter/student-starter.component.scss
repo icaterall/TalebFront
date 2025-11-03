@@ -3698,6 +3698,29 @@
         text-align: right;
       }
     }
+
+    // CKEditor content RTL/LTR support
+    ::ng-deep .ck.ck-editor__editable {
+      &[dir='rtl'] {
+        direction: rtl;
+        text-align: right;
+
+        p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote {
+          direction: rtl;
+          text-align: right;
+        }
+      }
+
+      &[dir='ltr'] {
+        direction: ltr;
+        text-align: left;
+
+        p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote {
+          direction: ltr;
+          text-align: left;
+        }
+      }
+    }
   }
   
   .editor-actions {
