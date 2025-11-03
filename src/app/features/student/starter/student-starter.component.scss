@@ -3701,12 +3701,15 @@
 
     // CKEditor content RTL/LTR support - forced styles
     // Use CSS to prevent glitches by enforcing direction immediately
+    // Must work for both ck-focused and ck-blurred states
     ::ng-deep {
       // RTL support based on HTML direction - Only set direction, NOT text-align (let alignment plugin handle it)
       html[dir="rtl"] {
         .ck.ck-editor__editable_inline,
         .ck.ck-editor__editable_inline[dir="ltr"],
-        .ck.ck-editor__editable_inline[dir="rtl"] {
+        .ck.ck-editor__editable_inline[dir="rtl"],
+        .ck.ck-editor__editable_inline.ck-focused,
+        .ck.ck-editor__editable_inline.ck-blurred {
           direction: rtl !important;
           // Prevent glitch by using will-change and contain
           will-change: direction;
@@ -3715,7 +3718,9 @@
 
         .ck.ck-editor__editable,
         .ck.ck-editor__editable[dir="ltr"],
-        .ck.ck-editor__editable[dir="rtl"] {
+        .ck.ck-editor__editable[dir="rtl"],
+        .ck.ck-editor__editable.ck-focused,
+        .ck.ck-editor__editable.ck-blurred {
           direction: rtl !important;
           will-change: direction;
           contain: layout style;
@@ -3731,7 +3736,9 @@
       html[dir="ltr"] {
         .ck.ck-editor__editable_inline,
         .ck.ck-editor__editable_inline[dir="ltr"],
-        .ck.ck-editor__editable_inline[dir="rtl"] {
+        .ck.ck-editor__editable_inline[dir="rtl"],
+        .ck.ck-editor__editable_inline.ck-focused,
+        .ck.ck-editor__editable_inline.ck-blurred {
           direction: ltr !important;
           will-change: direction;
           contain: layout style;
@@ -3739,7 +3746,9 @@
 
         .ck.ck-editor__editable,
         .ck.ck-editor__editable[dir="ltr"],
-        .ck.ck-editor__editable[dir="rtl"] {
+        .ck.ck-editor__editable[dir="rtl"],
+        .ck.ck-editor__editable.ck-focused,
+        .ck.ck-editor__editable.ck-blurred {
           direction: ltr !important;
           will-change: direction;
           contain: layout style;
@@ -3752,19 +3761,26 @@
       }
 
       // Also target when editor element itself has dir attribute (fallback) - Only direction
-      .ck.ck-editor__editable_inline[dir='rtl'] {
+      // Support both focused and blurred states
+      .ck.ck-editor__editable_inline[dir='rtl'],
+      .ck.ck-editor__editable_inline[dir='rtl'].ck-focused,
+      .ck.ck-editor__editable_inline[dir='rtl'].ck-blurred {
         direction: rtl !important;
         will-change: direction;
         contain: layout style;
       }
 
-      .ck.ck-editor__editable_inline[dir='ltr'] {
+      .ck.ck-editor__editable_inline[dir='ltr'],
+      .ck.ck-editor__editable_inline[dir='ltr'].ck-focused,
+      .ck.ck-editor__editable_inline[dir='ltr'].ck-blurred {
         direction: ltr !important;
         will-change: direction;
         contain: layout style;
       }
 
-      .ck.ck-editor__editable[dir='rtl'] {
+      .ck.ck-editor__editable[dir='rtl'],
+      .ck.ck-editor__editable[dir='rtl'].ck-focused,
+      .ck.ck-editor__editable[dir='rtl'].ck-blurred {
         direction: rtl !important;
         will-change: direction;
         contain: layout style;
@@ -3774,7 +3790,9 @@
         }
       }
 
-      .ck.ck-editor__editable[dir='ltr'] {
+      .ck.ck-editor__editable[dir='ltr'],
+      .ck.ck-editor__editable[dir='ltr'].ck-focused,
+      .ck.ck-editor__editable[dir='ltr'].ck-blurred {
         direction: ltr !important;
         will-change: direction;
         contain: layout style;

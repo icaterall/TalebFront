@@ -391,12 +391,30 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     const direction = this.isRTL ? 'rtl' : 'ltr';
     
-    // Function to enforce direction - only update if needed to prevent glitches
+    // Set direction SYNCHRONOUSLY and IMMEDIATELY before any rendering
+    element.setAttribute('dir', direction);
+    element.style.setProperty('direction', direction, 'important');
+    
+    // Override lang if it conflicts
+    if (this.isRTL) {
+      element.setAttribute('lang', 'ar');
+    } else {
+      element.setAttribute('lang', 'en');
+    }
+    
+    // Set direction on toolbar
+    const toolbar = editor.ui.view.toolbar.element;
+    if (toolbar) {
+      toolbar.setAttribute('dir', direction);
+      toolbar.style.setProperty('direction', direction, 'important');
+    }
+    
+    // Function to enforce direction - must work in both focused and blurred states
     const enforceDirection = () => {
       const currentDir = element.getAttribute('dir');
       if (currentDir !== direction) {
         element.setAttribute('dir', direction);
-        element.style.direction = direction;
+        element.style.setProperty('direction', direction, 'important');
       }
       
       // Override lang if it conflicts
@@ -413,50 +431,61 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
       
       // Set direction on toolbar
-      const toolbar = editor.ui.view.toolbar.element;
       if (toolbar) {
         const toolbarDir = toolbar.getAttribute('dir');
         if (toolbarDir !== direction) {
           toolbar.setAttribute('dir', direction);
-          toolbar.style.direction = direction;
+          toolbar.style.setProperty('direction', direction, 'important');
         }
       }
     };
     
-    // Set direction immediately
-    enforceDirection();
-    
-    // Use a very passive observer that only fixes direction when it's actually wrong
-    // Use a longer debounce to prevent glitches
-    let debounceTimer: any = null;
-    const observer = new MutationObserver(() => {
-      // Clear any pending update
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-      
-      // Only check after a delay to batch updates and prevent glitches
-      debounceTimer = setTimeout(() => {
-        const currentDir = element.getAttribute('dir');
-        if (currentDir !== direction) {
-          enforceDirection();
-        }
-        debounceTimer = null;
-      }, 200); // Longer delay to prevent glitches
+    // Enforce direction on focus events (when clicking to edit)
+    // This ensures direction is correct even when editor is focused
+    editor.ui.focusTracker.on('change:isFocused', () => {
+      // Use requestAnimationFrame to batch updates and prevent glitches
+      requestAnimationFrame(() => {
+        enforceDirection();
+      });
     });
     
-    // Observe only the editable element for dir attribute changes
+    // Use a smart MutationObserver that only updates when direction actually changes
+    // Use requestAnimationFrame to batch updates and prevent visual glitches
+    let rafScheduled = false;
+    const observer = new MutationObserver(() => {
+      if (!rafScheduled) {
+        rafScheduled = true;
+        requestAnimationFrame(() => {
+          const currentDir = element.getAttribute('dir');
+          if (currentDir !== direction) {
+            enforceDirection();
+          }
+          rafScheduled = false;
+        });
+      }
+    });
+    
+    // Observe the editable element for dir attribute changes
+    // This catches when CKEditor tries to change direction
     observer.observe(element, {
       attributes: true,
       attributeFilter: ['dir', 'lang']
     });
     
-    // Clean up observer and timer when editor is destroyed
+    // Also check periodically to catch any missed changes
+    const periodicCheck = setInterval(() => {
+      requestAnimationFrame(() => {
+        const currentDir = element.getAttribute('dir');
+        if (currentDir !== direction) {
+          enforceDirection();
+        }
+      });
+    }, 1000);
+    
+    // Clean up when editor is destroyed
     editor.on('destroy', () => {
       observer.disconnect();
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
+      clearInterval(periodicCheck);
     });
 
     parent.insertBefore(
