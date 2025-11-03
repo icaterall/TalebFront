@@ -50,6 +50,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   selectedContentType: 'video' | 'resources' | 'text' | 'audio' | 'quiz' | null = null; // Track selected content type
   showTextEditor: boolean = false; // Track text editor visibility
   textContent: string = ''; // Store text editor content
+  currentEditor: DecoupledEditor | null = null; // Store current editor instance
   subsectionTitle: string = ''; // Store subsection title
   generatingWithAI: boolean = false; // Track AI generation status
   showAIHintModal: boolean = false; // Track AI hint modal visibility
@@ -383,6 +384,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   public onReady( editor: DecoupledEditor ): void {
+    // Store editor instance for later use
+    this.currentEditor = editor;
+    
     editor.plugins.get( 'FileRepository' ).createUploadAdapter = ( loader: any ) => {
       return new CKEditor5CustomUploadAdapter( loader);
    };
@@ -888,6 +892,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Text Editor Methods
   closeTextEditor(): void {
     this.showTextEditor = false;
+    // Reset editor instance when closing
+    this.currentEditor = null;
     this.selectedContentType = null;
     this.subsectionTitle = '';
     this.textContent = '';
@@ -1020,6 +1026,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
     
+    // Get content directly from editor instance (more reliable than ngModel)
+    const editorContent = this.currentEditor ? this.currentEditor.getData() : this.textContent;
+    
     const userId = this.student?.id || this.student?.user_id;
     
     // Determine active section (use activeSectionId or first section)
@@ -1034,10 +1043,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           activeSection.content_items[itemIndex] = {
             ...activeSection.content_items[itemIndex],
             title: this.subsectionTitle.trim(),
-            content: this.textContent,
+            content: editorContent,
             updatedAt: new Date().toISOString()
           };
           activeSection.updatedAt = new Date().toISOString();
+          // Save sections to persist the update
+          this.saveSections();
         }
       }
       
@@ -1045,7 +1056,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.updateContentItem(
         this.viewingContentItem.id,
         this.subsectionTitle.trim(),
-        this.textContent
+        editorContent
       );
     } else {
       // Create new content item
@@ -1053,7 +1064,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         id: `content-${Date.now()}`,
         type: 'text',
         title: this.subsectionTitle.trim(),
-        content: this.textContent,
+        content: editorContent,
         section_id: activeSection?.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
