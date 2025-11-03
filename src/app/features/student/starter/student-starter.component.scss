@@ -3694,30 +3694,85 @@
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
       }
 
-      &[dir='rtl'] {
+      &html[dir="rtl"] {
         text-align: right;
       }
     }
 
-    // CKEditor content RTL/LTR support
-    ::ng-deep .ck.ck-editor__editable {
-      &[dir='rtl'] {
-        direction: rtl;
-        text-align: right;
+    // CKEditor content RTL/LTR support - forced styles
+    ::ng-deep {
+      // RTL support based on HTML direction - FORCE even if element has dir="ltr"
+      html[dir="rtl"] {
+        .ck.ck-editor__editable_inline,
+        .ck.ck-editor__editable_inline[dir="ltr"],
+        .ck.ck-editor__editable_inline[dir="rtl"] {
+          direction: rtl !important;
+          text-align: right !important;
+        }
 
-        p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote {
-          direction: rtl;
-          text-align: right;
+        .ck.ck-editor__editable,
+        .ck.ck-editor__editable[dir="ltr"],
+        .ck.ck-editor__editable[dir="rtl"] {
+          direction: rtl !important;
+          text-align: right !important;
+
+          p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
+            direction: rtl !important;
+            text-align: right !important;
+          }
         }
       }
 
-      &[dir='ltr'] {
-        direction: ltr;
-        text-align: left;
+      // LTR support based on HTML direction
+      html[dir="ltr"] {
+        .ck.ck-editor__editable_inline,
+        .ck.ck-editor__editable_inline[dir="ltr"],
+        .ck.ck-editor__editable_inline[dir="rtl"] {
+          direction: ltr !important;
+          text-align: left !important;
+        }
 
-        p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote {
-          direction: ltr;
-          text-align: left;
+        .ck.ck-editor__editable,
+        .ck.ck-editor__editable[dir="ltr"],
+        .ck.ck-editor__editable[dir="rtl"] {
+          direction: ltr !important;
+          text-align: left !important;
+
+          p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
+            direction: ltr !important;
+            text-align: left !important;
+          }
+        }
+      }
+
+      // Also target when editor element itself has dir attribute (fallback)
+      .ck.ck-editor__editable_inline[dir='rtl'] {
+        direction: rtl !important;
+        text-align: right !important;
+      }
+
+      .ck.ck-editor__editable_inline[dir='ltr'] {
+        direction: ltr !important;
+        text-align: left !important;
+      }
+
+      .ck.ck-editor__editable[dir='rtl'] {
+        direction: rtl !important;
+        text-align: right !important;
+
+        p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
+          direction: rtl !important;
+          text-align: right !important;
+        }
+      }
+
+      .ck.ck-editor__editable[dir='ltr'] {
+        direction: ltr !important;
+        text-align: left !important;
+
+        p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span, strong, em, u, a {
+          direction: ltr !important;
+          text-align: left !important;
         }
       }
     }

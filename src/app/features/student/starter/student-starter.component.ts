@@ -349,21 +349,66 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const element = editor.ui.getEditableElement()!;
     const parent = element.parentElement!;
     
-    // Set RTL/LTR direction for editor content
-    const direction = this.isRTL ? 'rtl' : 'ltr';
-    element.setAttribute('dir', direction);
-    element.style.direction = direction;
-    element.style.textAlign = this.isRTL ? 'right' : 'left';
+    // Function to enforce direction
+    const enforceDirection = () => {
+      const direction = this.isRTL ? 'rtl' : 'ltr';
+      const textAlign = this.isRTL ? 'right' : 'left';
+      
+      // Force set direction on editable element
+      if (element) {
+        element.setAttribute('dir', direction);
+        element.style.direction = direction;
+        element.style.textAlign = textAlign;
+        // Override lang if it conflicts
+        if (this.isRTL && element.getAttribute('lang') === 'en') {
+          element.setAttribute('lang', 'ar');
+        } else if (!this.isRTL && element.getAttribute('lang') === 'ar') {
+          element.setAttribute('lang', 'en');
+        }
+        
+        // Force direction on all child elements
+        const childElements = element.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, span');
+        childElements.forEach((el: Element) => {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.direction = direction;
+          htmlEl.style.textAlign = textAlign;
+        });
+      }
+      
+      // Set direction on toolbar
+      const toolbar = editor.ui.view.toolbar.element;
+      if (toolbar) {
+        toolbar.setAttribute('dir', direction);
+        toolbar.style.direction = direction;
+      }
+    };
     
-    // Set direction on toolbar
-    const toolbar = editor.ui.view.toolbar.element;
-    if (toolbar) {
-      toolbar.setAttribute('dir', direction);
-      toolbar.style.direction = direction;
-    }
+    // Enforce direction immediately
+    enforceDirection();
+    
+    // Enforce direction after a short delay (in case CKEditor resets it)
+    setTimeout(enforceDirection, 100);
+    setTimeout(enforceDirection, 500);
+    
+    // Listen to editor changes and re-enforce direction
+    editor.model.document.on('change', () => {
+      setTimeout(enforceDirection, 0);
+    });
+    
+    // Also use interval to continuously enforce (in case CKEditor keeps resetting)
+    const directionInterval = setInterval(() => {
+      if (element && element.getAttribute('dir') !== (this.isRTL ? 'rtl' : 'ltr')) {
+        enforceDirection();
+      }
+    }, 1000);
+    
+    // Clear interval when editor is destroyed
+    editor.on('destroy', () => {
+      clearInterval(directionInterval);
+    });
 
     parent.insertBefore(
-      toolbar!,
+      editor.ui.view.toolbar.element!,
       element
     );
   }

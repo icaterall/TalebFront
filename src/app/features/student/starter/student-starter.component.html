@@ -898,8 +898,8 @@
     </div>
 
     <!-- Text Editor Modal -->
-    <div class="modal-overlay" *ngIf="showTextEditor" (click)="closeTextEditor()">
-      <div class="modal-content text-editor-modal" (click)="$event.stopPropagation()">
+    <div class="modal-overlay" *ngIf="showTextEditor">
+      <div class="modal-content text-editor-modal">
         <div class="modal-header">
           <h3>{{ currentLang === 'ar' ? '✍️ إنشاء درس نصي' : '✍️ Create Text Lesson' }}</h3>
           <button type="button" class="modal-close-btn" (click)="closeTextEditor()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
