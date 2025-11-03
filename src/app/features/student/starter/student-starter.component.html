@@ -35,28 +35,22 @@
           <ng-template #stepOne>1</ng-template>
         </div>
         <div class="step-labels">
-          <span class="step-name">{{ currentLang === 'ar' ? 'التصنيف' : 'Category' }}</span>
+          <span class="step-name">{{ currentLang === 'ar' ? 'أساسيات المادة' : 'Course Basics' }}</span>
         </div>
       </div>
       <div class="progress-step" [ngClass]="{'completed': currentStep > 2, 'current': currentStep === 2, 'pending': currentStep < 2}">
         <div class="step-circle">
           <ng-container *ngIf="currentStep > 2; else stepTwo">
             <span class="check-icon">✔</span>
-    </ng-container>
+          </ng-container>
           <ng-template #stepTwo>2</ng-template>
         </div>
         <div class="step-labels">
-          <span class="step-name">{{ currentLang === 'ar' ? 'أساسيات المقرر' : 'Course Basics' }}</span>
+          <span class="step-name">{{ currentLang === 'ar' ? 'بناء الاقسام' : 'Building Sections' }}</span>
         </div>
       </div>
       <div class="progress-step pending">
         <div class="step-circle">3</div>
-        <div class="step-labels">
-          <span class="step-name">{{ currentLang === 'ar' ? 'بناء الوحدة الأولى' : 'Build First Unit' }}</span>
-        </div>
-      </div>
-      <div class="progress-step pending">
-        <div class="step-circle">4</div>
         <div class="step-labels">
           <span class="step-name">{{ currentLang === 'ar' ? 'مراجعة ونشر' : 'Review & Publish' }}</span>
         </div>
@@ -69,13 +63,23 @@
       <div *ngIf="showStep1" class="step-content step1-content">
         <!-- Read-only Summary (shown when step2Locked is true) -->
         <div class="read-only-summary" *ngIf="step2Locked && selectedCategory" [dir]="isRTL ? 'rtl' : 'ltr'">
-          <div class="summary-item">
-            <span class="summary-label">{{ currentLang === 'ar' ? 'التصنيف:' : 'Category:' }}</span>
-            <span class="summary-icon">{{ selectedCategory.icon }}</span>
-            <span class="summary-value">{{ getCategoryName(selectedCategory) }}</span>
+          <div class="summary-item summary-item-with-action">
+            <div class="summary-content">
+              <span class="summary-label">{{ currentLang === 'ar' ? 'التصنيف:' : 'Category:' }}</span>
+              <span class="summary-icon">{{ selectedCategory.icon }}</span>
+              <span class="summary-value">{{ getCategoryName(selectedCategory) }}</span>
+            </div>
+            <button 
+              type="button" 
+              class="btn-start-from-scratch"
+              (click)="showStartFromScratchModal = true"
+              [attr.aria-label]="currentLang === 'ar' ? 'بدء من جديد' : 'Start from Scratch'">
+              <span class="btn-icon">🔄</span>
+              <span class="btn-text">{{ currentLang === 'ar' ? 'بدء من جديد' : 'Start from Scratch' }}</span>
+            </button>
           </div>
           <div class="summary-item">
-            <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المقرر:' : 'Course Name:' }}</span>
+            <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المادة:' : 'Course Name:' }}</span>
             <span class="summary-value">
               <span *ngIf="!editingCourseName">{{ courseName }}</span>
               <input 
@@ -85,11 +89,11 @@
                 [(ngModel)]="editingCourseNameValue"
                 (keyup.enter)="saveCourseNameEdit()"
                 (keyup.escape)="cancelCourseNameEdit()"
-                [placeholder]="currentLang === 'ar' ? 'اسم المقرر' : 'Course Name'"
+                [placeholder]="currentLang === 'ar' ? 'اسم المادة' : 'Course Name'"
                 [dir]="isRTL ? 'rtl' : 'ltr'"
                 maxlength="200">
               <div class="summary-action-buttons">
-                <button *ngIf="!editingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المقرر' : 'Edit Course Name'">✏️</button>
+                <button *ngIf="!editingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المادة' : 'Edit Course Name'">✏️</button>
                 <div *ngIf="editingCourseName" class="inline-edit-actions">
                   <button type="button" class="inline-edit-btn inline-edit-cancel" (click)="cancelCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
                   <button type="button" class="inline-edit-btn inline-edit-save" (click)="saveCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
@@ -157,6 +161,17 @@
                   
                   <!-- Edit and Menu buttons (when not editing) -->
                   <ng-container *ngIf="!editingSection || editingSectionId !== section.id">
+                    <!-- Toggle Switch for Section Availability -->
+                    <label class="section-toggle-switch" [attr.aria-label]="currentLang === 'ar' ? (section.available ? 'القسم متاح' : 'القسم غير متاح') : (section.available ? 'Section Available' : 'Section Unavailable')">
+                      <input 
+                        type="checkbox" 
+                        [checked]="section.available !== false"
+                        (change)="toggleSectionAvailability(section.id, $event)"
+                        (click)="$event.stopPropagation()"
+                        [attr.aria-label]="currentLang === 'ar' ? 'تبديل توفر القسم' : 'Toggle Section Availability'">
+                      <span class="toggle-slider"></span>
+                    </label>
+                    
                     <button 
                       type="button" 
                       class="section-edit-btn" 
@@ -206,7 +221,7 @@
             </div>
 
             <!-- Section Content (hidden when collapsed) -->
-            <div class="section-content-body" *ngIf="!section.isCollapsed">
+            <div class="section-content-body" *ngIf="!section.isCollapsed" [dir]="isRTL ? 'rtl' : 'ltr'">
               <!-- Content Items List -->
               <div class="content-items-section" *ngIf="section.content_items && section.content_items.length > 0">
                 <div class="content-items-list">
@@ -278,7 +293,7 @@
               </div>
 
               <!-- Add Content to Section -->
-              <div class="add-content-section">
+              <div class="add-content-section" [dir]="isRTL ? 'rtl' : 'ltr'">
                 <div class="content-type-grid">
                   <button 
                     type="button"
@@ -385,7 +400,7 @@
               </h2>
             </div>
 
-            <div class="section-content-body">
+            <div class="section-content-body" [dir]="isRTL ? 'rtl' : 'ltr'">
               <!-- Legacy Content Items -->
               <div class="content-items-section" *ngIf="contentItems.length > 0">
                 <div class="content-items-list">
@@ -398,7 +413,7 @@
               </div>
 
               <!-- Legacy Add Content -->
-              <div class="add-content-section">
+              <div class="add-content-section" [dir]="isRTL ? 'rtl' : 'ltr'">
                 <div class="content-type-grid">
                   <!-- Same buttons as above -->
                 </div>
@@ -409,14 +424,13 @@
 
         <!-- Skeleton Loader for Read-only Summary (shown when loading or data is being fetched) -->
         <div class="read-only-summary read-only-summary-skeleton" *ngIf="showSummarySkeleton" [dir]="isRTL ? 'rtl' : 'ltr'">
-          <div class="summary-item">
-            <span class="summary-label skeleton-text"></span>
-            <span class="summary-icon skeleton-icon"></span>
-            <span class="summary-value skeleton-text"></span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label skeleton-text"></span>
-            <span class="summary-value skeleton-text"></span>
+          <div class="summary-item summary-item-with-action">
+            <div class="summary-content">
+              <span class="summary-label skeleton-text"></span>
+              <span class="summary-icon skeleton-icon"></span>
+              <span class="summary-value skeleton-text"></span>
+            </div>
+            <div class="btn-start-from-scratch skeleton-button"></div>
           </div>
           <div class="summary-item">
             <span class="summary-label skeleton-text"></span>
@@ -468,7 +482,7 @@
           <!-- Course Name Input with AI Generate Button -->
           <div class="field-group course-name-input-group" *ngIf="!step2Locked">
             <label class="field-label">
-              {{ currentLang === 'ar' ? 'اسم المقرر' : 'Course Name' }}
+              {{ currentLang === 'ar' ? 'اسم المادة' : 'Course Name' }}
               <span class="required">*</span>
             </label>
             <div class="course-name-input-row">
@@ -477,7 +491,7 @@
                 class="course-name-input"
                 [(ngModel)]="courseName"
                 (input)="onCourseNameChange()"
-                [placeholder]="currentLang === 'ar' ? 'أدخل اسم المقرر...' : 'Enter course name...'"
+                [placeholder]="currentLang === 'ar' ? 'أدخل اسم المادة...' : 'Enter course name...'"
                 maxlength="80" />
               <button
                 type="button"
@@ -491,10 +505,10 @@
             </div>
             <div class="field-help">
               <span *ngIf="courseTitleSuggestions.length === 0">
-                {{ currentLang === 'ar' ? 'اكتب اسم المقرر يدوياً أو انقر على الزر لإنشاء اقتراحات بالذكاء الاصطناعي' : 'Type the course name manually or click the button to generate suggestions with AI' }}
+                {{ currentLang === 'ar' ? 'اكتب اسم المادة يدوياً أو انقر على الزر لإنشاء اقتراحات بالذكاء الاصطناعي' : 'Type the course name manually or click the button to generate suggestions with AI' }}
               </span>
               <span *ngIf="courseTitleSuggestions.length > 0">
-                {{ currentLang === 'ar' ? 'اختر عنواناً من الاقتراحات أعلاه أو اكتب اسم المقرر يدوياً' : 'Select a title from suggestions above or type the course name manually' }}
+                {{ currentLang === 'ar' ? 'اختر عنواناً من الاقتراحات أعلاه أو اكتب اسم المادة يدوياً' : 'Select a title from suggestions above or type the course name manually' }}
               </span>
             </div>
           </div>
@@ -678,13 +692,13 @@
         <!-- A) Course Name -->
         <div class="field-group">
           <label class="field-label" *ngIf="!courseName">
-            {{ currentLang === 'ar' ? 'اسم المقرر' : 'Course Name' }}
+            {{ currentLang === 'ar' ? 'اسم المادة' : 'Course Name' }}
             <span class="required">*</span>
           </label>
 
           <!-- Stored Course Name (one line with underline) -->
           <div class="inline-field-display" *ngIf="courseName" [dir]="isRTL ? 'rtl' : 'ltr'">
-            <span class="inline-label">{{ currentLang === 'ar' ? 'اسم المقرر:' : 'Course Name:' }}</span>
+            <span class="inline-label">{{ currentLang === 'ar' ? 'اسم المادة:' : 'Course Name:' }}</span>
             <span class="inline-value underlined">{{ courseName }}</span>
           </div>
 
@@ -990,26 +1004,21 @@
 
   <!-- Info Preview -->
   <div class="info-preview" *ngIf="selectedCategory">
-    <h3>{{ currentLang === 'ar' ? 'خطوات بناء المقرر:' : 'Course Building Steps:' }}</h3>
+    <h3>{{ currentLang === 'ar' ? 'خطوات بناء المادة:' : 'Course Building Steps:' }}</h3>
     <div class="preview-grid">
       <div class="preview-item">
-        <span class="preview-icon">✅</span>
-        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 1: التصنيف' : 'Step 1: Category' }}</span>
-        <span class="preview-desc">{{ currentLang === 'ar' ? 'اختيار التصنيف الرئيسي (مكتمل)' : 'Pick main category (completed)' }}</span>
-      </div>
-      <div class="preview-item">
         <span class="preview-icon">📝</span>
-        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 2: أساسيات المقرر' : 'Step 2: Course Basics' }}</span>
-        <span class="preview-desc">{{ currentLang === 'ar' ? 'اسم المقرر والوحدة' : 'Name and topic' }}</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 1: أساسيات المادة' : 'Step 1: Course Basics' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'اسم المادة والوحدة' : 'Name and topic' }}</span>
       </div>
       <div class="preview-item">
         <span class="preview-icon">🎯</span>
-        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 3: بناء الوحدة الأولى' : 'Step 3: Build First Unit' }}</span>
-        <span class="preview-desc">{{ currentLang === 'ar' ? 'أهداف، محتوى مختصر، واختبار من 3 أسئلة' : 'Objectives, brief content, and 3-question quiz' }}</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 2: بناء الاقسام' : 'Step 2: Building Sections' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'بناء الاقسام والأقسام' : 'Build units and sections' }}</span>
       </div>
       <div class="preview-item">
         <span class="preview-icon">🚀</span>
-        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 4: مراجعة ونشر' : 'Step 4: Review & Publish' }}</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 3: مراجعة ونشر' : 'Step 3: Review & Publish' }}</span>
         <span class="preview-desc">{{ currentLang === 'ar' ? 'تحديد الرؤية والنشر مع قسم اختياري' : 'Set visibility and publish with optional section' }}</span>
       </div>
     </div>
@@ -1033,6 +1042,28 @@
       </button>
       <button type="button" class="btn-delete" (click)="confirmDeleteSection()">
         {{ currentLang === 'ar' ? 'نعم، حذف' : 'Yes, delete' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Start from Scratch Modal -->
+<div class="modal-overlay" *ngIf="showStartFromScratchModal" (click)="showStartFromScratchModal = false">
+  <div class="modal-content start-from-scratch-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ currentLang === 'ar' ? 'بدء من جديد' : 'Start from Scratch' }}</h2>
+      <button type="button" class="modal-close" (click)="showStartFromScratchModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="warning-message">{{ currentLang === 'ar' ? 'هل أنت متأكد من أنك تريد حذف كل شيء والبدء من جديد؟' : 'Are you sure you want to delete everything and start from scratch?' }}</p>
+      <p class="warning-details">{{ currentLang === 'ar' ? 'سيتم حذف جميع البيانات المحفوظة بما في ذلك المادة، الأقسام، والمحتوى. لا يمكن التراجع عن هذا الإجراء.' : 'All saved data will be deleted including course, sections, and content. This action cannot be undone.' }}</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="showStartFromScratchModal = false">
+        {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+      </button>
+      <button type="button" class="btn-delete" (click)="confirmStartFromScratch()">
+        {{ currentLang === 'ar' ? 'نعم، ابدأ من جديد' : 'Yes, Start from Scratch' }}
       </button>
     </div>
   </div>

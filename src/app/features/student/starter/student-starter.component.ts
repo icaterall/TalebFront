@@ -41,7 +41,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private languageChangeSubscription?: Subscription;
 
   // Step Management
-  currentStep: number = 1; // 1 = Category, 2 = Course Basics
+  currentStep: number = 1; // 1 = Course Basics, 2 = Building Sections, 3 = Review & Publish
   step2Locked: boolean = false; // Track if Step 2 inputs are locked after continue
   showWarningModal: boolean = false; // Track warning modal visibility
   warningModalType: 'goBack' | 'deleteContent' | null = null; // Track warning modal type
@@ -56,7 +56,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   aiHint: string = ''; // Store optional AI hint
   
   // Section Management
-  sections: Section[] = []; // Store all sections
+  sections: (Section & { available?: boolean })[] = []; // Store all sections with availability toggle
   activeSectionId: string | null = null; // Currently active/selected section
   
   // Content Management (legacy - will migrate to sections)
@@ -77,6 +77,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Delete Section
   showDeleteSectionModal: boolean = false; // Track delete section modal visibility
   sectionToDelete: Section | null = null; // Track which section is being deleted
+  showStartFromScratchModal: boolean = false; // Track start from scratch modal visibility
   
   // Undo Toast
   showUndoToast: boolean = false; // Track undo toast visibility
@@ -924,9 +925,43 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const category = this.selectedCategory 
       ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
       : '';
-    const section = this.selectedTopic || this.subjectSlug || '';
+    
+    // Get section name from active section if available
+    let sectionName = '';
+    if (this.activeSectionId) {
+      const activeSection = this.sections.find(s => s.id === this.activeSectionId);
+      if (activeSection) {
+        sectionName = activeSection.name;
+      }
+    }
+    // Fallback to selectedTopic or subjectSlug if no active section
+    const section = sectionName || this.selectedTopic || this.subjectSlug || '';
     const title = this.subsectionTitle.trim();
     const hint = this.aiHint.trim() || undefined; // Only include if provided
+    
+    // Build restrictions/instructions for AI
+    const restrictions: string[] = [];
+    if (course_name) {
+      restrictions.push(
+        this.currentLang === 'ar' 
+          ? `يجب أن يكون المحتوى متعلقًا فقط بدورة "${course_name}" ولا يتضمن مواضيع خارجية`
+          : `Content must be strictly related to the course "${course_name}" and must not include unrelated topics`
+      );
+    }
+    if (section) {
+      restrictions.push(
+        this.currentLang === 'ar'
+          ? `يجب أن يكون المحتوى متعلقًا بقسم "${section}" فقط`
+          : `Content must be strictly related to the section "${section}" only`
+      );
+    }
+    if (title) {
+      restrictions.push(
+        this.currentLang === 'ar'
+          ? `يجب أن يركز المحتوى على العنوان "${title}" فقط ولا يتجاوزه`
+          : `Content must focus strictly on the title "${title}" and must not deviate from it`
+      );
+    }
     
     const payload: any = {
       grade,
@@ -937,6 +972,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       title,
       locale: this.currentLang
     };
+    
+    // Add restrictions/instructions to ensure AI stays on topic
+    if (restrictions.length > 0) {
+      payload.restrictions = restrictions.join('. ');
+      payload.instructions = this.currentLang === 'ar'
+        ? `مهم جداً: يجب أن يقتصر المحتوى على موضوع الدورة "${course_name}" وقسم "${section}" والعنوان "${title}" فقط. لا تتضمن أي معلومات أو أمثلة غير متعلقة بهذه الموضوعات.`
+        : `CRITICAL: Content must be strictly limited to the course "${course_name}", section "${section}", and title "${title}" only. Do not include any information or examples unrelated to these topics.`;
+    }
     
     // Add hint only if provided
     if (hint) {
@@ -1151,13 +1194,33 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   confirmDeleteContent(): void {
     if (!this.itemToDelete) return;
     
+    // Delete from sections (new structure)
+    let itemDeleted = false;
+    for (const section of this.sections) {
+      const itemIndex = section.content_items.findIndex(item => item.id === this.itemToDelete);
+      if (itemIndex !== -1) {
+        section.content_items.splice(itemIndex, 1);
+        section.updatedAt = new Date().toISOString();
+        itemDeleted = true;
+        break;
+      }
+    }
+    
+    // Also delete from legacy contentItems (for backward compatibility)
     this.contentItems = this.contentItems.filter(item => item.id !== this.itemToDelete);
-    const userId = this.student?.id || this.student?.user_id;
-    const draft = this.ai.getDraft(userId);
-    this.ai.saveDraft({
-      ...draft,
-      content_items: this.contentItems
-    }, userId);
+    
+    // Save sections
+    if (itemDeleted) {
+      this.saveSections();
+    } else {
+      // Legacy save if using old structure
+      const userId = this.student?.id || this.student?.user_id;
+      const draft = this.ai.getDraft(userId);
+      this.ai.saveDraft({
+        ...draft,
+        content_items: this.contentItems
+      }, userId);
+    }
     
     this.showWarningModal = false;
     this.warningModalType = null;
@@ -1260,22 +1323,27 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     // If sections already exist in draft, restore them
     if (draft.sections && draft.sections.length > 0) {
-      this.sections = draft.sections.map(s => ({
-        ...s,
-        isCollapsed: this.getSectionCollapseState(s.id) ?? s.isCollapsed ?? false
-      }));
+      this.sections = draft.sections.map(s => {
+        const section = s as Section & { available?: boolean };
+        return {
+          ...s,
+          isCollapsed: this.getSectionCollapseState(s.id) ?? s.isCollapsed ?? false,
+          available: section.available !== false // Default to true if not set
+        };
+      });
       return;
     }
     
     // Migrate from legacy contentItems or create first section
     if (this.selectedTopic || this.subjectSlug) {
       const sectionName = this.selectedTopic || this.subjectSlug || '';
-      const firstSection: Section = {
+      const firstSection: Section & { available: boolean } = {
         id: `section-${Date.now()}`,
         number: 1,
         name: sectionName,
         content_items: draft.content_items || this.contentItems || [],
         isCollapsed: this.getSectionCollapseState(`section-1`) ?? false,
+        available: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -1288,12 +1356,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Add New Section
   addNewSection(): void {
     const newSectionNumber = this.sections.length + 1;
-    const newSection: Section = {
+    const newSection: Section & { available: boolean } = {
       id: `section-${Date.now()}`,
       number: newSectionNumber,
       name: `${this.currentLang === 'ar' ? 'القسم' : 'Section'} ${newSectionNumber}`,
       content_items: [],
       isCollapsed: false,
+      available: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -1369,7 +1438,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (!section) return;
     
     const newSectionNumber = this.sections.length + 1;
-    const duplicatedSection: Section = {
+    const duplicatedSection: Section & { available: boolean } = {
       id: `section-${Date.now()}`,
       number: newSectionNumber,
       name: `${section.name} (${this.currentLang === 'ar' ? 'نسخة' : 'Copy'})`,
@@ -1379,6 +1448,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         section_id: `section-${Date.now()}`
       })),
       isCollapsed: false,
+      available: section.available !== false, // Preserve availability from original
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -1434,6 +1504,18 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
   
+  // Toggle Section Availability
+  toggleSectionAvailability(sectionId: string, event: Event): void {
+    event.stopPropagation();
+    const section = this.sections.find(s => s.id === sectionId);
+    if (section) {
+      section.available = !(section.available !== false); // Toggle: true becomes false, undefined/false becomes true
+      section.updatedAt = new Date().toISOString();
+      this.saveSections();
+      this.cdr.detectChanges();
+    }
+  }
+
   // Undo Delete Section
   undoDeleteSection(): void {
     if (!this.deletedSection) return;
@@ -1456,6 +1538,47 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     this.deletedSection = null;
     this.cdr.detectChanges();
+  }
+
+  // Start from Scratch - Clear everything
+  confirmStartFromScratch(): void {
+    const userId = this.student?.id || this.student?.user_id;
+    
+    // Clear all draft data from localStorage
+    this.ai.clearDraft(userId);
+    
+    // Clear all component state
+    this.courseName = '';
+    this.selectedTopic = '';
+    this.subjectSlug = '';
+    this.availableTopics = [];
+    this.selectedCategory = null;
+    this.selectedCategoryId = null;
+    this.courseTitleSuggestions = [];
+    this.units = [];
+    this.sections = [];
+    this.contentItems = [];
+    this.activeSectionId = null;
+    this.step2Locked = false;
+    this.currentStep = 1;
+    this.editingCourseName = false;
+    this.editingCourseNameValue = '';
+    this.showStartFromScratchModal = false;
+    
+    // Clear any localStorage items related to CKEditor images
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('ckeditor_image_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to clear CKEditor images from localStorage:', error);
+    }
+    
+    // Reload the page to start fresh
+    window.location.reload();
   }
   
   // Save Sections to localStorage
@@ -1525,8 +1648,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     
     // Backspace on selected header → open delete dialog
+    // But NOT if user is typing in an input/textarea/editable element
     if (event.key === 'Backspace' && !event.ctrlKey && !event.metaKey) {
       const target = event.target as HTMLElement;
+      
+      // Don't trigger if user is typing in an input field
+      if (target.tagName === 'INPUT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.isContentEditable) {
+        return;
+      }
+      
       if (target.classList.contains('section-content-header') || 
           target.closest('.section-content-header')) {
         event.preventDefault();
