@@ -1,0 +1,261 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shared-alb-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/group.name: k8s-sharedalbgroup
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type":"redirect","RedirectConfig":{"Protocol":"HTTPS","Port":"443","StatusCode":"HTTP_301"}}'
+    alb.ingress.kubernetes.io/certificate-arn: >
+      arn:aws:acm:us-east-2:533267169159:certificate/bde034bc-24ba-4fd2-9dbf-3b640c861f26,
+      arn:aws:acm:us-east-2:533267169159:certificate/9c35fa73-9fe7-4c43-86f7-18ef898e5940,
+      arn:aws:acm:us-east-2:533267169159:certificate/2de4aede-a756-477f-9358-266bfbaea22a,
+      arn:aws:acm:us-east-2:533267169159:certificate/ee1f5588-d351-4629-874c-abaf9ee2ab98,
+      arn:aws:acm:us-east-2:533267169159:certificate/7f091665-3171-4a38-acd2-91313c7ad192,
+      arn:aws:acm:us-east-2:533267169159:certificate/f4dc6d9f-88be-4e07-863a-34b5e6596151,
+      arn:aws:acm:us-east-2:533267169159:certificate/970247ab-70b2-4f2a-8d32-99843eb616b3,
+      arn:aws:acm:us-east-2:533267169159:certificate/c6b1de19-e514-4e44-bc0c-5c1b8daada47,
+      arn:aws:acm:us-east-2:533267169159:certificate/f893dfcf-2fa0-4820-a353-4291d8f3e09b,
+      arn:aws:acm:us-east-2:533267169159:certificate/45c9eaf9-b2aa-444e-98ad-120eadd8ff6b
+spec:
+  ingressClassName: alb
+  rules:
+    # HTTP → HTTPS redirect (catch-all)
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ssl-redirect
+                port:
+                  name: use-annotation
+
+    - host: savvycater.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+    - host: www.savvycater.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+    - host: felfelgrill.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+    - host: www.felfelgrill.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+    - host: tahinakitchen.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+    - host: www.tahinakitchen.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+
+    - host: bagelstime.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+    - host: www.bagelstime.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+
+    - host: anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: anataleb-frontend-service
+                port:
+                  number: 80
+    - host: www.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: anataleb-frontend-service
+                port:
+                  number: 80
+    - host: backend.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: anataleb-backend-service
+                port:
+                  number: 3000
+    - host: test.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: front-test-anataleb-service
+                port:
+                  number: 80
+    - host: backtest.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: back-test-anataleb-service
+                port:
+                  number: 3000
+    - host: manuscriptjournal.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: manuscript-frontend-service
+                port:
+                  number: 80
+    - host: www.manuscriptjournal.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: manuscript-frontend-service
+                port:
+                  number: 80
+    - host: backend.manuscriptjournal.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: manuscript-backend-service
+                port:
+                  number: 3000
+    - host: pickpickgo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-dashboard-service
+                port:
+                  number: 80
+    - host: www.pickpickgo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-dashboard-service
+                port:
+                  number: 80
+    - host: admin.pickpickgo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-dashboard-service
+                port:
+                  number: 80
+    - host: backendstores.pickpickgo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-backend-service
+                port:
+                  number: 3000
+    - host: atolito.pickpickgo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+    - host: felfelgrill.pickpickgo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pickpickgo-store-service
+                port:
+                  number: 80
+#kubectl apply -f shared-alb-ingress.yaml
