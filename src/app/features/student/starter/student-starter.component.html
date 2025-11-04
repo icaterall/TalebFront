@@ -35,7 +35,7 @@
           <ng-template #stepOne>1</ng-template>
         </div>
         <div class="step-labels">
-          <span class="step-name">{{ currentLang === 'ar' ? 'أساسيات المادة' : 'Course Basics' }}</span>
+          <span class="step-name">{{ currentLang === 'ar' ? 'أساسيات المادة الدراسية' : 'Course Basics' }}</span>
         </div>
       </div>
       <div class="progress-step" [ngClass]="{'completed': currentStep > 2, 'current': currentStep === 2, 'pending': currentStep < 2}">
@@ -79,7 +79,7 @@
             </button>
           </div>
           <div class="summary-item">
-            <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المادة:' : 'Course Name:' }}</span>
+            <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المادة الدراسية:' : 'Course Name:' }}</span>
             <span class="summary-value">
               <span *ngIf="!editingCourseName">{{ courseName }}</span>
               <input 
@@ -89,11 +89,11 @@
                 [(ngModel)]="editingCourseNameValue"
                 (keyup.enter)="saveCourseNameEdit()"
                 (keyup.escape)="cancelCourseNameEdit()"
-                [placeholder]="currentLang === 'ar' ? 'اسم المادة' : 'Course Name'"
+                [placeholder]="currentLang === 'ar' ? 'اسم المادة الدراسية' : 'Course Name'"
                 [dir]="isRTL ? 'rtl' : 'ltr'"
                 maxlength="200">
               <div class="summary-action-buttons">
-                <button *ngIf="!editingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المادة' : 'Edit Course Name'">✏️</button>
+                <button *ngIf="!editingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المادة الدراسية' : 'Edit Course Name'">✏️</button>
                 <div *ngIf="editingCourseName" class="inline-edit-actions">
                   <button type="button" class="inline-edit-btn inline-edit-cancel" (click)="cancelCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
                   <button type="button" class="inline-edit-btn inline-edit-save" (click)="saveCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
@@ -482,7 +482,7 @@
           <!-- Course Name Input with AI Generate Button -->
           <div class="field-group course-name-input-group" *ngIf="!step2Locked">
             <label class="field-label">
-              {{ currentLang === 'ar' ? 'اسم المادة' : 'Course Name' }}
+              {{ currentLang === 'ar' ? 'اسم المادة الدراسية' : 'Course Name' }}
               <span class="required">*</span>
             </label>
             <div class="course-name-input-row">
@@ -491,7 +491,7 @@
                 class="course-name-input"
                 [(ngModel)]="courseName"
                 (input)="onCourseNameChange()"
-                [placeholder]="currentLang === 'ar' ? 'أدخل اسم المادة...' : 'Enter course name...'"
+                [placeholder]="currentLang === 'ar' ? 'أدخل اسم المادة الدراسية...' : 'Enter course name...'"
                 maxlength="80" />
               <button
                 type="button"
@@ -505,10 +505,10 @@
             </div>
             <div class="field-help">
               <span *ngIf="courseTitleSuggestions.length === 0">
-                {{ currentLang === 'ar' ? 'اكتب اسم المادة يدوياً أو انقر على الزر لإنشاء اقتراحات بالذكاء الاصطناعي' : 'Type the course name manually or click the button to generate suggestions with AI' }}
+                {{ currentLang === 'ar' ? 'اكتب اسم المادة الدراسية يدوياً أو انقر على الزر لإنشاء اقتراحات بالذكاء الاصطناعي' : 'Type the course name manually or click the button to generate suggestions with AI' }}
               </span>
               <span *ngIf="courseTitleSuggestions.length > 0">
-                {{ currentLang === 'ar' ? 'اختر عنواناً من الاقتراحات أعلاه أو اكتب اسم المادة يدوياً' : 'Select a title from suggestions above or type the course name manually' }}
+                {{ currentLang === 'ar' ? 'اختر عنواناً من الاقتراحات أعلاه أو اكتب اسم المادة الدراسية يدوياً' : 'Select a title from suggestions above or type the course name manually' }}
               </span>
             </div>
           </div>
@@ -692,13 +692,13 @@
         <!-- A) Course Name -->
         <div class="field-group">
           <label class="field-label" *ngIf="!courseName">
-            {{ currentLang === 'ar' ? 'اسم المادة' : 'Course Name' }}
+            {{ currentLang === 'ar' ? 'اسم المادة الدراسية' : 'Course Name' }}
             <span class="required">*</span>
           </label>
 
           <!-- Stored Course Name (one line with underline) -->
           <div class="inline-field-display" *ngIf="courseName" [dir]="isRTL ? 'rtl' : 'ltr'">
-            <span class="inline-label">{{ currentLang === 'ar' ? 'اسم المادة:' : 'Course Name:' }}</span>
+            <span class="inline-label">{{ currentLang === 'ar' ? 'اسم المادة الدراسية:' : 'Course Name:' }}</span>
             <span class="inline-value underlined">{{ courseName }}</span>
           </div>
 
@@ -935,15 +935,15 @@
             <button 
               type="button"
               class="btn-generate-ai"
-              [disabled]="generatingWithAI || !subsectionTitle || subsectionTitle.trim().length < 4"
-              (click)="generateTextWithAI()">
+              [disabled]="generatingWithAI"
+              (click)="suggestNameWithAI()">
               <span class="btn-icon">🤖</span>
-              <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'Generate by AI' }}</span>
-              <span class="btn-hint">{{ currentLang === 'ar' ? '(سوف يستغرق 1-2 دقيقة)' : '(Will take 1-2 minutes)' }}</span>
+              <span class="btn-text">{{ currentLang === 'ar' ? 'اقتراح اسم بالذكاء الاصطناعي' : 'Suggest Name by AI' }}</span>
+              <span class="btn-hint">{{ currentLang === 'ar' ? '(سوف يستغرق دقيقة)' : '(Will take a minute)' }}</span>
             </button>
             <div class="ai-generating" *ngIf="generatingWithAI">
               <span class="spinner"></span>
-              <span>{{ currentLang === 'ar' ? 'جاري الإنشاء...' : 'Generating...' }}</span>
+              <span>{{ currentLang === 'ar' ? 'جاري الاقتراح...' : 'Suggesting...' }}</span>
             </div>
           </div>
           
@@ -1004,12 +1004,12 @@
 
   <!-- Info Preview -->
   <div class="info-preview" *ngIf="selectedCategory">
-    <h3>{{ currentLang === 'ar' ? 'خطوات بناء المادة:' : 'Course Building Steps:' }}</h3>
+    <h3>{{ currentLang === 'ar' ? 'خطوات بناء المادة الدراسية:' : 'Course Building Steps:' }}</h3>
     <div class="preview-grid">
       <div class="preview-item">
         <span class="preview-icon">📝</span>
-        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 1: أساسيات المادة' : 'Step 1: Course Basics' }}</span>
-        <span class="preview-desc">{{ currentLang === 'ar' ? 'اسم المادة والوحدة' : 'Name and topic' }}</span>
+        <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 1: أساسيات المادة الدراسية' : 'Step 1: Course Basics' }}</span>
+        <span class="preview-desc">{{ currentLang === 'ar' ? 'اسم المادة الدراسية والوحدة' : 'Name and topic' }}</span>
       </div>
       <div class="preview-item">
         <span class="preview-icon">🎯</span>

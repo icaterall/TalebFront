@@ -1027,6 +1027,68 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.aiHint = '';
   }
 
+  suggestNameWithAI(): void {
+    if (this.generatingWithAI) return;
+    
+    this.generatingWithAI = true;
+    
+    // Prepare context data
+    const grade = this.stageName || '';
+    const country = this.countryName || '';
+    const course_name = this.courseName || '';
+    const category = this.selectedCategory 
+      ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
+      : '';
+    
+    // Get section name from active section if available
+    let sectionName = '';
+    if (this.activeSectionId) {
+      const activeSection = this.sections.find(s => s.id === this.activeSectionId);
+      if (activeSection) {
+        sectionName = activeSection.name;
+      }
+    }
+    // Fallback to selectedTopic or subjectSlug if no active section
+    const section = sectionName || this.selectedTopic || this.subjectSlug || '';
+    
+    const payload: any = {
+      grade,
+      country,
+      course_name,
+      category,
+      section,
+      locale: this.currentLang,
+      type: 'title' // Indicate we want a title suggestion
+    };
+    
+    console.log('Requesting name suggestion from AI...', payload);
+    
+    // Call backend API for title suggestion
+    this.http.post<{ title: string }>(`${this.baseUrl}/ai/content/title`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Language': this.currentLang === 'ar' ? 'ar' : 'en'
+      }
+    }).subscribe({
+      next: (response) => {
+        // Set the suggested title
+        this.subsectionTitle = response.title || '';
+        this.generatingWithAI = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('AI name suggestion error:', error);
+        // Show error message (could be a toast or inline message)
+        this.generatingWithAI = false;
+        this.cdr.detectChanges();
+        // Optionally show an error message
+        alert(this.currentLang === 'ar' 
+          ? 'فشل في اقتراح الاسم. يرجى المحاولة مرة أخرى.' 
+          : 'Failed to suggest name. Please try again.');
+      }
+    });
+  }
+
   saveTextContent(): void {
     // Validate that subsection title is provided
     if (!this.subsectionTitle || !this.subsectionTitle.trim()) {
