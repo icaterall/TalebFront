@@ -168,6 +168,26 @@ spec:
                 name: back-test-anataleb-service
                 port:
                   number: 3000
+    - host: clfs.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: clfsanataleb-frontend-service
+                port:
+                  number: 80
+    - host: clfsbackend.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: clfsanataleb-backend-service
+                port:
+                  number: 3000
     - host: manuscriptjournal.com
       http:
         paths:
