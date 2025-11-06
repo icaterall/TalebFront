@@ -881,21 +881,21 @@
     <div class="modal-overlay ai-hint-overlay" *ngIf="showAIHintModal" (click)="cancelAIHint()" style="z-index: 10001;">
       <div class="modal-content ai-hint-modal" (click)="$event.stopPropagation()" style="z-index: 10001;">
         <div class="modal-header">
-          <h3>{{ aiHintModalTitle }}</h3>
+          <h3>{{ currentLang === 'ar' ? '🤖 تلميح للذكاء الاصطناعي' : '🤖 AI Hint (Optional)' }}</h3>
           <button type="button" class="modal-close-btn" (click)="cancelAIHint()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
         </div>
         <div class="modal-body">
           <div class="hint-field">
-            <label class="field-label">{{ aiHintModalLabel }}</label>
+            <label class="field-label">{{ currentLang === 'ar' ? 'أضف تلميحاً (اختياري)' : 'Add a hint (optional)' }}</label>
             <textarea 
               class="hint-input"
               [(ngModel)]="aiHint"
-              [placeholder]="aiHintModalPlaceholder"
+              [placeholder]="currentLang === 'ar' ? 'مثال: ركز على الأساسيات، استخدم أمثلة عملية، اجعل المحتوى مناسباً للمبتدئين...' : 'Example: Focus on fundamentals, use practical examples, make content suitable for beginners...'"
               [dir]="isRTL ? 'rtl' : 'ltr'"
               rows="4"
               maxlength="500"></textarea>
             <div class="field-help">
-              {{ aiHintModalHelpText }}
+              {{ currentLang === 'ar' ? 'أضف أي توجيهات أو متطلبات إضافية لتحسين جودة المحتوى المولّد' : 'Add any additional guidance or requirements to improve the quality of generated content' }}
             </div>
           </div>
           
@@ -935,10 +935,10 @@
             <button 
               type="button"
               class="btn-generate-ai"
-              [disabled]="generatingWithAI"
-              (click)="suggestNameWithAI()">
+              [disabled]="generatingWithAI || !subsectionTitle || !subsectionTitle.trim()"
+              (click)="generateTextWithAI()">
               <span class="btn-icon">🤖</span>
-              <span class="btn-text">{{ currentLang === 'ar' ? 'اقتراح اسم بالذكاء الاصطناعي' : 'Suggest Name by AI' }}</span>
+              <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء محتوى بالذكاء الاصطناعي' : 'Generate Text with AI' }}</span>
               <span class="btn-hint">{{ currentLang === 'ar' ? '(سوف يستغرق دقيقة)' : '(Will take a minute)' }}</span>
             </button>
             <div class="ai-generating" *ngIf="generatingWithAI">

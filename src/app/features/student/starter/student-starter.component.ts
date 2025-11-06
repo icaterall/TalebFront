@@ -55,7 +55,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   generatingWithAI: boolean = false; // Track AI generation status
   showAIHintModal: boolean = false; // Track AI hint modal visibility
   aiHint: string = ''; // Store optional AI hint
-  pendingAIAction: 'textContent' | 'titleSuggestion' | null = null; // Track which AI action is pending hint confirmation
+  pendingAiAction: 'textContent' | null = null; // Track which AI action is pending hint input
   
   // Section Management
   sections: (Section & { available?: boolean })[] = []; // Store all sections with availability toggle
@@ -181,45 +181,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   get showStep1(): boolean { return this.currentStep === 1; }
   get showStep2(): boolean { return this.currentStep === 2; }
-  get aiHintModalTitle(): string {
-    const isTitle = this.pendingAIAction === 'titleSuggestion';
-    if (this.currentLang === 'ar') {
-      return isTitle ? '🤖 تلميح لاقتراح الاسم' : '🤖 تلميح للذكاء الاصطناعي';
-    }
-    return isTitle ? '🤖 AI Hint for Title' : '🤖 AI Hint (Optional)';
-  }
-
-  get aiHintModalLabel(): string {
-    const isTitle = this.pendingAIAction === 'titleSuggestion';
-    if (this.currentLang === 'ar') {
-      return isTitle ? 'أضف توجيهاً لاقتراح الاسم (اختياري)' : 'أضف تلميحاً (اختياري)';
-    }
-    return isTitle ? 'Add guidance for the suggested title (optional)' : 'Add a hint (optional)';
-  }
-
-  get aiHintModalPlaceholder(): string {
-    const isTitle = this.pendingAIAction === 'titleSuggestion';
-    if (this.currentLang === 'ar') {
-      return isTitle
-        ? 'مثال: اجعل الاسم جذاباً، استخدم أفعالاً قوية، ركز على المهارة الأساسية...'
-        : 'مثال: ركز على الأساسيات، استخدم أمثلة عملية، اجعل المحتوى مناسباً للمبتدئين...';
-    }
-    return isTitle
-      ? 'Example: Make the title catchy, use strong verbs, highlight the key skill...'
-      : 'Example: Focus on fundamentals, use practical examples, make content suitable for beginners...';
-  }
-
-  get aiHintModalHelpText(): string {
-    const isTitle = this.pendingAIAction === 'titleSuggestion';
-    if (this.currentLang === 'ar') {
-      return isTitle
-        ? 'أخبر الذكاء الاصطناعي كيف تريد أن يكون الاسم المقترح ليظهر بالشكل الأنسب'
-        : 'أضف أي توجيهات أو متطلبات إضافية لتحسين جودة المحتوى المولّد';
-    }
-    return isTitle
-      ? 'Tell the AI what style of title you prefer so it can match your tone'
-      : 'Add any additional guidance or requirements to improve the generated content';
-  }
   
   getSectionDisplayName(sectionName: string): string {
     // Format as "Section 1" in bold, followed by section name
@@ -757,15 +718,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       // Stay on Step 1 and show read-only summary (don't move to Step 2 yet)
       this.step2Locked = true;
 
-      if (this.sections.length === 0) {
+      // Ensure the first section is created immediately after locking step 2
+      if (!this.sections || this.sections.length === 0) {
         this.initializeSections();
-      }
-
-      if (this.sections.length > 0) {
-        const firstSection = this.sections[0];
-        firstSection.isCollapsed = false;
-        this.activeSectionId = firstSection.id;
-        this.saveSections();
       }
       
       // Force immediate change detection to hide inputs and show summary
@@ -960,58 +915,60 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   generateTextWithAI(): void {
     if (this.generatingWithAI) return;
-
-    // Validate that subsection title is provided
-    if (!this.subsectionTitle || this.subsectionTitle.trim().length < 4) {
+    
+    // Validate that subsection title is provided (users cannot generate without title)
+    if (!this.subsectionTitle || this.subsectionTitle.trim().length === 0) {
+      alert(this.currentLang === 'ar'
+        ? 'الرجاء إدخال عنوان الدرس قبل إنشاء المحتوى بالذكاء الاصطناعي.'
+        : 'Please enter a lesson title before generating content with AI.');
       return;
     }
 
+    // Warn user if content already exists (will be replaced)
+    const existingContent = this.currentEditor ? this.currentEditor.getData() : this.textContent;
+    if (existingContent && existingContent.trim().length > 0) {
+      const confirmReplace = confirm(
+        this.currentLang === 'ar'
+          ? 'المحتوى الحالي سيتم استبداله بالمحتوى الذي سيولده الذكاء الاصطناعي. هل تريد المتابعة؟'
+          : 'The current content will be replaced with new AI-generated content. Do you want to continue?'
+      );
+      if (!confirmReplace) {
+        return;
+      }
+    }
+
+    // Show hint modal first
+    this.pendingAiAction = 'textContent';
     this.aiHint = '';
-    this.pendingAIAction = 'textContent';
     this.showAIHintModal = true;
-    this.cdr.detectChanges();
   }
-
+  
   proceedWithAIGeneration(withHint: boolean = false): void {
-    const action = this.pendingAIAction;
+    const action = this.pendingAiAction;
     const hintValue = withHint ? this.aiHint.trim() : '';
-
+    
+    // Close hint modal and reset hint state for next time
     this.showAIHintModal = false;
-    this.pendingAIAction = null;
     this.aiHint = '';
-
+    this.pendingAiAction = null;
+    
     if (action === 'textContent') {
-      this.requestTextGeneration(hintValue || undefined);
-    } else if (action === 'titleSuggestion') {
-      this.requestTitleSuggestion(hintValue || undefined);
+      this.generateTextContentWithAI(hintValue);
     }
   }
-
-  cancelAIHint(): void {
-    this.showAIHintModal = false;
-    this.aiHint = '';
-    this.pendingAIAction = null;
-  }
-
-  suggestNameWithAI(): void {
+  
+  private generateTextContentWithAI(hint?: string): void {
     if (this.generatingWithAI) return;
-
-    this.aiHint = '';
-    this.pendingAIAction = 'titleSuggestion';
-    this.showAIHintModal = true;
-    this.cdr.detectChanges();
-  }
-
-  private requestTextGeneration(hint?: string): void {
+    
     this.generatingWithAI = true;
-
+    
     const grade = this.stageName || '';
     const country = this.countryName || '';
     const course_name = this.courseName || '';
-    const category = this.selectedCategory
+    const category = this.selectedCategory 
       ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
       : '';
-
+    
     let sectionName = '';
     if (this.activeSectionId) {
       const activeSection = this.sections.find(s => s.id === this.activeSectionId);
@@ -1021,11 +978,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     const section = sectionName || this.selectedTopic || this.subjectSlug || '';
     const title = this.subsectionTitle.trim();
-
+    const hintText = hint?.trim() || '';
+    
     const restrictions: string[] = [];
     if (course_name) {
       restrictions.push(
-        this.currentLang === 'ar'
+        this.currentLang === 'ar' 
           ? `يجب أن يكون المحتوى متعلقًا فقط بدورة "${course_name}" ولا يتضمن مواضيع خارجية`
           : `Content must be strictly related to the course "${course_name}" and must not include unrelated topics`
       );
@@ -1044,7 +1002,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           : `Content must focus strictly on the title "${title}" and must not deviate from it`
       );
     }
-
+    
     const payload: any = {
       grade,
       country,
@@ -1054,20 +1012,20 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       title,
       locale: this.currentLang
     };
-
+    
     if (restrictions.length > 0) {
       payload.restrictions = restrictions.join('. ');
       payload.instructions = this.currentLang === 'ar'
         ? `مهم جداً: يجب أن يقتصر المحتوى على موضوع الدورة "${course_name}" وقسم "${section}" والعنوان "${title}" فقط. لا تتضمن أي معلومات أو أمثلة غير متعلقة بهذه الموضوعات.`
         : `CRITICAL: Content must be strictly limited to the course "${course_name}", section "${section}", and title "${title}" only. Do not include any information or examples unrelated to these topics.`;
     }
-
-    if (hint) {
-      payload.hint = hint;
+    
+    if (hintText) {
+      payload.hint = hintText;
     }
-
+    
     console.log('Generating text content with AI...', payload);
-
+    
     this.http.post<{ content: string }>(`${this.baseUrl}/ai/content/text`, payload, {
       headers: {
         'Content-Type': 'application/json',
@@ -1087,59 +1045,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  private requestTitleSuggestion(hint?: string): void {
-    this.generatingWithAI = true;
-
-    const grade = this.stageName || '';
-    const country = this.countryName || '';
-    const course_name = this.courseName || '';
-    const category = this.selectedCategory
-      ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
-      : '';
-
-    let sectionName = '';
-    if (this.activeSectionId) {
-      const activeSection = this.sections.find(s => s.id === this.activeSectionId);
-      if (activeSection) {
-        sectionName = activeSection.name;
-      }
-    }
-    const section = sectionName || this.selectedTopic || this.subjectSlug || '';
-
-    const payload: any = {
-      grade,
-      country,
-      course_name,
-      category,
-      section,
-      locale: this.currentLang,
-      type: 'title'
-    };
-
-    if (hint) {
-      payload.hint = hint;
-    }
-
-    console.log('Requesting name suggestion from AI...', payload);
-
-    this.http.post<{ title: string }>(`${this.baseUrl}/ai/content/title`, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept-Language': this.currentLang === 'ar' ? 'ar' : 'en'
-      }
-    }).subscribe({
-      next: (response) => {
-        this.subsectionTitle = response.title || '';
-        this.generatingWithAI = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('AI name suggestion error:', error);
-        this.generatingWithAI = false;
-        this.cdr.detectChanges();
-      }
-    });
+  
+  cancelAIHint(): void {
+    this.showAIHintModal = false;
+    this.aiHint = '';
+    this.pendingAiAction = null;
   }
 
   saveTextContent(): void {
@@ -1469,7 +1379,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     // Migrate from legacy contentItems or create first section
     if (this.selectedTopic || this.subjectSlug) {
-      const sectionName = this.selectedTopic || this.subjectSlug || '';
+      const sectionName = (this.selectedTopic || this.subjectSlug || '').trim();
+      if (!sectionName) {
+        return;
+      }
       const firstSection: Section & { available: boolean } = {
         id: `section-${Date.now()}`,
         number: 1,
