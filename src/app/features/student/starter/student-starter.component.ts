@@ -55,6 +55,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   generatingWithAI: boolean = false; // Track AI generation status
   showAIHintModal: boolean = false; // Track AI hint modal visibility
   aiHint: string = ''; // Store optional AI hint
+  pendingAIAction: 'textContent' | 'titleSuggestion' | null = null; // Track which AI action is pending hint confirmation
   
   // Section Management
   sections: (Section & { available?: boolean })[] = []; // Store all sections with availability toggle
@@ -180,6 +181,45 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   get showStep1(): boolean { return this.currentStep === 1; }
   get showStep2(): boolean { return this.currentStep === 2; }
+  get aiHintModalTitle(): string {
+    const isTitle = this.pendingAIAction === 'titleSuggestion';
+    if (this.currentLang === 'ar') {
+      return isTitle ? '🤖 تلميح لاقتراح الاسم' : '🤖 تلميح للذكاء الاصطناعي';
+    }
+    return isTitle ? '🤖 AI Hint for Title' : '🤖 AI Hint (Optional)';
+  }
+
+  get aiHintModalLabel(): string {
+    const isTitle = this.pendingAIAction === 'titleSuggestion';
+    if (this.currentLang === 'ar') {
+      return isTitle ? 'أضف توجيهاً لاقتراح الاسم (اختياري)' : 'أضف تلميحاً (اختياري)';
+    }
+    return isTitle ? 'Add guidance for the suggested title (optional)' : 'Add a hint (optional)';
+  }
+
+  get aiHintModalPlaceholder(): string {
+    const isTitle = this.pendingAIAction === 'titleSuggestion';
+    if (this.currentLang === 'ar') {
+      return isTitle
+        ? 'مثال: اجعل الاسم جذاباً، استخدم أفعالاً قوية، ركز على المهارة الأساسية...'
+        : 'مثال: ركز على الأساسيات، استخدم أمثلة عملية، اجعل المحتوى مناسباً للمبتدئين...';
+    }
+    return isTitle
+      ? 'Example: Make the title catchy, use strong verbs, highlight the key skill...'
+      : 'Example: Focus on fundamentals, use practical examples, make content suitable for beginners...';
+  }
+
+  get aiHintModalHelpText(): string {
+    const isTitle = this.pendingAIAction === 'titleSuggestion';
+    if (this.currentLang === 'ar') {
+      return isTitle
+        ? 'أخبر الذكاء الاصطناعي كيف تريد أن يكون الاسم المقترح ليظهر بالشكل الأنسب'
+        : 'أضف أي توجيهات أو متطلبات إضافية لتحسين جودة المحتوى المولّد';
+    }
+    return isTitle
+      ? 'Tell the AI what style of title you prefer so it can match your tone'
+      : 'Add any additional guidance or requirements to improve the generated content';
+  }
   
   getSectionDisplayName(sectionName: string): string {
     // Format as "Section 1" in bold, followed by section name
@@ -716,6 +756,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       // Lock Step 2 inputs immediately - hide them and show read-only values
       // Stay on Step 1 and show read-only summary (don't move to Step 2 yet)
       this.step2Locked = true;
+
+      if (this.sections.length === 0) {
+        this.initializeSections();
+      }
+
+      if (this.sections.length > 0) {
+        const firstSection = this.sections[0];
+        firstSection.isCollapsed = false;
+        this.activeSectionId = firstSection.id;
+        this.saveSections();
+      }
       
       // Force immediate change detection to hide inputs and show summary
       this.cdr.markForCheck();
@@ -909,37 +960,58 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   generateTextWithAI(): void {
     if (this.generatingWithAI) return;
-    
+
     // Validate that subsection title is provided
     if (!this.subsectionTitle || this.subsectionTitle.trim().length < 4) {
       return;
     }
-    
-    // Show hint modal first
+
     this.aiHint = '';
+    this.pendingAIAction = 'textContent';
     this.showAIHintModal = true;
+    this.cdr.detectChanges();
   }
-  
+
   proceedWithAIGeneration(withHint: boolean = false): void {
-    // Close hint modal
+    const action = this.pendingAIAction;
+    const hintValue = withHint ? this.aiHint.trim() : '';
+
     this.showAIHintModal = false;
-    
-    // If user skipped hint, clear it
-    if (!withHint) {
-      this.aiHint = '';
+    this.pendingAIAction = null;
+    this.aiHint = '';
+
+    if (action === 'textContent') {
+      this.requestTextGeneration(hintValue || undefined);
+    } else if (action === 'titleSuggestion') {
+      this.requestTitleSuggestion(hintValue || undefined);
     }
-    
+  }
+
+  cancelAIHint(): void {
+    this.showAIHintModal = false;
+    this.aiHint = '';
+    this.pendingAIAction = null;
+  }
+
+  suggestNameWithAI(): void {
+    if (this.generatingWithAI) return;
+
+    this.aiHint = '';
+    this.pendingAIAction = 'titleSuggestion';
+    this.showAIHintModal = true;
+    this.cdr.detectChanges();
+  }
+
+  private requestTextGeneration(hint?: string): void {
     this.generatingWithAI = true;
-    
-    // Prepare context data
+
     const grade = this.stageName || '';
     const country = this.countryName || '';
     const course_name = this.courseName || '';
-    const category = this.selectedCategory 
+    const category = this.selectedCategory
       ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
       : '';
-    
-    // Get section name from active section if available
+
     let sectionName = '';
     if (this.activeSectionId) {
       const activeSection = this.sections.find(s => s.id === this.activeSectionId);
@@ -947,16 +1019,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         sectionName = activeSection.name;
       }
     }
-    // Fallback to selectedTopic or subjectSlug if no active section
     const section = sectionName || this.selectedTopic || this.subjectSlug || '';
     const title = this.subsectionTitle.trim();
-    const hint = this.aiHint.trim() || undefined; // Only include if provided
-    
-    // Build restrictions/instructions for AI
+
     const restrictions: string[] = [];
     if (course_name) {
       restrictions.push(
-        this.currentLang === 'ar' 
+        this.currentLang === 'ar'
           ? `يجب أن يكون المحتوى متعلقًا فقط بدورة "${course_name}" ولا يتضمن مواضيع خارجية`
           : `Content must be strictly related to the course "${course_name}" and must not include unrelated topics`
       );
@@ -975,7 +1044,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           : `Content must focus strictly on the title "${title}" and must not deviate from it`
       );
     }
-    
+
     const payload: any = {
       grade,
       country,
@@ -985,23 +1054,20 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       title,
       locale: this.currentLang
     };
-    
-    // Add restrictions/instructions to ensure AI stays on topic
+
     if (restrictions.length > 0) {
       payload.restrictions = restrictions.join('. ');
       payload.instructions = this.currentLang === 'ar'
         ? `مهم جداً: يجب أن يقتصر المحتوى على موضوع الدورة "${course_name}" وقسم "${section}" والعنوان "${title}" فقط. لا تتضمن أي معلومات أو أمثلة غير متعلقة بهذه الموضوعات.`
         : `CRITICAL: Content must be strictly limited to the course "${course_name}", section "${section}", and title "${title}" only. Do not include any information or examples unrelated to these topics.`;
     }
-    
-    // Add hint only if provided
+
     if (hint) {
       payload.hint = hint;
     }
-    
+
     console.log('Generating text content with AI...', payload);
-    
-    // Call backend API
+
     this.http.post<{ content: string }>(`${this.baseUrl}/ai/content/text`, payload, {
       headers: {
         'Content-Type': 'application/json',
@@ -1021,26 +1087,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
-  cancelAIHint(): void {
-    this.showAIHintModal = false;
-    this.aiHint = '';
-  }
 
-  suggestNameWithAI(): void {
-    if (this.generatingWithAI) return;
-    
+  private requestTitleSuggestion(hint?: string): void {
     this.generatingWithAI = true;
-    
-    // Prepare context data
+
     const grade = this.stageName || '';
     const country = this.countryName || '';
     const course_name = this.courseName || '';
-    const category = this.selectedCategory 
+    const category = this.selectedCategory
       ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
       : '';
-    
-    // Get section name from active section if available
+
     let sectionName = '';
     if (this.activeSectionId) {
       const activeSection = this.sections.find(s => s.id === this.activeSectionId);
@@ -1048,9 +1105,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         sectionName = activeSection.name;
       }
     }
-    // Fallback to selectedTopic or subjectSlug if no active section
     const section = sectionName || this.selectedTopic || this.subjectSlug || '';
-    
+
     const payload: any = {
       grade,
       country,
@@ -1058,12 +1114,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       category,
       section,
       locale: this.currentLang,
-      type: 'title' // Indicate we want a title suggestion
+      type: 'title'
     };
-    
+
+    if (hint) {
+      payload.hint = hint;
+    }
+
     console.log('Requesting name suggestion from AI...', payload);
-    
-    // Call backend API for title suggestion
+
     this.http.post<{ title: string }>(`${this.baseUrl}/ai/content/title`, payload, {
       headers: {
         'Content-Type': 'application/json',
@@ -1071,20 +1130,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
     }).subscribe({
       next: (response) => {
-        // Set the suggested title
         this.subsectionTitle = response.title || '';
         this.generatingWithAI = false;
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('AI name suggestion error:', error);
-        // Show error message (could be a toast or inline message)
         this.generatingWithAI = false;
         this.cdr.detectChanges();
-        // Optionally show an error message
-        alert(this.currentLang === 'ar' 
-          ? 'فشل في اقتراح الاسم. يرجى المحاولة مرة أخرى.' 
-          : 'Failed to suggest name. Please try again.');
       }
     });
   }
