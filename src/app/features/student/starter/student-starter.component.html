@@ -63,43 +63,61 @@
       <div *ngIf="showStep1" class="step-content step1-content">
         <!-- Read-only Summary (shown when step2Locked is true) -->
         <div class="read-only-summary" *ngIf="step2Locked && selectedCategory" [dir]="isRTL ? 'rtl' : 'ltr'">
-          <div class="summary-item summary-item-with-action">
-            <div class="summary-content">
-              <span class="summary-label">{{ currentLang === 'ar' ? 'التصنيف:' : 'Category:' }}</span>
-              <span class="summary-icon">{{ selectedCategory.icon }}</span>
-              <span class="summary-value">{{ getCategoryName(selectedCategory) }}</span>
-            </div>
-            <button 
-              type="button" 
-              class="btn-start-from-scratch"
-              (click)="showStartFromScratchModal = true"
-              [attr.aria-label]="currentLang === 'ar' ? 'بدء من جديد' : 'Start from Scratch'">
-              <span class="btn-icon">🔄</span>
-              <span class="btn-text">{{ currentLang === 'ar' ? 'بدء من جديد' : 'Start from Scratch' }}</span>
-            </button>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المادة الدراسية:' : 'Course Name:' }}</span>
-            <span class="summary-value">
-              <span *ngIf="!editingCourseName">{{ courseName }}</span>
-              <input 
-                *ngIf="editingCourseName"
-                type="text"
-                class="inline-edit-input"
-                [(ngModel)]="editingCourseNameValue"
-                (keyup.enter)="saveCourseNameEdit()"
-                (keyup.escape)="cancelCourseNameEdit()"
-                [placeholder]="currentLang === 'ar' ? 'اسم المادة الدراسية' : 'Course Name'"
-                [dir]="isRTL ? 'rtl' : 'ltr'"
-                maxlength="200">
-              <div class="summary-action-buttons">
-                <button *ngIf="!editingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المادة الدراسية' : 'Edit Course Name'">✏️</button>
-                <div *ngIf="editingCourseName" class="inline-edit-actions">
-                  <button type="button" class="inline-edit-btn inline-edit-cancel" (click)="cancelCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
-                  <button type="button" class="inline-edit-btn inline-edit-save" (click)="saveCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
-                </div>
+          <div class="summary-main">
+            <div class="summary-item summary-item-with-action">
+              <div class="summary-content">
+                <span class="summary-label">{{ currentLang === 'ar' ? 'التصنيف:' : 'Category:' }}</span>
+                <span class="summary-icon">{{ selectedCategory.icon }}</span>
+                <span class="summary-value">{{ getCategoryName(selectedCategory) }}</span>
               </div>
-            </span>
+              <button 
+                type="button" 
+                class="btn-start-from-scratch"
+                (click)="showStartFromScratchModal = true"
+                [attr.aria-label]="currentLang === 'ar' ? 'بدء من جديد' : 'Start from Scratch'">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">{{ currentLang === 'ar' ? 'بدء من جديد' : 'Start from Scratch' }}</span>
+              </button>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المادة الدراسية:' : 'Course Name:' }}</span>
+              <span class="summary-value">
+                <span *ngIf="!editingCourseName">{{ courseName }}</span>
+                <input 
+                  *ngIf="editingCourseName"
+                  type="text"
+                  class="inline-edit-input"
+                  [(ngModel)]="editingCourseNameValue"
+                  (keyup.enter)="saveCourseNameEdit()"
+                  (keyup.escape)="cancelCourseNameEdit()"
+                  [placeholder]="currentLang === 'ar' ? 'اسم المادة الدراسية' : 'Course Name'"
+                  [dir]="isRTL ? 'rtl' : 'ltr'"
+                  maxlength="200">
+                <div class="summary-action-buttons">
+                  <button *ngIf="!editingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المادة الدراسية' : 'Edit Course Name'">✏️</button>
+                  <div *ngIf="editingCourseName" class="inline-edit-actions">
+                    <button type="button" class="inline-edit-btn inline-edit-cancel" (click)="cancelCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
+                    <button type="button" class="inline-edit-btn inline-edit-save" (click)="saveCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
+                  </div>
+                </div>
+              </span>
+            </div>
+          </div>
+          <div class="summary-cover">
+            <div class="cover-box" [class.has-image]="courseCoverPreview">
+              <ng-container *ngIf="courseCoverPreview; else emptyCover">
+                <img [src]="courseCoverPreview" [alt]="currentLang === 'ar' ? 'صورة غلاف المادة' : 'Course cover image'" />
+                <button type="button" class="cover-remove-btn" (click)="removeCourseCover()" [attr.aria-label]="currentLang === 'ar' ? 'إزالة صورة الغلاف' : 'Remove cover image'">✕</button>
+              </ng-container>
+              <ng-template #emptyCover>
+                <div class="cover-placeholder">
+                  <span class="cover-icon">🖼️</span>
+                  <span class="cover-text">{{ currentLang === 'ar' ? 'أضف صورة' : 'Add Cover' }}</span>
+                  <span class="cover-hint">{{ currentLang === 'ar' ? 'اختياري • اضغط هنا' : 'Optional • Click to upload' }}</span>
+                </div>
+              </ng-template>
+              <input type="file" class="cover-input" accept="image/*" (change)="onCourseCoverSelected($event)">
+            </div>
           </div>
         </div>
 
@@ -153,41 +171,62 @@
                 
                 <!-- Section Actions -->
                 <div class="section-title-actions" (click)="$event.stopPropagation()">
-                  <!-- Edit/Save/Cancel buttons -->
+                  <div class="section-reorder-controls" *ngIf="sections.length > 1">
+                    <button
+                      type="button"
+                      class="section-reorder-btn"
+                      [disabled]="i === 0"
+                      (click)="$event.stopPropagation(); moveSectionUp(section.id)"
+                      [attr.aria-label]="currentLang === 'ar' ? 'نقل القسم لأعلى' : 'Move section up'"
+                      [title]="currentLang === 'ar' ? 'نقل القسم لأعلى' : 'Move section up'">
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      class="section-reorder-btn"
+                      [disabled]="i === sections.length - 1"
+                      (click)="$event.stopPropagation(); moveSectionDown(section.id)"
+                      [attr.aria-label]="currentLang === 'ar' ? 'نقل القسم لأسفل' : 'Move section down'"
+                      [title]="currentLang === 'ar' ? 'نقل القسم لأسفل' : 'Move section down'">
+                      ▼
+                    </button>
+                  </div>
+
                   <div *ngIf="editingSection && editingSectionId === section.id" class="section-edit-actions">
                     <button type="button" class="section-action-btn section-cancel-btn" (click)="cancelSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
                     <button type="button" class="section-action-btn section-save-btn" (click)="saveSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
                   </div>
                   
-                  <!-- Edit and Menu buttons (when not editing) -->
-                  <ng-container *ngIf="!editingSection || editingSectionId !== section.id">
-                    <!-- Toggle Switch for Section Availability -->
-                    <label class="section-toggle-switch" [attr.aria-label]="currentLang === 'ar' ? (section.available ? 'القسم متاح' : 'القسم غير متاح') : (section.available ? 'Section Available' : 'Section Unavailable')">
+                  <div class="section-action-buttons" *ngIf="!editingSection || editingSectionId !== section.id">
+                    <label class="section-toggle-pill" [class.active]="section.available !== false" [attr.aria-label]="currentLang === 'ar' ? (section.available ? 'القسم متاح' : 'القسم غير متاح') : (section.available ? 'Section Available' : 'Section Unavailable')">
                       <input 
                         type="checkbox" 
                         [checked]="section.available !== false"
                         (change)="toggleSectionAvailability(section.id, $event)"
                         (click)="$event.stopPropagation()"
                         [attr.aria-label]="currentLang === 'ar' ? 'تبديل توفر القسم' : 'Toggle Section Availability'">
-                      <span class="toggle-slider"></span>
+                      <span class="pill-track">
+                        <span class="pill-handle"></span>
+                      </span>
+                      <span class="pill-status">{{ section.available !== false ? (currentLang === 'ar' ? 'مفعل' : 'Active') : (currentLang === 'ar' ? 'مخفي' : 'Hidden') }}</span>
                     </label>
                     
                     <button 
                       type="button" 
-                      class="section-edit-btn" 
+                      class="section-icon-btn section-edit section-edit-btn" 
                       (click)="startEditingSection(section.id); $event.stopPropagation()" 
                       [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'"
                       [title]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'">✏️</button>
                     
                     <button 
                       type="button"
-                      class="section-delete-btn"
+                      class="section-icon-btn section-delete section-delete-btn"
                       (click)="deleteSection(section.id); $event.stopPropagation()"
                       [attr.aria-label]="currentLang === 'ar' ? 'حذف القسم' : 'Delete section'"
                       [title]="currentLang === 'ar' ? 'حذف القسم' : 'Delete section'">
                       🗑
                     </button>
-                  </ng-container>
+                  </div>
                 </div>
               </h2>
             </div>
@@ -229,7 +268,7 @@
                         <span class="content-item-icon">
                           <span *ngIf="item.type === 'text'">✍️</span>
                           <span *ngIf="item.type === 'video'">🎥</span>
-                          <span *ngIf="item.type === 'resources'">📄</span>
+                          <span *ngIf="item.type === 'resources'">{{ getResourceIcon(item.resourceDetails) }}</span>
                           <span *ngIf="item.type === 'audio'">🔊</span>
                           <span *ngIf="item.type === 'quiz'">✅</span>
                         </span>
@@ -238,9 +277,9 @@
                           <span class="content-item-type-badge">{{ currentLang === 'ar' ? 
                             (item.type === 'text' ? 'درس نصي' : 
                              item.type === 'video' ? 'فيديو' : 
-                             item.type === 'resources' ? 'موارد' : 
+                             item.type === 'resources' ? getResourceDisplayLabel(item.resourceDetails) : 
                              item.type === 'audio' ? 'صوت' : 'اختبار') 
-                            : item.type }}</span>
+                            : (item.type === 'resources' ? getResourceDisplayLabel(item.resourceDetails) : item.type) }}</span>
                         </div>
                         <button 
                           type="button"
@@ -254,6 +293,16 @@
                       <div class="content-item-preview" *ngIf="item.type === 'text' && item.content">
                         <span class="preview-text">{{ getTextPreview(item.content) }}</span>
                         <span class="preview-date">{{ item.updatedAt || item.createdAt | date:'short' }}</span>
+                      </div>
+                      <div class="resource-item-preview" *ngIf="item.type === 'resources'">
+                        <div class="resource-item-meta">
+                          <span class="resource-file-info">
+                            <ng-container *ngFor="let entry of getResourceDetailEntries(item.resourceDetails); let last = last">
+                              <span class="resource-detail"><strong>{{ entry.label }}:</strong> {{ entry.value }}</span><span *ngIf="!last">{{ getResourceDetailSeparator() }}</span>
+                            </ng-container>
+                          </span>
+                        </div>
+                        <p class="resource-file-description" *ngIf="item.resourceDetails?.description">{{ item.resourceDetails?.description }}</p>
                       </div>
                       <!-- Date only for non-text content -->
                       <div class="content-item-meta" *ngIf="item.type !== 'text'">
@@ -797,29 +846,27 @@
 
     <!-- Action Buttons -->
     <div class="wizard-actions" [dir]="isRTL ? 'rtl' : 'ltr'">
-      <button 
-        class="btn-back"
-        *ngIf="(currentStep === 2 || step2Locked) && contentItems.length === 0"
-        (click)="goBack()">
-        <span class="btn-icon">{{ isRTL ? '→' : '←' }}</span>
-        <span>{{ currentLang === 'ar' ? 'رجوع' : 'Back' }}</span>
-      </button>
+
       
       <button 
         class="btn-continue" 
-        [disabled]="!canContinue"
+        [disabled]="!canContinue || savingDraftCourse"
+        [attr.aria-busy]="savingDraftCourse"
         *ngIf="step2Locked"
         (click)="continue()">
-        <span class="btn-icon">🤖</span>
+        <span *ngIf="savingDraftCourse" class="btn-spinner" aria-hidden="true"></span>
+        <span *ngIf="!savingDraftCourse" class="btn-icon">🤖</span>
         <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
       </button>
       
       <button 
         class="btn-continue" 
-        [disabled]="!canContinue || step2Locked"
+        [disabled]="!canContinue || step2Locked || savingDraftCourse"
+        [attr.aria-busy]="savingDraftCourse"
         *ngIf="!step2Locked"
         (click)="continue()">
-        <span class="btn-icon">🤖</span>
+        <span *ngIf="savingDraftCourse" class="btn-spinner" aria-hidden="true"></span>
+        <span *ngIf="!savingDraftCourse" class="btn-icon">🤖</span>
         <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
       </button>
     </div>
@@ -971,6 +1018,150 @@
         </div>
       </div>
     </div>
+
+    <!-- Resource Creation Modal -->
+    <div class="modal-overlay" *ngIf="showResourceModal" (click)="closeResourceModal()">
+      <div class="modal-content resource-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
+        <div class="modal-header">
+          <h3>{{ currentLang === 'ar' ? '📄 إضافة مورد' : '📄 Add Resource' }}</h3>
+          <button type="button" class="modal-close-btn" (click)="closeResourceModal()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="field-group">
+            <label class="field-label" for="resourceTitle">{{ currentLang === 'ar' ? 'عنوان المورد *' : 'Resource Title *' }}</label>
+            <input
+              id="resourceTitle"
+              type="text"
+              class="field-input"
+              [(ngModel)]="resourceForm.title"
+              [placeholder]="currentLang === 'ar' ? 'مثال: أوراق عمل الوحدة الأولى' : 'Example: Unit 1 Worksheets'"
+              [dir]="isRTL ? 'rtl' : 'ltr'"
+              maxlength="150" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="resourceType">{{ currentLang === 'ar' ? 'نوع الملف' : 'File Type' }}</label>
+            <select id="resourceType" class="field-select" [(ngModel)]="resourceForm.displayType">
+              <option *ngFor="let option of resourceTypeOptions" [value]="option.value">
+                {{ currentLang === 'ar' ? option.icon + ' ' + option.labelAr : option.icon + ' ' + option.labelEn }}
+              </option>
+            </select>
+            <div class="field-help">{{ currentLang === 'ar' ? 'يمكن تعديل نوع الملف بعد التحميل إذا لزم الأمر.' : 'You can adjust the file type after selecting a file if needed.' }}</div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="resourceFile">{{ currentLang === 'ar' ? 'تحميل الملف *' : 'Upload File *' }}</label>
+            <input id="resourceFile" type="file" class="field-input" (change)="onResourceFileSelected($event)" />
+            <div class="field-error" *ngIf="resourceUploadError">{{ resourceUploadError }}</div>
+            <div class="resource-uploading" *ngIf="resourceUploading">
+              <span class="resource-uploading-spinner"></span>
+              <span>{{ currentLang === 'ar' ? 'جاري معالجة الملف...' : 'Processing file...' }}</span>
+            </div>
+            <div class="resource-file-summary" *ngIf="resourceForm.fileName">
+               <span class="resource-summary-icon">{{ getResourceIcon({ kind: resourceForm.displayType, fileName: resourceForm.fileName, fileType: resourceForm.fileType, fileSize: resourceForm.fileSize }) }}</span>
+               <div class="resource-summary-details">
+                 <span class="resource-summary-name">{{ getResourceDisplayLabelFromForm() }}</span>
+                 <span class="resource-summary-meta">
+                   <ng-container *ngFor="let entry of getResourceDetailEntriesFromForm(); let last = last">
+                     <span class="resource-detail"><strong>{{ entry.label }}:</strong> {{ entry.value }}</span><span *ngIf="!last">{{ getResourceDetailSeparator() }}</span>
+                   </ng-container>
+                 </span>
+               </div>
+             </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="resourceDescription">{{ currentLang === 'ar' ? 'ملاحظات حول المورد' : 'Resource Notes' }}</label>
+            <textarea
+              id="resourceDescription"
+              rows="4"
+              class="field-textarea"
+              [(ngModel)]="resourceForm.description"
+              [placeholder]="currentLang === 'ar' ? 'أضف وصفاً قصيراً أو تعليمات للمورد...' : 'Add a short description or instructions for the resource...'"
+              [dir]="isRTL ? 'rtl' : 'ltr'"
+              maxlength="600"></textarea>
+            <div class="field-help">{{ currentLang === 'ar' ? 'اكتب ملاحظات تساعد الطالب على استخدام المورد بشكل صحيح.' : 'Add notes that help students use this resource effectively.' }}</div>
+          </div>
+
+          <div class="resource-preview-container" *ngIf="resourceForm.previewMode === 'inline' && resourceForm.dataUrl">
+            <div class="resource-preview-header">
+              <span class="preview-label">{{ currentLang === 'ar' ? 'معاينة سريعة' : 'Quick Preview' }}</span>
+              <span class="preview-hint">{{ currentLang === 'ar' ? 'هذه المعاينة للاطلاع فقط.' : 'Preview for reference only.' }}</span>
+            </div>
+            <div class="resource-preview-frame" *ngIf="resourceForm.displayType === 'pdf'">
+              <iframe [src]="resourcePreviewSafeUrl" title="Resource preview" loading="lazy"></iframe>
+            </div>
+            <div class="resource-preview-frame" *ngIf="resourceForm.displayType === 'image'">
+              <img [src]="resourceForm.dataUrl" [alt]="resourceForm.fileName" />
+            </div>
+          </div>
+
+          <div class="resource-preview-placeholder" *ngIf="resourceForm.previewMode === 'download' && resourceForm.fileName">
+            {{ currentLang === 'ar' ? 'لن يتم عرض معاينة لهذا الملف. سيكون متاحاً للتنزيل.' : 'Preview is not available for this file. It will be provided as a download.' }}
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeResourceModal()">
+            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+          </button>
+          <button type="button" class="btn-save" (click)="submitResource()" [disabled]="resourceUploading || !resourceForm.title.trim() || !resourceForm.dataUrl">
+            {{ currentLang === 'ar' ? 'حفظ المورد' : 'Save Resource' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resource Preview Modal -->
+    <div class="modal-overlay" *ngIf="showResourcePreviewModal" (click)="closeResourcePreview()">
+      <div class="modal-content resource-preview-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
+        <div class="modal-header">
+          <h3>{{ currentLang === 'ar' ? 'عرض المورد' : 'View Resource' }}</h3>
+          <button type="button" class="modal-close-btn" (click)="closeResourcePreview()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        <div class="modal-body" *ngIf="resourcePreviewItem">
+          <div class="resource-preview-info">
+            <div class="resource-preview-icon">{{ getResourceIcon(resourcePreviewItem.resourceDetails) }}</div>
+            <div class="resource-preview-details">
+              <span class="resource-preview-title">{{ resourcePreviewItem.title }}</span>
+              <span class="resource-preview-meta">
+                <ng-container *ngFor="let entry of getResourceDetailEntries(resourcePreviewItem.resourceDetails); let last = last">
+                  <span class="resource-detail"><strong>{{ entry.label }}:</strong> {{ entry.value }}</span><span *ngIf="!last">{{ getResourceDetailSeparator() }}</span>
+                </ng-container>
+              </span>
+              <span class="resource-preview-date">{{ (resourcePreviewItem.updatedAt || resourcePreviewItem.createdAt) | date:'medium' }}</span>
+            </div>
+          </div>
+
+          <p class="resource-preview-description" *ngIf="resourcePreviewItem.resourceDetails?.description">{{ resourcePreviewItem.resourceDetails?.description }}</p>
+
+          <div class="resource-preview-frame" *ngIf="resourcePreviewItem.resourceDetails?.previewMode === 'inline' && resourcePreviewSafeUrl">
+            <ng-container [ngSwitch]="resourcePreviewKind">
+              <iframe *ngSwitchCase="'pdf'" [src]="resourcePreviewSafeUrl" title="PDF preview" loading="lazy"></iframe>
+              <img *ngSwitchCase="'image'" [src]="resourcePreviewItem.resourceDetails?.dataUrl" [alt]="resourcePreviewItem.resourceDetails?.fileName" />
+              <iframe *ngSwitchDefault [src]="resourcePreviewSafeUrl" title="File preview" loading="lazy"></iframe>
+            </ng-container>
+          </div>
+
+          <div class="resource-preview-placeholder" *ngIf="resourcePreviewItem.resourceDetails?.previewMode !== 'inline'">
+            {{ currentLang === 'ar' ? 'لا تتوفر معاينة لهذا الملف. يمكنك تنزيله لعرضه.' : 'Preview not available for this file. Download to view it.' }}
+          </div>
+        </div>
+        <div class="modal-actions">
+          <ng-container *ngIf="resourcePreviewItem?.resourceDetails as previewDetails">
+            <a
+              *ngIf="previewDetails.dataUrl"
+              class="btn-primary"
+              [href]="previewDetails.dataUrl"
+              [attr.download]="getResourceDownloadName(previewDetails)">
+              {{ currentLang === 'ar' ? 'تنزيل الملف' : 'Download File' }}
+            </a>
+          </ng-container>
+          <button type="button" class="btn-cancel" (click)="closeResourcePreview()">
+            {{ currentLang === 'ar' ? 'إغلاق' : 'Close' }}
+          </button>
+        </div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -1008,7 +1199,7 @@
       <p class="delete-message">{{ currentLang === 'ar' ? 'سيتم حذف هذا القسم وجميع المحتويات بداخله بشكل نهائي.' : 'This will permanently delete the section and everything inside it.' }}</p>
       <p class="delete-warning">{{ currentLang === 'ar' ? 'لا يمكن التراجع عن هذا الإجراء. يرجى كتابة delete للتأكيد.' : 'This action cannot be undone. Please type delete to confirm.' }}</p>
       <p class="delete-section-name" *ngIf="sectionToDelete">{{ sectionToDelete.name }}</p>
-      <div class="delete-confirm-field">
+      <div class="delete-confirm-field" *ngIf="sectionToDelete?.content_items?.length">
         <label for="delete-confirm-input">{{ currentLang === 'ar' ? 'اكتب delete للتأكيد' : 'Type delete to confirm' }}</label>
         <input
           id="delete-confirm-input"
@@ -1024,7 +1215,7 @@
       <button type="button" class="btn-cancel" (click)="cancelDeleteSection()">
         {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
       </button>
-      <button type="button" class="btn-delete" (click)="confirmDeleteSection()" [disabled]="!canConfirmDeleteSection()">
+      <button type="button" class="btn-delete" (click)="confirmDeleteSection()" [disabled]="sectionRequiresConfirmation() && !canConfirmDeleteSection()">
         {{ currentLang === 'ar' ? 'نعم، حذف' : 'Yes, delete' }}
       </button>
     </div>
@@ -1046,8 +1237,14 @@
       <button type="button" class="btn-cancel" (click)="showStartFromScratchModal = false">
         {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
       </button>
-      <button type="button" class="btn-delete" (click)="confirmStartFromScratch()">
-        {{ currentLang === 'ar' ? 'نعم، ابدأ من جديد' : 'Yes, Start from Scratch' }}
+      <button 
+        type="button" 
+        class="btn-delete" 
+        (click)="confirmStartFromScratch()"
+        [disabled]="deletingDraftCourse"
+        [attr.aria-busy]="deletingDraftCourse">
+        <span *ngIf="deletingDraftCourse" class="btn-spinner" aria-hidden="true"></span>
+        <span>{{ currentLang === 'ar' ? 'نعم، ابدأ من جديد' : 'Yes, Start from Scratch' }}</span>
       </button>
     </div>
   </div>

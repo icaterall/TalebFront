@@ -1,86 +1,82 @@
 // src/app/core/interceptors/auth.interceptor.ts
+import { isPlatformBrowser } from '@angular/common';
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, PLATFORM_ID } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
-  
-  // Skip adding auth header for login/register endpoints
-  const skipAuthEndpoints = [
-    '/auth/login',
-    '/auth/register', 
-    '/auth/google',
-    '/auth/apple-login',
-    '/auth/google-oauth-callback',
-    '/auth/forgot-password',
-    '/auth/reset-password',
-    '/auth/verify-email',
-    '/auth/resend-verification',
-    '/auth/check-email-exist',
-    '/auth/check-email',
-    '/auth/refresh' // Don't add auth header to refresh endpoint
-  ];
-  
-  // Check if this request should skip authentication
-  const shouldSkipAuth = skipAuthEndpoints.some(endpoint => 
-    req.url.includes(endpoint)
-  );
-  
-  if (shouldSkipAuth) {
-    return next(req);
-  }
-  
-  // Get the token from AuthService
-  const token = authService.getToken();
-  
-  if (token) {
-    // Clone the request and add the Authorization header
-    const authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    
-    return next(authReq).pipe(
-      catchError((error: HttpErrorResponse) => {
-        // If token expired (401) and we have a refresh token, try to refresh
-        if (error.status === 401 && authService.getRefreshToken()) {
-          return authService.refreshToken().pipe(
-            switchMap((response) => {
-              // Store the new tokens
-              if (response.token && response.refreshToken) {
-                authService.storeAuthData(response.user, response.token, response.refreshToken);
-              }
-              
-              // Retry the original request with the new token
-              const retryReq = req.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${response.token || response.accessToken}`
+  const platformId = inject(PLATFORM_ID);
+
+  // Only run this interceptor in the browser
+  if (isPlatformBrowser(platformId)) {
+    const authService = inject(AuthService);
+
+    // Endpoints that should skip authentication
+    const skipAuthEndpoints = [
+      '/auth/login',
+      '/auth/register',
+      '/auth/google',
+      '/auth/apple-login',
+      '/auth/google-oauth-callback',
+      '/auth/forgot-password',
+      '/auth/reset-password',
+      '/auth/verify-email',
+      '/auth/resend-verification',
+      '/auth/check-email-exist',
+      '/auth/check-email',
+      '/auth/refresh' // Refresh endpoint should not have the old token
+    ];
+
+    const shouldSkipAuth = skipAuthEndpoints.some(endpoint => req.url.includes(endpoint));
+
+    if (shouldSkipAuth) {
+      return next(req);
+    }
+
+    const token = authService.getAccessToken();
+
+    if (token) {
+      const authReq = req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      return next(authReq).pipe(
+        catchError((error: HttpErrorResponse) => {
+          if (error.status === 401 && authService.getRefreshToken()) {
+            return authService.refreshToken().pipe(
+              switchMap((response) => {
+                const newAccessToken = response.accessToken;
+                if (newAccessToken) {
+                  authService.storeAuthData(response.user, newAccessToken, response.refreshToken);
+                  const retryReq = req.clone({
+                    setHeaders: {
+                      Authorization: `Bearer ${newAccessToken}`
+                    }
+                  });
+                  return next(retryReq);
                 }
-              });
-              return next(retryReq);
-            }),
-            catchError((refreshError) => {
-              // If refresh fails, force logout
-              authService.forceLogout('Token refresh failed');
-              return throwError(() => refreshError);
-            })
-          );
-        }
-        
-        // If no refresh token or other 401 error, force logout
-        if (error.status === 401) {
-          authService.forceLogout('Authentication failed');
-        }
-        
-        // For other errors, pass through the original error
-        return throwError(() => error);
-      })
-    );
+                // If refresh fails to provide a new token, logout
+                authService.forceLogout('Session refresh failed.');
+                return throwError(() => new Error('Failed to get new access token on refresh.'));
+              }),
+              catchError((refreshError) => {
+                authService.forceLogout('Session expired. Please login again.');
+                return throwError(() => refreshError);
+              })
+            );
+          } else if (error.status === 401) {
+            // If 401 and no refresh token, just logout
+            authService.forceLogout('Authentication failed.');
+          }
+          return throwError(() => error);
+        })
+      );
+    }
   }
-  
-  // If no token, proceed with original request
+
+  // If not in browser or no token, proceed without modification
   return next(req);
 };

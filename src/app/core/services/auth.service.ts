@@ -258,11 +258,24 @@ export class AuthService {
   }
 
   /**
+   * Get stored access token
+   */
+  getAccessToken(): string | null {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('accessToken');
+    }
+    return null;
+  }
+
+  /**
    * Get stored token
+   * @deprecated Use getAccessToken() instead for clarity.
    */
   getToken(): string | null {
-    const token = localStorage.getItem('accessToken');
-    return token;
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('accessToken');
+    }
+    return null;
   }
 
   /**

@@ -4,9 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
-import { AiBuilderService, CourseDraft, ContentItem, Section } from '../../../core/services/ai-builder.service';
+import { AiBuilderService, CourseDraft, ContentItem, Section, ResourceDetails, DraftCourseResponse, DraftCourseSectionResponse, CreateDraftCoursePayload } from '../../../core/services/ai-builder.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
@@ -20,6 +21,22 @@ interface Category {
   name_ar: string;
   icon: string;
   sort_order?: number;
+}
+
+type ResourceDisplayType = 'pdf' | 'word' | 'excel' | 'ppt' | 'image' | 'video' | 'audio' | 'other';
+
+type ResourcePreviewMode = 'inline' | 'download';
+
+interface ResourceFormState {
+  title: string;
+  description: string;
+  displayType: ResourceDisplayType;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  dataUrl: string | null;
+  previewMode: ResourcePreviewMode;
+  pageCount: number | null;
 }
 
 @Component({
@@ -37,8 +54,37 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly baseUrl = environment.apiUrl;
+  private readonly sanitizer = inject(DomSanitizer);
+  
+  private readonly RESOURCE_MAX_SIZE = 8 * 1024 * 1024; // 8MB
+  private readonly RESOURCE_INLINE_PREVIEW_LIMIT = 5 * 1024 * 1024; // 5MB for inline previews
+
+  readonly resourceTypeOptions: { value: ResourceDisplayType; icon: string; labelEn: string; labelAr: string; previewable: boolean; matcher: RegExp; }[] = [
+    { value: 'pdf', icon: '📄', labelEn: 'PDF Document', labelAr: 'ملف PDF', previewable: true, matcher: /pdf$/i },
+    { value: 'word', icon: '📝', labelEn: 'Word Document', labelAr: 'ملف Word', previewable: false, matcher: /(msword|word|doc|docx)$/i },
+    { value: 'excel', icon: '📊', labelEn: 'Excel Spreadsheet', labelAr: 'ملف Excel', previewable: false, matcher: /(sheet|excel|xls|xlsx|csv)$/i },
+    { value: 'ppt', icon: '📽️', labelEn: 'Presentation', labelAr: 'عرض تقديمي', previewable: false, matcher: /(powerpoint|presentation|ppt|pptx)$/i },
+    { value: 'image', icon: '🖼️', labelEn: 'Image', labelAr: 'صورة', previewable: true, matcher: /^image\//i },
+    { value: 'audio', icon: '🎧', labelEn: 'Audio', labelAr: 'صوت', previewable: false, matcher: /^audio\//i },
+    { value: 'video', icon: '🎞️', labelEn: 'Video', labelAr: 'فيديو', previewable: false, matcher: /^video\//i },
+    { value: 'other', icon: '📁', labelEn: 'Other', labelAr: 'ملف آخر', previewable: false, matcher: /.*/i }
+  ];
+
+  showResourceModal: boolean = false;
+  showResourcePreviewModal: boolean = false;
+  resourceUploading: boolean = false;
+  resourceUploadError: string | null = null;
+  resourceFile: File | null = null;
+  resourcePreviewSafeUrl: SafeResourceUrl | null = null;
+  resourcePreviewItem: ContentItem | null = null;
+  resourcePreviewKind: ResourceDisplayType | null = null;
+  resourceForm: ResourceFormState = this.createDefaultResourceForm();
   
   private languageChangeSubscription?: Subscription;
+  private draftCourseId: number | null = null;
+  private draftSyncCompleted: boolean = false;
+  savingDraftCourse: boolean = false;
+  deletingDraftCourse: boolean = false;
 
   // Step Management
   currentStep: number = 1; // 1 = Course Basics, 2 = Building Sections, 3 = Review & Publish
@@ -87,6 +133,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   showUndoToast: boolean = false; // Track undo toast visibility
   deletedSection: Section | null = null; // Store deleted section for undo
   undoToastTimeout: any = null; // Timeout for auto-hiding undo toast
+  courseCoverPreview: string | null = null;
 
   // Step 1: Category Selection
   loading = false;
@@ -263,47 +310,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Set loading state for summary data
     this.loadingSummaryData = true;
     
-    // Load existing draft to restore state (using user ID)
-    const userId = this.student?.id || this.student?.user_id;
-    const draft = this.ai.getDraft(userId);
-    if (draft.category_id) {
-      // Keep on Step 1 but restore locked state if Step 1 was completed
-      this.selectedCategoryId = draft.category_id;
-      // Don't try to find category yet - allCategories might not be loaded
-      // This will be done in loadAllCategories after categories are fetched
-      
-      // Restore step 1 and step 2 data
-      if (draft.name) {
-        this.courseName = draft.name;
-      }
-      if (draft.subject_slug) {
-        this.subjectSlug = draft.subject_slug;
-        this.selectedTopic = draft.subject_slug;
-      }
-      if (draft.mode) this.courseMode = draft.mode;
-      if (draft.context?.term) this.currentTerm = draft.context.term;
-      
-      // If draft has both category and course name, it means Step 1 was completed (Continue clicked)
-      // Restore the locked state to show read-only summary
-      if (draft.category_id && draft.name && draft.name.trim().length >= 3) {
-        this.step2Locked = true;
-        this.currentStep = 1; // Stay on Step 1 but show read-only summary
-      } else {
-        this.currentStep = 2; // If category selected but no name yet, go to step 2
-      }
-      
-      // After loading title suggestions, restore topics if available
-      // This will be done in loadTitleSuggestions callback
-    }
-    
-    // Load profile first, then fetch categories based on profile data
-    this.loadProfileFromBackend();
-    this.loadAllCategories();
-    
-    // Initialize sections from draft (after data is loaded)
-    setTimeout(() => {
-      this.initializeSections();
-    }, 500);
+    this.syncDraftFromServer(() => {
+      this.afterDraftLoaded();
+    });
     
     // Subscribe to language changes from I18nService to reload profile
     // Skip the first emission (current value) and only react to actual changes
@@ -694,6 +703,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   continue(): void {
+    if (this.savingDraftCourse) {
+      return;
+    }
+
     if (this.currentStep === 1) {
       if (!this.canContinue || !this.selectedCategory || this.courseName.trim().length < 3) return;
 
@@ -719,6 +732,18 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       };
 
       this.ai.saveDraft(draft, userId);
+      const payload = this.buildDraftCoursePayload();
+      this.savingDraftCourse = true;
+      this.ai.createDraftCourse(payload).subscribe({
+        next: (response: DraftCourseResponse) => {
+          this.savingDraftCourse = false;
+          this.handleDraftCourseResponse(response, userId);
+        },
+        error: (error) => {
+          this.savingDraftCourse = false;
+          console.error('Failed to create draft course', error);
+        }
+      });
       
       // Lock Step 2 inputs immediately - hide them and show read-only values
       // Stay on Step 1 and show read-only summary (don't move to Step 2 yet)
@@ -840,6 +865,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.showTextEditor = true;
       this.selectedContentType = 'text';
       this.cdr.detectChanges();
+      return;
+    }
+
+    if (contentType === 'resources') {
+      this.openResourceModal();
       return;
     }
     
@@ -1217,8 +1247,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.textContent = item.content || '<p></p>';
       this.showTextEditor = true;
       this.cdr.detectChanges();
+    } else if (item.type === 'resources') {
+      this.openResourcePreview(item);
     }
-    // TODO: Handle other content types (video, resources, audio, quiz)
+    // TODO: Handle other content types (video, audio, quiz)
   }
   
   // Update content item when editing existing content
@@ -1391,6 +1423,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           available: section.available !== false // Default to true if not set
         };
       });
+      this.sortSectionsByStoredOrder();
+      this.normalizeSectionOrdering();
       return;
     }
     
@@ -1403,6 +1437,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       const firstSection: Section & { available: boolean } = {
         id: `section-${Date.now()}`,
         number: 1,
+        sort_order: 1,
         name: sectionName,
         content_items: draft.content_items || this.contentItems || [],
         isCollapsed: this.getSectionCollapseState(`section-1`) ?? false,
@@ -1412,7 +1447,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       };
       this.sections = [firstSection];
       this.activeSectionId = firstSection.id;
+      this.normalizeSectionOrdering();
       this.saveSections();
+      this.saveCourseCoverToDraft();
     }
   }
   
@@ -1422,6 +1459,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const newSection: Section & { available: boolean } = {
       id: `section-${Date.now()}`,
       number: newSectionNumber,
+      sort_order: newSectionNumber,
       name: `${this.currentLang === 'ar' ? 'القسم' : 'Section'} ${newSectionNumber}`,
       content_items: [],
       isCollapsed: false,
@@ -1432,6 +1470,31 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     this.sections.push(newSection);
     this.activeSectionId = newSection.id;
+    this.normalizeSectionOrdering();
+    this.saveSections();
+    this.cdr.detectChanges();
+  }
+  
+  moveSectionUp(sectionId: string): void {
+    const index = this.sections.findIndex(section => section.id === sectionId);
+    if (index <= 0) {
+      return;
+    }
+
+    [this.sections[index], this.sections[index - 1]] = [this.sections[index - 1], this.sections[index]];
+    this.normalizeSectionOrdering();
+    this.saveSections();
+    this.cdr.detectChanges();
+  }
+
+  moveSectionDown(sectionId: string): void {
+    const index = this.sections.findIndex(section => section.id === sectionId);
+    if (index === -1 || index >= this.sections.length - 1) {
+      return;
+    }
+
+    [this.sections[index], this.sections[index + 1]] = [this.sections[index + 1], this.sections[index]];
+    this.normalizeSectionOrdering();
     this.saveSections();
     this.cdr.detectChanges();
   }
@@ -1504,6 +1567,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const duplicatedSection: Section & { available: boolean } = {
       id: `section-${Date.now()}`,
       number: newSectionNumber,
+      sort_order: newSectionNumber,
       name: `${section.name} (${this.currentLang === 'ar' ? 'نسخة' : 'Copy'})`,
       content_items: section.content_items.map(item => ({
         ...item,
@@ -1518,6 +1582,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     this.sections.push(duplicatedSection);
     this.closeSectionMenu();
+    this.normalizeSectionOrdering();
     this.saveSections();
     this.cdr.detectChanges();
   }
@@ -1536,7 +1601,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Confirm Delete Section
   confirmDeleteSection(): void {
-    if (!this.sectionToDelete || !this.canConfirmDeleteSection()) return;
+    if (!this.sectionToDelete) return;
+    if (this.sectionRequiresConfirmation() && !this.canConfirmDeleteSection()) {
+      return;
+    }
     
     // Store deleted section for undo
     this.deletedSection = { ...this.sectionToDelete };
@@ -1544,11 +1612,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     // Remove section
     this.sections = this.sections.filter(s => s.id !== this.sectionToDelete!.id);
-    
-    // Renumber remaining sections
-    this.sections.forEach((section, index) => {
-      section.number = index + 1;
-    });
+    this.normalizeSectionOrdering();
     
     // If deleted section was active, select first section or null
     if (this.activeSectionId === this.sectionToDelete.id) {
@@ -1580,6 +1644,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return this.deleteConfirmationInput.trim().toLowerCase() === this.deleteKeyword;
   }
   
+  sectionRequiresConfirmation(): boolean {
+    if (!this.sectionToDelete) return false;
+    return (this.sectionToDelete.content_items?.length ?? 0) > 0;
+  }
+  
   // Toggle Section Availability
   toggleSectionAvailability(sectionId: string, event: Event): void {
     event.stopPropagation();
@@ -1598,8 +1667,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     // Restore section
     this.sections.push(this.deletedSection);
-    this.sections.sort((a, b) => a.number - b.number);
-    
+    this.sortSectionsByStoredOrder();
+    this.normalizeSectionOrdering();
     this.saveSections();
     this.hideUndoToast();
     this.cdr.detectChanges();
@@ -1618,53 +1687,103 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   // Start from Scratch - Clear everything
   confirmStartFromScratch(): void {
+    if (this.deletingDraftCourse) {
+      return;
+    }
+
+    this.deletingDraftCourse = true;
     const userId = this.student?.id || this.student?.user_id;
-    
-    // Clear all draft data from localStorage
-    this.ai.clearDraft(userId);
-    
-    // Clear all component state
-    this.courseName = '';
-    this.selectedTopic = '';
-    this.subjectSlug = '';
-    this.availableTopics = [];
-    this.selectedCategory = null;
-    this.selectedCategoryId = null;
-    this.courseTitleSuggestions = [];
-    this.units = [];
-    this.sections = [];
-    this.contentItems = [];
-    this.activeSectionId = null;
-    this.step2Locked = false;
-    this.currentStep = 1;
-    this.editingCourseName = false;
-    this.editingCourseNameValue = '';
-    this.showStartFromScratchModal = false;
-    
-    // Clear any localStorage items related to CKEditor images
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('ckeditor_image_')) {
-          localStorage.removeItem(key);
+
+    const resetState = () => {
+      this.deletingDraftCourse = false;
+      this.ai.clearDraft(userId);
+
+      // Clear all component state
+      this.courseName = '';
+      this.selectedTopic = '';
+      this.subjectSlug = '';
+      this.availableTopics = [];
+      this.selectedCategory = null;
+      this.selectedCategoryId = null;
+      this.courseTitleSuggestions = [];
+      this.units = [];
+      this.sections = [];
+      this.contentItems = [];
+      this.activeSectionId = null;
+      this.step2Locked = false;
+      this.currentStep = 1;
+      this.editingCourseName = false;
+      this.editingCourseNameValue = '';
+      this.showStartFromScratchModal = false;
+
+      // Clear any localStorage items related to CKEditor images
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.startsWith('ckeditor_image_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (error) {
+        console.warn('Failed to clear CKEditor images from localStorage:', error);
+      }
+
+      window.location.reload();
+    };
+
+    if (userId && this.universalAuth.isAuthenticated()) {
+      this.ai.deleteDraftCourse().subscribe({
+        next: () => resetState(),
+        error: (error) => {
+          console.error('Failed to delete draft course on server:', error);
+          resetState();
         }
       });
-    } catch (error) {
-      console.warn('Failed to clear CKEditor images from localStorage:', error);
+    } else {
+      resetState();
     }
-    
-    // Reload the page to start fresh
-    window.location.reload();
   }
   
   // Save Sections to localStorage
   private saveSections(): void {
+    this.normalizeSectionOrdering();
     const userId = this.student?.id || this.student?.user_id;
     const draft = this.ai.getDraft(userId);
     this.ai.saveDraft({
       ...draft,
       sections: this.sections
     }, userId);
+  }
+
+  private normalizeSectionOrdering(): void {
+    if (!Array.isArray(this.sections) || this.sections.length === 0) {
+      return;
+    }
+
+    this.sections.forEach((section, index) => {
+      section.sort_order = index + 1;
+      section.number = index + 1;
+    });
+  }
+
+  private sortSectionsByStoredOrder(): void {
+    if (!Array.isArray(this.sections) || this.sections.length === 0) {
+      return;
+    }
+
+    this.sections.sort((a, b) => {
+      const orderA = a.sort_order ?? a.number ?? 0;
+      const orderB = b.sort_order ?? b.number ?? 0;
+      if (orderA === orderB) {
+        const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        if (createdA === createdB) {
+          return a.id.localeCompare(b.id);
+        }
+        return createdA - createdB;
+      }
+      return orderA - orderB;
+    });
   }
   
   // Update Section Name (from edit)
@@ -2073,6 +2192,706 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   getCategoryName(cat: Category): string {
     return this.currentLang === 'ar' ? cat.name_ar : cat.name_en;
+  }
+
+  private createDefaultResourceForm(): ResourceFormState {
+    return {
+      title: '',
+      description: '',
+      displayType: 'pdf',
+      fileName: '',
+      fileType: '',
+      fileSize: 0,
+      dataUrl: null,
+      previewMode: 'download',
+      pageCount: null
+    };
+  }
+
+  private syncDraftFromServer(onComplete?: () => void): void {
+    if (!this.student || !this.universalAuth.isAuthenticated()) {
+      onComplete?.();
+      return;
+    }
+    const userId = this.student.id || this.student.user_id;
+    if (!userId) {
+      onComplete?.();
+      return;
+    }
+
+    this.ai.getDraftCourse().subscribe({
+      next: (response: DraftCourseResponse) => {
+        if (response && response.course) {
+          this.handleDraftCourseResponse(response, userId);
+        } else {
+          this.ai.clearDraft(userId);
+          this.sections = [];
+          this.activeSectionId = null;
+          this.step2Locked = false;
+        }
+        onComplete?.();
+      },
+      error: (error) => {
+        console.error('Failed to sync draft course', error);
+        onComplete?.();
+      }
+    });
+  }
+
+  private afterDraftLoaded(): void {
+    if (this.draftSyncCompleted) {
+      return;
+    }
+    this.draftSyncCompleted = true;
+
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+
+    if (draft) {
+      if (draft.category_id) {
+        this.selectedCategoryId = draft.category_id;
+      }
+      if (draft.name) {
+        this.courseName = draft.name;
+      }
+      if (draft.subject_slug) {
+        this.subjectSlug = draft.subject_slug;
+        this.selectedTopic = draft.subject_slug;
+      }
+      if (draft.mode) {
+        this.courseMode = draft.mode;
+      }
+      if (draft.context?.term) {
+        this.currentTerm = draft.context.term;
+      }
+      if (draft.cover_image_url) {
+        this.courseCoverPreview = draft.cover_image_url;
+      }
+      if (draft.category_id && draft.name && draft.name.trim().length >= 3) {
+        this.step2Locked = true;
+        this.currentStep = 1;
+      } else if (draft.category_id) {
+        this.currentStep = 2;
+      }
+    }
+
+    this.loadProfileFromBackend();
+    this.loadAllCategories();
+    this.initializeSections();
+  }
+
+  private mapApiSectionToLocal(section: DraftCourseSectionResponse): (Section & { available?: boolean }) {
+    const id = String(section.id);
+    const available = section.available !== false;
+    return {
+      id,
+      number: section.position ?? 1,
+      sort_order: section.position ?? 1,
+      name: section.name,
+      content_items: [],
+      isCollapsed: this.getSectionCollapseState(id) ?? false,
+      createdAt: section.created_at,
+      updatedAt: section.updated_at,
+      available
+    };
+  }
+
+  private handleDraftCourseResponse(response: DraftCourseResponse | null, userId?: number): void {
+    if (!response) {
+      return;
+    }
+
+    const resolvedUserId = userId ?? this.student?.id ?? this.student?.user_id ?? null;
+    let mappedSections: (Section & { available?: boolean })[] = this.sections;
+
+    if (response.course) {
+      this.draftCourseId = response.course.id;
+      this.courseName = response.course.name || this.courseName;
+      this.subjectSlug = response.course.subject_slug || this.subjectSlug;
+      this.selectedTopic = this.subjectSlug;
+      this.courseCoverPreview = response.course.cover_image_url || this.courseCoverPreview;
+      if (response.course.category_id) {
+        this.selectedCategoryId = response.course.category_id;
+      }
+      this.step2Locked = true;
+      this.currentStep = 1;
+    }
+
+    if (response.sections && response.sections.length) {
+      mappedSections = response.sections.map((section) => this.mapApiSectionToLocal(section));
+      this.sections = mappedSections;
+      this.activeSectionId = mappedSections.length ? mappedSections[0].id : null;
+    }
+
+    if (resolvedUserId) {
+      const draftForLocal: Partial<CourseDraft> = {
+        version: 1,
+        user_id: resolvedUserId,
+        category_id: response.course?.category_id ?? undefined,
+        category_name: this.selectedCategory ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en) : undefined,
+        name: response.course?.name ?? this.courseName,
+        subject_slug: response.course?.subject_slug ?? this.subjectSlug,
+        country_id: response.course?.country_id ?? undefined,
+        cover_image_url: response.course?.cover_image_url ?? this.courseCoverPreview ?? undefined,
+        last_saved_at: response.course?.updated_at ?? new Date().toISOString(),
+        sections: mappedSections
+      };
+      this.ai.saveDraft(draftForLocal, resolvedUserId);
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  private buildDraftCoursePayload(): CreateDraftCoursePayload {
+    const defaultSectionName = this.sections.length > 0
+      ? this.sections[0].name
+      : (this.selectedTopic || this.subjectSlug || this.courseName || 'Section 1');
+
+    const sectionsPayload = this.sections.map((section, index) => ({
+      name: section.name,
+      position: section.sort_order ?? section.number ?? index + 1,
+      description: (section as any).description ?? null,
+      available: (section as any).available !== false
+    }));
+
+    return {
+      course: {
+        name: this.courseName.trim(),
+        subject_slug: (this.selectedTopic || this.subjectSlug || this.courseName).trim(),
+        category_id: this.selectedCategory?.id,
+        country_id: this.student?.country_id ?? undefined,
+        cover_image_url: this.courseCoverPreview ?? undefined,
+        default_section_name: defaultSectionName
+      },
+      sections: sectionsPayload.length ? sectionsPayload : undefined
+    };
+  }
+
+  private resetResourceForm(): void {
+    this.resourceForm = this.createDefaultResourceForm();
+    this.resourceFile = null;
+    this.resourceUploadError = null;
+    this.resourceUploading = false;
+    this.resourcePreviewSafeUrl = null;
+  }
+
+  private detectResourceDisplayType(fileName: string, mimeType: string): ResourceDisplayType {
+    const extension = (fileName.split('.').pop() || '').toLowerCase();
+    if (mimeType === 'application/pdf' || extension === 'pdf') return 'pdf';
+    if (mimeType.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(extension)) return 'image';
+    if (mimeType.startsWith('audio/') || ['mp3', 'wav', 'aac', 'ogg'].includes(extension)) return 'audio';
+    if (mimeType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv'].includes(extension)) return 'video';
+    if (['doc', 'docx', 'rtf', 'odt', 'pages'].includes(extension)) return 'word';
+    if (['xls', 'xlsx', 'csv', 'ods', 'tsv'].includes(extension)) return 'excel';
+    if (['ppt', 'pptx', 'key', 'odp'].includes(extension)) return 'ppt';
+    return 'other';
+  }
+
+  private isResourcePreviewable(displayType: ResourceDisplayType, fileSize: number): boolean {
+    if (fileSize > this.RESOURCE_INLINE_PREVIEW_LIMIT) {
+      return false;
+    }
+    const option = this.resourceTypeOptions.find(opt => opt.value === displayType);
+    return option ? option.previewable : false;
+  }
+
+  openResourceModal(): void {
+    this.resetResourceForm();
+    this.showResourceModal = true;
+    this.selectedContentType = 'resources';
+    this.cdr.detectChanges();
+  }
+
+  closeResourceModal(): void {
+    this.showResourceModal = false;
+    this.selectedContentType = null;
+    this.resetResourceForm();
+    this.cdr.detectChanges();
+  }
+
+  onResourceFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) {
+      return;
+    }
+    this.processResourceFile(file);
+    // Reset input so the same file can be selected again if needed
+    input.value = '';
+  }
+
+  private processResourceFile(file: File): void {
+    if (file.size > this.RESOURCE_MAX_SIZE) {
+      this.resourceUploadError = this.currentLang === 'ar'
+        ? 'الملف كبير جدًا. الحد الأقصى 8 ميجابايت.'
+        : 'File is too large. Maximum allowed size is 8 MB.';
+      this.resourceFile = null;
+      this.resourceForm.fileName = '';
+      this.resourceForm.fileType = '';
+      this.resourceForm.fileSize = 0;
+      this.resourceForm.dataUrl = null;
+      this.resourceForm.pageCount = null;
+      this.resourcePreviewSafeUrl = null;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.resourceUploadError = null;
+    this.resourceUploading = true;
+    this.resourceFile = file;
+
+    const mimeType = file.type || 'application/octet-stream';
+    const displayType = this.detectResourceDisplayType(file.name, mimeType);
+    const previewable = this.isResourcePreviewable(displayType, file.size);
+
+    this.resourceForm.displayType = displayType;
+    this.resourceForm.fileName = file.name;
+    this.resourceForm.fileType = mimeType;
+    this.resourceForm.fileSize = file.size;
+    this.resourceForm.previewMode = previewable ? 'inline' : 'download';
+    this.resourceForm.pageCount = null;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const result = reader.result as string;
+      this.resourceForm.dataUrl = result;
+      this.resourcePreviewSafeUrl = previewable
+        ? this.sanitizer.bypassSecurityTrustResourceUrl(result)
+        : null;
+
+      try {
+        const arrayBuffer = await this.base64ToArrayBuffer(result);
+        const extras = await this.extractResourceMetadataFromArrayBuffer(arrayBuffer, displayType, {
+          fileName: file.name,
+          mimeType
+        });
+        if (extras.pageCount !== undefined && extras.pageCount !== null) {
+          this.resourceForm.pageCount = extras.pageCount;
+        }
+      } catch (error) {
+        console.warn('Could not extract resource metadata', file.name, error);
+      } finally {
+        this.resourceUploading = false;
+        this.cdr.detectChanges();
+      }
+    };
+
+    reader.onerror = () => {
+      this.resourceUploadError = this.currentLang === 'ar'
+        ? 'تعذر قراءة الملف. حاول مرة أخرى.'
+        : 'Failed to read file. Please try again.';
+      this.resourceUploading = false;
+      this.resourceFile = null;
+      this.resourceForm.dataUrl = null;
+      this.resourceForm.pageCount = null;
+      this.resourcePreviewSafeUrl = null;
+      this.cdr.detectChanges();
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  submitResource(): void {
+    if (!this.resourceForm.title.trim()) {
+      alert(this.currentLang === 'ar'
+        ? 'يرجى إدخال عنوان للموارد.'
+        : 'Please provide a title for the resource.');
+      return;
+    }
+
+    if (!this.resourceForm.dataUrl || !this.resourceForm.fileName) {
+      alert(this.currentLang === 'ar'
+        ? 'يرجى اختيار ملف للموارد.'
+        : 'Please select a file for the resource.');
+      return;
+    }
+
+    const activeSection = this.getActiveSection() || this.sections[0];
+    if (!activeSection) {
+      alert(this.currentLang === 'ar'
+        ? 'يرجى إنشاء قسم أولاً قبل إضافة الموارد.'
+        : 'Please create a section before adding resources.');
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const resourceDetails: ResourceDetails = {
+      fileName: this.resourceForm.fileName,
+      fileType: this.resourceForm.fileType,
+      fileSize: this.resourceForm.fileSize,
+      description: this.resourceForm.description?.trim() || undefined,
+      dataUrl: this.resourceForm.dataUrl,
+      previewMode: this.resourceForm.previewMode,
+      kind: this.resourceForm.displayType,
+      pageCount: this.resourceForm.pageCount ?? undefined
+    };
+
+    const resourceItem: ContentItem = {
+      id: `resource-${Date.now()}`,
+      type: 'resources',
+      title: this.resourceForm.title.trim(),
+      content: this.resourceForm.description?.trim() || undefined,
+      section_id: activeSection.id,
+      createdAt: now,
+      updatedAt: now,
+      resourceDetails
+    };
+
+    activeSection.content_items.push(resourceItem);
+    activeSection.updatedAt = now;
+    this.contentItems.push(resourceItem); // legacy support
+    this.saveSections();
+
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    this.ai.saveDraft({
+      ...draft,
+      content_items: this.contentItems
+    }, userId);
+
+    this.closeResourceModal();
+  }
+
+  openResourcePreview(item: ContentItem): void {
+    this.resourcePreviewItem = item;
+    const dataUrl = item.resourceDetails?.dataUrl || null;
+    const displayType = (item.resourceDetails?.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(item.resourceDetails?.fileName || '', item.resourceDetails?.fileType || '');
+    const previewable = dataUrl ? this.isResourcePreviewable(displayType, item.resourceDetails?.fileSize || 0) : false;
+
+    if (item.resourceDetails && !item.resourceDetails.kind) {
+      item.resourceDetails.kind = displayType;
+    }
+
+    if (item.resourceDetails) {
+      item.resourceDetails.previewMode = previewable ? 'inline' : 'download';
+      if (item.resourceDetails.pageCount === undefined || item.resourceDetails.pageCount === null) {
+        void this.populateExistingResourceMetadata(item, displayType);
+      }
+    }
+
+    this.resourcePreviewKind = displayType;
+    this.resourcePreviewSafeUrl = previewable && dataUrl
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(dataUrl)
+      : null;
+    this.showResourcePreviewModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeResourcePreview(): void {
+    this.resourcePreviewItem = null;
+    this.resourcePreviewSafeUrl = null;
+    this.resourcePreviewKind = null;
+    this.showResourcePreviewModal = false;
+    this.cdr.detectChanges();
+  }
+
+  getResourceDisplayLabel(details?: ResourceDetails | null): string {
+    if (!details) {
+      return this.currentLang === 'ar' ? 'غير محدد' : 'Unspecified';
+    }
+    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
+    const option = this.resourceTypeOptions.find(opt => opt.value === kind);
+    if (!option) {
+      return details.fileType;
+    }
+    return this.currentLang === 'ar' ? option.labelAr : option.labelEn;
+  }
+
+  getResourceIcon(details?: ResourceDetails | null): string {
+    if (!details) return '📁';
+    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
+    const option = this.resourceTypeOptions.find(opt => opt.value === kind);
+    return option?.icon || '📁';
+  }
+
+  formatFileSize(bytes?: number): string {
+    if (!bytes || bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / Math.pow(1024, exponent);
+    return `${value.toFixed(exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+  }
+
+  isPdfResource(details?: ResourceDetails | null): boolean {
+    if (!details) return false;
+    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
+    return kind === 'pdf';
+  }
+
+  isImageResource(details?: ResourceDetails | null): boolean {
+    if (!details) return false;
+    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
+    return kind === 'image';
+  }
+
+  getResourceDownloadName(details?: ResourceDetails | null): string {
+    if (!details) {
+      return 'resource';
+    }
+    return details.fileName || 'resource';
+  }
+
+  getResourceDetailSeparator(): string {
+    return this.currentLang === 'ar' ? '، ' : ', ';
+  }
+
+  getResourceDetailEntries(details?: ResourceDetails | null): { label: string; value: string }[] {
+    if (!details) {
+      return [];
+    }
+
+    const labelPages = this.currentLang === 'ar' ? 'الصفحات' : 'Pages';
+    const labelSize = this.currentLang === 'ar' ? 'الحجم' : 'Size';
+    const labelFile = this.currentLang === 'ar' ? 'الملف' : 'File';
+    const labelType = this.currentLang === 'ar' ? 'النوع' : 'Type';
+
+    const entries: { label: string; value: string }[] = [];
+
+    const fileName = details.fileName && details.fileName.trim().length > 0
+      ? details.fileName
+      : (this.currentLang === 'ar' ? 'بدون اسم' : 'Untitled');
+    entries.push({ label: labelFile, value: fileName });
+
+    const typeLabel = this.getResourceDisplayLabel(details);
+    if (typeLabel) {
+      entries.push({ label: labelType, value: typeLabel });
+    }
+
+    if (details.pageCount !== undefined && details.pageCount !== null) {
+      entries.push({ label: labelPages, value: `${details.pageCount}` });
+    }
+
+    if (details.fileSize) {
+      entries.push({ label: labelSize, value: this.formatFileSize(details.fileSize) });
+    }
+
+    return entries;
+  }
+
+  getResourceDetailEntriesFromForm(): { label: string; value: string }[] {
+    if (!this.resourceForm.fileName) {
+      return [];
+    }
+
+    return this.getResourceDetailEntries({
+      fileName: this.resourceForm.fileName,
+      fileType: this.resourceForm.fileType,
+      fileSize: this.resourceForm.fileSize,
+      kind: this.resourceForm.displayType,
+      pageCount: this.resourceForm.pageCount ?? undefined
+    });
+  }
+
+  private async base64ToArrayBuffer(dataUrl: string): Promise<ArrayBuffer> {
+    const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  private async extractResourceMetadataFromArrayBuffer(
+    arrayBuffer: ArrayBuffer,
+    displayType: ResourceDisplayType,
+    info: { fileName: string; mimeType: string }
+  ): Promise<Partial<ResourceDetails>> {
+    const extras: Partial<ResourceDetails> = {};
+
+    try {
+      if (displayType === 'pdf') {
+        // @ts-ignore - dynamic runtime import, types resolved at build time post-install
+        const pdfjsLib: any = await import('pdfjs-dist/build/pdf');
+        if (pdfjsLib?.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const typedArray = new Uint8Array(arrayBuffer);
+        const loadingTask = pdfjsLib.getDocument({ data: typedArray });
+        const doc = await loadingTask.promise;
+        if (doc?.numPages) {
+          extras.pageCount = doc.numPages;
+        }
+        if (doc?.destroy) {
+          doc.destroy();
+        }
+      } else if (displayType === 'word' && info.fileName.toLowerCase().endsWith('.docx')) {
+        // @ts-ignore - dynamic runtime import, types resolved at build time post-install
+        const JSZip = (await import('jszip')).default;
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const appXmlFile = zip.file('docProps/app.xml');
+        if (appXmlFile) {
+          const appXml = await appXmlFile.async('text');
+          const pagesMatch = appXml.match(/<Pages>(\d+)<\/Pages>/i);
+          if (pagesMatch) {
+            extras.pageCount = parseInt(pagesMatch[1], 10);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Resource metadata extraction failed', info.fileName, error);
+    }
+
+    return extras;
+  }
+
+  private getResourcePageLabel(count?: number | null): string | null {
+    if (count === undefined || count === null) {
+      return null;
+    }
+
+    if (this.currentLang === 'ar') {
+      if (count === 0) return '0 صفحة';
+      if (count === 1) return 'صفحة واحدة';
+      if (count === 2) return 'صفحتان';
+      if (count >= 3 && count <= 10) return `${count} صفحات`;
+      return `${count} صفحة`;
+    }
+
+    if (count === 1) {
+      return '1 page';
+    }
+    return `${count} pages`;
+  }
+
+  getResourceFormSummary(): string {
+    if (!this.resourceForm.fileName) {
+      return this.currentLang === 'ar' ? 'لم يتم اختيار ملف' : 'No file selected';
+    }
+
+    return this.buildResourceInfo({
+      fileName: this.resourceForm.fileName,
+      fileType: this.resourceForm.fileType,
+      fileSize: this.resourceForm.fileSize,
+      kind: this.resourceForm.displayType,
+      pageCount: this.resourceForm.pageCount ?? undefined
+    });
+  }
+
+  buildResourceInfo(details?: ResourceDetails | null): string {
+    if (!details) {
+      return this.currentLang === 'ar' ? 'الملف: غير محدد' : 'File: N/A';
+    }
+
+    const parts: string[] = [];
+    const separator = this.currentLang === 'ar' ? '، ' : ', ';
+    const labelPages = this.currentLang === 'ar' ? 'الصفحات' : 'Pages';
+    const labelSize = this.currentLang === 'ar' ? 'الحجم' : 'Size';
+    const labelFile = this.currentLang === 'ar' ? 'الملف' : 'File';
+    const labelType = this.currentLang === 'ar' ? 'النوع' : 'Type';
+
+    if (details.pageCount !== undefined && details.pageCount !== null) {
+      parts.push(`${labelPages}: ${details.pageCount}`);
+    }
+
+    if (details.fileSize) {
+      parts.push(`${labelSize}: ${this.formatFileSize(details.fileSize)}`);
+    }
+
+    const fileName = details.fileName || (this.currentLang === 'ar' ? 'بدون اسم' : 'Untitled');
+    parts.push(`${labelFile}: ${fileName}`);
+
+    const typeLabel = this.getResourceDisplayLabel(details);
+    if (typeLabel) {
+      parts.push(`${labelType}: ${typeLabel}`);
+    }
+
+    return parts.filter(Boolean).join(separator);
+  }
+
+  private async populateExistingResourceMetadata(item: ContentItem, displayType: ResourceDisplayType): Promise<void> {
+    const details = item.resourceDetails;
+    if (!details?.dataUrl) {
+      return;
+    }
+
+    try {
+      const arrayBuffer = await this.base64ToArrayBuffer(details.dataUrl);
+      const extras = await this.extractResourceMetadataFromArrayBuffer(arrayBuffer, displayType, {
+        fileName: details.fileName,
+        mimeType: details.fileType
+      });
+
+      let updated = false;
+      if (extras.pageCount !== undefined && extras.pageCount !== null && details.pageCount !== extras.pageCount) {
+        details.pageCount = extras.pageCount;
+        updated = true;
+      }
+
+      if (updated) {
+        this.saveSections();
+        const legacyIndex = this.contentItems.findIndex(ci => ci.id === item.id);
+        if (legacyIndex !== -1) {
+          this.contentItems[legacyIndex] = {
+            ...this.contentItems[legacyIndex],
+            resourceDetails: {
+              ...this.contentItems[legacyIndex].resourceDetails,
+              ...details
+            }
+          };
+          const userId = this.student?.id || this.student?.user_id;
+          const draft = this.ai.getDraft(userId);
+          this.ai.saveDraft({
+            ...draft,
+            content_items: this.contentItems
+          }, userId);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to populate metadata for existing resource', item.title, error);
+    } finally {
+      this.cdr.detectChanges();
+    }
+  }
+
+  getResourceDisplayLabelFromForm(): string {
+    if (!this.resourceForm.fileName) {
+      return this.currentLang === 'ar' ? 'لم يتم اختيار ملف' : 'No file selected';
+    }
+
+    return this.getResourceDisplayLabel({
+      fileName: this.resourceForm.fileName,
+      fileType: this.resourceForm.fileType,
+      fileSize: this.resourceForm.fileSize,
+      kind: this.resourceForm.displayType
+    });
+  }
+
+  onCourseCoverSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.courseCoverPreview = reader.result as string;
+      this.saveCourseCoverToDraft();
+      this.cdr.detectChanges();
+    };
+    reader.onerror = () => {
+      console.warn('Failed to read course cover image');
+    };
+    reader.readAsDataURL(file);
+
+    input.value = '';
+  }
+
+  removeCourseCover(): void {
+    this.courseCoverPreview = null;
+    this.saveCourseCoverToDraft();
+    this.cdr.detectChanges();
+  }
+
+  private saveCourseCoverToDraft(): void {
+    const userId = this.student?.id || this.student?.user_id;
+    const draft = this.ai.getDraft(userId);
+    this.ai.saveDraft({
+      ...draft,
+      cover_image_url: this.courseCoverPreview || undefined
+    }, userId);
   }
 }
 

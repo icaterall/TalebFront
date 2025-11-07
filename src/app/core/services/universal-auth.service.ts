@@ -67,6 +67,14 @@ export class UniversalAuthService {
   }
 
   /**
+   * Get access token
+   * @returns string | null
+   */
+  getAccessToken(): string | null {
+    return this.authService.getAccessToken();
+  }
+
+  /**
    * Force logout with custom message
    * @param reason - The reason for logout
    */
