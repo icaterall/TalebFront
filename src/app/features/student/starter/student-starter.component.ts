@@ -141,15 +141,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         '|',
         'bulletedList',
         'numberedList',
-        '|',
-        'alignment',
-        '|',
         'outdent',
         'indent',
-        '|',
-        'link',
-        'imageUpload',
-        'insertTable',
         '|',
         'blockQuote',
         'codeBlock',
@@ -161,7 +154,18 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     alignment: {
       options: ['left', 'center', 'right', 'justify']
     },
-    language: 'en'
+    language: this.currentLang === 'ar' ? 'ar' : 'en',
+    simpleUpload: {
+      uploadUrl: `${this.baseUrl}/common/upload`
+    },
+    heading: {
+      options: [
+        { model: 'paragraph', title: this.currentLang === 'ar' ? 'فقرة' : 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: this.currentLang === 'ar' ? 'عنوان رئيسي' : 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: this.currentLang === 'ar' ? 'عنوان فرعي' : 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: this.currentLang === 'ar' ? 'عنوان ثالث' : 'Heading 3', class: 'ck-heading_heading3' }
+      ]
+    }
   };
 
   get currentLang(): 'ar' | 'en' { return this.i18n.current; }
@@ -1015,11 +1019,22 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       locale: this.currentLang
     };
     
+    const richContentInstruction = this.currentLang === 'ar'
+      ? 'ينبغي أن يكون المحتوى بتنسيق HTML صالح ومتوافق مع CKEditor 5، مع تضمين عناوين منسقة بمستويات مناسبة، قوائم نقطية أو مرقمة، جداول منظمة عند الحاجة، روابط سليمة، نصوص مميزة باستخدام الوسوم <strong> و <em>، واستخدام رموز تعبيرية (Unicode emoji) مناسبة لزيادة التوضيح متى ما أمكن دون مبالغة. يُمنع استخدام سكربتات أو وسوم غير مدعومة. يجب إرجاع النتيجة النهائية في JSON بالهيكل { "content": "..." }.'
+      : 'Return the final result as JSON with the shape { "content": "..." }. The HTML string must be valid for CKEditor 5 and feel rich: include semantic headings, bullet/numbered lists, well-structured tables where useful, safe links, highlighted text via <strong> / <em>, and sprinkle relevant Unicode emojis to enhance clarity (without overusing them). Absolutely no scripts or unsupported embeds.';
+
     if (restrictions.length > 0) {
+      restrictions.push(richContentInstruction);
       payload.restrictions = restrictions.join('. ');
       payload.instructions = this.currentLang === 'ar'
         ? `مهم جداً: يجب أن يقتصر المحتوى على موضوع الدورة "${course_name}" وقسم "${section}" والعنوان "${title}" فقط. لا تتضمن أي معلومات أو أمثلة غير متعلقة بهذه الموضوعات.`
         : `CRITICAL: Content must be strictly limited to the course "${course_name}", section "${section}", and title "${title}" only. Do not include any information or examples unrelated to these topics.`;
+    } else {
+      payload.instructions = richContentInstruction;
+    }
+    
+    if (payload.instructions && payload.instructions !== richContentInstruction) {
+      payload.instructions = `${payload.instructions} ${richContentInstruction}`;
     }
     
     if (hintText) {

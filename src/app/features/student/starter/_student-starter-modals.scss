@@ -594,6 +594,76 @@
       }
     }
     
+    // CKEditor dropdown alignment fix
+    ::ng-deep {
+      .ck.ck-dropdown .ck-dropdown__panel.ck-dropdown__panel_ne,
+      .ck.ck-dropdown .ck-dropdown__panel.ck-dropdown__panel_se {
+        left: 0;
+        right: auto;
+      }
+
+      [dir="rtl"] .ck.ck-dropdown .ck-dropdown__panel.ck-dropdown__panel_ne,
+      [dir="rtl"] .ck.ck-dropdown .ck-dropdown__panel.ck-dropdown__panel_se,
+      html[dir="rtl"] .ck.ck-dropdown .ck-dropdown__panel.ck-dropdown__panel_ne,
+      html[dir="rtl"] .ck.ck-dropdown .ck-dropdown__panel.ck-dropdown__panel_se {
+        left: auto;
+        right: 0;
+      }
+
+      @media (max-width: 768px) {
+        .ck.ck-toolbar {
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .ck.ck-toolbar .ck-toolbar__items {
+          flex-wrap: wrap;
+          row-gap: 6px;
+          column-gap: 6px;
+        }
+      }
+
+      @media (max-width: 540px) {
+        .ck.ck-toolbar {
+          padding: 6px;
+        }
+
+        .ck.ck-toolbar .ck-toolbar__items {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .ck.ck-toolbar .ck.ck-dropdown {
+          width: auto;
+        }
+
+        .ck.ck-toolbar .ck.ck-button {
+          flex: 0 0 auto;
+        }
+      }
+
+      .ck-content h1 {
+        font-size: 1.8rem;
+        line-height: 1.25;
+      }
+
+      .ck-content h2 {
+        font-size: 1.5rem;
+        line-height: 1.3;
+      }
+
+      .ck-content h3 {
+        font-size: 1.3rem;
+        line-height: 1.35;
+      }
+
+      [dir="rtl"] .ck-content .emoji-direction,
+      html[dir="rtl"] .ck-content .emoji-direction {
+        direction: rtl;
+        unicode-bidi: plaintext;
+      }
+    }
+
     .editor-actions {
       padding: 16px 24px;
       border-top: 1px solid #e5e7eb;
