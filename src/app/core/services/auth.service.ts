@@ -60,7 +60,7 @@ export class AuthService {
     private router: Router
   ) {
     this.loadStoredUser();
-    this.startProfileSync();
+    Promise.resolve().then(() => this.startProfileSync());
     this.listenToLanguageChanges();
   }
 

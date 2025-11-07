@@ -179,42 +179,14 @@
                       [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'"
                       [title]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'">✏️</button>
                     
-                    <!-- 3-Dot Menu Button -->
-                    <div class="section-menu-wrapper">
-                      <button 
-                        type="button"
-                        class="section-menu-btn"
-                        (click)="openSectionMenu(section.id, $event)"
-                        [attr.aria-label]="currentLang === 'ar' ? 'قائمة القسم' : 'Section Menu'"
-                        [title]="currentLang === 'ar' ? 'قائمة القسم' : 'Section Menu'">
-                        ⋮
-                      </button>
-                      
-                      <!-- Section Menu Dropdown -->
-                      <div 
-                        class="section-menu-dropdown"
-                        *ngIf="showSectionMenu && menuSectionId === section.id"
-                        (click)="$event.stopPropagation()">
-                        <button 
-                          type="button"
-                          class="menu-item"
-                          (click)="renameSection(section.id)">
-                          <span>{{ currentLang === 'ar' ? 'إعادة تسمية' : 'Rename' }}</span>
-                        </button>
-                        <button 
-                          type="button"
-                          class="menu-item"
-                          (click)="duplicateSection(section.id)">
-                          <span>{{ currentLang === 'ar' ? 'تكرار' : 'Duplicate' }}</span>
-                        </button>
-                        <button 
-                          type="button"
-                          class="menu-item menu-item-delete"
-                          (click)="deleteSection(section.id)">
-                          <span>{{ currentLang === 'ar' ? 'حذف' : 'Delete' }}</span>
-                        </button>
-                      </div>
-                    </div>
+                    <button 
+                      type="button"
+                      class="section-delete-btn"
+                      (click)="deleteSection(section.id); $event.stopPropagation()"
+                      [attr.aria-label]="currentLang === 'ar' ? 'حذف القسم' : 'Delete section'"
+                      [title]="currentLang === 'ar' ? 'حذف القسم' : 'Delete section'">
+                      🗑
+                    </button>
                   </ng-container>
                 </div>
               </h2>
@@ -1026,21 +998,33 @@
 </div>
 
 <!-- Delete Section Confirmation Modal -->
-<div class="modal-overlay" *ngIf="showDeleteSectionModal" (click)="showDeleteSectionModal = false">
+<div class="modal-overlay" *ngIf="showDeleteSectionModal" (click)="cancelDeleteSection()">
   <div class="modal-content delete-section-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2 class="modal-title">{{ currentLang === 'ar' ? 'حذف هذا القسم؟' : 'Delete this section?' }}</h2>
-      <button type="button" class="modal-close" (click)="showDeleteSectionModal = false">✕</button>
+      <button type="button" class="modal-close" (click)="cancelDeleteSection()">✕</button>
     </div>
     <div class="modal-body">
-      <p class="delete-message">{{ currentLang === 'ar' ? 'سيتم حذف جميع العناصر داخل هذا القسم.' : 'All items inside will be removed.' }}</p>
+      <p class="delete-message">{{ currentLang === 'ar' ? 'سيتم حذف هذا القسم وجميع المحتويات بداخله بشكل نهائي.' : 'This will permanently delete the section and everything inside it.' }}</p>
+      <p class="delete-warning">{{ currentLang === 'ar' ? 'لا يمكن التراجع عن هذا الإجراء. يرجى كتابة delete للتأكيد.' : 'This action cannot be undone. Please type delete to confirm.' }}</p>
       <p class="delete-section-name" *ngIf="sectionToDelete">{{ sectionToDelete.name }}</p>
+      <div class="delete-confirm-field">
+        <label for="delete-confirm-input">{{ currentLang === 'ar' ? 'اكتب delete للتأكيد' : 'Type delete to confirm' }}</label>
+        <input
+          id="delete-confirm-input"
+          type="text"
+          [(ngModel)]="deleteConfirmationInput"
+          (keydown.enter)="canConfirmDeleteSection() ? confirmDeleteSection() : null"
+          [attr.placeholder]="deleteKeyword"
+          autocomplete="off"
+        />
+      </div>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn-cancel" (click)="showDeleteSectionModal = false">
+      <button type="button" class="btn-cancel" (click)="cancelDeleteSection()">
         {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
       </button>
-      <button type="button" class="btn-delete" (click)="confirmDeleteSection()">
+      <button type="button" class="btn-delete" (click)="confirmDeleteSection()" [disabled]="!canConfirmDeleteSection()">
         {{ currentLang === 'ar' ? 'نعم، حذف' : 'Yes, delete' }}
       </button>
     </div>

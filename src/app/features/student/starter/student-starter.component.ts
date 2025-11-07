@@ -79,6 +79,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Delete Section
   showDeleteSectionModal: boolean = false; // Track delete section modal visibility
   sectionToDelete: Section | null = null; // Track which section is being deleted
+  deleteConfirmationInput: string = '';
+  readonly deleteKeyword: string = 'delete';
   showStartFromScratchModal: boolean = false; // Track start from scratch modal visibility
   
   // Undo Toast
@@ -1512,13 +1514,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     this.sectionToDelete = section;
     this.showDeleteSectionModal = true;
+    this.deleteConfirmationInput = '';
     this.closeSectionMenu();
     this.cdr.detectChanges();
   }
   
   // Confirm Delete Section
   confirmDeleteSection(): void {
-    if (!this.sectionToDelete) return;
+    if (!this.sectionToDelete || !this.canConfirmDeleteSection()) return;
     
     // Store deleted section for undo
     this.deletedSection = { ...this.sectionToDelete };
@@ -1540,6 +1543,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.saveSections();
     this.showDeleteSectionModal = false;
     this.sectionToDelete = null;
+    this.deleteConfirmationInput = '';
     
     // Show undo toast
     this.showUndoToast = true;
@@ -1548,6 +1552,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }, 5000); // Auto-hide after 5 seconds
     
     this.cdr.detectChanges();
+  }
+
+  cancelDeleteSection(): void {
+    this.showDeleteSectionModal = false;
+    this.sectionToDelete = null;
+    this.deleteConfirmationInput = '';
+    this.cdr.detectChanges();
+  }
+
+  canConfirmDeleteSection(): boolean {
+    return this.deleteConfirmationInput.trim().toLowerCase() === this.deleteKeyword;
   }
   
   // Toggle Section Availability
