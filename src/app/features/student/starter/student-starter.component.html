@@ -106,11 +106,20 @@
           <div class="summary-cover">
             <div class="cover-box" [class.has-image]="hasCustomCourseCover" [attr.aria-busy]="courseCoverUploading">
               <div class="cover-upload-overlay" *ngIf="courseCoverUploading">
-                <div class="cover-progress-bar">
-                  <div class="cover-progress-fill" [style.width.%]="courseCoverUploadProgress"></div>
-                </div>
-                <div class="cover-progress-text">
-                  {{ courseCoverUploadProgress > 0 ? (courseCoverUploadProgress | number:'1.0-0') + '%' : (currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...') }}
+                <div class="upload-content-wrapper">
+                  <div class="upload-progress-wrapper">
+                    <div class="cover-progress-label">
+                      {{ courseCoverDeleting ? (currentLang === 'ar' ? 'جاري الحذف...' : 'Deleting...') : (currentLang === 'ar' ? 'جاري الرفع...' : 'Uploading...') }}
+                    </div>
+                    <div class="cover-progress-row">
+                      <div class="cover-progress-bar">
+                        <div class="cover-progress-fill" [style.width.%]="courseCoverUploadProgress"></div>
+                      </div>
+                      <div class="cover-progress-text">
+                        {{ (courseCoverUploadProgress || 0) | number:'1.0-0' }}%
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <img class="cover-fallback" [src]="defaultCourseCover" [alt]="currentLang === 'ar' ? 'صورة الغلاف الافتراضية' : 'Default course cover'" />
@@ -1164,11 +1173,15 @@
       <p>{{ deleteCoverMessage }}</p>
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" (click)="showDeleteCoverModal = false">
+      <button class="btn-cancel" (click)="showDeleteCoverModal = false" [disabled]="courseCoverUploading">
         {{ currentLang === 'ar' ? 'تراجع' : 'Cancel' }}
       </button>
       <button class="btn-confirm" (click)="confirmDeleteCover()" [disabled]="courseCoverUploading">
-        {{ currentLang === 'ar' ? 'حذف' : 'Delete' }}
+        <span *ngIf="!courseCoverUploading">{{ currentLang === 'ar' ? 'حذف' : 'Delete' }}</span>
+        <span *ngIf="courseCoverUploading" class="btn-loading">
+          <span class="spinner"></span>
+          <span>{{ currentLang === 'ar' ? 'جاري الحذف...' : 'Deleting...' }}</span>
+        </span>
       </button>
     </div>
   </div>

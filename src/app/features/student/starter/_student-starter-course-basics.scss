@@ -33,7 +33,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
-    border-radius: 8px;
+    border-radius: 5px;
     transition: all 0.2s;
   
     .link-icon {
@@ -108,7 +108,7 @@
     color: #1F2937;
     background: white;
     border: 2px solid #E2E8F0;
-    border-radius: 12px;
+    border-radius: 5px;
     transition: all 0.2s;
     box-sizing: border-box;
   
@@ -138,7 +138,7 @@
     color: white;
     background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
     border: none;
-    border-radius: 12px;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
@@ -229,7 +229,7 @@
     margin-bottom: 16px;
     padding: 16px;
     background: #F8FAFC;
-    border-radius: 12px;
+    border-radius: 5px;
     border: 1px solid #E2E8F0;
   }
   
@@ -251,7 +251,7 @@
     padding: 12px 20px;
     background: white;
     border: 2px solid #E2E8F0;
-    border-radius: 8px;
+    border-radius: 5px;
     font-size: 14px;
     font-weight: 600;
     color: #64748B;
@@ -308,7 +308,7 @@
       padding: 4px 8px;
       background: #EFF6FF;
       border: none;
-      border-radius: 6px;
+      border-radius: 5px;
       color: #3B82F6;
       cursor: pointer;
       transition: all 0.2s;
@@ -486,7 +486,7 @@
     padding: 16px 20px;
     background: white;
     border: 2px solid #E2E8F0;
-    border-radius: 12px;
+    border-radius: 5px;
     transition: all 0.2s;
   
     &:hover {
@@ -523,7 +523,7 @@
         color: #1F2937;
         cursor: pointer;
         padding: 8px;
-        border-radius: 6px;
+        border-radius: 5px;
         transition: background 0.2s;
         word-break: break-word;
   
@@ -540,7 +540,7 @@
         color: #1F2937;
         background: white;
         border: 2px solid #3B82F6;
-        border-radius: 8px;
+        border-radius: 5px;
         outline: none;
   
         &:focus {
@@ -562,7 +562,7 @@
     font-size: 13px;
     font-weight: 600;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s;
     display: inline-flex;
@@ -622,7 +622,7 @@
     padding: 12px 24px;
     background: #F8FAFC;
     border: 2px dashed #CBD5E1;
-    border-radius: 12px;
+    border-radius: 5px;
     font-size: 14px;
     font-weight: 600;
     color: #64748B;
@@ -664,7 +664,7 @@
     background: white;
     color: #475569;
     border: 2px solid #E2E8F0;
-    border-radius: 12px;
+    border-radius: 5px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -838,7 +838,7 @@
     padding: 16px;
     background: #ffffff;
     border: 2px solid #e5e7eb;
-    border-radius: 12px;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
     min-height: 60px;
@@ -881,7 +881,7 @@
     color: #1F2937;
     background: white;
     border: 2px solid #E2E8F0;
-    border-radius: 12px;
+    border-radius: 5px;
     transition: all 0.2s;
     box-sizing: border-box;
   
@@ -907,7 +907,7 @@
       flex: 1;
       padding: 10px 14px;
       border: 2px solid #2563EB;
-      border-radius: 8px;
+      border-radius: 5px;
       font-size: 14px;
       background: #ffffff;
       color: #1a1a1a;
@@ -930,7 +930,7 @@
     .topic-action-btn {
       width: 32px;
       height: 32px;
-      border-radius: 6px;
+      border-radius: 5px;
       border: none;
       cursor: pointer;
       display: flex;
@@ -994,7 +994,7 @@
     width: 100%;
     padding: 8px 12px;
     border: 2px solid #73adef;
-    border-radius: 8px;
+    border-radius: 5px;
     font-size: 14px;
     background: #ffffff;
     color: #1a1a1a;
@@ -1038,7 +1038,7 @@
     margin: 24px 0;
     padding: 10px;
     background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%);
-    border-radius: 12px;
+    border-radius: 5px;
     box-shadow: 0 2px 12px rgba(16, 185, 129, 0.15);
     border: 2px solid #86EFAC;
     position: relative;
@@ -1070,7 +1070,7 @@
         position: relative;
         width: 180px;
         height: 132px;
-        border-radius: 12px;
+        border-radius: 5px;
         border: 2px dashed rgba(59, 130, 246, 0.35);
         background: rgba(59, 130, 246, 0.08);
         overflow: hidden;
@@ -1099,38 +1099,121 @@
         .cover-upload-overlay {
           position: absolute;
           inset: 0;
-          background: rgba(15, 23, 42, 0.55);
+          background: rgba(15, 23, 42, 0.92);
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 10px;
           color: #ffffff;
-          font-weight: 600;
-          letter-spacing: 0.4px;
           pointer-events: none;
-          backdrop-filter: blur(2px);
-          padding: 0 16px;
-          text-align: center;
+          backdrop-filter: blur(4px);
+          padding: 0 24px;
+          z-index: 10;
+
+          .upload-content-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+          }
+
+          .upload-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 56px;
+            height: 56px;
+            background: rgba(37, 99, 235, 0.2);
+            border: 2px solid rgba(37, 99, 235, 0.5);
+            border-radius: 5px;
+            animation: pulse-upload 1.5s ease-in-out infinite;
+
+            .upload-icon {
+              width: 28px;
+              height: 28px;
+              color: #3b82f6;
+              animation: bounce-upload 1s ease-in-out infinite;
+            }
+          }
+
+          .upload-progress-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+          }
+
+          .cover-progress-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          .cover-progress-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
 
           .cover-progress-bar {
-            width: 100%;
-            max-width: 160px;
-            height: 6px;
-            border-radius: 999px;
-            background: rgba(148, 163, 184, 0.35);
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(148, 163, 184, 0.3);
             overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
             .cover-progress-fill {
               height: 100%;
               width: 0%;
-              background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
-              transition: width 0.2s ease;
+              background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+              transition: width 0.3s ease;
+              box-shadow: 0 0 10px rgba(37, 99, 235, 0.6);
+              animation: shimmer 1.5s ease-in-out infinite;
             }
           }
 
           .cover-progress-text {
-            font-size: 0.85rem;
+            font-size: 16px;
+            font-weight: 700;
+            color: #60a5fa;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            min-width: 50px;
+            text-align: right;
+            flex-shrink: 0;
+          }
+
+          @keyframes pulse-upload {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: scale(1.05);
+              opacity: 0.9;
+            }
+          }
+
+          @keyframes bounce-upload {
+            0%, 100% {
+              transform: translateY(0);
+            }
+            50% {
+              transform: translateY(-4px);
+            }
+          }
+
+          @keyframes shimmer {
+            0% {
+              background-position: -240px 0;
+            }
+            100% {
+              background-position: 240px 0;
+            }
           }
         }
 
@@ -1255,7 +1338,7 @@
           padding: 10px 20px;
           background: #ffffff;
           border: 2px solid #ef4444;
-          border-radius: 8px;
+          border-radius: 5px;
           color: #dc2626;
           font-size: 14px;
           font-weight: 600;
@@ -1458,7 +1541,7 @@
   .summary-edit-btn {
     background: rgba(16, 185, 129, 0.1);
     border: 1px solid rgba(16, 185, 129, 0.3);
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
     padding: 4px 8px;
@@ -1488,7 +1571,7 @@
     flex: 1;
     padding: 6px 10px;
     border: 1px solid #86EFAC;
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 16px;
     font-weight: 500;
     color: #065F46;
@@ -1531,7 +1614,7 @@
       width: 28px;
       height: 28px;
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 600;
@@ -1701,7 +1784,7 @@
     margin-top: 32px;
     padding: 24px;
     background: #ffffff;
-    border-radius: 12px;
+    border-radius: 5px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     width: 100%;
     overflow: hidden;
@@ -1717,7 +1800,7 @@
   
     @media (max-width: 360px) {
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 5px;
     }
     
     .section-content-header {
@@ -1757,7 +1840,7 @@
             min-width: 200px;
             padding: 8px 12px;
             border: 2px solid #86EFAC;
-            border-radius: 8px;
+            border-radius: 5px;
             font-size: 18px;
             font-weight: 500;
             color: #065F46;
@@ -1807,7 +1890,7 @@
               width: 30px;
               height: 30px;
               border: 1px solid #cbd5e1;
-              border-radius: 8px;
+              border-radius: 5px;
               background: #ffffff;
               color: #0f172a;
               cursor: pointer;
@@ -1847,7 +1930,7 @@
             .section-action-btn {
               width: 34px;
               height: 34px;
-              border-radius: 10px;
+              border-radius: 5px;
               border: 1px solid #cbd5e1;
               background: #ffffff;
               color: #0f172a;
@@ -1899,7 +1982,7 @@
               gap: 8px;
               padding: 6px 10px;
               border: 1px solid #cbd5e1;
-              border-radius: 999px;
+              border-radius: 5px;
               background: #f8fafc;
               cursor: pointer;
               transition: all 0.2s ease;
@@ -1930,7 +2013,7 @@
                 width: 36px;
                 height: 18px;
                 background: #cbd5e1;
-                border-radius: 999px;
+                border-radius: 5px;
                 transition: background 0.2s ease;
 
                 .pill-handle {
@@ -1963,7 +2046,7 @@
             .section-icon-btn {
               width: 34px;
               height: 34px;
-              border-radius: 10px;
+              border-radius: 5px;
               border: 1px solid #cbd5e1;
               background: #ffffff;
               color: #0f172a;
@@ -2340,7 +2423,7 @@
       gap: 12px;
       background: #f8fafc;
       border: 2px solid #e5e7eb;
-      border-radius: 12px;
+      border-radius: 5px;
       padding: 12px;
       transition: all 0.2s ease;
       position: relative;
@@ -2367,7 +2450,7 @@
         justify-content: center;
         padding: 8px 4px;
         background: rgba(37, 99, 235, 0.05);
-        border-radius: 8px;
+        border-radius: 5px;
         flex-shrink: 0;
         min-width: 60px;
         
@@ -2375,7 +2458,7 @@
           width: 28px;
           height: 28px;
           border: 1px solid #cbd5e1;
-          border-radius: 6px;
+          border-radius: 5px;
           background: #ffffff;
           color: #2563EB;
           font-size: 12px;
@@ -2449,7 +2532,7 @@
               color: #64748b;
               background: rgba(100, 116, 139, 0.1);
               padding: 3px 8px;
-              border-radius: 12px;
+              border-radius: 5px;
               text-transform: capitalize;
               white-space: nowrap;
               flex-shrink: 0;
@@ -2466,7 +2549,7 @@
             opacity: 0.6;
             transition: all 0.2s ease;
             flex-shrink: 0;
-            border-radius: 4px;
+            border-radius: 5px;
             
             &:hover {
               opacity: 1;

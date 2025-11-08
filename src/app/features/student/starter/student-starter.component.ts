@@ -87,6 +87,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   deletingDraftCourse: boolean = false;
   continueErrorMessage: string | null = null;
   courseCoverUploading: boolean = false;
+  courseCoverDeleting: boolean = false;
   courseCoverUploadProgress: number = 0;
   courseCoverUploadError: string | null = null;
   showDeleteCoverModal: boolean = false;
@@ -2936,6 +2937,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.courseCoverUploadError = null;
     this.courseCoverUploadProgress = 0;
     this.courseCoverUploading = true;
+    this.courseCoverDeleting = false;
     this.coverImageLoaded = false;
     this.cdr.markForCheck();
 
@@ -2984,6 +2986,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.courseCoverUploadError = null;
     this.courseCoverUploadProgress = 0;
     this.courseCoverUploading = true;
+    this.courseCoverDeleting = true;
     this.coverImageLoaded = false;
     this.cdr.markForCheck();
 
@@ -2992,6 +2995,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.ai.deleteDraftCover().subscribe({
       next: (response) => {
         this.courseCoverUploading = false;
+        this.courseCoverDeleting = false;
         this.courseCoverUploadProgress = 100;
         if (response) {
           this.handleDraftCourseResponse(response, userId);
@@ -3004,6 +3008,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Cover deletion failed:', error);
         this.courseCoverUploading = false;
+        this.courseCoverDeleting = false;
         this.courseCoverUploadProgress = 0;
         this.coverImageLoaded = false;
         this.courseCoverUploadError = this.resolveErrorMessage(
