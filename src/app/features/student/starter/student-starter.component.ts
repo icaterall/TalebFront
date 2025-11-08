@@ -8,10 +8,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
 import { AiBuilderService, CourseDraft, ContentItem, Section, ResourceDetails, DraftCourseResponse, DraftCourseSectionResponse, CreateDraftCoursePayload } from '../../../core/services/ai-builder.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEventType } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
-import { skip } from 'rxjs/operators';
+import { skip, finalize } from 'rxjs/operators';
 import DecoupledEditor from '@ckeditor/ckeditor5-build-decoupled-document';
 import { CKEditor5CustomUploadAdapter } from './custom-uploader';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
@@ -85,6 +85,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private draftSyncCompleted: boolean = false;
   savingDraftCourse: boolean = false;
   deletingDraftCourse: boolean = false;
+  continueErrorMessage: string | null = null;
+  courseCoverUploading: boolean = false;
+  courseCoverUploadProgress: number = 0;
+  courseCoverUploadError: string | null = null;
+  showDeleteCoverModal: boolean = false;
+  coverImageLoaded: boolean = false;
 
   // Step Management
   currentStep: number = 1; // 1 = Course Basics, 2 = Building Sections, 3 = Review & Publish
@@ -134,6 +140,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   deletedSection: Section | null = null; // Store deleted section for undo
   undoToastTimeout: any = null; // Timeout for auto-hiding undo toast
   courseCoverPreview: string | null = null;
+  readonly defaultCourseCover = 'assets/images/no-image-course.png';
 
   // Step 1: Category Selection
   loading = false;
@@ -217,6 +224,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   get currentLang(): 'ar' | 'en' { return this.i18n.current; }
   get isRTL(): boolean { return this.currentLang === 'ar'; }
+  get hasCustomCourseCover(): boolean { return !!this.courseCoverPreview; }
+  get courseCoverDisplay(): string { return this.courseCoverPreview ?? this.defaultCourseCover; }
+  get hasServerCourseCover(): boolean {
+    return !!(this.draftCourseId && this.courseCoverPreview && this.courseCoverPreview !== this.defaultCourseCover);
+  }
+  get deleteCoverTitle(): string {
+    return this.currentLang === 'ar' ? 'حذف صورة الغلاف؟' : 'Delete cover image?';
+  }
+  get deleteCoverMessage(): string {
+    return this.currentLang === 'ar'
+      ? 'سيتم حذف صورة الغلاف نهائيًا من الدورة. هل تريد المتابعة؟'
+      : 'The cover image will be permanently removed from the course. Do you want to continue?';
+  }
   get canContinue(): boolean {
     if (this.currentStep === 1) {
       // In Step 1, require category AND course name (min 3 chars) AND topic selected
@@ -304,7 +324,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (!this.universalAuth.validateAccess('Student')) return;
     this.student = this.universalAuth.getCurrentUser();
     
-    // Detect current term from date (Term 1: Sept-Feb, Term 2: Mar-Aug)
+    // Detect current term from date (Term 1: Sept-Feb)
     this.currentTerm = this.detectTerm();
     
     // Set loading state for summary data
@@ -702,14 +722,62 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.saveDraftStep2();
   }
 
+  private updateContinueLoadingState(isLoading: boolean): void {
+    if (this.savingDraftCourse === isLoading) {
+      return;
+    }
+    this.savingDraftCourse = isLoading;
+    this.cdr.markForCheck();
+  }
+
+  private resolveErrorMessage(error: unknown, fallbackEn: string, fallbackAr: string): string {
+    const fallback = this.currentLang === 'ar' ? fallbackAr : fallbackEn;
+
+    if (!error || typeof error !== 'object') {
+      return fallback;
+    }
+
+    const maybeHttpError = error as { error?: unknown; message?: unknown };
+    const nestedMessage = maybeHttpError?.error && typeof maybeHttpError.error === 'object'
+      ? (maybeHttpError.error as { message?: unknown }).message
+      : undefined;
+
+    const messageCandidate = nestedMessage ?? maybeHttpError?.message;
+
+    if (typeof messageCandidate === 'string' && messageCandidate.trim().length > 0) {
+      return messageCandidate.trim();
+    }
+
+    return fallback;
+  }
+
+  private buildContinueErrorMessage(error: unknown): string {
+    return this.resolveErrorMessage(
+      error,
+      'We could not save your progress. Please try again.',
+      'حدث خطأ أثناء حفظ تقدمك. يرجى المحاولة مرة أخرى.'
+    );
+  }
+
+  private getCoverUploadErrorMessage(error: unknown): string {
+    return this.resolveErrorMessage(
+      error,
+      'Failed to upload cover image. Please try again.',
+      'فشل رفع صورة الغلاف. يرجى المحاولة مرة أخرى.'
+    );
+  }
+
   continue(): void {
     if (this.savingDraftCourse) {
       return;
     }
 
     if (this.currentStep === 1) {
-      if (!this.canContinue || !this.selectedCategory || this.courseName.trim().length < 3) return;
+      if (!this.canContinue || !this.selectedCategory || this.courseName.trim().length < 3) {
+        return;
+      }
 
+      this.continueErrorMessage = null;
       // Step 1 Complete: Save category and course name to draft
       const userId = this.student?.id || this.student?.user_id;
       const draft: Partial<CourseDraft> = {
@@ -733,59 +801,55 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
       this.ai.saveDraft(draft, userId);
       const payload = this.buildDraftCoursePayload();
-      this.savingDraftCourse = true;
-      this.ai.createDraftCourse(payload).subscribe({
+      this.updateContinueLoadingState(true);
+
+      this.ai.createDraftCourse(payload).pipe(
+        finalize(() => this.updateContinueLoadingState(false))
+      ).subscribe({
         next: (response: DraftCourseResponse) => {
-          this.savingDraftCourse = false;
           this.handleDraftCourseResponse(response, userId);
+          if (!this.sections || this.sections.length === 0) {
+            this.initializeSections();
+          }
+          this.cdr.detectChanges();
         },
         error: (error) => {
-          this.savingDraftCourse = false;
           console.error('Failed to create draft course', error);
+          this.continueErrorMessage = this.buildContinueErrorMessage(error);
         }
       });
-      
-      // Lock Step 2 inputs immediately - hide them and show read-only values
-      // Stay on Step 1 and show read-only summary (don't move to Step 2 yet)
-      this.step2Locked = true;
-
-      // Ensure the first section is created immediately after locking step 2
-      if (!this.sections || this.sections.length === 0) {
-        this.initializeSections();
-      }
-      
-      // Force immediate change detection to hide inputs and show summary
-      this.cdr.markForCheck();
-      this.cdr.detectChanges();
-      
-      // Force another change detection in next tick to ensure view updates
-      setTimeout(() => {
-        this.cdr.detectChanges();
-      }, 10);
     } else if (this.currentStep === 2) {
-      if (!this.canContinue) return;
+      if (!this.canContinue) {
+        return;
+      }
 
-      // Step 2 Complete: Save course basics to draft
-      const userId = this.student?.id || this.student?.user_id;
-      const draft: Partial<CourseDraft> = {
-        name: this.courseName.trim(),
-        subject_slug: this.selectedTopic.trim() || this.subjectSlug.trim(),
-        user_id: userId,
-        last_saved_at: new Date().toISOString()
-      };
+      this.continueErrorMessage = null;
+      this.updateContinueLoadingState(true);
+      try {
+        // Step 2 Complete: Save course basics to draft
+        const userId = this.student?.id || this.student?.user_id;
+        const draft: Partial<CourseDraft> = {
+          name: this.courseName.trim(),
+          subject_slug: this.selectedTopic.trim() || this.subjectSlug.trim(),
+          user_id: userId,
+          last_saved_at: new Date().toISOString()
+        };
 
-      this.ai.saveDraft(draft, userId);
-      
-      // Lock Step 2 inputs - hide them and show read-only values
-      this.step2Locked = true;
-      this.cdr.detectChanges();
-      
-      // Force another change detection to ensure view updates
-      setTimeout(() => {
+        this.ai.saveDraft(draft, userId);
+        
+        // Lock Step 2 inputs - hide them and show read-only values
+        this.step2Locked = true;
         this.cdr.detectChanges();
-      }, 0);
-      
-      // Note: Navigation to Step 3 will be handled elsewhere or stay on page
+        
+        // Force another change detection to ensure view updates
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 0);
+        
+        // Note: Navigation to Step 3 will be handled elsewhere or stay on page
+      } finally {
+        this.updateContinueLoadingState(false);
+      }
     }
   }
 
@@ -2309,7 +2373,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.courseName = response.course.name || this.courseName;
       this.subjectSlug = response.course.subject_slug || this.subjectSlug;
       this.selectedTopic = this.subjectSlug;
-      this.courseCoverPreview = response.course.cover_image_url || this.courseCoverPreview;
+      this.courseCoverPreview = response.course.cover_image_url ?? null;
       if (response.course.category_id) {
         this.selectedCategoryId = response.course.category_id;
       }
@@ -2332,7 +2396,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         name: response.course?.name ?? this.courseName,
         subject_slug: response.course?.subject_slug ?? this.subjectSlug,
         country_id: response.course?.country_id ?? undefined,
-        cover_image_url: response.course?.cover_image_url ?? this.courseCoverPreview ?? undefined,
+        cover_image_url: response.course?.cover_image_url ?? null,
         last_saved_at: response.course?.updated_at ?? new Date().toISOString(),
         sections: mappedSections
       };
@@ -2861,28 +2925,95 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   onCourseCoverSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input?.files?.[0];
-    if (!file) {
+
+    if (!file || this.courseCoverUploading) {
+      if (input) {
+        input.value = '';
+      }
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.courseCoverPreview = reader.result as string;
-      this.saveCourseCoverToDraft();
-      this.cdr.detectChanges();
-    };
-    reader.onerror = () => {
-      console.warn('Failed to read course cover image');
-    };
-    reader.readAsDataURL(file);
+    this.courseCoverUploadError = null;
+    this.courseCoverUploadProgress = 0;
+    this.courseCoverUploading = true;
+    this.coverImageLoaded = false;
+    this.cdr.markForCheck();
 
-    input.value = '';
+    const userId = this.student?.id || this.student?.user_id;
+
+    this.ai.uploadDraftCover(file).subscribe({
+      next: (uploadEvent) => {
+        if (uploadEvent.type === HttpEventType.UploadProgress) {
+          if (uploadEvent.total) {
+            const percent = Math.round((uploadEvent.loaded / uploadEvent.total) * 100);
+            this.courseCoverUploadProgress = Math.min(99, percent);
+          } else {
+            this.courseCoverUploadProgress = Math.max(this.courseCoverUploadProgress, 15);
+          }
+          this.cdr.markForCheck();
+        } else if (uploadEvent.type === HttpEventType.Response) {
+          this.courseCoverUploadProgress = 100;
+          this.courseCoverUploading = false;
+          this.coverImageLoaded = false;
+          if (uploadEvent.body) {
+            this.handleDraftCourseResponse(uploadEvent.body, userId);
+          }
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Cover upload failed:', error);
+        this.courseCoverUploading = false;
+        this.courseCoverUploadProgress = 0;
+        this.coverImageLoaded = false;
+        this.courseCoverUploadError = this.getCoverUploadErrorMessage(error);
+        this.cdr.detectChanges();
+      }
+    });
+
+    if (input) {
+      input.value = '';
+    }
   }
 
   removeCourseCover(): void {
-    this.courseCoverPreview = null;
-    this.saveCourseCoverToDraft();
-    this.cdr.detectChanges();
+    if (this.courseCoverUploading) {
+      return;
+    }
+
+    this.courseCoverUploadError = null;
+    this.courseCoverUploadProgress = 0;
+    this.courseCoverUploading = true;
+    this.coverImageLoaded = false;
+    this.cdr.markForCheck();
+
+    const userId = this.student?.id || this.student?.user_id;
+
+    this.ai.deleteDraftCover().subscribe({
+      next: (response) => {
+        this.courseCoverUploading = false;
+        this.courseCoverUploadProgress = 100;
+        if (response) {
+          this.handleDraftCourseResponse(response, userId);
+        } else {
+          this.courseCoverPreview = null;
+          this.saveCourseCoverToDraft();
+        }
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Cover deletion failed:', error);
+        this.courseCoverUploading = false;
+        this.courseCoverUploadProgress = 0;
+        this.coverImageLoaded = false;
+        this.courseCoverUploadError = this.resolveErrorMessage(
+          error,
+          'Failed to delete cover image. Please try again.',
+          'فشل في حذف صورة الغلاف. يرجى المحاولة مرة أخرى.'
+        );
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private saveCourseCoverToDraft(): void {
@@ -2890,8 +3021,26 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const draft = this.ai.getDraft(userId);
     this.ai.saveDraft({
       ...draft,
-      cover_image_url: this.courseCoverPreview || undefined
+      cover_image_url: this.courseCoverPreview ?? null
     }, userId);
+  }
+
+  confirmDeleteCover(): void {
+    if (!this.hasCustomCourseCover || this.courseCoverUploading) {
+      this.showDeleteCoverModal = false;
+      return;
+    }
+
+    this.showDeleteCoverModal = false;
+    this.removeCourseCover();
+  }
+
+  onCoverImageLoad(): void {
+    this.coverImageLoaded = true;
+  }
+
+  onCoverImageError(): void {
+    this.coverImageLoaded = false;
   }
 }
 

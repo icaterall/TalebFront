@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
@@ -89,6 +89,14 @@ export interface CreateDraftCoursePayload {
   }>;
 }
 
+export interface UpdateDraftCoursePayload {
+  name?: string;
+  subject_slug?: string;
+  description?: string | null;
+  country_id?: number | null;
+  availability?: any;
+}
+
 export interface CourseDraft {
   version: number;
   user_id?: number; // Current user ID - assigned when saving
@@ -99,7 +107,7 @@ export interface CourseDraft {
   category_name?: string;
   name?: string;
   subject_slug?: string;
-  cover_image_url?: string;
+  cover_image_url?: string | null;
   mode?: 'curriculum' | 'general'; // curriculum or general skills
   context?: {
     stage_id?: number;
@@ -176,6 +184,25 @@ export class AiBuilderService {
 
   createDraftCourse(payload: CreateDraftCoursePayload) {
     return this.http.post<DraftCourseResponse>(`${this.baseUrl}/courses/draft`, payload, { headers: this.getAuthHeaders() });
+  }
+
+  updateDraftCourse(payload: UpdateDraftCoursePayload): Observable<DraftCourseResponse> {
+    return this.http.put<DraftCourseResponse>(`${this.baseUrl}/courses/draft`, payload, { headers: this.getAuthHeaders() });
+  }
+
+  uploadDraftCover(file: File): Observable<HttpEvent<DraftCourseResponse>> {
+    const formData = new FormData();
+    formData.append('cover', file);
+
+    return this.http.post<DraftCourseResponse>(`${this.baseUrl}/courses/draft/cover`, formData, {
+      headers: this.getAuthHeaders(),
+      reportProgress: true,
+      observe: 'events'
+    });
+  }
+
+  deleteDraftCover(): Observable<DraftCourseResponse> {
+    return this.http.delete<DraftCourseResponse>(`${this.baseUrl}/courses/draft/cover`, { headers: this.getAuthHeaders() });
   }
 
   deleteDraftCourse() {

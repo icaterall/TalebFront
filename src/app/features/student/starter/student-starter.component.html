@@ -104,342 +104,30 @@
             </div>
           </div>
           <div class="summary-cover">
-            <div class="cover-box" [class.has-image]="courseCoverPreview">
-              <ng-container *ngIf="courseCoverPreview; else emptyCover">
-                <img [src]="courseCoverPreview" [alt]="currentLang === 'ar' ? 'صورة غلاف المادة' : 'Course cover image'" />
-                <button type="button" class="cover-remove-btn" (click)="removeCourseCover()" [attr.aria-label]="currentLang === 'ar' ? 'إزالة صورة الغلاف' : 'Remove cover image'">✕</button>
-              </ng-container>
-              <ng-template #emptyCover>
-                <div class="cover-placeholder">
-                  <span class="cover-icon">🖼️</span>
-                  <span class="cover-text">{{ currentLang === 'ar' ? 'أضف صورة' : 'Add Cover' }}</span>
-                  <span class="cover-hint">{{ currentLang === 'ar' ? 'اختياري • اضغط هنا' : 'Optional • Click to upload' }}</span>
+            <div class="cover-box" [class.has-image]="hasCustomCourseCover" [attr.aria-busy]="courseCoverUploading">
+              <div class="cover-upload-overlay" *ngIf="courseCoverUploading">
+                <div class="cover-progress-bar">
+                  <div class="cover-progress-fill" [style.width.%]="courseCoverUploadProgress"></div>
                 </div>
-              </ng-template>
-              <input type="file" class="cover-input" accept="image/*" (change)="onCourseCoverSelected($event)">
-            </div>
-          </div>
-        </div>
-
-        <!-- Sections List (Multiple Sections Support) -->
-        <div class="sections-list" *ngIf="step2Locked && selectedCategory && (selectedTopic || subjectSlug || sections.length > 0)" [dir]="isRTL ? 'rtl' : 'ltr'">
-          <!-- Loop through sections -->
-          <div 
-            *ngFor="let section of sections; let i = index; trackBy: trackBySectionId" 
-            class="section-content-wrapper"
-            [class.collapsed]="section.isCollapsed">
-            <!-- Section Header -->
-            <div 
-              class="section-content-header"
-              [attr.data-section-id]="section.id"
-              [attr.tabindex]="0"
-              (click)="toggleSectionFold(section.id)"
-              [attr.aria-label]="(currentLang === 'ar' ? 'القسم ' : 'Section ') + section.number + ': ' + section.name"
-              [attr.aria-expanded]="!section.isCollapsed">
-              <h2 class="section-content-title">
-                <!-- Chevron Icon (Fold/Unfold) -->
-                <button 
-                  type="button"
-                  class="section-chevron-btn"
-                  (click)="toggleSectionFold(section.id); $event.stopPropagation()"
-                  [attr.aria-label]="section.isCollapsed ? (currentLang === 'ar' ? 'فتح القسم' : 'Expand Section') : (currentLang === 'ar' ? 'طيّ القسم' : 'Collapse Section')"
-                  [title]="section.isCollapsed ? (currentLang === 'ar' ? 'فتح القسم' : 'Expand Section') : (currentLang === 'ar' ? 'طيّ القسم' : 'Collapse Section')">
-                  <span class="chevron-icon" [class.collapsed]="section.isCollapsed">
-                    <span *ngIf="section.isCollapsed">▸</span>
-                    <span *ngIf="!section.isCollapsed">▾</span>
-                  </span>
-                </button>
-                
-                <!-- Section Number (always visible, even when collapsed) -->
-                <span class="section-number">{{ currentLang === 'ar' ? 'القسم ' : 'Section ' }}{{ section.number }}:</span>
-                
-                <!-- Section Name (Editable) -->
-                <span class="section-name-value">
-                  <span *ngIf="!editingSection || editingSectionId !== section.id">{{ section.name }}</span>
-                  <input 
-                    *ngIf="editingSection && editingSectionId === section.id"
-                    type="text"
-                    class="section-name-input"
-                    [(ngModel)]="editingSectionValue"
-                    (keyup.enter)="saveSectionEdit()"
-                    (keyup.escape)="cancelSectionEdit()"
-                    (click)="$event.stopPropagation()"
-                    [placeholder]="currentLang === 'ar' ? 'اسم القسم' : 'Section Name'"
-                    [dir]="isRTL ? 'rtl' : 'ltr'"
-                    maxlength="200">
-                </span>
-                
-                <!-- Section Actions -->
-                <div class="section-title-actions" (click)="$event.stopPropagation()">
-                  <div class="section-reorder-controls" *ngIf="sections.length > 1">
-                    <button
-                      type="button"
-                      class="section-reorder-btn"
-                      [disabled]="i === 0"
-                      (click)="$event.stopPropagation(); moveSectionUp(section.id)"
-                      [attr.aria-label]="currentLang === 'ar' ? 'نقل القسم لأعلى' : 'Move section up'"
-                      [title]="currentLang === 'ar' ? 'نقل القسم لأعلى' : 'Move section up'">
-                      ▲
-                    </button>
-                    <button
-                      type="button"
-                      class="section-reorder-btn"
-                      [disabled]="i === sections.length - 1"
-                      (click)="$event.stopPropagation(); moveSectionDown(section.id)"
-                      [attr.aria-label]="currentLang === 'ar' ? 'نقل القسم لأسفل' : 'Move section down'"
-                      [title]="currentLang === 'ar' ? 'نقل القسم لأسفل' : 'Move section down'">
-                      ▼
-                    </button>
-                  </div>
-
-                  <div *ngIf="editingSection && editingSectionId === section.id" class="section-edit-actions">
-                    <button type="button" class="section-action-btn section-cancel-btn" (click)="cancelSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
-                    <button type="button" class="section-action-btn section-save-btn" (click)="saveSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
-                  </div>
-                  
-                  <div class="section-action-buttons" *ngIf="!editingSection || editingSectionId !== section.id">
-                    <label class="section-toggle-pill" [class.active]="section.available !== false" [attr.aria-label]="currentLang === 'ar' ? (section.available ? 'القسم متاح' : 'القسم غير متاح') : (section.available ? 'Section Available' : 'Section Unavailable')">
-                      <input 
-                        type="checkbox" 
-                        [checked]="section.available !== false"
-                        (change)="toggleSectionAvailability(section.id, $event)"
-                        (click)="$event.stopPropagation()"
-                        [attr.aria-label]="currentLang === 'ar' ? 'تبديل توفر القسم' : 'Toggle Section Availability'">
-                      <span class="pill-track">
-                        <span class="pill-handle"></span>
-                      </span>
-                      <span class="pill-status">{{ section.available !== false ? (currentLang === 'ar' ? 'مفعل' : 'Active') : (currentLang === 'ar' ? 'مخفي' : 'Hidden') }}</span>
-                    </label>
-                    
-                    <button 
-                      type="button" 
-                      class="section-icon-btn section-edit section-edit-btn" 
-                      (click)="startEditingSection(section.id); $event.stopPropagation()" 
-                      [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'"
-                      [title]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'">✏️</button>
-                    
-                    <button 
-                      type="button"
-                      class="section-icon-btn section-delete section-delete-btn"
-                      (click)="deleteSection(section.id); $event.stopPropagation()"
-                      [attr.aria-label]="currentLang === 'ar' ? 'حذف القسم' : 'Delete section'"
-                      [title]="currentLang === 'ar' ? 'حذف القسم' : 'Delete section'">
-                      🗑
-                    </button>
-                  </div>
-                </div>
-              </h2>
-            </div>
-
-            <!-- Section Content (hidden when collapsed) -->
-            <div class="section-content-body" *ngIf="!section.isCollapsed" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <!-- Content Items List -->
-              <div class="content-items-section" *ngIf="section.content_items && section.content_items.length > 0">
-                <div class="content-items-list">
-                  <div 
-                    *ngFor="let item of section.content_items; let i = index; trackBy: trackByContentId" 
-                    class="content-item-card"
-                    [attr.aria-label]="currentLang === 'ar' ? 'محتوى: ' + item.title : 'Content: ' + item.title">
-                    <!-- Reorder Controls -->
-                    <div class="content-item-reorder" *ngIf="section.content_items.length > 1">
-                      <button 
-                        type="button"
-                        class="reorder-btn reorder-up"
-                        [disabled]="i === 0"
-                        (click)="$event.stopPropagation(); moveContentItemUp(i, section.id)"
-                        [attr.aria-label]="currentLang === 'ar' ? 'نقل لأعلى' : 'Move up'"
-                        [title]="currentLang === 'ar' ? 'نقل لأعلى' : 'Move up'">
-                        ▲
-                      </button>
-                      <button 
-                        type="button"
-                        class="reorder-btn reorder-down"
-                        [disabled]="i === section.content_items.length - 1"
-                        (click)="$event.stopPropagation(); moveContentItemDown(i, section.id)"
-                        [attr.aria-label]="currentLang === 'ar' ? 'نقل لأسفل' : 'Move down'"
-                        [title]="currentLang === 'ar' ? 'نقل لأسفل' : 'Move down'">
-                        ▼
-                      </button>
-                    </div>
-                    
-                    <!-- Content Item Body -->
-                    <div class="content-item-body" (click)="viewContentItem(item)">
-                      <div class="content-item-header">
-                        <span class="content-item-icon">
-                          <span *ngIf="item.type === 'text'">✍️</span>
-                          <span *ngIf="item.type === 'video'">🎥</span>
-                          <span *ngIf="item.type === 'resources'">{{ getResourceIcon(item.resourceDetails) }}</span>
-                          <span *ngIf="item.type === 'audio'">🔊</span>
-                          <span *ngIf="item.type === 'quiz'">✅</span>
-                        </span>
-                        <div class="content-item-title-wrapper">
-                          <span class="content-item-title">{{ item.title }}</span>
-                          <span class="content-item-type-badge">{{ currentLang === 'ar' ? 
-                            (item.type === 'text' ? 'درس نصي' : 
-                             item.type === 'video' ? 'فيديو' : 
-                             item.type === 'resources' ? getResourceDisplayLabel(item.resourceDetails) : 
-                             item.type === 'audio' ? 'صوت' : 'اختبار') 
-                            : (item.type === 'resources' ? getResourceDisplayLabel(item.resourceDetails) : item.type) }}</span>
-                        </div>
-                        <button 
-                          type="button"
-                          class="content-item-delete"
-                          (click)="$event.stopPropagation(); deleteContentItem(item.id)"
-                          [attr.aria-label]="currentLang === 'ar' ? 'حذف المحتوى' : 'Delete content'">
-                          ✕
-                        </button>
-                      </div>
-                      <!-- Text Content Preview with Date -->
-                      <div class="content-item-preview" *ngIf="item.type === 'text' && item.content">
-                        <span class="preview-text">{{ getTextPreview(item.content) }}</span>
-                        <span class="preview-date">{{ item.updatedAt || item.createdAt | date:'short' }}</span>
-                      </div>
-                      <div class="resource-item-preview" *ngIf="item.type === 'resources'">
-                        <div class="resource-item-meta">
-                          <span class="resource-file-info">
-                            <ng-container *ngFor="let entry of getResourceDetailEntries(item.resourceDetails); let last = last">
-                              <span class="resource-detail"><strong>{{ entry.label }}:</strong> {{ entry.value }}</span><span *ngIf="!last">{{ getResourceDetailSeparator() }}</span>
-                            </ng-container>
-                          </span>
-                        </div>
-                        <p class="resource-file-description" *ngIf="item.resourceDetails?.description">{{ item.resourceDetails?.description }}</p>
-                      </div>
-                      <!-- Date only for non-text content -->
-                      <div class="content-item-meta" *ngIf="item.type !== 'text'">
-                        <span class="content-item-date">{{ item.updatedAt || item.createdAt | date:'short' }}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div class="cover-progress-text">
+                  {{ courseCoverUploadProgress > 0 ? (courseCoverUploadProgress | number:'1.0-0') + '%' : (currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...') }}
                 </div>
               </div>
-
-              <!-- Add Content to Section -->
-              <div class="add-content-section" [dir]="isRTL ? 'rtl' : 'ltr'">
-                <div class="content-type-grid">
-                  <button 
-                    type="button"
-                    class="content-type-btn"
-                    (click)="activeSectionId = section.id; openContentTypeModal('text')"
-                    [attr.aria-label]="currentLang === 'ar' ? 'إضافة درس نصي' : 'Add Text Lesson'">
-                    <div class="content-type-header">
-                      <span class="content-icon">✍️</span>
-                      <span class="content-type-label">{{ currentLang === 'ar' ? 'درس نصي' : 'Text Lesson' }}</span>
-                    </div>
-                    <span class="content-type-desc">{{ currentLang === 'ar' ? 'محتوى نصي غني' : 'Rich text content' }}</span>
-                  </button>
-                  
-                  <button 
-                    type="button"
-                    class="content-type-btn"
-                    (click)="activeSectionId = section.id; openContentTypeModal('resources')"
-                    [attr.aria-label]="currentLang === 'ar' ? 'إضافة موارد' : 'Add Resources'">
-                    <div class="content-type-header">
-                      <span class="content-icon">📄</span>
-                      <span class="content-type-label">{{ currentLang === 'ar' ? 'موارد' : 'Resources' }}</span>
-                    </div>
-                    <span class="content-type-desc">{{ currentLang === 'ar' ? 'ملفات وروابط' : 'Files & links' }}</span>
-                  </button>
-                  
-                  <button 
-                    type="button"
-                    class="content-type-btn"
-                    (click)="activeSectionId = section.id; openContentTypeModal('video')"
-                    [attr.aria-label]="currentLang === 'ar' ? 'إضافة فيديو' : 'Add Video'">
-                    <div class="content-type-header">
-                      <span class="content-icon">🎥</span>
-                      <span class="content-type-label">{{ currentLang === 'ar' ? 'فيديو' : 'Video' }}</span>
-                    </div>
-                    <span class="content-type-desc">{{ currentLang === 'ar' ? 'YouTube أو ملف' : 'YouTube or file' }}</span>
-                  </button>
-                  
-                  <button 
-                    type="button"
-                    class="content-type-btn"
-                    (click)="activeSectionId = section.id; openContentTypeModal('audio')"
-                    [attr.aria-label]="currentLang === 'ar' ? 'إضافة صوت' : 'Add Audio'">
-                    <div class="content-type-header">
-                      <span class="content-icon">🔊</span>
-                      <span class="content-type-label">{{ currentLang === 'ar' ? 'صوت' : 'Audio' }}</span>
-                    </div>
-                    <span class="content-type-desc">{{ currentLang === 'ar' ? 'MP3/WAV' : 'MP3/WAV' }}</span>
-                  </button>
-                  
-                  <button 
-                    type="button"
-                    class="content-type-btn"
-                    (click)="activeSectionId = section.id; openContentTypeModal('quiz')"
-                    [attr.aria-label]="currentLang === 'ar' ? 'إضافة اختبار وواجبات' : 'Add Quiz & Assignments'">
-                    <div class="content-type-header">
-                      <span class="content-icon">✅</span>
-                      <span class="content-type-label">{{ currentLang === 'ar' ? 'اختبار وواجبات' : 'Quiz & Assignments' }}</span>
-                    </div>
-                    <span class="content-type-desc">{{ currentLang === 'ar' ? 'اختبارات وتقييم' : 'Quizzes & grading' }}</span>
-                  </button>
-                </div>
+              <img class="cover-fallback" [src]="defaultCourseCover" [alt]="currentLang === 'ar' ? 'صورة الغلاف الافتراضية' : 'Default course cover'" />
+              <img class="cover-main"
+                   [class.loaded]="coverImageLoaded"
+                   [src]="courseCoverPreview ?? defaultCourseCover"
+                   (load)="onCoverImageLoad()"
+                   (error)="onCoverImageError()"
+                   [alt]="currentLang === 'ar' ? 'صورة غلاف المادة' : 'Course cover image'" />
+              <div class="cover-placeholder-overlay" *ngIf="!hasCustomCourseCover && !courseCoverUploading">
+                <span class="cover-text">{{ currentLang === 'ar' ? 'اضغط لرفع صورة الغلاف' : 'Click to upload a cover' }}</span>
+                <span class="cover-hint">{{ currentLang === 'ar' ? 'اختياري • يمكنك إضافة صورة لاحقاً' : 'Optional • You can add one later' }}</span>
               </div>
+              <button *ngIf="hasCustomCourseCover" type="button" class="cover-remove-btn" (click)="showDeleteCoverModal = true" [disabled]="courseCoverUploading" [attr.aria-label]="currentLang === 'ar' ? 'إزالة صورة الغلاف' : 'Remove cover image'">✕</button>
+              <input type="file" class="cover-input" accept="image/*" (change)="onCourseCoverSelected($event)" [disabled]="courseCoverUploading">
             </div>
-          </div>
-
-          <!-- Add New Section Button (Full-width ghost button under last section) -->
-          <button
-            type="button"
-            class="btn-add-section"
-            (click)="addNewSection()"
-            [attr.aria-label]="currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add New Section'">
-            <span class="add-icon">+</span>
-            <span class="add-text">{{ currentLang === 'ar' ? 'إضافة قسم' : 'Add Section' }}</span>
-          </button>
-
-          <!-- Legacy: Single Section Support (for backward compatibility) -->
-          <div 
-            class="section-content-wrapper"
-            *ngIf="sections.length === 0 && (selectedTopic || subjectSlug)"
-            [class.collapsed]="false">
-            <div class="section-content-header">
-              <h2 class="section-content-title">
-                <span class="section-number">{{ currentLang === 'ar' ? 'القسم 1:' : 'Section 1:' }}</span>
-                <span class="section-name-value">
-                  <span *ngIf="!editingSection">{{ selectedTopic || subjectSlug }}</span>
-                  <input 
-                    *ngIf="editingSection"
-                    type="text"
-                    class="section-name-input"
-                    [(ngModel)]="editingSectionValue"
-                    (keyup.enter)="saveSectionEdit()"
-                    (keyup.escape)="cancelSectionEdit()"
-                    [placeholder]="currentLang === 'ar' ? 'اسم القسم' : 'Section Name'"
-                    [dir]="isRTL ? 'rtl' : 'ltr'"
-                    maxlength="200">
-                </span>
-                <div class="section-title-actions">
-                  <button *ngIf="!editingSection" type="button" class="section-edit-btn" (click)="startEditingSection()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit Section'">✏️</button>
-                  <div *ngIf="editingSection" class="section-edit-actions">
-                    <button type="button" class="section-action-btn section-cancel-btn" (click)="cancelSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
-                    <button type="button" class="section-action-btn section-save-btn" (click)="saveSectionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
-                  </div>
-                </div>
-              </h2>
-            </div>
-
-            <div class="section-content-body" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <!-- Legacy Content Items -->
-              <div class="content-items-section" *ngIf="contentItems.length > 0">
-                <div class="content-items-list">
-                  <div 
-                    *ngFor="let item of contentItems; let i = index; trackBy: trackByContentId" 
-                    class="content-item-card">
-                    <!-- Same content item structure as above -->
-                  </div>
-                </div>
-              </div>
-
-              <!-- Legacy Add Content -->
-              <div class="add-content-section" [dir]="isRTL ? 'rtl' : 'ltr'">
-                <div class="content-type-grid">
-                  <!-- Same buttons as above -->
-                </div>
-              </div>
-            </div>
+            <div class="cover-error" *ngIf="courseCoverUploadError">{{ courseCoverUploadError }}</div>
           </div>
         </div>
 
@@ -871,6 +559,10 @@
       </button>
     </div>
 
+    <div class="continue-error" *ngIf="continueErrorMessage" role="alert" aria-live="assertive">
+      {{ continueErrorMessage }}
+    </div>
+
     <!-- Warning Modal -->
     <div class="modal-overlay" *ngIf="showWarningModal" (click)="cancelGoBack()">
       <div class="modal-content" (click)="$event.stopPropagation()">
@@ -1257,6 +949,27 @@
     <button type="button" class="btn-undo" (click)="undoDeleteSection()">
       {{ currentLang === 'ar' ? 'تراجع' : 'Undo' }}
     </button>
+  </div>
+</div>
+
+<!-- Delete Cover Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteCoverModal" (click)="showDeleteCoverModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ deleteCoverTitle }}</h3>
+      <button type="button" class="modal-close-btn" (click)="showDeleteCoverModal = false" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>{{ deleteCoverMessage }}</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="showDeleteCoverModal = false">
+        {{ currentLang === 'ar' ? 'تراجع' : 'Cancel' }}
+      </button>
+      <button class="btn-confirm" (click)="confirmDeleteCover()" [disabled]="courseCoverUploading">
+        {{ currentLang === 'ar' ? 'حذف' : 'Delete' }}
+      </button>
+    </div>
   </div>
 </div>
 
