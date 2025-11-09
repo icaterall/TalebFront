@@ -3,6 +3,9 @@ import { ApplicationConfig, importProvidersFrom, ErrorHandler } from '@angular/c
 import { PreloadAllModules, provideRouter, withInMemoryScrolling, withPreloading, withViewTransitions } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { registerLocaleData } from '@angular/common';
+import localeAr from '@angular/common/locales/ar';
+import localeEn from '@angular/common/locales/en';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { APP_INITIALIZER } from '@angular/core';
@@ -15,6 +18,9 @@ import { RECAPTCHA_V3_SITE_KEY } from 'ng-recaptcha-2';
 import { environment } from '../environments/environment';
 import { langInterceptor } from './core/interceptors/lang.interceptor';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+
+registerLocaleData(localeAr);
+registerLocaleData(localeEn);
 
 // Global error handler to prevent hanging
 class GlobalErrorHandler implements ErrorHandler {

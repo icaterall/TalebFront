@@ -307,6 +307,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return this.currentLang === 'ar' ? 'القسم 1' : 'Section 1';
   }
   
+  getItemCountDisplay(count: number): string {
+    const safeCount = count ?? 0;
+    if (this.currentLang === 'ar') {
+      if (safeCount === 1) return 'عنصر';
+      if (safeCount === 2) return 'عنصرين';
+      return `${safeCount} عناصر`;
+    }
+    return `${safeCount} ${safeCount === 1 ? 'item' : 'items'}`;
+  }
+  
   get showSummarySkeleton(): boolean {
     // Show skeleton when data is being loaded/restored from localStorage or backend
     if (this.loadingSummaryData) return true; // Always show skeleton when loading summary data
@@ -3364,6 +3374,118 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   onCoverImageError(): void {
     this.coverImageLoaded = false;
+  }
+
+  isContentVisible(item: ContentItem | null | undefined): boolean {
+    if (!item) return false;
+    const visibility = (item.visibility || '').toLowerCase();
+    return visibility !== 'private' && visibility !== 'hidden';
+  }
+
+  toggleContentVisibility(sectionId: string, contentId: string, event: Event): void {
+    event.stopPropagation();
+
+    const section = this.sections.find(s => s.id === sectionId);
+    if (!section) return;
+
+    const itemIndex = section.content_items.findIndex(item => item.id === contentId);
+    if (itemIndex === -1) return;
+
+    const currentItem = section.content_items[itemIndex];
+    const previousState = { ...currentItem };
+    const nextVisibility = this.isContentVisible(currentItem) ? 'private' : 'public';
+    const timestamp = new Date().toISOString();
+
+    const updatedItem: ContentItem = {
+      ...currentItem,
+      visibility: nextVisibility,
+      updatedAt: timestamp
+    };
+
+    section.content_items = [
+      ...section.content_items.slice(0, itemIndex),
+      updatedItem,
+      ...section.content_items.slice(itemIndex + 1)
+    ];
+    section.updatedAt = timestamp;
+    this.rebuildLegacyContentItems();
+    this.saveSections();
+    this.cdr.detectChanges();
+
+    const numericSectionId = Number(sectionId);
+    const numericContentId = Number(contentId);
+    if (!Number.isFinite(numericSectionId) || !Number.isFinite(numericContentId)) {
+      return;
+    }
+
+    const payload: CreateSectionContentPayload = {
+      type: updatedItem.type,
+      title: updatedItem.title,
+      status: updatedItem.status ?? 'draft',
+      visibility: nextVisibility,
+      position: updatedItem.position
+    };
+
+    if (updatedItem.type === 'text') {
+      payload.body_html = updatedItem.content ?? '';
+    }
+
+    if (updatedItem.meta && Object.keys(updatedItem.meta).length > 0) {
+      payload.meta = updatedItem.meta;
+    }
+
+    this.ai.updateSectionContent(numericSectionId, numericContentId, payload).subscribe({
+      next: (response) => {
+        const record = response?.content;
+        if (!record) {
+          return;
+        }
+
+        const mapped = this.mapContentRecordToItem(record);
+        section.content_items = [
+          ...section.content_items.slice(0, itemIndex),
+          mapped,
+          ...section.content_items.slice(itemIndex + 1)
+        ];
+        section.updatedAt = mapped.updatedAt || section.updatedAt;
+        this.rebuildLegacyContentItems();
+        this.saveSections();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to update content visibility:', error);
+        section.content_items = [
+          ...section.content_items.slice(0, itemIndex),
+          previousState,
+          ...section.content_items.slice(itemIndex + 1)
+        ];
+        section.updatedAt = previousState.updatedAt || section.updatedAt;
+        this.rebuildLegacyContentItems();
+        this.saveSections();
+        this.cdr.detectChanges();
+        const message = this.currentLang === 'ar'
+          ? 'تعذر تحديث حالة الظهور. حاول مرة أخرى.'
+          : 'Failed to update visibility. Please try again.';
+        this.toastr.error(message);
+      }
+    });
+  }
+
+  formatContentDate(value: string | Date | null | undefined): string {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+
+    const locale = this.currentLang === 'ar' ? 'ar' : 'en';
+    return new Intl.DateTimeFormat(locale, options).format(date);
   }
 }
 
