@@ -165,6 +165,7 @@
                 <button 
                   type="button"
                   class="section-fold-btn"
+                  [class.collapsed]="section.isCollapsed"
                   [attr.aria-label]="section.isCollapsed ? (currentLang === 'ar' ? 'توسيع القسم' : 'Expand section') : (currentLang === 'ar' ? 'طي القسم' : 'Collapse section')">
                   <span class="fold-icon">{{ section.isCollapsed ? '▶' : '▼' }}</span>
                 </button>
@@ -246,13 +247,13 @@
 
                   <div class="section-meta">
                     <span class="section-item-count">
-                      {{ getItemCountDisplay(section.content_items?.length || 0) }}
+                      {{ section.content_items?.length || 0 }} {{ getItemCountDisplay(section.content_items?.length || 0) }}
                     </span>
                     <span class="section-visibility" [class.hidden]="section.available === false">
                       {{ section.available !== false ? (currentLang === 'ar' ? 'ظاهر' : 'Visible') : (currentLang === 'ar' ? 'مخفي' : 'Hidden') }}
                     </span>
                     <span class="section-created-at" *ngIf="section.createdAt">
-                      {{ section.createdAt | date:'medium':undefined:currentLang }}
+                      {{ formatContentDate(section.createdAt) }}
                     </span>
                   </div>
                 </div>
@@ -317,6 +318,18 @@
                           (click)="viewContentItem(item)"
                           [attr.aria-label]="currentLang === 'ar' ? 'تعديل المحتوى' : 'Edit content'">
                           ✏️
+                        </button>
+                        <button
+                          type="button"
+                          class="content-toggle-switch"
+                          (click)="toggleContentVisibility(section.id, item.id, $event)"
+                          role="switch"
+                          [attr.aria-checked]="isContentVisible(item)"
+                          [attr.aria-label]="isContentVisible(item) ? (currentLang === 'ar' ? 'إخفاء المحتوى' : 'Hide content') : (currentLang === 'ar' ? 'إظهار المحتوى' : 'Show content')"
+                          [class.active]="isContentVisible(item)">
+                          <span class="switch-track">
+                            <span class="switch-handle"></span>
+                          </span>
                         </button>
                         <button
                           type="button"

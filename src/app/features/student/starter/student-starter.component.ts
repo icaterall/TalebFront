@@ -3472,20 +3472,50 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   formatContentDate(value: string | Date | null | undefined): string {
-    if (!value) return '';
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
+    if (!value) {
+      return '';
+    }
 
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const now = new Date();
+    const locale = this.currentLang === 'ar' ? 'ar' : 'en';
+
+    const sameDay = date.toDateString() === now.toDateString();
+
+    const startOfWeek = new Date(now);
+    const currentWeekday = startOfWeek.getDay();
+    const daysFromMonday = currentWeekday === 0 ? 6 : currentWeekday - 1; // Monday as start
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - daysFromMonday);
+
+    const startOfNextWeek = new Date(startOfWeek);
+    startOfNextWeek.setDate(startOfWeek.getDate() + 7);
+
+    const formatTime = (): string => new Intl.DateTimeFormat(locale, {
       hour: '2-digit',
       minute: '2-digit'
-    };
+    }).format(date);
 
-    const locale = this.currentLang === 'ar' ? 'ar' : 'en';
-    return new Intl.DateTimeFormat(locale, options).format(date);
+    const formatDayName = (): string => new Intl.DateTimeFormat(locale, {
+      weekday: 'long'
+    }).format(date);
+
+    const formatDayMonth = (): string => new Intl.DateTimeFormat(locale, {
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+
+    if (sameDay) {
+      return formatTime();
+    } else if (date >= startOfWeek && date < startOfNextWeek) {
+      return `${formatDayName()} • ${formatTime()}`;
+    }
+
+    return formatDayMonth();
   }
-}
+ }
 
