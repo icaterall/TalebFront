@@ -698,6 +698,9 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         
         &:hover:not(:disabled) {
           background: #1D4ED8;
@@ -711,6 +714,21 @@
           opacity: 0.5;
           cursor: not-allowed;
           background: #94a3b8;
+        }
+
+        .btn-save-content {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .inline-spinner {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          border: 2px solid rgba(255, 255, 255, 0.4);
+          border-top-color: #ffffff;
+          animation: spin 0.7s linear infinite;
         }
       }
       

@@ -1659,6 +1659,34 @@
       }
     }
   }
+
+  .saving-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 5px;
+    
+    .saving-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(37, 99, 235, 0.3);
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    
+    .saving-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2563eb;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  }
   
   // RTL support for inline edit - buttons already positioned correctly via order
   // No additional margin needed as they follow the label naturally

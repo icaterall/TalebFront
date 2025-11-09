@@ -2,18 +2,30 @@ import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { I18nService } from '../../../core/services/i18n.service';
 import { UniversalAuthService } from '../../../core/services/universal-auth.service';
-import { AiBuilderService, CourseDraft, ContentItem, Section, ResourceDetails, DraftCourseResponse, DraftCourseSectionResponse, CreateDraftCoursePayload } from '../../../core/services/ai-builder.service';
+import {
+  AiBuilderService,
+  CourseDraft,
+  ContentItem,
+  Section,
+  ResourceDetails,
+  DraftCourseResponse,
+  DraftCourseSectionResponse,
+  CreateDraftCoursePayload,
+  SectionContentRecord,
+  CreateSectionContentPayload
+} from '../../../core/services/ai-builder.service';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { skip, finalize } from 'rxjs/operators';
 import DecoupledEditor from '@ckeditor/ckeditor5-build-decoupled-document';
-import { CKEditor5CustomUploadAdapter } from './custom-uploader';
+import { CKEditor5CustomUploadAdapter, UploadedEditorImageAsset } from './custom-uploader';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 interface Category {
   id: number;
@@ -54,7 +66,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly baseUrl = environment.apiUrl;
+  private readonly contentImageUploadUrl = `${this.baseUrl}/courses/draft/content/images`;
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly toastr = inject(ToastrService);
   
   private readonly RESOURCE_MAX_SIZE = 8 * 1024 * 1024; // 8MB
   private readonly RESOURCE_INLINE_PREVIEW_LIMIT = 5 * 1024 * 1024; // 5MB for inline previews
@@ -83,6 +97,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private languageChangeSubscription?: Subscription;
   private draftCourseId: number | null = null;
   private draftSyncCompleted: boolean = false;
+  private loadedSectionContentIds: Set<string> = new Set();
+  private pendingImageUploads: Map<string, UploadedEditorImageAsset> = new Map<string, UploadedEditorImageAsset>();
   savingDraftCourse: boolean = false;
   deletingDraftCourse: boolean = false;
   continueErrorMessage: string | null = null;
@@ -106,6 +122,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   currentEditor: DecoupledEditor | null = null; // Store current editor instance
   subsectionTitle: string = ''; // Store subsection title
   generatingWithAI: boolean = false; // Track AI generation status
+  savingTextContent: boolean = false; // Track manual text lesson persistence state
+  isDeletingContent: boolean = false; // Track text lesson deletion state
+  textSaveError: string | null = null; // Track errors when persisting text lessons
   showAIHintModal: boolean = false; // Track AI hint modal visibility
   aiHint: string = ''; // Store optional AI hint
   pendingAiAction: 'textContent' | null = null; // Track which AI action is pending hint input
@@ -120,6 +139,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Editing States
   editingCourseName: boolean = false; // Track if editing course name
+  savingCourseName: boolean = false; // Track if saving course name to backend
   editingSection: boolean = false; // Track if editing section
   editingCourseNameValue: string = ''; // Temp value for editing course name
   editingSectionValue: string = ''; // Temp value for editing section
@@ -202,6 +222,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         'blockQuote',
         'codeBlock',
         '|',
+        'insertImage',
+        '|',
         'undo',
         'redo'
       ]
@@ -210,8 +232,26 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       options: ['left', 'center', 'right', 'justify']
     },
     language: this.currentLang === 'ar' ? 'ar' : 'en',
-    simpleUpload: {
-      uploadUrl: `${this.baseUrl}/common/upload`
+    image: {
+      toolbar: [
+        'imageTextAlternative',
+        '|',
+        'imageStyle:inline',
+        'imageStyle:block',
+        'imageStyle:side',
+        '|',
+        'resizeImage:25',
+        'resizeImage:50',
+        'resizeImage:75',
+        'resizeImage:original'
+      ],
+      resizeOptions: [
+        { name: 'resizeImage:25', value: '25', label: '25%', icon: 'small' },
+        { name: 'resizeImage:50', value: '50', label: '50%', icon: 'medium' },
+        { name: 'resizeImage:75', value: '75', label: '75%', icon: 'large' },
+        { name: 'resizeImage:original', value: null, label: this.currentLang === 'ar' ? 'الحجم الأصلي' : 'Original', icon: 'original' }
+      ],
+      styles: ['inline', 'block', 'side']
     },
     heading: {
       options: [
@@ -362,6 +402,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (this.languageChangeSubscription) {
       this.languageChangeSubscription.unsubscribe();
     }
+
+    if (this.pendingImageUploads.size) {
+      this.cleanupPendingImageUploads();
+    }
   }
 
   private loadProfileFromBackend(): void {
@@ -424,9 +468,30 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Store editor instance for later use
     this.currentEditor = editor;
     
-    editor.plugins.get( 'FileRepository' ).createUploadAdapter = ( loader: any ) => {
-      return new CKEditor5CustomUploadAdapter( loader);
-   };
+    editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
+      return new CKEditor5CustomUploadAdapter(loader, {
+        uploadUrl: this.contentImageUploadUrl,
+        token: this.universalAuth.getAccessToken(),
+        onUploaded: (asset) => this.registerPendingImageAsset(asset),
+        onError: (error) => {
+          console.error('CKEditor image upload failed:', error);
+          const message = this.currentLang === 'ar'
+            ? 'فشل رفع الصورة. حاول مرة أخرى.'
+            : 'Failed to upload the image. Please try again.';
+          this.toastr.error(message);
+        },
+        onAbort: (asset) => {
+          if (asset?.key) {
+            this.pendingImageUploads.delete(asset.key);
+            this.ai.deleteDraftContentImages([asset.key]).subscribe({
+              error: (error: unknown) => {
+                console.error('Failed to delete aborted editor image:', error);
+              }
+            });
+          }
+        }
+      });
+    };
    
     const element = editor.ui.getEditableElement()!;
     const parent = element.parentElement!;
@@ -916,6 +981,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.showWarningModal = false;
     this.warningModalType = null;
     this.itemToDelete = null;
+    this.isDeletingContent = false;
   }
 
   // Content Type Modal Methods
@@ -927,8 +993,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.subsectionTitle = '';
       this.textContent = '';
       this.currentEditor = null;
+      this.textSaveError = null;
       this.showTextEditor = true;
       this.selectedContentType = 'text';
+      this.pendingImageUploads.clear();
       this.cdr.detectChanges();
       return;
     }
@@ -1002,16 +1070,29 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   // Text Editor Methods
-  closeTextEditor(): void {
+  closeTextEditor(saved: boolean = false): void {
+    if (saved) {
+      this.pendingImageUploads.clear();
+    } else {
+      this.cleanupPendingImageUploads();
+    }
+
     this.showTextEditor = false;
     // Reset editor instance when closing
     this.currentEditor = null;
     this.selectedContentType = null;
     this.subsectionTitle = '';
     this.textContent = '';
+    this.textSaveError = null;
     // Reset viewingContentItem to ensure clean state for next creation
     this.viewingContentItem = null;
     this.cdr.detectChanges();
+  }
+
+  cancelTextEditor(): void {
+    this.savingTextContent = false;
+    this.textSaveError = null;
+    this.closeTextEditor(false);
   }
 
   generateTextWithAI(): void {
@@ -1165,77 +1246,105 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   saveTextContent(): void {
-    // Validate that subsection title is provided
-    if (!this.subsectionTitle || !this.subsectionTitle.trim()) {
+    if (this.savingTextContent) {
       return;
     }
-    
-    // Get content directly from editor instance (more reliable than ngModel)
-    const editorContent = this.currentEditor ? this.currentEditor.getData() : this.textContent;
-    
-    const userId = this.student?.id || this.student?.user_id;
-    
-    // Determine active section (use activeSectionId or first section)
-    const activeSection = this.getActiveSection() || this.sections[0];
-    
-    // If viewing an existing content item, update it
-    if (this.viewingContentItem && this.viewingContentItem.id) {
-      if (activeSection) {
-        // Update in active section
-        const itemIndex = activeSection.content_items.findIndex(item => item.id === this.viewingContentItem!.id);
-        if (itemIndex >= 0) {
-          activeSection.content_items[itemIndex] = {
-            ...activeSection.content_items[itemIndex],
-            title: this.subsectionTitle.trim(),
-            content: editorContent,
-            updatedAt: new Date().toISOString()
-          };
-          activeSection.updatedAt = new Date().toISOString();
-          // Save sections to persist the update
-          this.saveSections();
-        }
-      }
-      
-      // Also update in legacy contentItems for backward compatibility
-      this.updateContentItem(
-        this.viewingContentItem.id,
-        this.subsectionTitle.trim(),
-        editorContent
-      );
-    } else {
-      // Create new content item
-      const contentItem: ContentItem = {
-        id: `content-${Date.now()}`,
-        type: 'text',
-        title: this.subsectionTitle.trim(),
-        content: editorContent,
-        section_id: activeSection?.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Add to active section if exists
-      if (activeSection) {
-        activeSection.content_items.push(contentItem);
-        activeSection.updatedAt = new Date().toISOString();
-        this.saveSections();
-      }
-      
-      // Also add to legacy contentItems for backward compatibility
-      this.contentItems.push(contentItem);
-      
-      // Save to localStorage
-      const draft = this.ai.getDraft(userId);
-      this.ai.saveDraft({
-        ...draft,
-        content_items: this.contentItems
-      }, userId);
+
+    const trimmedTitle = (this.subsectionTitle || '').trim();
+    if (!trimmedTitle) {
+      this.textSaveError = this.currentLang === 'ar'
+        ? 'يرجى إدخال عنوان للدرس.'
+        : 'Please provide a lesson title.';
+      return;
     }
-    
-    // Reset viewing item and close editor
-    this.viewingContentItem = null;
-    this.closeTextEditor();
+
+    const activeSection = this.getActiveSection() || this.sections[0];
+    if (!activeSection) {
+      this.textSaveError = this.currentLang === 'ar'
+        ? 'لا يوجد قسم متاح لحفظ الدرس.'
+        : 'No section is available to attach the lesson.';
+      return;
+    }
+
+    const numericSectionId = Number(activeSection.id);
+    if (!Number.isFinite(numericSectionId)) {
+      this.textSaveError = this.currentLang === 'ar'
+        ? 'يرجى حفظ القسم في الخادم قبل إضافة الدروس.'
+        : 'Please sync the section with the server before adding lessons.';
+      return;
+    }
+
+    const editorContent = this.currentEditor ? this.currentEditor.getData() : this.textContent;
+    const payload: CreateSectionContentPayload = {
+      type: 'text',
+      title: trimmedTitle,
+      body_html: editorContent,
+      status: 'draft',
+      visibility: 'private'
+    };
+
+    const editingItem = this.viewingContentItem;
+    const editingContentId = editingItem ? Number(editingItem.id) : NaN;
+    const isUpdatingExisting = Number.isFinite(editingContentId);
+
+    this.savingTextContent = true;
+    this.textSaveError = null;
     this.cdr.detectChanges();
+
+    const request$ = isUpdatingExisting
+      ? this.ai.updateSectionContent(numericSectionId, editingContentId, payload)
+      : this.ai.createSectionContent(numericSectionId, payload);
+
+    request$
+      .pipe(finalize(() => {
+        this.savingTextContent = false;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: (response) => {
+          const record = response?.content;
+          if (!record) {
+            console.warn('Content response missing payload.', response);
+            return;
+          }
+
+          const mappedItem = this.mapContentRecordToItem(record);
+          const sectionKey = String(record.section_id);
+          const targetSection = this.getSection(sectionKey);
+
+          if (!targetSection) {
+            console.warn('Unable to locate section locally for content record.', record);
+            return;
+          }
+
+          if (editingItem && !Number.isFinite(Number(editingItem.id))) {
+            targetSection.content_items = targetSection.content_items.filter((item) => item.id !== editingItem.id);
+          }
+
+          const existingIndex = targetSection.content_items.findIndex((item) => item.id === mappedItem.id);
+          if (existingIndex >= 0) {
+            targetSection.content_items[existingIndex] = mappedItem;
+          } else {
+            targetSection.content_items.push(mappedItem);
+            targetSection.content_items.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+          }
+
+          targetSection.updatedAt = mappedItem.updatedAt || new Date().toISOString();
+          this.loadedSectionContentIds.add(sectionKey);
+          this.rebuildLegacyContentItems();
+          this.saveSections();
+
+          this.pruneUnusedPendingImages(record.body_html ?? editorContent);
+          this.viewingContentItem = null;
+          this.closeTextEditor(true);
+        },
+        error: (error) => {
+          console.error('Failed to save text content to server:', error);
+          this.textSaveError = this.currentLang === 'ar'
+            ? 'تعذر حفظ الدرس. حاول مرة أخرى.'
+            : 'Failed to save the lesson. Please try again.';
+        }
+      });
   }
   
   // Edit Course Name
@@ -1245,13 +1354,44 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   saveCourseNameEdit(): void {
-    if (this.editingCourseNameValue.trim()) {
-      this.courseName = this.editingCourseNameValue.trim();
-      this.saveDraftStep2();
-      this.editingCourseName = false;
-      this.editingCourseNameValue = '';
-      this.cdr.detectChanges();
+    const trimmedName = this.editingCourseNameValue.trim();
+    if (!trimmedName || this.savingCourseName) {
+      return;
     }
+
+    this.savingCourseName = true;
+    this.courseName = trimmedName;
+    
+    // Save to localStorage first
+    this.saveDraftStep2();
+
+    // Save to backend
+    const userId = this.student?.id || this.student?.user_id;
+    const topicValue = this.selectedTopic.trim() || this.subjectSlug.trim();
+    
+    const payload: Partial<CourseDraft> = {
+      name: trimmedName,
+      subject_slug: topicValue || undefined,
+      mode: this.courseMode,
+      context: {
+        stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
+        country_id: this.student?.country_id,
+        term: this.currentTerm
+      },
+      user_id: userId
+    };
+
+    this.ai.updateDraftCourse(payload).subscribe({
+      next: (response) => {
+        this.savingCourseName = false;
+        this.editingCourseName = false;
+        this.editingCourseNameValue = '';
+        if (response) {
+          this.handleDraftCourseResponse(response, userId);
+        }
+        this.cdr.detectChanges();
+      }
+    });
   }
   
   cancelCourseNameEdit(): void {
@@ -1310,14 +1450,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       // Open text editor with this content
       this.subsectionTitle = item.title;
       this.textContent = item.content || '<p></p>';
+       this.textSaveError = null;
       this.showTextEditor = true;
+  this.pendingImageUploads.clear();
       this.cdr.detectChanges();
     } else if (item.type === 'resources') {
       this.openResourcePreview(item);
     }
     // TODO: Handle other content types (video, audio, quiz)
   }
-  
   // Update content item when editing existing content
   updateContentItem(itemId: string, title: string, content: string): void {
     const index = this.contentItems.findIndex(item => item.id === itemId);
@@ -1342,6 +1483,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Delete Content Item - Show warning modal first
   deleteContentItem(itemId: string): void {
+    this.isDeletingContent = false;
     this.itemToDelete = itemId;
     this.warningModalType = 'deleteContent';
     this.showWarningModal = true;
@@ -1351,38 +1493,62 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   confirmDeleteContent(): void {
     if (!this.itemToDelete) return;
     
-    // Delete from sections (new structure)
-    let itemDeleted = false;
-    for (const section of this.sections) {
-      const itemIndex = section.content_items.findIndex(item => item.id === this.itemToDelete);
-      if (itemIndex !== -1) {
-        section.content_items.splice(itemIndex, 1);
-        section.updatedAt = new Date().toISOString();
-        itemDeleted = true;
-        break;
+    this.isDeletingContent = true;
+    const targetSection = this.sections.find((section) =>
+      section.content_items.some((item) => item.id === this.itemToDelete)
+    );
+
+    const numericSectionId = targetSection ? Number(targetSection.id) : NaN;
+    const numericContentId = Number(this.itemToDelete);
+
+    const removeLocally = () => {
+      if (targetSection) {
+        targetSection.content_items = targetSection.content_items.filter((item) => item.id !== this.itemToDelete);
+        targetSection.updatedAt = new Date().toISOString();
+      } else {
+        for (const section of this.sections) {
+          const itemIndex = section.content_items.findIndex((item) => item.id === this.itemToDelete);
+          if (itemIndex !== -1) {
+            section.content_items.splice(itemIndex, 1);
+            section.updatedAt = new Date().toISOString();
+            break;
+          }
+        }
       }
-    }
-    
-    // Also delete from legacy contentItems (for backward compatibility)
-    this.contentItems = this.contentItems.filter(item => item.id !== this.itemToDelete);
-    
-    // Save sections
-    if (itemDeleted) {
+
+      this.contentItems = this.contentItems.filter((item) => item.id !== this.itemToDelete);
       this.saveSections();
+
+      this.showWarningModal = false;
+      this.warningModalType = null;
+      this.itemToDelete = null;
+      this.isDeletingContent = false;
+      const successMessage = this.currentLang === 'ar'
+        ? 'تم حذف الدرس بنجاح'
+        : 'Lesson deleted successfully';
+      this.toastr.success(successMessage);
+      this.cdr.detectChanges();
+    };
+
+    if (targetSection && Number.isFinite(numericSectionId) && Number.isFinite(numericContentId)) {
+      this.ai.deleteSectionContent(numericSectionId, numericContentId).subscribe({
+        next: () => {
+          this.loadedSectionContentIds.add(String(numericSectionId));
+          removeLocally();
+        },
+        error: (error) => {
+          console.error('Failed to delete section content from server:', error);
+          this.isDeletingContent = false;
+          const errorMessage = this.currentLang === 'ar'
+            ? 'تعذر حذف الدرس من الخادم. حاول مرة أخرى.'
+            : 'Unable to delete the lesson from the server. Please try again.';
+          this.toastr.error(errorMessage);
+          this.cdr.detectChanges();
+        }
+      });
     } else {
-      // Legacy save if using old structure
-      const userId = this.student?.id || this.student?.user_id;
-      const draft = this.ai.getDraft(userId);
-      this.ai.saveDraft({
-        ...draft,
-        content_items: this.contentItems
-      }, userId);
+      removeLocally();
     }
-    
-    this.showWarningModal = false;
-    this.warningModalType = null;
-    this.itemToDelete = null;
-    this.cdr.detectChanges();
   }
   
   // Move Content Item Up
@@ -1511,7 +1677,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         updatedAt: new Date().toISOString()
       };
       this.sections = [firstSection];
-      this.activeSectionId = firstSection.id;
+  this.setActiveSection(firstSection.id);
       this.normalizeSectionOrdering();
       this.saveSections();
       this.saveCourseCoverToDraft();
@@ -1534,7 +1700,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     };
     
     this.sections.push(newSection);
-    this.activeSectionId = newSection.id;
+  this.setActiveSection(newSection.id);
     this.normalizeSectionOrdering();
     this.saveSections();
     this.cdr.detectChanges();
@@ -1681,7 +1847,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     // If deleted section was active, select first section or null
     if (this.activeSectionId === this.sectionToDelete.id) {
-      this.activeSectionId = this.sections.length > 0 ? this.sections[0].id : null;
+  this.setActiveSection(this.sections.length > 0 ? this.sections[0].id : null);
     }
     
     this.saveSections();
@@ -1772,9 +1938,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.selectedCategoryId = null;
       this.courseTitleSuggestions = [];
       this.units = [];
-      this.sections = [];
-      this.contentItems = [];
-      this.activeSectionId = null;
+    this.sections = [];
+    this.contentItems = [];
+    this.setActiveSection(null);
       this.step2Locked = false;
       this.currentStep = 1;
       this.editingCourseName = false;
@@ -1812,6 +1978,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Save Sections to localStorage
   private saveSections(): void {
     this.normalizeSectionOrdering();
+    this.rebuildLegacyContentItems();
     const userId = this.student?.id || this.student?.user_id;
     const draft = this.ai.getDraft(userId);
     this.ai.saveDraft({
@@ -1878,6 +2045,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Get Section by ID
   getSection(sectionId: string): Section | undefined {
     return this.sections.find(s => s.id === sectionId);
+  }
+  
+  setActiveSection(sectionId: string | null): void {
+    this.activeSectionId = sectionId;
+    if (sectionId) {
+      this.ensureSectionContentLoaded(sectionId);
+    }
   }
   
   // Get Active Section
@@ -1980,6 +2154,79 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     
     return text;
+  }
+
+  private mapContentRecordToItem(record: SectionContentRecord): ContentItem {
+    const allowedTypes: Array<ContentItem['type']> = ['text', 'video', 'resources', 'audio', 'quiz'];
+    const normalizedType = allowedTypes.includes(record.type as ContentItem['type'])
+      ? (record.type as ContentItem['type'])
+      : 'text';
+
+    return {
+      id: String(record.id),
+      type: normalizedType,
+      title: record.title,
+      content: record.body_html ?? '',
+      section_id: String(record.section_id),
+      createdAt: record.created_at,
+      updatedAt: record.updated_at,
+      position: record.position,
+      status: record.status,
+      visibility: record.visibility,
+      meta: record.meta ?? {}
+    };
+  }
+
+  private rebuildLegacyContentItems(): void {
+    const aggregated: ContentItem[] = [];
+    for (const section of this.sections) {
+      if (!section || !Array.isArray(section.content_items)) {
+        continue;
+      }
+      const sectionId = section.id;
+      section.content_items.forEach((item) => {
+        aggregated.push({ ...item, section_id: sectionId });
+      });
+    }
+    this.contentItems = aggregated;
+  }
+
+  private ensureSectionContentLoaded(sectionId: string | null | undefined): void {
+    if (!sectionId || this.loadedSectionContentIds.has(sectionId)) {
+      return;
+    }
+
+    const numericSectionId = Number(sectionId);
+    if (!Number.isFinite(numericSectionId)) {
+      return;
+    }
+
+    this.ai.getSectionContent(numericSectionId).subscribe({
+      next: (response) => {
+        const targetSection = this.getSection(sectionId);
+        if (!targetSection) {
+          return;
+        }
+
+        const mappedItems = (response?.content ?? []).map((record) => this.mapContentRecordToItem(record));
+        targetSection.content_items = mappedItems;
+        if (mappedItems.length > 0) {
+          targetSection.updatedAt = mappedItems[mappedItems.length - 1].updatedAt ?? targetSection.updatedAt;
+        }
+
+        this.loadedSectionContentIds.add(sectionId);
+        this.rebuildLegacyContentItems();
+        this.saveSections();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load section content:', error);
+      }
+    });
+  }
+
+  private ensureSectionsContentLoaded(sections: (Section & { available?: boolean })[]): void {
+    sections.forEach((section) => this.ensureSectionContentLoaded(section.id));
   }
 
 
@@ -2291,7 +2538,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         } else {
           this.ai.clearDraft(userId);
           this.sections = [];
-          this.activeSectionId = null;
+          this.setActiveSection(null);
           this.step2Locked = false;
         }
         onComplete?.();
@@ -2361,11 +2608,80 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     };
   }
 
+  private registerPendingImageAsset(asset: UploadedEditorImageAsset | undefined): void {
+    if (!asset || !asset.key) {
+      return;
+    }
+    this.pendingImageUploads.set(asset.key, asset);
+  }
+
+  private cleanupPendingImageUploads(): void {
+    if (!this.pendingImageUploads.size) {
+      return;
+    }
+
+    const keys = Array.from(this.pendingImageUploads.values())
+      .map((asset) => asset.key)
+      .filter((key): key is string => typeof key === 'string' && key.trim().length > 0);
+
+    if (!keys.length) {
+      this.pendingImageUploads.clear();
+      return;
+    }
+
+    this.pendingImageUploads.clear();
+
+    this.ai.deleteDraftContentImages(keys).subscribe({
+      next: () => {
+        // All good, nothing else to do.
+      },
+      error: (error: unknown) => {
+        console.error('Failed to delete pending editor images:', error);
+      }
+    });
+  }
+
+  private pruneUnusedPendingImages(finalHtml: string | null | undefined): void {
+    if (!this.pendingImageUploads.size) {
+      return;
+    }
+
+    const html = typeof finalHtml === 'string' ? finalHtml : '';
+    const unusedKeys = Array.from(this.pendingImageUploads.values())
+      .filter((asset) => {
+        if (!asset.key) {
+          return false;
+        }
+
+        const urlMatch = asset.url ? html.includes(asset.url) : false;
+        const keyMatch = html.includes(asset.key);
+        return !(urlMatch || keyMatch);
+      })
+      .map((asset) => asset.key as string);
+
+    if (!unusedKeys.length) {
+      this.pendingImageUploads.clear();
+      return;
+    }
+
+    this.pendingImageUploads.clear();
+
+    this.ai.deleteDraftContentImages(unusedKeys).subscribe({
+      next: () => {
+        // Unused images removed successfully.
+      },
+      error: (error: unknown) => {
+        console.error('Failed to prune unused editor images:', error);
+      }
+    });
+  }
+
   private handleDraftCourseResponse(response: DraftCourseResponse | null, userId?: number): void {
     if (!response) {
       return;
     }
 
+    this.loadedSectionContentIds.clear();
     const resolvedUserId = userId ?? this.student?.id ?? this.student?.user_id ?? null;
     let mappedSections: (Section & { available?: boolean })[] = this.sections;
 
@@ -2384,8 +2700,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
     if (response.sections && response.sections.length) {
       mappedSections = response.sections.map((section) => this.mapApiSectionToLocal(section));
-      this.sections = mappedSections;
-      this.activeSectionId = mappedSections.length ? mappedSections[0].id : null;
+  this.sections = mappedSections;
+  this.setActiveSection(mappedSections.length ? mappedSections[0].id : null);
+  this.ensureSectionsContentLoaded(mappedSections);
     }
 
     if (resolvedUserId) {
@@ -2404,6 +2721,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.ai.saveDraft(draftForLocal, resolvedUserId);
     }
 
+    this.rebuildLegacyContentItems();
     this.cdr.detectChanges();
   }
 

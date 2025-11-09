@@ -24,7 +24,46 @@ export interface ContentItem {
   createdAt: string;
   updatedAt?: string;
   section_id?: string; // Link content to section
+  position?: number;
+  status?: string;
+  visibility?: string;
+  meta?: Record<string, unknown> | null;
   resourceDetails?: ResourceDetails;
+}
+
+export interface SectionContentRecord {
+  id: number;
+  course_id: number;
+  section_id: number;
+  type: string;
+  title: string;
+  body_html?: string | null;
+  position: number;
+  meta?: Record<string, unknown> | null;
+  visibility: string;
+  status: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SectionContentResponse {
+  message?: string;
+  content: SectionContentRecord;
+}
+
+export interface SectionContentListResponse {
+  content: SectionContentRecord[];
+}
+
+export interface CreateSectionContentPayload {
+  type: string;
+  title: string;
+  body_html?: string;
+  position?: number;
+  visibility?: string;
+  status?: string;
+  meta?: Record<string, unknown> | null;
 }
 
 export interface Section {
@@ -216,6 +255,47 @@ export class AiBuilderService {
 
   getUnits(payload: { category_id: number; course_name?: string; stage_id?: number; country_id?: number; locale?: string }): Observable<{ units: { name: string; order: number }[] }> {
     return this.http.post<{ units: { name: string; order: number }[] }>(`${this.baseUrl}/ai/units`, payload);
+  }
+
+  getSectionContent(sectionId: number | string): Observable<SectionContentListResponse> {
+    return this.http.get<SectionContentListResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  createSectionContent(sectionId: number | string, payload: CreateSectionContentPayload): Observable<SectionContentResponse> {
+    return this.http.post<SectionContentResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  updateSectionContent(sectionId: number | string, contentId: number | string, payload: CreateSectionContentPayload): Observable<SectionContentResponse> {
+    return this.http.put<SectionContentResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  deleteSectionContent(sectionId: number | string, contentId: number | string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  deleteDraftContentImages(keys: string[]): Observable<void> {
+    return this.http.request<void>(
+      'DELETE',
+      `${this.baseUrl}/courses/draft/content/images`,
+      {
+        headers: this.getAuthHeaders(),
+        body: { keys }
+      }
+    );
   }
 }
 

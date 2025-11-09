@@ -82,9 +82,13 @@
             <div class="summary-item">
               <span class="summary-label">{{ currentLang === 'ar' ? 'اسم المادة الدراسية:' : 'Course Name:' }}</span>
               <span class="summary-value">
-                <span *ngIf="!editingCourseName">{{ courseName }}</span>
+                <span *ngIf="!editingCourseName && !savingCourseName">{{ courseName }}</span>
+                <span *ngIf="savingCourseName" class="saving-indicator">
+                  <span class="saving-spinner"></span>
+                  <span class="saving-text">{{ currentLang === 'ar' ? 'جاري الحفظ...' : 'Saving...' }}</span>
+                </span>
                 <input 
-                  *ngIf="editingCourseName"
+                  *ngIf="editingCourseName && !savingCourseName"
                   type="text"
                   class="inline-edit-input"
                   [(ngModel)]="editingCourseNameValue"
@@ -94,8 +98,8 @@
                   [dir]="isRTL ? 'rtl' : 'ltr'"
                   maxlength="200">
                 <div class="summary-action-buttons">
-                  <button *ngIf="!editingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المادة الدراسية' : 'Edit Course Name'">✏️</button>
-                  <div *ngIf="editingCourseName" class="inline-edit-actions">
+                  <button *ngIf="!editingCourseName && !savingCourseName" type="button" class="summary-edit-btn" (click)="startEditingCourseName()" [attr.aria-label]="currentLang === 'ar' ? 'تعديل اسم المادة الدراسية' : 'Edit Course Name'">✏️</button>
+                  <div *ngIf="editingCourseName && !savingCourseName" class="inline-edit-actions">
                     <button type="button" class="inline-edit-btn inline-edit-cancel" (click)="cancelCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">✕</button>
                     <button type="button" class="inline-edit-btn inline-edit-save" (click)="saveCourseNameEdit()" [attr.aria-label]="currentLang === 'ar' ? 'حفظ' : 'Save'">✓</button>
                   </div>
@@ -306,23 +310,23 @@
               
               <!-- Add Content Buttons -->
               <div class="add-content-actions">
-                <button type="button" class="add-content-btn" (click)="activeSectionId = section.id; openContentTypeModal('text')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('text')">
                   <span class="btn-icon">📝</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة درس نصي' : 'Add Text Lesson' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="activeSectionId = section.id; openContentTypeModal('resources')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('resources')">
                   <span class="btn-icon">📄</span>
-                  <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة موارد' : 'Add Resources' }}</span>
+                  <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة ملفات' : 'Add Resources' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="activeSectionId = section.id; openContentTypeModal('video')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('video')">
                   <span class="btn-icon">🎥</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة فيديو' : 'Add Video' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="activeSectionId = section.id; openContentTypeModal('audio')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('audio')">
                   <span class="btn-icon">🎧</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة صوت' : 'Add Audio' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="activeSectionId = section.id; openContentTypeModal('quiz')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('quiz')">
                   <span class="btn-icon">📋</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة اختبار' : 'Add Quiz' }}</span>
                 </button>
@@ -791,8 +795,14 @@
           <button class="btn-cancel" (click)="cancelGoBack()">
             {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
           </button>
-          <button class="btn-confirm" (click)="warningModalType === 'goBack' ? confirmGoBack() : confirmDeleteContent()">
-            {{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}
+          <button
+            class="btn-confirm"
+            [disabled]="warningModalType === 'deleteContent' ? isDeletingContent : false"
+            [attr.aria-busy]="warningModalType === 'deleteContent' && isDeletingContent ? 'true' : null"
+            (click)="warningModalType === 'goBack' ? confirmGoBack() : confirmDeleteContent()"
+          >
+            <span *ngIf="warningModalType === 'deleteContent' && isDeletingContent" class="btn-spinner" aria-hidden="true"></span>
+            <span>{{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}</span>
           </button>
         </div>
       </div>
@@ -878,11 +888,19 @@
           </div>
           
           <div class="editor-actions">
-            <button type="button" class="btn-cancel" (click)="closeTextEditor()">
+            <button type="button" class="btn-cancel" (click)="cancelTextEditor()">
               {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
             </button>
-            <button type="button" class="btn-save" [disabled]="!subsectionTitle.trim()" (click)="saveTextContent()">
-              {{ currentLang === 'ar' ? 'حفظ' : 'Save' }}
+            <button
+              type="button"
+              class="btn-save"
+              [disabled]="generatingWithAI || !subsectionTitle.trim() || savingTextContent"
+              (click)="saveTextContent()">
+              <span *ngIf="!savingTextContent">{{ currentLang === 'ar' ? 'حفظ' : 'Save' }}</span>
+              <span *ngIf="savingTextContent" class="btn-save-content">
+                <span class="inline-spinner" aria-hidden="true"></span>
+                <span>{{ currentLang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...' }}</span>
+              </span>
             </button>
           </div>
         </div>
@@ -925,12 +943,12 @@
     <div class="modal-overlay" *ngIf="showResourceModal" (click)="closeResourceModal()">
       <div class="modal-content resource-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
         <div class="modal-header">
-          <h3>{{ currentLang === 'ar' ? '📄 إضافة مورد' : '📄 Add Resource' }}</h3>
+          <h3>{{ currentLang === 'ar' ? '📄 إضافة ملف' : '📄 Add Resource' }}</h3>
           <button type="button" class="modal-close-btn" (click)="closeResourceModal()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
         </div>
         <div class="modal-body">
           <div class="field-group">
-            <label class="field-label" for="resourceTitle">{{ currentLang === 'ar' ? 'عنوان المورد *' : 'Resource Title *' }}</label>
+            <label class="field-label" for="resourceTitle">{{ currentLang === 'ar' ? 'عنوان الملف *' : 'Resource Title *' }}</label>
             <input
               id="resourceTitle"
               type="text"
@@ -973,16 +991,16 @@
           </div>
 
           <div class="field-group">
-            <label class="field-label" for="resourceDescription">{{ currentLang === 'ar' ? 'ملاحظات حول المورد' : 'Resource Notes' }}</label>
+            <label class="field-label" for="resourceDescription">{{ currentLang === 'ar' ? 'ملاحظات حول الملف' : 'Resource Notes' }}</label>
             <textarea
               id="resourceDescription"
               rows="4"
               class="field-textarea"
               [(ngModel)]="resourceForm.description"
-              [placeholder]="currentLang === 'ar' ? 'أضف وصفاً قصيراً أو تعليمات للمورد...' : 'Add a short description or instructions for the resource...'"
+              [placeholder]="currentLang === 'ar' ? 'أضف وصفاً قصيراً أو تعليمات للملف...' : 'Add a short description or instructions for the resource...'"
               [dir]="isRTL ? 'rtl' : 'ltr'"
               maxlength="600"></textarea>
-            <div class="field-help">{{ currentLang === 'ar' ? 'اكتب ملاحظات تساعد الطالب على استخدام المورد بشكل صحيح.' : 'Add notes that help students use this resource effectively.' }}</div>
+            <div class="field-help">{{ currentLang === 'ar' ? 'اكتب ملاحظات تساعد الطالب على استخدام الملف بشكل صحيح.' : 'Add notes that help students use this resource effectively.' }}</div>
           </div>
 
           <div class="resource-preview-container" *ngIf="resourceForm.previewMode === 'inline' && resourceForm.dataUrl">
@@ -1007,7 +1025,7 @@
             {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
           </button>
           <button type="button" class="btn-save" (click)="submitResource()" [disabled]="resourceUploading || !resourceForm.title.trim() || !resourceForm.dataUrl">
-            {{ currentLang === 'ar' ? 'حفظ المورد' : 'Save Resource' }}
+            {{ currentLang === 'ar' ? 'حفظ الملف' : 'Save Resource' }}
           </button>
         </div>
       </div>
@@ -1017,7 +1035,7 @@
     <div class="modal-overlay" *ngIf="showResourcePreviewModal" (click)="closeResourcePreview()">
       <div class="modal-content resource-preview-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
         <div class="modal-header">
-          <h3>{{ currentLang === 'ar' ? 'عرض المورد' : 'View Resource' }}</h3>
+          <h3>{{ currentLang === 'ar' ? 'عرض الملف' : 'View Resource' }}</h3>
           <button type="button" class="modal-close-btn" (click)="closeResourcePreview()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
         </div>
         <div class="modal-body" *ngIf="resourcePreviewItem">
