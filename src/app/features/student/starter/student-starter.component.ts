@@ -99,6 +99,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private draftSyncCompleted: boolean = false;
   private loadedSectionContentIds: Set<string> = new Set();
   private pendingImageUploads: Map<string, UploadedEditorImageAsset> = new Map<string, UploadedEditorImageAsset>();
+  private editorActiveImageKeys: Set<string> = new Set<string>();
+  private editorKnownImageMap: Map<string, string> = new Map<string, string>();
+  private editorDeletedImageKeys: Set<string> = new Set<string>();
+  private editorImageChangeDebounce: number | null = null;
+  private currentEditingContentId: string | null = null;
   savingDraftCourse: boolean = false;
   deletingDraftCourse: boolean = false;
   continueErrorMessage: string | null = null;
@@ -478,10 +483,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Store editor instance for later use
     this.currentEditor = editor;
     
+    const currentContentId = this.ensureCurrentEditingContentId();
+    const uploadUrl = this.contentImageUploadUrl;
+    
     editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
       return new CKEditor5CustomUploadAdapter(loader, {
-        uploadUrl: this.contentImageUploadUrl,
+        uploadUrl,
         token: this.universalAuth.getAccessToken(),
+        contentId: currentContentId ? String(currentContentId) : undefined,
         onUploaded: (asset) => this.registerPendingImageAsset(asset),
         onError: (error) => {
           console.error('CKEditor image upload failed:', error);
@@ -609,6 +618,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       editor.ui.view.toolbar.element!,
       element
     );
+
+    this.setupEditorImageTracking(editor);
+
+    const initialData = this.pendingEditorData ?? (this.textContent && this.textContent.trim().length
+      ? this.textContent
+      : '<p></p>');
+    editor.setData(initialData);
+    this.pendingEditorData = null;
   }
 
 
@@ -1007,6 +1024,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.showTextEditor = true;
       this.selectedContentType = 'text';
       this.pendingImageUploads.clear();
+      this.currentEditingContentId = this.generateDraftContentId();
+      this.editorActiveImageKeys.clear();
+      this.editorKnownImageMap.clear();
+      this.editorDeletedImageKeys.clear();
       this.cdr.detectChanges();
       return;
     }
@@ -1087,6 +1108,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.cleanupPendingImageUploads();
     }
 
+    if (this.editorImageChangeDebounce !== null) {
+      clearTimeout(this.editorImageChangeDebounce);
+      this.editorImageChangeDebounce = null;
+    }
+
+    this.editorActiveImageKeys.clear();
+    this.editorKnownImageMap.clear();
+    this.editorDeletedImageKeys.clear();
+    this.pendingEditorData = null;
+
     this.showTextEditor = false;
     // Reset editor instance when closing
     this.currentEditor = null;
@@ -1095,7 +1126,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.textContent = '';
     this.textSaveError = null;
     // Reset viewingContentItem to ensure clean state for next creation
-    this.viewingContentItem = null;
+    if (!saved) {
+      this.currentEditingContentId = null;
+      this.viewingContentItem = null;
+    }
     this.cdr.detectChanges();
   }
 
@@ -1463,6 +1497,24 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
        this.textSaveError = null;
       this.showTextEditor = true;
   this.pendingImageUploads.clear();
+      this.currentEditingContentId = item.id;
+      this.editorKnownImageMap.clear();
+      this.editorDeletedImageKeys.clear();
+      this.editorActiveImageKeys.clear();
+
+      const existingKeys = this.extractImageKeysFromHtml(this.textContent || '');
+      existingKeys.forEach((key) => this.editorActiveImageKeys.add(key));
+
+      if (Array.isArray(item.assets)) {
+        item.assets.forEach((asset: any) => {
+          const assetKey = asset?.key || asset?.extra?.s3Key || null;
+          const assetUrl = asset?.url || null;
+          if (assetKey && assetUrl) {
+            this.editorKnownImageMap.set(this.normalizeAssetUrl(assetUrl) || assetUrl, assetKey);
+            this.editorActiveImageKeys.add(assetKey);
+          }
+        });
+      }
       this.cdr.detectChanges();
     } else if (item.type === 'resources') {
       this.openResourcePreview(item);
@@ -2183,7 +2235,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       position: record.position,
       status: record.status,
       visibility: record.visibility,
-      meta: record.meta ?? {}
+      meta: record.meta ?? {},
+      assets: record.assets ?? []
     };
   }
 
@@ -2325,7 +2378,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       console.log('After selectTitleSuggestion - availableTopics:', this.availableTopics);
       console.log('After selectTitleSuggestion - selectedTopic:', this.selectedTopic);
-    }, 100);
+    }, 10);
   }
   
   selectTopic(topic: string): void {
@@ -2622,7 +2675,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (!asset || !asset.key) {
       return;
     }
+    this.ensureCurrentEditingContentId();
     this.pendingImageUploads.set(asset.key, asset);
+
+    if (asset.url) {
+      const normalized = this.normalizeAssetUrl(asset.url);
+      if (normalized) {
+        this.editorKnownImageMap.set(normalized, asset.key);
+      }
+    }
+
+    this.editorDeletedImageKeys.delete(asset.key);
   }
 
   private cleanupPendingImageUploads(): void {
@@ -3517,5 +3580,178 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
     return formatDayMonth();
   }
+
+  private normalizeAssetUrl(url: string | null | undefined): string | null {
+    if (!url || !url.trim()) {
+      return null;
+    }
+
+    try {
+      const parsed = new URL(url);
+      parsed.hash = '';
+      parsed.search = '';
+      return parsed.toString();
+    } catch (_error) {
+      const sanitized = url.split('?')[0]?.trim();
+      return sanitized || null;
+    }
+  }
+
+  private extractKeyFromUrl(url: string | null | undefined): string | null {
+    if (!url || !url.trim()) {
+      return null;
+    }
+
+    try {
+      const parsed = new URL(url);
+      const path = decodeURIComponent(parsed.pathname.replace(/^\/+/, ''));
+      return path || null;
+    } catch (_error) {
+      try {
+        const sanitized = decodeURIComponent(url.split('?')[0] || '');
+        return sanitized.replace(/^\/+/, '') || null;
+      } catch (_inner) {
+        return null;
+      }
+    }
+  }
+
+  private extractImageKeysFromHtml(html: string | null | undefined): Set<string> {
+    const keys = new Set<string>();
+
+    if (!html || !html.trim()) {
+      return keys;
+    }
+
+    if (typeof document === 'undefined') {
+      // Unable to parse safely outside the browser environment
+      return keys;
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const images = Array.from(container.querySelectorAll('img'));
+    for (const img of images) {
+      const dataKey = img.getAttribute('data-asset-key');
+      if (dataKey && dataKey.trim()) {
+        keys.add(dataKey.trim());
+        continue;
+      }
+
+      const src = img.getAttribute('src');
+      if (!src) {
+        continue;
+      }
+
+      const normalizedUrl = this.normalizeAssetUrl(src);
+      const mappedKey = normalizedUrl ? this.editorKnownImageMap.get(normalizedUrl) : null;
+      if (mappedKey) {
+        keys.add(mappedKey);
+        continue;
+      }
+
+      const extracted = this.extractKeyFromUrl(src);
+      if (extracted) {
+        keys.add(extracted);
+        if (normalizedUrl) {
+          this.editorKnownImageMap.set(normalizedUrl, extracted);
+        }
+      }
+    }
+
+    return keys;
+  }
+
+  private handleRemovedEditorImageKeys(keys: string[]): void {
+    if (!keys.length) {
+      return;
+    }
+
+    const uniqueKeys = Array.from(new Set(keys));
+
+    this.ai.deleteDraftContentImages(uniqueKeys).subscribe({
+      next: () => {
+        for (const key of uniqueKeys) {
+          this.pendingImageUploads.delete(key);
+          this.editorDeletedImageKeys.add(key);
+
+          for (const [url, mappedKey] of Array.from(this.editorKnownImageMap.entries())) {
+            if (mappedKey === key) {
+              this.editorKnownImageMap.delete(url);
+            }
+          }
+        }
+      },
+      error: (error: unknown) => {
+        console.error('Failed to delete editor images:', error);
+      }
+    });
+  }
+
+  private setupEditorImageTracking(editor: DecoupledEditor): void {
+    this.ensureCurrentEditingContentId();
+
+    const syncImageState = () => {
+      const html = editor.getData() ?? '';
+      const currentKeys = this.extractImageKeysFromHtml(html);
+      const previousKeys = new Set(this.editorActiveImageKeys);
+
+      this.editorActiveImageKeys = new Set(currentKeys);
+
+      // Keys currently present should be considered active again
+      this.editorActiveImageKeys.forEach((key) => this.editorDeletedImageKeys.delete(key));
+
+      const removedKeys: string[] = [];
+      previousKeys.forEach((key) => {
+        if (!this.editorActiveImageKeys.has(key) && !this.editorDeletedImageKeys.has(key)) {
+          removedKeys.push(key);
+        }
+      });
+
+      if (removedKeys.length) {
+        this.handleRemovedEditorImageKeys(removedKeys);
+      }
+    };
+
+    syncImageState();
+
+    editor.model.document.on('change:data', () => {
+      if (this.editorImageChangeDebounce !== null) {
+        clearTimeout(this.editorImageChangeDebounce);
+      }
+
+      const schedule = typeof window !== 'undefined' && window.setTimeout ? window.setTimeout.bind(window) : setTimeout;
+      this.editorImageChangeDebounce = schedule(() => {
+        this.editorImageChangeDebounce = null;
+        syncImageState();
+      }, 250) as unknown as number;
+    });
+  }
+
+  private deleteImagesFromHtml(_html: string | null | undefined): void {
+    // No-op: the backend now owns deletion for whole content removal.
+  }
+
+  private generateDraftContentId(): string {
+    return `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  private ensureCurrentEditingContentId(): string {
+    if (this.currentEditingContentId && this.currentEditingContentId.trim()) {
+      return this.currentEditingContentId;
+    }
+
+    if (this.viewingContentItem?.id) {
+      this.currentEditingContentId = this.viewingContentItem.id;
+      return this.currentEditingContentId;
+    }
+
+    const generated = this.generateDraftContentId();
+    this.currentEditingContentId = generated;
+    return generated;
+  }
+
+  private pendingEditorData: string | null = null;
  }
 

@@ -29,6 +29,7 @@ export interface ContentItem {
   visibility?: string;
   meta?: Record<string, unknown> | null;
   resourceDetails?: ResourceDetails;
+  assets?: ContentAsset[];
 }
 
 export interface SectionContentRecord {
@@ -45,6 +46,15 @@ export interface SectionContentRecord {
   created_by: number;
   created_at: string;
   updated_at: string;
+  assets?: ContentAsset[];
+}
+
+export interface ContentAsset {
+  id: number;
+  url: string;
+  filename?: string | null;
+  position?: number | null;
+  extra?: Record<string, unknown> | null;
 }
 
 export interface SectionContentResponse {

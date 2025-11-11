@@ -11,6 +11,7 @@ export interface UploadedEditorImageAsset {
 interface UploadAdapterOptions {
     uploadUrl: string;
     token?: string | null;
+    contentId?: string | null;
     onUploaded?: (asset: UploadedEditorImageAsset) => void;
     onError?: (error: Error) => void;
     onAbort?: (asset: UploadedEditorImageAsset | null) => void;
@@ -34,6 +35,9 @@ export class CKEditor5CustomUploadAdapter {
                     this.abortController = new AbortController();
                     const formData = new FormData();
                     formData.append('image', file);
+                    if (this.options.contentId) {
+                        formData.append('content_id', this.options.contentId);
+                    }
 
                     const headers: Record<string, string> = {};
                     if (this.options.token) {
