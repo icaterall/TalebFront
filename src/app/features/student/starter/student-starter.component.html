@@ -883,7 +883,7 @@
             <button
               type="button"
               class="btn-save"
-              [disabled]="generatingWithAI || !subsectionTitle.trim() || savingTextContent"
+              [disabled]="generatingWithAI || !subsectionTitle.trim() || savingTextContent || isEditorUploading"
               (click)="saveTextContent()">
               <span *ngIf="!savingTextContent">{{ currentLang === 'ar' ? 'حفظ' : 'Save' }}</span>
               <span *ngIf="savingTextContent" class="btn-save-content">

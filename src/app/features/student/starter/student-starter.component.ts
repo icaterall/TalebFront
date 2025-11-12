@@ -1142,6 +1142,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.closeTextEditor(false);
   }
 
+  get isEditorUploading(): boolean {
+    return this.hasActiveEditorUploads();
+  }
+
   generateTextWithAI(): void {
     if (this.generatingWithAI) return;
     
@@ -1294,6 +1298,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   saveTextContent(): void {
     if (this.savingTextContent) {
+      return;
+    }
+
+    if (this.hasActiveEditorUploads()) {
+      const message = this.currentLang === 'ar'
+        ? 'يرجى الانتظار حتى يكتمل رفع جميع الصور قبل الحفظ.'
+        : 'Please wait until all image uploads have finished before saving.';
+      this.textSaveError = message;
+      this.toastr.warning(message);
       return;
     }
 
@@ -3756,5 +3769,42 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   private pendingEditorData: string | null = null;
+
+  private hasActiveEditorUploads(): boolean {
+    if (!this.currentEditor) {
+      return false;
+    }
+
+    try {
+      const repository: any = this.currentEditor.plugins.get('FileRepository');
+      if (!repository || !repository.loaders) {
+        return false;
+      }
+
+      const rawLoaders = Array.from(
+        typeof repository.loaders.values === 'function'
+          ? repository.loaders.values()
+          : repository.loaders
+      );
+
+      return rawLoaders.some((entry: any) => {
+        const loader = Array.isArray(entry) ? entry[1] ?? entry[0] : entry;
+        if (!loader) {
+          return false;
+        }
+
+        const status = String(loader.status ?? loader.state ?? '').toLowerCase();
+        if (status) {
+          return !['idle', 'uploaded', 'complete', 'finished', 'success'].includes(status);
+        }
+
+        const uploaded = Number(loader.uploaded ?? loader.uploadedTotal ?? 0);
+        const total = Number(loader.uploadTotal ?? loader.total ?? 0);
+        return total > 0 && uploaded < total;
+      });
+    } catch (_error) {
+      return false;
+    }
+  }
  }
 
