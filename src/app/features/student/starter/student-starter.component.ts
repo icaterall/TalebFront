@@ -622,13 +622,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       element
     );
 
-    this.setupEditorImageTracking(editor);
-
     const initialData = this.pendingEditorData ?? (this.textContent && this.textContent.trim().length
       ? this.textContent
       : '<p></p>');
     editor.setData(initialData);
     this.pendingEditorData = null;
+
+    this.setupEditorImageTracking(editor);
   }
 
 
