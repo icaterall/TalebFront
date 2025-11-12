@@ -1,0 +1,56 @@
+<div class="category-selector" [class.is-rtl]="isRTL">
+  <div class="category-selector__quick" *ngIf="smartSix?.length">
+    <div class="category-selector__label">{{ quickPickLabel }}</div>
+    <div class="category-selector__chips" role="list">
+      <button
+        type="button"
+        class="category-chip"
+        role="listitem"
+        *ngFor="let category of smartSix; trackBy: trackByCategoryId"
+        [class.category-chip--active]="category.id === selectedCategoryId"
+        (click)="handleQuickPick(category)">
+        <span class="category-chip__icon" aria-hidden="true">{{ category.icon }}</span>
+        <span class="category-chip__label">{{ getCategoryName(category) }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="category-selector__dropdown">
+    <label class="category-selector__label" [attr.for]="'category-select'">
+      {{ dropdownLabel }}
+    </label>
+    <ng-select
+      id="category-select"
+      class="category-select"
+      [dir]="isRTL ? 'rtl' : 'ltr'"
+      [items]="allCategories"
+      [minTermLength]="0"
+      [loading]="loading"
+      [clearable]="true"
+      [searchable]="true"
+      [virtualScroll]="true"
+      [bindLabel]="labelKey"
+      bindValue="id"
+      [(ngModel)]="selectedCategoryIdInternal"
+      (ngModelChange)="handleSelectedIdChange($event)"
+      [placeholder]="dropdownPlaceholder">
+      <ng-template ng-option-tmp let-item="item">
+        <span class="category-option__icon" aria-hidden="true">{{ item.icon }}</span>
+        <span class="category-option__label">{{ getCategoryName(item) }}</span>
+      </ng-template>
+      <ng-template ng-label-tmp let-item="item">
+        <span class="category-option__icon" aria-hidden="true">{{ item.icon }}</span>
+        <span class="category-option__label">{{ getCategoryName(item) }}</span>
+      </ng-template>
+      <ng-template ng-notfound-tmp>
+        <div class="category-selector__empty">
+          {{ isArabic ? 'لا توجد نتائج' : 'No categories found' }}
+        </div>
+      </ng-template>
+    </ng-select>
+  </div>
+
+  <div class="category-selector__empty" *ngIf="!loading && (!allCategories?.length)">
+    {{ isArabic ? 'لم يتم العثور على تصنيفات.' : 'No categories are available right now.' }}
+  </div>
+</div>

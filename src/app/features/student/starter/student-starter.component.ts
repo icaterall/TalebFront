@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -27,6 +27,8 @@ import { skip, finalize } from 'rxjs/operators';
 import DecoupledEditor from '@ckeditor/ckeditor5-build-decoupled-document';
 import { CKEditor5CustomUploadAdapter, UploadedEditorImageAsset } from './custom-uploader';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import { CategorySelectorComponent } from './components/category-selector/category-selector.component';
+import { CoverImageComponent } from './components/cover-image/cover-image.component';
 interface Category {
   id: number;
   name_en: string;
@@ -54,9 +56,10 @@ interface ResourceFormState {
 @Component({
   selector: 'app-student-starter',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule,CKEditorModule],
+  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule, CKEditorModule, CategorySelectorComponent, CoverImageComponent],
   templateUrl: './student-starter.component.html',
-  styleUrls: ['./student-starter.component.scss']
+  styleUrls: ['./student-starter.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);

@@ -1,0 +1,104 @@
+.category-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: start;
+
+  &.is-rtl {
+    direction: rtl;
+    text-align: start;
+  }
+}
+
+.category-selector__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.category-selector__quick {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category-selector__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.08);
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover,
+  &--active {
+    border-color: rgba(59, 130, 246, 0.7);
+    background: rgba(59, 130, 246, 0.12);
+  }
+
+  &--active {
+    background: rgba(59, 130, 246, 0.18);
+    color: #1e40af;
+  }
+}
+
+.category-chip__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.category-chip__label {
+  line-height: 1;
+}
+
+.category-selector__dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-select ::ng-deep .ng-select-container {
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  min-height: 46px;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.category-select ::ng-deep .ng-select-container:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.category-select ::ng-deep .ng-select-container.ng-select-focused {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.9);
+}
+
+.category-option__icon {
+  margin-inline-end: 8px;
+}
+
+.category-option__label {
+  font-weight: 500;
+}
+
+.category-selector__empty {
+  font-size: 0.9rem;
+  color: #64748b;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  padding: 12px 14px;
+  border-radius: 6px;
+}

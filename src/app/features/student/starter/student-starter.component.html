@@ -107,41 +107,22 @@
               </span>
             </div>
           </div>
-          <div class="summary-cover">
-            <div class="cover-box" [class.has-image]="hasCustomCourseCover" [attr.aria-busy]="courseCoverUploading">
-              <div class="cover-upload-overlay" *ngIf="courseCoverUploading">
-                <div class="upload-content-wrapper">
-                  <div class="upload-progress-wrapper">
-                    <div class="cover-progress-label">
-                      {{ courseCoverDeleting ? (currentLang === 'ar' ? 'جاري الحذف...' : 'Deleting...') : (currentLang === 'ar' ? 'جاري الرفع...' : 'Uploading...') }}
-                    </div>
-                    <div class="cover-progress-row">
-                      <div class="cover-progress-bar">
-                        <div class="cover-progress-fill" [style.width.%]="courseCoverUploadProgress"></div>
-                      </div>
-                      <div class="cover-progress-text">
-                        {{ (courseCoverUploadProgress || 0) | number:'1.0-0' }}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <img class="cover-fallback" [src]="defaultCourseCover" [alt]="currentLang === 'ar' ? 'صورة الغلاف الافتراضية' : 'Default course cover'" />
-              <img class="cover-main"
-                   [class.loaded]="coverImageLoaded"
-                   [src]="courseCoverPreview ?? defaultCourseCover"
-                   (load)="onCoverImageLoad()"
-                   (error)="onCoverImageError()"
-                   [alt]="currentLang === 'ar' ? 'صورة غلاف المادة' : 'Course cover image'" />
-              <div class="cover-placeholder-overlay" *ngIf="!hasCustomCourseCover && !courseCoverUploading">
-                <span class="cover-text">{{ currentLang === 'ar' ? 'اضغط لرفع صورة الغلاف' : 'Click to upload a cover' }}</span>
-                <span class="cover-hint">{{ currentLang === 'ar' ? 'اختياري • يمكنك إضافة صورة لاحقاً' : 'Optional • You can add one later' }}</span>
-              </div>
-              <button *ngIf="hasCustomCourseCover" type="button" class="cover-remove-btn" (click)="showDeleteCoverModal = true" [disabled]="courseCoverUploading" [attr.aria-label]="currentLang === 'ar' ? 'إزالة صورة الغلاف' : 'Remove cover image'">✕</button>
-              <input type="file" class="cover-input" accept="image/*" (change)="onCourseCoverSelected($event)" [disabled]="courseCoverUploading">
-            </div>
-            <div class="cover-error" *ngIf="courseCoverUploadError">{{ courseCoverUploadError }}</div>
-          </div>
+          <app-cover-image
+            [courseCoverPreview]="courseCoverPreview"
+            [defaultCourseCover]="defaultCourseCover"
+            [courseCoverUploading]="courseCoverUploading"
+            [courseCoverDeleting]="courseCoverDeleting"
+            [courseCoverUploadProgress]="courseCoverUploadProgress"
+            [courseCoverUploadError]="courseCoverUploadError"
+            [hasCustomCourseCover]="hasCustomCourseCover"
+            [coverImageLoaded]="coverImageLoaded"
+            [currentLang]="currentLang"
+            (select)="onCourseCoverSelected($event)"
+            (openDelete)="showDeleteCoverModal = true"
+            (confirmDelete)="confirmDeleteCover()"
+            (imageLoad)="onCoverImageLoad()"
+            (imageError)="onCoverImageError()">
+          </app-cover-image>
         </div>
 
         <!-- Sections List (Multiple Sections Support) -->
@@ -586,50 +567,17 @@
         </div>
 
         <!-- Category Selection (hidden when step2Locked) -->
-        <div *ngIf="!selectedCategory && !step2Locked" class="search-section">
-        <div class="card-header">
-          <h2>📚 {{ currentLang === 'ar' ? 'اختر الموضوع' : 'Choose Your Category' }}</h2>
-          <p>{{ currentLang === 'ar' ? 'الأكثر صلة بمرحلتك الدراسية' : 'Most relevant for your education stage' }}</p>
-        </div>
-
-        <!-- Loading Skeleton -->
-        <div class="categories-grid" *ngIf="loading">
-          <div class="cat-box skeleton" *ngFor="let i of [1,2,3,4,5,6]"></div>
-        </div>
-
-        <!-- Smart Six Categories -->
-        <div class="categories-grid" *ngIf="!loading && smartSix.length > 0">
-          <div
-            *ngFor="let cat of smartSix"
-            class="cat-box"
-            (click)="selectCategory(cat)">
-            <span class="cat-icon">{{ cat.icon }}</span>
-            <span class="cat-name">{{ getCategoryName(cat) }}</span>
-          </div>
-        </div>
-
-        <!-- Search Other Categories -->
-        <div class="search-header">
-          <span class="search-icon">🔍</span>
-          <h3>{{ currentLang === 'ar' ? 'أو ابحث عن موضوع آخر' : 'Or search for another category' }}</h3>
-        </div>
-        <ng-select
-          [items]="allCategories"
-          [bindLabel]="currentLang === 'ar' ? 'name_ar' : 'name_en'"
-          bindValue="id"
-          [searchable]="true"
-          [clearable]="true"
-          [placeholder]="currentLang === 'ar' ? 'ابحث عن موضوع...' : 'Search for a category...'"
-          [(ngModel)]="selectedCategoryId"
-          (change)="onNgSelectChange()">
-          <ng-template ng-option-tmp let-item="item">
-            <div class="select-option">
-              <span class="opt-icon">{{ item.icon }}</span>
-              <span class="opt-name">{{ getCategoryName(item) }}</span>
-            </div>
-          </ng-template>
-        </ng-select>
-        </div>
+        <app-category-selector
+          *ngIf="!selectedCategory && !step2Locked"
+          [smartSix]="smartSix"
+          [allCategories]="allCategories"
+          [(selectedCategoryId)]="selectedCategoryId"
+          (selectedCategoryIdChange)="onNgSelectChange()"
+          [loading]="loading"
+          [currentLang]="currentLang"
+          [isRTL]="isRTL"
+          (categorySelected)="selectCategory($event)">
+        </app-category-selector>
       </div>
 
       <!-- Step 2: Course Basics -->

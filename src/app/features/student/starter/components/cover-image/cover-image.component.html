@@ -1,0 +1,66 @@
+<div class="summary-cover">
+  <div
+    class="cover-box"
+    [class.has-image]="hasCustomCourseCover"
+    [attr.aria-busy]="courseCoverUploading">
+    <button
+      type="button"
+      class="cover-remove-btn"
+      *ngIf="hasCustomCourseCover && !courseCoverUploading"
+      (click)="onRemoveClicked($event)"
+      [attr.aria-label]="removeLabel">
+      {{ deleteIcon }}
+    </button>
+
+    <img
+      class="cover-fallback"
+      [src]="defaultCourseCover"
+      [alt]="isArabic ? 'صورة الغلاف الافتراضية' : 'Default cover image'"
+      aria-hidden="true">
+
+    <img
+      *ngIf="courseCoverPreview"
+      class="cover-main"
+      [class.loaded]="coverImageLoaded"
+      [src]="courseCoverPreview"
+      [alt]="isArabic ? 'صورة غلاف الدورة' : 'Course cover image'"
+      (load)="onImageLoad()"
+      (error)="onImageError()">
+
+    <div class="cover-placeholder-overlay" *ngIf="!hasCustomCourseCover">
+      <div class="cover-text">{{ placeholderTitle }}</div>
+      <div class="cover-hint">{{ placeholderHint }}</div>
+    </div>
+
+    <div class="cover-upload-overlay" *ngIf="courseCoverUploading">
+      <div class="upload-content-wrapper">
+        <div class="upload-icon-wrapper">
+          <span class="upload-icon" aria-hidden="true">{{ uploadIcon }}</span>
+        </div>
+        <div class="upload-progress-wrapper">
+          <div class="cover-progress-label">{{ progressLabel }}</div>
+          <div class="cover-progress-row">
+            <div class="cover-progress-bar">
+              <div
+                class="cover-progress-fill"
+                [style.width.%]="progressValue">
+              </div>
+            </div>
+            <div class="cover-progress-text">{{ progressValue }}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input
+      class="cover-input"
+      type="file"
+      accept="image/*"
+      [disabled]="courseCoverUploading"
+      (change)="onFileSelected($event)">
+  </div>
+
+  <div class="cover-error" *ngIf="courseCoverUploadError">
+    {{ uploadErrorLabel }}
+  </div>
+</div>
