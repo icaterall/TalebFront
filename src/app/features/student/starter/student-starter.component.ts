@@ -107,6 +107,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private editorDeletedImageKeys: Set<string> = new Set<string>();
   private editorImageChangeDebounce: number | null = null;
   private currentEditingContentId: string | null = null;
+  private contentReorderLoading: Set<string> = new Set<string>();
   savingDraftCourse: boolean = false;
   deletingDraftCourse: boolean = false;
   continueErrorMessage: string | null = null;
@@ -1635,12 +1636,56 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (sectionId) {
       const section = this.sections.find(s => s.id === sectionId);
       if (section && index > 0 && index < section.content_items.length) {
-        const items = [...section.content_items];
-        [items[index], items[index - 1]] = [items[index - 1], items[index]];
-        section.content_items = items;
+        const before = [...section.content_items];
+        [section.content_items[index], section.content_items[index - 1]] = [section.content_items[index - 1], section.content_items[index]];
+        // Optimistically adjust positions (1-based)
+        const moved = section.content_items[index - 1];
+        const swapped = section.content_items[index];
+        if (typeof moved.position === 'number') moved.position = index; // new pos
+        if (typeof swapped.position === 'number') swapped.position = index + 1; // shifted down
+
+        this.contentReorderLoading.add(String(moved.id));
+        this.contentReorderLoading.add(String(swapped.id));
+        this.cdr.markForCheck();
+
         section.updatedAt = new Date().toISOString();
         this.saveSections();
         this.cdr.detectChanges();
+
+        const numericSectionId = Number(sectionId);
+        const numericContentId = Number(moved.id);
+        const targetPosition = index; // 1-based
+        if (Number.isFinite(numericSectionId) && Number.isFinite(numericContentId)) {
+          this.ai.updateSectionContent(numericSectionId, numericContentId, { type: moved.type || 'text', title: moved.title || '', position: targetPosition })
+            .subscribe({
+              next: (resp) => {
+                // Ensure local positions are consistent after server normalization
+                const rec = resp?.content;
+                if (rec) {
+                  const updatedIdx = section.content_items.findIndex(ci => ci.id === String(rec.id));
+                  if (updatedIdx >= 0) {
+                    section.content_items[updatedIdx].position = rec.position;
+                  }
+                }
+                // Finalize order by position just in case
+                section.content_items.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+                this.contentReorderLoading.delete(String(moved.id));
+                this.contentReorderLoading.delete(String(swapped.id));
+                this.saveSections();
+                this.cdr.detectChanges();
+              },
+              error: (_) => {
+                // Revert on error
+                section.content_items = before;
+                this.contentReorderLoading.delete(String(moved.id));
+                this.contentReorderLoading.delete(String(swapped.id));
+                this.saveSections();
+                this.cdr.detectChanges();
+                const msg = this.currentLang === 'ar' ? 'تعذر تحديث ترتيب المحتوى.' : 'Failed to update content order.';
+                this.toastr.error(msg);
+              }
+            });
+        }
         return;
       }
     }
@@ -1660,12 +1705,53 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (sectionId) {
       const section = this.sections.find(s => s.id === sectionId);
       if (section && index < section.content_items.length - 1) {
-        const items = [...section.content_items];
-        [items[index], items[index + 1]] = [items[index + 1], items[index]];
-        section.content_items = items;
+        const before = [...section.content_items];
+        [section.content_items[index], section.content_items[index + 1]] = [section.content_items[index + 1], section.content_items[index]];
+        // Optimistically adjust positions (1-based)
+        const moved = section.content_items[index + 1];
+        const swapped = section.content_items[index];
+        if (typeof moved.position === 'number') moved.position = index + 2; // new pos
+        if (typeof swapped.position === 'number') swapped.position = index + 1; // shifted up
+
+        this.contentReorderLoading.add(String(moved.id));
+        this.contentReorderLoading.add(String(swapped.id));
+        this.cdr.markForCheck();
+
         section.updatedAt = new Date().toISOString();
         this.saveSections();
         this.cdr.detectChanges();
+
+        const numericSectionId = Number(sectionId);
+        const numericContentId = Number(moved.id);
+        const targetPosition = index + 2; // 1-based
+        if (Number.isFinite(numericSectionId) && Number.isFinite(numericContentId)) {
+          this.ai.updateSectionContent(numericSectionId, numericContentId, { type: moved.type || 'text', title: moved.title || '', position: targetPosition })
+            .subscribe({
+              next: (resp) => {
+                const rec = resp?.content;
+                if (rec) {
+                  const updatedIdx = section.content_items.findIndex(ci => ci.id === String(rec.id));
+                  if (updatedIdx >= 0) {
+                    section.content_items[updatedIdx].position = rec.position;
+                  }
+                }
+                section.content_items.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+                this.contentReorderLoading.delete(String(moved.id));
+                this.contentReorderLoading.delete(String(swapped.id));
+                this.saveSections();
+                this.cdr.detectChanges();
+              },
+              error: (_) => {
+                section.content_items = before;
+                this.contentReorderLoading.delete(String(moved.id));
+                this.contentReorderLoading.delete(String(swapped.id));
+                this.saveSections();
+                this.cdr.detectChanges();
+                const msg = this.currentLang === 'ar' ? 'تعذر تحديث ترتيب المحتوى.' : 'Failed to update content order.';
+                this.toastr.error(msg);
+              }
+            });
+        }
         return;
       }
     }
@@ -1708,6 +1794,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Track by function for content items
   trackByContentId(index: number, item: ContentItem): string {
     return item.id;
+  }
+
+  isReordering(contentId: string): boolean {
+    return this.contentReorderLoading.has(String(contentId));
   }
   
   // Track by function for sections
@@ -3807,4 +3897,3 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
   }
  }
-

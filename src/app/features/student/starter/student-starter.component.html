@@ -228,10 +228,10 @@
 
                   <div class="section-meta">
                     <span class="section-item-count">
-                      {{ section.content_items?.length || 0 }} {{ getItemCountDisplay(section.content_items?.length || 0) }}
+                      {{ getItemCountDisplay(section.content_items?.length || 0) }}
                     </span>
                     <span class="section-visibility" [class.hidden]="section.available === false">
-                      {{ section.available !== false ? (currentLang === 'ar' ? 'ظاهر' : 'Visible') : (currentLang === 'ar' ? 'مخفي' : 'Hidden') }}
+                      {{ section.available !== false ? (currentLang === 'ar' ? 'متاح' : 'Visible') : (currentLang === 'ar' ? 'مخفي' : 'Hidden') }}
                     </span>
                     <span class="section-created-at" *ngIf="section.createdAt">
                       {{ formatContentDate(section.createdAt) }}
@@ -261,7 +261,8 @@
                           type="button" 
                           class="order-btn" 
                           (click)="moveContentItemUp(j, section.id)"
-                          [disabled]="j === 0"
+                          [disabled]="isReordering(item.id) || j === 0"
+                          [attr.aria-busy]="isReordering(item.id) ? 'true' : null"
                           [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأعلى' : 'Move up'">
                           ⬆️
                         </button>
@@ -269,10 +270,12 @@
                           type="button" 
                           class="order-btn" 
                           (click)="moveContentItemDown(j, section.id)"
-                          [disabled]="j === section.content_items.length - 1"
+                          [disabled]="isReordering(item.id) || j === section.content_items.length - 1"
+                          [attr.aria-busy]="isReordering(item.id) ? 'true' : null"
                           [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأسفل' : 'Move down'">
                           ⬇️
                         </button>
+                        <span class="order-loading" *ngIf="isReordering(item.id)">⏳</span>
                       </div>
                       <div class="content-item-type-icon">
                         <span *ngIf="item.type === 'text'">📝</span>
