@@ -252,8 +252,7 @@
                   [class.content-type-resources]="item.type === 'resources'"
                   [class.content-type-video]="item.type === 'video'"
                   [class.content-type-audio]="item.type === 'audio'"
-                  [class.content-type-quiz]="item.type === 'quiz'"
-                  (click)="item.type === 'text' ? viewContentItem(item) : null">
+                  [class.content-type-quiz]="item.type === 'quiz'">
                   
                   <div class="content-item-header">
                     <div class="content-item-main">
@@ -282,7 +281,7 @@
                         <span *ngIf="item.type === 'audio'">🎧</span>
                         <span *ngIf="item.type === 'quiz'">📋</span>
                       </div>
-                      <div class="content-item-text">
+                      <div class="content-item-text" (click)="item.type === 'text' ? viewContentItem(item) : null">
                         <h4 class="content-item-title">{{ item.title }}</h4>
                         <div class="content-item-preview" *ngIf="item.type === 'text' && item.content">
                           <p class="content-text-preview">
@@ -1193,4 +1192,3 @@
     </div>
   </div>
 </div>
-
