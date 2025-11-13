@@ -14,6 +14,10 @@ export interface ResourceDetails {
   previewDataUrl?: string; // Derived preview data when different from dataUrl (e.g., generated thumbnails)
   kind?: string; // e.g., pdf, word, excel
   pageCount?: number;
+  downloadUrl?: string;
+  storageKey?: string;
+  assetId?: number | null;
+  storage?: string;
 }
 
 export interface ContentItem {
@@ -48,10 +52,16 @@ export interface SectionContentRecord {
 }
 
 export interface ContentAsset {
-  id: number;
+  id?: number;
   url: string;
   filename?: string | null;
   position?: number | null;
+  kind?: string | null;
+  mime?: string | null;
+  filesize_bytes?: number | null;
+  pages?: number | null;
+  width?: number | null;
+  height?: number | null;
   extra?: Record<string, unknown> | null;
 }
 
@@ -279,7 +289,7 @@ export class AiBuilderService {
     );
   }
 
-  updateSectionContent(sectionId: number | string, contentId: number | string, payload: CreateSectionContentPayload): Observable<SectionContentResponse> {
+  updateSectionContent(sectionId: number | string, contentId: number | string, payload: Partial<CreateSectionContentPayload>): Observable<SectionContentResponse> {
     return this.http.put<SectionContentResponse>(
       `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}`,
       payload,
@@ -304,5 +314,48 @@ export class AiBuilderService {
       }
     );
   }
+
+  uploadDraftContentResource(file: File, contentId?: number | string): Observable<HttpEvent<UploadResourceResponse>> {
+    const formData = new FormData();
+    formData.append('resource', file);
+    if (contentId !== undefined && contentId !== null) {
+      formData.append('content_id', String(contentId));
+    }
+
+    return this.http.post<UploadResourceResponse>(
+      `${this.baseUrl}/courses/draft/content/resources`,
+      formData,
+      {
+        headers: this.getAuthHeaders(),
+        reportProgress: true,
+        observe: 'events'
+      }
+    );
+  }
+
+  deleteDraftContentResources(keys: string[]): Observable<void> {
+    return this.http.request<void>(
+      'DELETE',
+      `${this.baseUrl}/courses/draft/content/resources`,
+      {
+        headers: this.getAuthHeaders(),
+        body: { keys }
+      }
+    );
+  }
+}
+
+export interface UploadResourceResponse {
+  message: string;
+  asset: {
+    id: number | null;
+    url: string;
+    key: string;
+    mime: string;
+    filename: string;
+    size: number;
+    position: number | null;
+    kind?: string | null;
+  };
 }
 

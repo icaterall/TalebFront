@@ -963,7 +963,7 @@
                 {{ currentLang === 'ar' ? option.icon + ' ' + option.labelAr : option.icon + ' ' + option.labelEn }}
               </option>
             </select>
-            <div class="field-help">{{ currentLang === 'ar' ? 'يمكن تعديل نوع الملف بعد التحميل إذا لزم الأمر.' : 'You can adjust the file type after selecting a file if needed.' }}</div>
+            <div class="field-help">{{ currentLang === 'ar' ? 'الصيغ المسموح بها: ZIP, RAR, PDF, PPT/PPTX، XLS/XLSX، DOC/DOCX.' : 'Allowed formats: ZIP, RAR, PDF, PPT/PPTX, XLS/XLSX, DOC/DOCX.' }}</div>
           </div>
 
           <div class="field-group">
@@ -1008,9 +1008,6 @@
             <div class="resource-preview-frame" *ngIf="resourceForm.displayType === 'pdf'">
               <iframe [src]="resourcePreviewSafeUrl" title="Resource preview" loading="lazy"></iframe>
             </div>
-            <div class="resource-preview-frame" *ngIf="resourceForm.displayType === 'image'">
-              <img [src]="resourceForm.dataUrl" [alt]="resourceForm.fileName" />
-            </div>
           </div>
 
           <div class="resource-preview-placeholder" *ngIf="resourceForm.previewMode === 'download' && resourceForm.fileName">
@@ -1018,12 +1015,24 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" (click)="closeResourceModal()">
+          <button type="button" class="btn-cancel" (click)="closeResourceModal()" [disabled]="resourceUploadInProgress || resourceSaving">
             {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
           </button>
-          <button type="button" class="btn-save" (click)="submitResource()" [disabled]="resourceUploading || !resourceForm.title.trim() || !resourceForm.dataUrl">
+          <button type="button" class="btn-save" (click)="submitResource()" [disabled]="resourceSaving || resourceUploading || resourceUploadInProgress || !resourceForm.title.trim() || !resourceFile">
             {{ currentLang === 'ar' ? 'حفظ الملف' : 'Save Resource' }}
           </button>
+        </div>
+        <div class="resource-upload-overlay" *ngIf="resourceUploadInProgress">
+          <div class="resource-upload-dialog">
+            <div class="upload-spinner"></div>
+            <div class="upload-progress-info">
+              <span class="upload-text">{{ currentLang === 'ar' ? 'جاري رفع الملف...' : 'Uploading resource...' }}</span>
+              <div class="upload-progress-bar">
+                <div class="upload-progress-fill" [style.width.%]="resourceUploadProgress"></div>
+              </div>
+              <span class="upload-progress-value">{{ resourceUploadProgress }}%</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1051,12 +1060,8 @@
 
           <p class="resource-preview-description" *ngIf="resourcePreviewItem.resourceDetails?.description">{{ resourcePreviewItem.resourceDetails?.description }}</p>
 
-          <div class="resource-preview-frame" *ngIf="resourcePreviewItem.resourceDetails?.previewMode === 'inline' && resourcePreviewSafeUrl">
-            <ng-container [ngSwitch]="resourcePreviewKind">
-              <iframe *ngSwitchCase="'pdf'" [src]="resourcePreviewSafeUrl" title="PDF preview" loading="lazy"></iframe>
-              <img *ngSwitchCase="'image'" [src]="resourcePreviewItem.resourceDetails?.dataUrl" [alt]="resourcePreviewItem.resourceDetails?.fileName" />
-              <iframe *ngSwitchDefault [src]="resourcePreviewSafeUrl" title="File preview" loading="lazy"></iframe>
-            </ng-container>
+          <div class="resource-preview-frame" *ngIf="resourcePreviewItem.resourceDetails?.previewMode === 'inline' && resourcePreviewSafeUrl && resourcePreviewKind === 'pdf'">
+            <iframe [src]="resourcePreviewSafeUrl" title="PDF preview" loading="lazy"></iframe>
           </div>
 
           <div class="resource-preview-placeholder" *ngIf="resourcePreviewItem.resourceDetails?.previewMode !== 'inline'">

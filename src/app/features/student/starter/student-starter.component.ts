@@ -12,13 +12,15 @@ import {
   AiBuilderService,
   CourseDraft,
   ContentItem,
+  ContentAsset,
   Section,
   ResourceDetails,
   DraftCourseResponse,
   DraftCourseSectionResponse,
   CreateDraftCoursePayload,
   SectionContentRecord,
-  CreateSectionContentPayload
+  CreateSectionContentPayload,
+  UploadResourceResponse
 } from '../../../core/services/ai-builder.service';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -37,7 +39,7 @@ interface Category {
   sort_order?: number;
 }
 
-type ResourceDisplayType = 'pdf' | 'word' | 'excel' | 'ppt' | 'image' | 'video' | 'audio' | 'other';
+type ResourceDisplayType = 'pdf' | 'word' | 'excel' | 'ppt' | 'compressed';
 
 type ResourcePreviewMode = 'inline' | 'download';
 
@@ -73,18 +75,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly toastr = inject(ToastrService);
   
-  private readonly RESOURCE_MAX_SIZE = 8 * 1024 * 1024; // 8MB
+  private readonly RESOURCE_MAX_SIZE = 100 * 1024 * 1024; // 100MB
   private readonly RESOURCE_INLINE_PREVIEW_LIMIT = 5 * 1024 * 1024; // 5MB for inline previews
 
-  readonly resourceTypeOptions: { value: ResourceDisplayType; icon: string; labelEn: string; labelAr: string; previewable: boolean; matcher: RegExp; }[] = [
-    { value: 'pdf', icon: '📄', labelEn: 'PDF Document', labelAr: 'ملف PDF', previewable: true, matcher: /pdf$/i },
-    { value: 'word', icon: '📝', labelEn: 'Word Document', labelAr: 'ملف Word', previewable: false, matcher: /(msword|word|doc|docx)$/i },
-    { value: 'excel', icon: '📊', labelEn: 'Excel Spreadsheet', labelAr: 'ملف Excel', previewable: false, matcher: /(sheet|excel|xls|xlsx|csv)$/i },
-    { value: 'ppt', icon: '📽️', labelEn: 'Presentation', labelAr: 'عرض تقديمي', previewable: false, matcher: /(powerpoint|presentation|ppt|pptx)$/i },
-    { value: 'image', icon: '🖼️', labelEn: 'Image', labelAr: 'صورة', previewable: true, matcher: /^image\//i },
-    { value: 'audio', icon: '🎧', labelEn: 'Audio', labelAr: 'صوت', previewable: false, matcher: /^audio\//i },
-    { value: 'video', icon: '🎞️', labelEn: 'Video', labelAr: 'فيديو', previewable: false, matcher: /^video\//i },
-    { value: 'other', icon: '📁', labelEn: 'Other', labelAr: 'ملف آخر', previewable: false, matcher: /.*/i }
+  readonly resourceTypeOptions: { value: ResourceDisplayType; icon: string; labelEn: string; labelAr: string; previewable: boolean; extensions: string[]; }[] = [
+    { value: 'compressed', icon: '🗜️', labelEn: 'Archive (ZIP/RAR)', labelAr: 'ملف مضغوط (ZIP/RAR)', previewable: false, extensions: ['zip', 'rar'] },
+    { value: 'pdf', icon: '📄', labelEn: 'PDF Document', labelAr: 'ملف PDF', previewable: true, extensions: ['pdf'] },
+    { value: 'ppt', icon: '📽️', labelEn: 'Presentation', labelAr: 'عرض تقديمي', previewable: false, extensions: ['ppt', 'pptx'] },
+    { value: 'excel', icon: '📊', labelEn: 'Excel Spreadsheet', labelAr: 'ملف Excel', previewable: false, extensions: ['xls', 'xlsx'] },
+    { value: 'word', icon: '📝', labelEn: 'Word Document', labelAr: 'ملف Word', previewable: false, extensions: ['doc', 'docx'] }
   ];
 
   showResourceModal: boolean = false;
@@ -95,6 +94,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   resourcePreviewSafeUrl: SafeResourceUrl | null = null;
   resourcePreviewItem: ContentItem | null = null;
   resourcePreviewKind: ResourceDisplayType | null = null;
+  resourceSaving: boolean = false;
+  resourceUploadInProgress: boolean = false;
+  resourceUploadProgress: number = 0;
   resourceForm: ResourceFormState = this.createDefaultResourceForm();
   
   private languageChangeSubscription?: Subscription;
@@ -107,6 +109,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private editorDeletedImageKeys: Set<string> = new Set<string>();
   private editorImageChangeDebounce: number | null = null;
   private currentEditingContentId: string | null = null;
+  private resourceUploadSub?: Subscription;
   private contentReorderLoading: Set<string> = new Set<string>();
   savingDraftCourse: boolean = false;
   deletingDraftCourse: boolean = false;
@@ -2394,11 +2397,25 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (typeof rawStatus === 'boolean') {
       normalizedStatus = rawStatus;
     } else if (typeof rawStatus === 'string') {
-      const statusStr = rawStatus.trim().toLowerCase();
-      normalizedStatus = ['published', 'true', 'active', 'ready', 'success'].includes(statusStr);
+      normalizedStatus = ['published', 'true', 'active', 'ready', 'success'].includes(rawStatus.trim().toLowerCase());
     }
 
-    return {
+    const meta = (record.meta ?? {}) as Record<string, unknown>;
+    const mappedAssets: ContentAsset[] = (record.assets ?? []).map((asset: any) => ({
+      id: asset.id ?? undefined,
+      url: asset.url ?? '',
+      filename: asset.filename ?? null,
+      position: asset.position ?? null,
+      kind: asset.kind ?? null,
+      mime: asset.mime ?? asset.extra?.mime ?? null,
+      filesize_bytes: asset.filesize_bytes ?? asset.extra?.filesize_bytes ?? null,
+      pages: asset.pages ?? null,
+      width: asset.width ?? null,
+      height: asset.height ?? null,
+      extra: asset.extra ?? {}
+    }));
+
+    const baseItem: ContentItem = {
       id: String(record.id),
       type: normalizedType,
       title: record.title,
@@ -2408,9 +2425,63 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       updatedAt: record.updated_at,
       position: record.position,
       status: normalizedStatus,
-      meta: record.meta ?? {},
-      assets: record.assets ?? []
+      meta,
+      assets: mappedAssets
     };
+
+    if (normalizedType === 'resources') {
+      const fileAsset = mappedAssets.find((asset) => (asset.kind ?? 'file') === 'file');
+      const descriptionValue = typeof meta['description'] === 'string' && (meta['description'] as string).trim().length > 0
+        ? (meta['description'] as string).trim()
+        : undefined;
+      const detectedKind = (meta['displayType'] as ResourceDisplayType | undefined)
+        || this.detectResourceDisplayType((fileAsset?.filename as string) || record.title)
+        || 'compressed';
+      const fileSize = typeof meta['fileSize'] === 'number'
+        ? (meta['fileSize'] as number)
+        : fileAsset?.filesize_bytes ?? 0;
+      const downloadUrl = typeof meta['url'] === 'string'
+        ? (meta['url'] as string)
+        : fileAsset?.url;
+      const storageKey = typeof meta['key'] === 'string'
+        ? (meta['key'] as string)
+        : (fileAsset?.extra && typeof fileAsset.extra === 'object')
+          ? (fileAsset.extra as any).s3Key
+          : undefined;
+      const pageCount = typeof meta['pageCount'] === 'number'
+        ? (meta['pageCount'] as number)
+        : fileAsset?.pages ?? undefined;
+      const assetId = typeof meta['assetId'] === 'number'
+        ? (meta['assetId'] as number)
+        : fileAsset?.id ?? null;
+      const previewable = detectedKind === 'pdf' && fileSize <= this.RESOURCE_INLINE_PREVIEW_LIMIT && !!downloadUrl;
+
+      const resourceDetails: ResourceDetails = {
+        fileName: (meta['fileName'] as string) || fileAsset?.filename || record.title,
+        fileType: (meta['fileType'] as string) || fileAsset?.mime || '',
+        fileSize,
+        description: descriptionValue,
+        previewMode: previewable ? 'inline' : 'download',
+        kind: detectedKind,
+        pageCount,
+        downloadUrl,
+        storageKey,
+        assetId,
+        storage: downloadUrl ? 's3' : undefined
+      };
+
+      if (previewable && downloadUrl) {
+        resourceDetails.dataUrl = downloadUrl;
+      }
+
+      return {
+        ...baseItem,
+        content: descriptionValue,
+        resourceDetails
+      };
+    }
+
+    return baseItem;
   }
 
   private rebuildLegacyContentItems(): void {
@@ -2746,7 +2817,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return {
       title: '',
       description: '',
-      displayType: 'pdf',
+      displayType: 'compressed',
       fileName: '',
       fileType: '',
       fileSize: 0,
@@ -3001,22 +3072,29 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.resourceFile = null;
     this.resourceUploadError = null;
     this.resourceUploading = false;
+    this.resourceSaving = false;
+    this.resourceUploadInProgress = false;
+    this.resourceUploadProgress = 0;
     this.resourcePreviewSafeUrl = null;
+    this.resourcePreviewItem = null;
+    this.resourcePreviewKind = null;
+    if (this.resourceUploadSub) {
+      this.resourceUploadSub.unsubscribe();
+      this.resourceUploadSub = undefined;
+    }
   }
 
-  private detectResourceDisplayType(fileName: string, mimeType: string): ResourceDisplayType {
+  private detectResourceDisplayType(fileName: string): ResourceDisplayType | null {
     const extension = (fileName.split('.').pop() || '').toLowerCase();
-    if (mimeType === 'application/pdf' || extension === 'pdf') return 'pdf';
-    if (mimeType.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(extension)) return 'image';
-    if (mimeType.startsWith('audio/') || ['mp3', 'wav', 'aac', 'ogg'].includes(extension)) return 'audio';
-    if (mimeType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv'].includes(extension)) return 'video';
-    if (['doc', 'docx', 'rtf', 'odt', 'pages'].includes(extension)) return 'word';
-    if (['xls', 'xlsx', 'csv', 'ods', 'tsv'].includes(extension)) return 'excel';
-    if (['ppt', 'pptx', 'key', 'odp'].includes(extension)) return 'ppt';
-    return 'other';
+
+    const match = this.resourceTypeOptions.find(option => option.extensions.includes(extension));
+    return match ? match.value : null;
   }
 
-  private isResourcePreviewable(displayType: ResourceDisplayType, fileSize: number): boolean {
+  private isResourcePreviewable(displayType: ResourceDisplayType | null, fileSize: number): boolean {
+    if (!displayType) {
+      return false;
+    }
     if (fileSize > this.RESOURCE_INLINE_PREVIEW_LIMIT) {
       return false;
     }
@@ -3031,7 +3109,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  closeResourceModal(): void {
+  closeResourceModal(force: boolean = false): void {
+    if (this.resourceUploadInProgress && !force) {
+      return;
+    }
     this.showResourceModal = false;
     this.selectedContentType = null;
     this.resetResourceForm();
@@ -3052,8 +3133,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private processResourceFile(file: File): void {
     if (file.size > this.RESOURCE_MAX_SIZE) {
       this.resourceUploadError = this.currentLang === 'ar'
-        ? 'الملف كبير جدًا. الحد الأقصى 8 ميجابايت.'
-        : 'File is too large. Maximum allowed size is 8 MB.';
+        ? 'الملف كبير جدًا. الحد الأقصى 100 ميجابايت.'
+        : 'File is too large. Maximum allowed size is 100 MB.';
       this.resourceFile = null;
       this.resourceForm.fileName = '';
       this.resourceForm.fileType = '';
@@ -3070,7 +3151,24 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.resourceFile = file;
 
     const mimeType = file.type || 'application/octet-stream';
-    const displayType = this.detectResourceDisplayType(file.name, mimeType);
+    const displayType = this.detectResourceDisplayType(file.name);
+
+    if (!displayType) {
+      this.resourceUploadError = this.currentLang === 'ar'
+        ? 'نوع الملف غير مدعوم. الصيغ المسموح بها: ZIP, RAR، PDF، PPT/PPTX، XLS/XLSX، DOC/DOCX.'
+        : 'Unsupported file type. Allowed formats are ZIP, RAR, PDF, PPT/PPTX, XLS/XLSX, DOC/DOCX.';
+      this.resourceFile = null;
+      this.resourceForm.fileName = '';
+      this.resourceForm.fileType = '';
+      this.resourceForm.fileSize = 0;
+      this.resourceForm.dataUrl = null;
+      this.resourceForm.pageCount = null;
+      this.resourcePreviewSafeUrl = null;
+      this.resourceUploading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
     const previewable = this.isResourcePreviewable(displayType, file.size);
 
     this.resourceForm.displayType = displayType;
@@ -3080,13 +3178,20 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.resourceForm.previewMode = previewable ? 'inline' : 'download';
     this.resourceForm.pageCount = null;
 
+    if (!previewable) {
+      this.resourceForm.dataUrl = null;
+      this.resourcePreviewSafeUrl = null;
+      this.resourceUploading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.resourceUploading = true;
     const reader = new FileReader();
     reader.onload = async () => {
       const result = reader.result as string;
       this.resourceForm.dataUrl = result;
-      this.resourcePreviewSafeUrl = previewable
-        ? this.sanitizer.bypassSecurityTrustResourceUrl(result)
-        : null;
+      this.resourcePreviewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(result);
 
       try {
         const arrayBuffer = await this.base64ToArrayBuffer(result);
@@ -3121,14 +3226,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   submitResource(): void {
-    if (!this.resourceForm.title.trim()) {
+    if (this.resourceSaving || this.resourceUploading || this.resourceUploadInProgress) {
+      return;
+    }
+
+    const trimmedTitle = this.resourceForm.title.trim();
+    if (!trimmedTitle) {
       alert(this.currentLang === 'ar'
         ? 'يرجى إدخال عنوان للموارد.'
         : 'Please provide a title for the resource.');
       return;
     }
 
-    if (!this.resourceForm.dataUrl || !this.resourceForm.fileName) {
+    if (!this.resourceFile || !this.resourceForm.fileName) {
       alert(this.currentLang === 'ar'
         ? 'يرجى اختيار ملف للموارد.'
         : 'Please select a file for the resource.');
@@ -3143,48 +3253,298 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const now = new Date().toISOString();
-    const resourceDetails: ResourceDetails = {
+    const numericSectionId = Number(activeSection.id);
+    if (!Number.isFinite(numericSectionId)) {
+      const message = this.currentLang === 'ar'
+        ? 'يرجى حفظ القسم على الخادم قبل إضافة الملفات.'
+        : 'Please sync the section with the server before adding resources.';
+      this.toastr.warning(message);
+      return;
+    }
+
+    const description = this.resourceForm.description?.trim();
+    const meta: Record<string, unknown> = {
+      description: description || undefined,
+      displayType: this.resourceForm.displayType,
       fileName: this.resourceForm.fileName,
       fileType: this.resourceForm.fileType,
       fileSize: this.resourceForm.fileSize,
-      description: this.resourceForm.description?.trim() || undefined,
-      dataUrl: this.resourceForm.dataUrl,
-      previewMode: this.resourceForm.previewMode,
-      kind: this.resourceForm.displayType,
       pageCount: this.resourceForm.pageCount ?? undefined
     };
 
-    const resourceItem: ContentItem = {
-      id: `resource-${Date.now()}`,
+    this.resourceSaving = true;
+    this.resourceUploadInProgress = true;
+    this.resourceUploadProgress = 0;
+    this.resourceUploadError = null;
+    this.cdr.detectChanges();
+
+    this.ai.createSectionContent(numericSectionId, {
       type: 'resources',
-      title: this.resourceForm.title.trim(),
-      content: this.resourceForm.description?.trim() || undefined,
-      section_id: activeSection.id,
-      createdAt: now,
-      updatedAt: now,
-      resourceDetails
+      title: trimmedTitle,
+      status: false,
+      meta
+    }).subscribe({
+      next: (response) => {
+        const record = response?.content;
+        if (!record) {
+          throw new Error('Empty response while creating resource content.');
+        }
+
+        const sectionKey = String(record.section_id);
+        const mappedItem = this.mapContentRecordToItem(record);
+        if (description && mappedItem) {
+          mappedItem.content = description;
+          if (mappedItem.resourceDetails) {
+            mappedItem.resourceDetails.description = description;
+          }
+        }
+
+        const targetSection = this.getSection(sectionKey);
+        if (targetSection) {
+          targetSection.content_items = [...targetSection.content_items, mappedItem].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+          targetSection.updatedAt = mappedItem.updatedAt || new Date().toISOString();
+        }
+        this.loadedSectionContentIds.add(sectionKey);
+        this.rebuildLegacyContentItems();
+        this.saveSections();
+        this.cdr.detectChanges();
+
+        this.resourceUploadProgress = Math.max(this.resourceUploadProgress, 10);
+        this.cdr.detectChanges();
+        this.uploadResourceFile(this.resourceFile!, numericSectionId, mappedItem, sectionKey);
+      },
+      error: (error) => {
+        this.resourceSaving = false;
+        this.resourceUploadInProgress = false;
+        const message = this.resolveErrorMessage(
+          error,
+          'Failed to create the resource. Please try again.',
+          'تعذر إنشاء الملف. حاول مرة أخرى.'
+        );
+        this.toastr.error(message);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private uploadResourceFile(file: File, sectionId: number, item: ContentItem, sectionKey: string): void {
+    if (this.resourceUploadSub) {
+      this.resourceUploadSub.unsubscribe();
+    }
+
+    this.resourceUploadSub = this.ai.uploadDraftContentResource(file, item.id).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          const total = event.total ?? 0;
+          if (total > 0) {
+            this.resourceUploadProgress = Math.min(99, Math.max(10, Math.round((event.loaded / total) * 100)));
+          } else {
+            this.resourceUploadProgress = Math.min(99, Math.max(this.resourceUploadProgress, 25));
+          }
+          this.cdr.detectChanges();
+        } else if (event.type === HttpEventType.Response) {
+          const asset = event.body?.asset;
+          if (asset) {
+            this.applyResourceAsset(sectionId, sectionKey, String(item.id), asset);
+          }
+
+          this.resourceUploadProgress = 100;
+          this.resourceSaving = false;
+          this.resourceUploadInProgress = false;
+          if (this.resourceUploadSub) {
+            this.resourceUploadSub.unsubscribe();
+            this.resourceUploadSub = undefined;
+          }
+
+          const successMessage = this.currentLang === 'ar'
+            ? 'تم حفظ الملف بنجاح.'
+            : 'Resource saved successfully.';
+          this.toastr.success(successMessage);
+
+          this.closeResourceModal(true);
+        }
+      },
+      error: (error) => {
+        this.handleResourceUploadFailure(error, sectionId, String(item.id), sectionKey);
+      }
+    });
+  }
+
+  private handleResourceUploadFailure(error: unknown, sectionId: number, contentId: string, sectionKey: string): void {
+    if (this.resourceUploadSub) {
+      this.resourceUploadSub.unsubscribe();
+      this.resourceUploadSub = undefined;
+    }
+
+    this.resourceSaving = false;
+    this.resourceUploadInProgress = false;
+    this.resourceUploadProgress = 0;
+    this.setContentStatusPending(contentId, false);
+
+    const message = this.resolveErrorMessage(
+      error,
+      'Failed to upload the resource. Please try again.',
+      'تعذر رفع الملف. حاول مرة أخرى.'
+    );
+    this.toastr.error(message);
+
+    this.removeContentItem(sectionKey, contentId);
+    this.resourceFile = null;
+    this.resourceForm.fileName = '';
+    this.resourceForm.fileType = '';
+    this.resourceForm.fileSize = 0;
+    this.resourceForm.dataUrl = null;
+    this.resourceForm.pageCount = null;
+    this.resourcePreviewSafeUrl = null;
+    this.resourceUploading = false;
+    this.cdr.detectChanges();
+
+    this.ai.deleteSectionContent(sectionId, contentId).subscribe({
+      error: (cleanupError) => console.error('Failed to remove resource content after upload failure', cleanupError)
+    });
+  }
+
+  private applyResourceAsset(sectionId: number, sectionKey: string, contentId: string, asset: UploadResourceResponse['asset']): void {
+    const targetSection = this.getSection(sectionKey);
+    if (!targetSection) {
+      return;
+    }
+
+    const itemIndex = targetSection.content_items.findIndex((ci) => ci.id === contentId);
+    if (itemIndex === -1) {
+      return;
+    }
+
+    const currentItem = targetSection.content_items[itemIndex];
+    const existingAssets = [...(currentItem.assets ?? [])];
+    const fileAssetIndex = existingAssets.findIndex((a) => (a.kind ?? 'file') === 'file');
+
+    const mappedAsset: ContentAsset = {
+      id: asset.id ?? undefined,
+      url: asset.url,
+      filename: asset.filename ?? currentItem.resourceDetails?.fileName ?? currentItem.title,
+      position: asset.position ?? (existingAssets.length + 1),
+      kind: asset.kind ?? 'file',
+      mime: asset.mime ?? null,
+      filesize_bytes: asset.size,
+      extra: {
+        ...(fileAssetIndex >= 0 && existingAssets[fileAssetIndex].extra ? existingAssets[fileAssetIndex].extra : {}),
+        s3Key: asset.key,
+        mime: asset.mime
+      }
     };
 
-    activeSection.content_items.push(resourceItem);
-    activeSection.updatedAt = now;
-    this.contentItems.push(resourceItem); // legacy support
+    if (fileAssetIndex >= 0) {
+      existingAssets[fileAssetIndex] = { ...existingAssets[fileAssetIndex], ...mappedAsset };
+    } else {
+      existingAssets.push(mappedAsset);
+    }
+
+    const meta = { ...(currentItem.meta ?? {}) } as Record<string, unknown>;
+    const inferredKind = (meta['displayType'] as ResourceDisplayType | undefined)
+      || this.detectResourceDisplayType(mappedAsset.filename || '')
+      || 'compressed';
+    const fileSize = mappedAsset.filesize_bytes ?? (typeof meta['fileSize'] === 'number' ? (meta['fileSize'] as number) : 0);
+    const previewable = inferredKind === 'pdf' && fileSize <= this.RESOURCE_INLINE_PREVIEW_LIMIT;
+    const descriptionValue = currentItem.resourceDetails?.description
+      ?? (typeof meta['description'] === 'string' ? (meta['description'] as string).trim() : undefined);
+
+    const updatedResourceDetails: ResourceDetails = {
+      fileName: mappedAsset.filename || (meta['fileName'] as string) || currentItem.title,
+      fileType: mappedAsset.mime || (meta['fileType'] as string) || '',
+      fileSize,
+      description: descriptionValue,
+      previewMode: previewable ? 'inline' : 'download',
+      kind: inferredKind,
+      pageCount: typeof meta['pageCount'] === 'number' ? (meta['pageCount'] as number) : currentItem.resourceDetails?.pageCount,
+      downloadUrl: mappedAsset.url,
+      storageKey: (mappedAsset.extra as any)?.s3Key ?? (meta['key'] as string | undefined),
+      assetId: mappedAsset.id ?? (typeof meta['assetId'] === 'number' ? (meta['assetId'] as number) : null),
+      storage: 's3'
+    };
+
+    if (previewable) {
+      updatedResourceDetails.dataUrl = mappedAsset.url;
+    }
+
+    const updatedMeta: Record<string, unknown> = {
+      ...meta,
+      description: updatedResourceDetails.description,
+      displayType: inferredKind,
+      fileName: updatedResourceDetails.fileName,
+      fileType: updatedResourceDetails.fileType,
+      fileSize: updatedResourceDetails.fileSize,
+      pageCount: updatedResourceDetails.pageCount,
+      url: mappedAsset.url,
+      key: (mappedAsset.extra as any)?.s3Key,
+      mime: mappedAsset.mime,
+      assetId: updatedResourceDetails.assetId,
+      storage: 's3'
+    };
+
+    const updatedItem: ContentItem = {
+      ...currentItem,
+      meta: updatedMeta,
+      assets: existingAssets,
+      resourceDetails: updatedResourceDetails,
+      content: updatedResourceDetails.description,
+      updatedAt: new Date().toISOString()
+    };
+
+    targetSection.content_items[itemIndex] = updatedItem;
+    this.setContentStatusPending(contentId, false);
+    this.rebuildLegacyContentItems();
     this.saveSections();
+    this.cdr.detectChanges();
 
-    const userId = this.student?.id || this.student?.user_id;
-    const draft = this.ai.getDraft(userId);
-    this.ai.saveDraft({
-      ...draft,
-      content_items: this.contentItems
-    }, userId);
+    this.ai.updateSectionContent(sectionId, contentId, {
+      meta: updatedMeta,
+      status: updatedItem.status ?? true
+    }).subscribe({
+      next: (response) => {
+        const content = response?.content;
+        if (!content) {
+          return;
+        }
+        const refreshed = this.mapContentRecordToItem(content);
+        const refreshedSection = this.getSection(sectionKey);
+        if (!refreshedSection) {
+          return;
+        }
+        const refreshedIndex = refreshedSection.content_items.findIndex((ci) => ci.id === refreshed.id);
+        if (refreshedIndex !== -1) {
+          refreshedSection.content_items[refreshedIndex] = {
+            ...refreshedSection.content_items[refreshedIndex],
+            ...refreshed
+          };
+          this.rebuildLegacyContentItems();
+          this.saveSections();
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Failed to persist resource metadata', error);
+      }
+    });
+  }
 
-    this.closeResourceModal();
+  private removeContentItem(sectionId: string, contentId: string): void {
+    const targetSection = this.getSection(sectionId);
+    if (targetSection) {
+      targetSection.content_items = targetSection.content_items.filter((item) => item.id !== contentId);
+      targetSection.updatedAt = new Date().toISOString();
+    }
+
+    this.rebuildLegacyContentItems();
+    this.saveSections();
+    this.pendingContentStatus.delete(contentId);
   }
 
   openResourcePreview(item: ContentItem): void {
     this.resourcePreviewItem = item;
     const dataUrl = item.resourceDetails?.dataUrl || null;
-    const displayType = (item.resourceDetails?.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(item.resourceDetails?.fileName || '', item.resourceDetails?.fileType || '');
+    const detectedKind = this.detectResourceDisplayType(item.resourceDetails?.fileName || '');
+    const displayType = (item.resourceDetails?.kind as ResourceDisplayType | undefined) || detectedKind || 'pdf';
     const previewable = dataUrl ? this.isResourcePreviewable(displayType, item.resourceDetails?.fileSize || 0) : false;
 
     if (item.resourceDetails && !item.resourceDetails.kind) {
@@ -3193,7 +3553,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
     if (item.resourceDetails) {
       item.resourceDetails.previewMode = previewable ? 'inline' : 'download';
-      if (item.resourceDetails.pageCount === undefined || item.resourceDetails.pageCount === null) {
+      if (previewable && (item.resourceDetails.pageCount === undefined || item.resourceDetails.pageCount === null)) {
         void this.populateExistingResourceMetadata(item, displayType);
       }
     }
@@ -3218,18 +3578,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (!details) {
       return this.currentLang === 'ar' ? 'غير محدد' : 'Unspecified';
     }
-    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
-    const option = this.resourceTypeOptions.find(opt => opt.value === kind);
+    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName);
+    const option = kind ? this.resourceTypeOptions.find(opt => opt.value === kind) : undefined;
     if (!option) {
-      return details.fileType;
+      return details.fileType || (this.currentLang === 'ar' ? 'غير محدد' : 'Unspecified');
     }
     return this.currentLang === 'ar' ? option.labelAr : option.labelEn;
   }
 
   getResourceIcon(details?: ResourceDetails | null): string {
     if (!details) return '📁';
-    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
-    const option = this.resourceTypeOptions.find(opt => opt.value === kind);
+    const detectedKind = this.detectResourceDisplayType(details.fileName);
+    const kind = (details.kind as ResourceDisplayType | undefined) || detectedKind;
+    const option = kind ? this.resourceTypeOptions.find(opt => opt.value === kind) : undefined;
     return option?.icon || '📁';
   }
 
@@ -3243,14 +3604,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   isPdfResource(details?: ResourceDetails | null): boolean {
     if (!details) return false;
-    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
+    const detectedKind = this.detectResourceDisplayType(details.fileName);
+    const kind = (details.kind as ResourceDisplayType | undefined) || detectedKind;
     return kind === 'pdf';
   }
 
   isImageResource(details?: ResourceDetails | null): boolean {
-    if (!details) return false;
-    const kind = (details.kind as ResourceDisplayType | undefined) || this.detectResourceDisplayType(details.fileName, details.fileType);
-    return kind === 'image';
+    return false;
   }
 
   getResourceDownloadName(details?: ResourceDetails | null): string {
@@ -3307,7 +3667,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       fileType: this.resourceForm.fileType,
       fileSize: this.resourceForm.fileSize,
       kind: this.resourceForm.displayType,
-      pageCount: this.resourceForm.pageCount ?? undefined
+      pageCount: this.resourceForm.pageCount ?? undefined,
+      description: this.resourceForm.description?.trim() || undefined,
+      previewMode: this.resourceForm.previewMode
     });
   }
 
