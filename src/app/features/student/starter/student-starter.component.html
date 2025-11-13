@@ -307,15 +307,21 @@
                         <button
                           type="button"
                           class="content-toggle-switch"
-                          (click)="$event.stopPropagation(); toggleContentVisibility(section.id, item.id, $event)"
+                          (click)="$event.stopPropagation(); toggleContentStatus(section.id, item.id, $event)"
                           role="switch"
-                          [attr.aria-checked]="isContentVisible(item)"
-                          [attr.aria-label]="isContentVisible(item) ? (currentLang === 'ar' ? 'إخفاء المحتوى' : 'Hide content') : (currentLang === 'ar' ? 'إظهار المحتوى' : 'Show content')"
-                          [class.active]="isContentVisible(item)">
+                          [attr.aria-checked]="isContentStatusActive(item)"
+                          [attr.aria-label]="isContentStatusActive(item) ? (currentLang === 'ar' ? 'إيقاف المحتوى' : 'Deactivate content') : (currentLang === 'ar' ? 'تنشيط المحتوى' : 'Activate content')"
+                          [class.active]="isContentStatusActive(item)"
+                          [disabled]="isContentStatusWaiting(item)">
                           <span class="switch-track">
                             <span class="switch-handle"></span>
                           </span>
                         </button>
+ 
+                         <span class="status-inline" *ngIf="isContentStatusWaiting(item)">
+                           ⏳
+                         </span>
+
                         <button
                           type="button"
                           class="content-icon-btn delete"
@@ -324,8 +330,10 @@
                           🗑️
                         </button>
                       </div>
-                      <div class="content-item-meta" *ngIf="item.createdAt">
-                        {{ formatContentDate(item.createdAt) }}
+                      <div class="content-item-meta" *ngIf="item.createdAt || item.status !== undefined && item.status !== null">
+                        <span class="content-item-date" *ngIf="item.createdAt">
+                          {{ formatContentDate(item.createdAt) }}
+                        </span>
                       </div>
                     </div>
                   </div>

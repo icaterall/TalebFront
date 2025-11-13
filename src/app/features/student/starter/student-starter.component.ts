@@ -1340,13 +1340,55 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       type: 'text',
       title: trimmedTitle,
       body_html: editorContent,
-      status: 'draft',
-      visibility: 'private'
+      status: false
     };
 
     const editingItem = this.viewingContentItem;
     const editingContentId = editingItem ? Number(editingItem.id) : NaN;
     const isUpdatingExisting = Number.isFinite(editingContentId);
+
+    const sectionKey = String(activeSection.id);
+    const targetSection = this.getSection(sectionKey);
+    let placeholderItemId: string | null = null;
+    let targetSectionIndex = -1;
+    let previousItemSnapshot: ContentItem | null = null;
+
+    if (targetSection) {
+      if (isUpdatingExisting) {
+        targetSectionIndex = targetSection.content_items.findIndex(item => item.id === String(editingItem?.id));
+        if (targetSectionIndex >= 0) {
+          previousItemSnapshot = { ...targetSection.content_items[targetSectionIndex] };
+          targetSection.content_items[targetSectionIndex] = {
+            ...targetSection.content_items[targetSectionIndex],
+            title: trimmedTitle,
+            content: editorContent,
+            status: false,
+            updatedAt: new Date().toISOString()
+          };
+          this.setContentStatusPending(previousItemSnapshot.id, true);
+        }
+      } else {
+        placeholderItemId = this.generateDraftContentId();
+        const nowIso = new Date().toISOString();
+        const placeholder: ContentItem = {
+          id: placeholderItemId,
+          type: 'text',
+          title: trimmedTitle,
+          content: editorContent,
+          section_id: sectionKey,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+          position: targetSection.content_items.length + 1,
+          status: false
+        };
+        targetSectionIndex = targetSection.content_items.length;
+        targetSection.content_items = [...targetSection.content_items, placeholder];
+        this.setContentStatusPending(placeholderItemId, true);
+      }
+
+      this.rebuildLegacyContentItems();
+      this.cdr.detectChanges();
+    }
 
     this.savingTextContent = true;
     this.textSaveError = null;
@@ -1370,30 +1412,32 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           }
 
           const mappedItem = this.mapContentRecordToItem(record);
-          const sectionKey = String(record.section_id);
-          const targetSection = this.getSection(sectionKey);
+          const responseSectionKey = String(record.section_id);
+          const responseSection = this.getSection(responseSectionKey);
 
-          if (!targetSection) {
+          if (!responseSection) {
             console.warn('Unable to locate section locally for content record.', record);
             return;
           }
 
-          if (editingItem && !Number.isFinite(Number(editingItem.id))) {
-            targetSection.content_items = targetSection.content_items.filter((item) => item.id !== editingItem.id);
+          if (!isUpdatingExisting && placeholderItemId) {
+            responseSection.content_items = responseSection.content_items.filter(item => item.id !== placeholderItemId);
+            this.setContentStatusPending(placeholderItemId, false);
           }
 
-          const existingIndex = targetSection.content_items.findIndex((item) => item.id === mappedItem.id);
+          const existingIndex = responseSection.content_items.findIndex((item) => item.id === mappedItem.id);
           if (existingIndex >= 0) {
-            targetSection.content_items[existingIndex] = mappedItem;
+            responseSection.content_items[existingIndex] = mappedItem;
           } else {
-            targetSection.content_items.push(mappedItem);
-            targetSection.content_items.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+            responseSection.content_items.push(mappedItem);
+            responseSection.content_items.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
           }
 
-          targetSection.updatedAt = mappedItem.updatedAt || new Date().toISOString();
-          this.loadedSectionContentIds.add(sectionKey);
+          responseSection.updatedAt = mappedItem.updatedAt || new Date().toISOString();
+          this.loadedSectionContentIds.add(responseSectionKey);
           this.rebuildLegacyContentItems();
           this.saveSections();
+          this.setContentStatusPending(mappedItem.id, false);
 
           this.pruneUnusedPendingImages(record.body_html ?? editorContent);
           this.viewingContentItem = null;
@@ -1404,6 +1448,21 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           this.textSaveError = this.currentLang === 'ar'
             ? 'تعذر حفظ الدرس. حاول مرة أخرى.'
             : 'Failed to save the lesson. Please try again.';
+
+          if (placeholderItemId) {
+            const fallbackSection = this.getSection(sectionKey);
+            if (fallbackSection) {
+              fallbackSection.content_items = fallbackSection.content_items.filter(item => item.id !== placeholderItemId);
+              this.rebuildLegacyContentItems();
+            }
+            this.setContentStatusPending(placeholderItemId, false);
+          }
+
+          if (previousItemSnapshot && targetSection && targetSectionIndex >= 0) {
+            targetSection.content_items[targetSectionIndex] = previousItemSnapshot;
+            this.rebuildLegacyContentItems();
+            this.setContentStatusPending(previousItemSnapshot.id, false);
+          }
         }
       });
   }
@@ -2330,6 +2389,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       ? (record.type as ContentItem['type'])
       : 'text';
 
+    const rawStatus = record.status;
+    let normalizedStatus = false;
+    if (typeof rawStatus === 'boolean') {
+      normalizedStatus = rawStatus;
+    } else if (typeof rawStatus === 'string') {
+      const statusStr = rawStatus.trim().toLowerCase();
+      normalizedStatus = ['published', 'true', 'active', 'ready', 'success'].includes(statusStr);
+    }
+
     return {
       id: String(record.id),
       type: normalizedType,
@@ -2339,8 +2407,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       createdAt: record.created_at,
       updatedAt: record.updated_at,
       position: record.position,
-      status: record.status,
-      visibility: record.visibility,
+      status: normalizedStatus,
       meta: record.meta ?? {},
       assets: record.assets ?? []
     };
@@ -3545,101 +3612,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.coverImageLoaded = false;
   }
 
-  isContentVisible(item: ContentItem | null | undefined): boolean {
-    if (!item) return false;
-    const visibility = (item.visibility || '').toLowerCase();
-    return visibility !== 'private' && visibility !== 'hidden';
-  }
-
-  toggleContentVisibility(sectionId: string, contentId: string, event: Event): void {
-    event.stopPropagation();
-
-    const section = this.sections.find(s => s.id === sectionId);
-    if (!section) return;
-
-    const itemIndex = section.content_items.findIndex(item => item.id === contentId);
-    if (itemIndex === -1) return;
-
-    const currentItem = section.content_items[itemIndex];
-    const previousState = { ...currentItem };
-    const nextVisibility = this.isContentVisible(currentItem) ? 'private' : 'public';
-    const timestamp = new Date().toISOString();
-
-    const updatedItem: ContentItem = {
-      ...currentItem,
-      visibility: nextVisibility,
-      updatedAt: timestamp
-    };
-
-    section.content_items = [
-      ...section.content_items.slice(0, itemIndex),
-      updatedItem,
-      ...section.content_items.slice(itemIndex + 1)
-    ];
-    section.updatedAt = timestamp;
-    this.rebuildLegacyContentItems();
-    this.saveSections();
-    this.cdr.detectChanges();
-
-    const numericSectionId = Number(sectionId);
-    const numericContentId = Number(contentId);
-    if (!Number.isFinite(numericSectionId) || !Number.isFinite(numericContentId)) {
-      return;
-    }
-
-    const payload: CreateSectionContentPayload = {
-      type: updatedItem.type,
-      title: updatedItem.title,
-      status: updatedItem.status ?? 'draft',
-      visibility: nextVisibility,
-      position: updatedItem.position
-    };
-
-    if (updatedItem.type === 'text') {
-      payload.body_html = updatedItem.content ?? '';
-    }
-
-    if (updatedItem.meta && Object.keys(updatedItem.meta).length > 0) {
-      payload.meta = updatedItem.meta;
-    }
-
-    this.ai.updateSectionContent(numericSectionId, numericContentId, payload).subscribe({
-      next: (response) => {
-        const record = response?.content;
-        if (!record) {
-          return;
-        }
-
-        const mapped = this.mapContentRecordToItem(record);
-        section.content_items = [
-          ...section.content_items.slice(0, itemIndex),
-          mapped,
-          ...section.content_items.slice(itemIndex + 1)
-        ];
-        section.updatedAt = mapped.updatedAt || section.updatedAt;
-        this.rebuildLegacyContentItems();
-        this.saveSections();
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to update content visibility:', error);
-        section.content_items = [
-          ...section.content_items.slice(0, itemIndex),
-          previousState,
-          ...section.content_items.slice(itemIndex + 1)
-        ];
-        section.updatedAt = previousState.updatedAt || section.updatedAt;
-        this.rebuildLegacyContentItems();
-        this.saveSections();
-        this.cdr.detectChanges();
-        const message = this.currentLang === 'ar'
-          ? 'تعذر تحديث حالة الظهور. حاول مرة أخرى.'
-          : 'Failed to update visibility. Please try again.';
-        this.toastr.error(message);
-      }
-    });
-  }
-
   formatContentDate(value: string | Date | null | undefined): string {
     if (!value) {
       return '';
@@ -3896,4 +3868,176 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return false;
     }
   }
+
+  getContentStatusLabel(item: ContentItem | null | undefined): string {
+    const state = this.resolveContentStatusState(item?.status);
+    switch (state) {
+      case 'waiting':
+        return this.currentLang === 'ar' ? 'قيد الانتظار' : 'Waiting';
+      case 'failed':
+        return this.currentLang === 'ar' ? 'فشل' : 'Failed';
+      default:
+        return this.currentLang === 'ar' ? 'جاهز' : 'Ready';
+    }
+  }
+
+  getContentStatusClasses(item: ContentItem | null | undefined): string {
+    const state = this.resolveContentStatusState(item?.status);
+    return `status-${state}`;
+  }
+
+  isContentStatusFailed(item: ContentItem | null | undefined): boolean {
+    return this.resolveContentStatusState(item?.status) === 'failed';
+  }
+
+  private resolveContentStatusState(status: unknown): 'waiting' | 'success' | 'failed' {
+    if (typeof status === 'boolean') {
+      return status ? 'success' : 'waiting';
+    }
+
+    if (status === null || typeof status === 'undefined') {
+      return 'success';
+    }
+
+    const normalized = String(status).trim().toLowerCase();
+    if (!normalized) {
+      return 'success';
+    }
+
+    if (['waiting', 'pending', 'processing', 'draft', 'queued', 'queue', 'in_progress', 'in-progress', 'false', '0', 'no'].includes(normalized)) {
+      return 'waiting';
+    }
+
+    if (['failed', 'error', 'rejected', 'cancelled', 'canceled'].includes(normalized)) {
+      return 'failed';
+    }
+
+    return 'success';
+  }
+
+  toggleContentStatus(sectionId: string, contentId: string, event: Event): void {
+    event.stopPropagation();
+
+    const section = this.sections.find(s => s.id === sectionId);
+    if (!section) {
+      return;
+    }
+
+    const itemIndex = section.content_items.findIndex(item => item.id === contentId);
+    if (itemIndex === -1) {
+      return;
+    }
+
+    const currentItem = section.content_items[itemIndex];
+    const previousState = { ...currentItem };
+    const nextStatus = !this.isContentStatusActive(currentItem);
+    const timestamp = new Date().toISOString();
+
+    const updatedItem: ContentItem = {
+      ...currentItem,
+      status: nextStatus,
+      updatedAt: timestamp
+    };
+
+    section.content_items = [
+      ...section.content_items.slice(0, itemIndex),
+      updatedItem,
+      ...section.content_items.slice(itemIndex + 1)
+    ];
+    section.updatedAt = timestamp;
+    this.rebuildLegacyContentItems();
+    this.cdr.detectChanges();
+    this.setContentStatusPending(contentId, true);
+
+    const numericSectionId = Number(sectionId);
+    const numericContentId = Number(contentId);
+    if (!Number.isFinite(numericSectionId) || !Number.isFinite(numericContentId)) {
+      return;
+    }
+
+    const payload: CreateSectionContentPayload = {
+      type: currentItem.type,
+      title: currentItem.title,
+      status: nextStatus,
+      position: currentItem.position
+    };
+
+    if (currentItem.type === 'text') {
+      payload.body_html = currentItem.content ?? '';
+    }
+
+    if (currentItem.meta && Object.keys(currentItem.meta).length > 0) {
+      payload.meta = currentItem.meta;
+    }
+
+    this.ai.updateSectionContent(numericSectionId, numericContentId, payload).subscribe({
+      next: (response) => {
+        const record = response?.content;
+        if (!record) {
+          return;
+        }
+
+        const mapped = this.mapContentRecordToItem(record);
+        section.content_items = [
+          ...section.content_items.slice(0, itemIndex),
+          mapped,
+          ...section.content_items.slice(itemIndex + 1)
+        ];
+        section.updatedAt = mapped.updatedAt || section.updatedAt;
+        this.rebuildLegacyContentItems();
+        this.saveSections();
+        this.setContentStatusPending(mapped.id, false);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to update content status:', error);
+        section.content_items = [
+          ...section.content_items.slice(0, itemIndex),
+          previousState,
+          ...section.content_items.slice(itemIndex + 1)
+        ];
+        section.updatedAt = previousState.updatedAt || section.updatedAt;
+        this.rebuildLegacyContentItems();
+        this.saveSections();
+        this.setContentStatusPending(contentId, false);
+        this.cdr.detectChanges();
+
+        const message = this.currentLang === 'ar'
+          ? 'تعذر تحديث حالة المحتوى. حاول مرة أخرى.'
+          : 'Failed to update the content status. Please try again.';
+        this.toastr.error(message);
+      }
+    });
+  }
+
+  isContentStatusActive(item: ContentItem | null | undefined): boolean {
+    if (!item) {
+      return false;
+    }
+
+    return !!item.status;
+  }
+
+  isContentStatusWaiting(item: ContentItem | null | undefined): boolean {
+    if (!item) {
+      return false;
+    }
+
+    return this.pendingContentStatus.has(item.id);
+  }
+
+  private setContentStatusPending(id: string | null | undefined, pending: boolean): void {
+    if (!id) {
+      return;
+    }
+
+    const key = String(id);
+    if (pending) {
+      this.pendingContentStatus.add(key);
+    } else {
+      this.pendingContentStatus.delete(key);
+    }
+  }
+
+  private pendingContentStatus: Set<string> = new Set<string>();
  }

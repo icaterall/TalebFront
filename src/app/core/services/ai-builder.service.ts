@@ -25,8 +25,7 @@ export interface ContentItem {
   updatedAt?: string;
   section_id?: string; // Link content to section
   position?: number;
-  status?: string;
-  visibility?: string;
+  status?: boolean;
   meta?: Record<string, unknown> | null;
   resourceDetails?: ResourceDetails;
   assets?: ContentAsset[];
@@ -41,8 +40,7 @@ export interface SectionContentRecord {
   body_html?: string | null;
   position: number;
   meta?: Record<string, unknown> | null;
-  visibility: string;
-  status: string;
+  status: string | boolean;
   created_by: number;
   created_at: string;
   updated_at: string;
@@ -71,8 +69,7 @@ export interface CreateSectionContentPayload {
   title: string;
   body_html?: string;
   position?: number;
-  visibility?: string;
-  status?: string;
+  status?: boolean;
   meta?: Record<string, unknown> | null;
 }
 
