@@ -33,6 +33,8 @@ import { CategorySelectorComponent } from './components/category-selector/catego
 import { CoverImageComponent } from './components/cover-image/cover-image.component';
 import { VideoSource, VideoFormState, VideoDetails, YouTubeVideoData } from './types/video.types';
 import { VideoUploadService } from './services/video-upload.service';
+import { AudioSource, AudioFormState, AudioMetadata, AudioGenerationRequest } from './types/audio.types';
+import { AudioUploadService } from './services/audio-upload.service';
 interface Category {
   id: number;
   name_en: string;
@@ -77,6 +79,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly toastr = inject(ToastrService);
   private readonly videoUploadService = inject(VideoUploadService);
+  private readonly audioUploadService = inject(AudioUploadService);
   
   private readonly RESOURCE_MAX_SIZE = 100 * 1024 * 1024; // 100MB
   private readonly RESOURCE_INLINE_PREVIEW_LIMIT = 5 * 1024 * 1024; // 5MB for inline previews
@@ -117,6 +120,31 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   private readonly VIDEO_MAX_SIZE = 100 * 1024 * 1024; // 100MB
   private readonly VIDEO_ACCEPTED_FORMATS = ['video/mp4', 'video/x-msvideo', '.mp4', '.avi'];
+  
+  // Audio Modal Properties
+  showAudioModal: boolean = false;
+  viewingAudioContent: boolean = false;
+  audioContentItem: ContentItem | null = null;
+  audioForm: AudioFormState = this.createDefaultAudioForm();
+  audioUploadError: string | null = null;
+  audioUploadInProgress: boolean = false;
+  audioUploadProgress: number = 0;
+  savingAudio: boolean = false;
+  deletingAudio: boolean = false;
+  generatingAudio: boolean = false;
+  audioGenerationProgress: number = 0;
+  
+  private readonly AUDIO_MAX_SIZE = 50 * 1024 * 1024; // 50MB
+  private readonly AUDIO_ACCEPTED_FORMATS = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg', '.mp3', '.wav', '.m4a', '.ogg'];
+  
+  // Available TTS voices
+  readonly ttsVoices = [
+    { value: 'zeina', labelEn: 'Zeina (Arabic Female)', labelAr: 'زينة (أنثى عربية)' },
+    { value: 'hala', labelEn: 'Hala (Arabic Female)', labelAr: 'هالة (أنثى عربية)' },
+    { value: 'zayd', labelEn: 'Zayd (Arabic Male)', labelAr: 'زيد (ذكر عربي)' },
+    { value: 'joanna', labelEn: 'Joanna (English Female)', labelAr: 'جوانا (أنثى إنجليزية)' },
+    { value: 'matthew', labelEn: 'Matthew (English Male)', labelAr: 'ماثيو (ذكر إنجليزي)' }
+  ];
   
   private languageChangeSubscription?: Subscription;
   private draftCourseId: number | null = null;
@@ -1068,6 +1096,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
     
+    if (contentType === 'audio') {
+      this.openAudioModal('audio');
+      return;
+    }
+    
     // For other content types, show the AI/Manual choice modal
     this.selectedContentType = contentType;
     this.showContentTypeModal = true;
@@ -1698,6 +1731,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.viewingVideoContent = false;
       }
       
+      // Close audio modal if deleting the currently viewed audio
+      if (this.viewingAudioContent && this.audioContentItem && this.audioContentItem.id === this.itemToDelete) {
+        this.showAudioModal = false;
+        this.audioContentItem = null;
+        this.viewingAudioContent = false;
+      }
+      
       this.showWarningModal = false;
       this.warningModalType = null;
       this.itemToDelete = null;
@@ -1710,9 +1750,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     };
 
     if (targetSection && Number.isFinite(numericSectionId) && Number.isFinite(numericContentId)) {
-      // Check if this is a video content item that needs S3 deletion
+      // Check if this is a video or audio content item that needs S3 deletion
       const contentItem = this.contentItems.find(item => item.id === this.itemToDelete);
       const isVideoContent = contentItem?.type === 'video';
+      const isAudioContent = contentItem?.type === 'audio';
       
       // Delete from database first
       this.ai.deleteSectionContent(numericSectionId, numericContentId).subscribe({
@@ -1737,8 +1778,26 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
                 this.toastr.warning(warningMessage);
               }
             });
+          } else if (isAudioContent && contentItem?.meta && (contentItem.meta['provider'] === 'upload' || contentItem.meta['provider'] === 'convert' || contentItem.meta['provider'] === 'generate') && contentItem.meta['dataUrl']) {
+            // If it's an audio file (uploaded or generated), delete from S3
+            const audioUrl = contentItem.meta['dataUrl'] as string;
+            this.audioUploadService.deleteAudios([audioUrl]).subscribe({
+              next: () => {
+                console.log('Audio file deleted from S3 successfully');
+                removeLocally();
+              },
+              error: (s3Error) => {
+                console.error('Failed to delete audio file from S3:', s3Error);
+                // Still remove locally even if S3 deletion fails
+                removeLocally();
+                const warningMessage = this.currentLang === 'ar'
+                  ? 'تم حذف المحتوى ولكن فشل حذف الملف الصوتي من التخزين'
+                  : 'Content deleted but failed to remove audio file from storage';
+                this.toastr.warning(warningMessage);
+              }
+            });
           } else {
-            // Not a local video or no file to delete
+            // Not a local video/audio or no file to delete
             removeLocally();
           }
         },
@@ -3759,6 +3818,43 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return entries;
   }
 
+  getAudioDetailEntries(item: ContentItem): { label: string; value: string }[] {
+    if (!item || item.type !== 'audio' || !item.meta) {
+      return [];
+    }
+
+    const labelSource = this.currentLang === 'ar' ? 'المصدر' : 'Source';
+    const labelDuration = this.currentLang === 'ar' ? 'المدة' : 'Duration';
+    const labelSize = this.currentLang === 'ar' ? 'الحجم' : 'Size';
+
+    const entries: { label: string; value: string }[] = [];
+    const meta = item.meta as any;
+
+    // Audio source/provider
+    if (meta.provider) {
+      const providerLabel = meta.provider === 'upload' 
+        ? (this.currentLang === 'ar' ? 'رفع ملف' : 'File Upload')
+        : meta.provider === 'convert' 
+          ? (this.currentLang === 'ar' ? 'تحويل نص' : 'Text Conversion')
+          : meta.provider === 'generate'
+            ? (this.currentLang === 'ar' ? 'توليد بالذكاء الاصطناعي' : 'AI Generated')
+            : meta.provider;
+      entries.push({ label: labelSource, value: providerLabel });
+    }
+
+    // Duration (most important for audio)
+    if (meta.duration) {
+      const durationFormatted = this.formatDuration(meta.duration);
+      entries.push({ label: labelDuration, value: durationFormatted });
+    }
+
+    // File size
+    if (meta.fileSize) {
+      entries.push({ label: labelSize, value: this.formatFileSize(meta.fileSize) });
+    }
+
+    return entries;
+  }
 
   getResourceDetailEntriesFromForm(): { label: string; value: string }[] {
     if (!this.resourceForm.fileName) {
@@ -5009,6 +5105,443 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.itemToDelete = this.videoContentItem.id;
     this.warningModalType = 'deleteContent';
     this.showWarningModal = true;
+  }
+
+  // ============= Audio Modal Methods =============
+  
+  private createDefaultAudioForm(): AudioFormState {
+    return {
+      source: null,
+      title: '',
+      description: '',
+      file: null,
+      fileName: '',
+      fileSize: 0,
+      metadata: null,
+      selectedTextLessonId: null,
+      selectedTextLesson: null,
+      textContent: '',
+      voice: 'alloy',
+      speed: 1.0
+    };
+  }
+
+  private resetAudioForm(): void {
+    this.audioForm = this.createDefaultAudioForm();
+    this.audioUploadError = null;
+    this.audioUploadInProgress = false;
+    this.audioUploadProgress = 0;
+    this.generatingAudio = false;
+    this.audioGenerationProgress = 0;
+  }
+
+  openAudioModal(contentType: 'audio'): void {
+    this.selectedContentType = contentType;
+    this.resetAudioForm();
+    this.viewingAudioContent = false;
+    this.audioContentItem = null;
+    this.showAudioModal = true;
+  }
+
+  openAudioContentModal(item: ContentItem): void {
+    console.log('Opening audio modal for item:', item);
+    console.log('Audio meta data:', item.meta);
+    this.audioContentItem = item;
+    this.viewingAudioContent = true;
+    this.showAudioModal = true;
+  }
+
+  editAudioContent(): void {
+    if (!this.audioContentItem) return;
+    
+    // Switch to edit mode
+    this.viewingAudioContent = false;
+    
+    // Populate the form with existing data
+    this.audioForm.title = this.audioContentItem.title;
+    this.audioForm.source = 'upload'; // Default to upload for editing
+    
+    if (this.audioContentItem.meta) {
+      const meta = this.audioContentItem.meta as any;
+      this.audioForm.metadata = {
+        duration: typeof meta.duration === 'number' ? meta.duration : 0,
+        durationFormatted: typeof meta.durationFormatted === 'string' ? meta.durationFormatted : undefined,
+        fileSize: typeof meta.fileSize === 'number' ? meta.fileSize : undefined,
+        fileName: typeof meta.fileName === 'string' ? meta.fileName : undefined
+      };
+      
+      // Set the existing audio URL for preview
+      this.audioForm.existingUrl = typeof meta.dataUrl === 'string' ? meta.dataUrl : undefined;
+    }
+  }
+
+  openContentItem(item: ContentItem): void {
+    if (item.type === 'video') {
+      this.videoContentItem = item;
+      this.viewingVideoContent = true;
+      this.showVideoModal = true;
+    } else if (item.type === 'audio') {
+      this.openAudioContentModal(item);
+    } else if (item.type === 'resources') {
+      // Handle resource modal opening if needed
+      // For now, resources might not have a preview modal
+    }
+  }
+
+  closeAudioModal(): void {
+    this.showAudioModal = false;
+    this.viewingAudioContent = false;
+    this.audioContentItem = null;
+    this.resetAudioForm();
+  }
+
+  selectAudioSource(source: AudioSource): void {
+    this.audioForm.source = source;
+    this.audioUploadError = null;
+  }
+
+  resetAudioSource(): void {
+    this.audioForm.source = null;
+    this.audioUploadError = null;
+  }
+
+  onAudioFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) {
+      return;
+    }
+
+    // Validate file type
+    const isValidType = this.AUDIO_ACCEPTED_FORMATS.some(format => 
+      format.startsWith('.') ? file.name.toLowerCase().endsWith(format) : file.type === format
+    );
+
+    if (!isValidType) {
+      this.audioUploadError = this.currentLang === 'ar'
+        ? 'نوع الملف غير مدعوم. يرجى اختيار ملف صوتي صالح (MP3, WAV, M4A, OGG)'
+        : 'Unsupported file type. Please select a valid audio file (MP3, WAV, M4A, OGG)';
+      return;
+    }
+
+    // Validate file size
+    if (file.size > this.AUDIO_MAX_SIZE) {
+      this.audioUploadError = this.currentLang === 'ar'
+        ? `حجم الملف كبير جداً. الحد الأقصى ${Math.round(this.AUDIO_MAX_SIZE / (1024 * 1024))} ميجابايت`
+        : `File size too large. Maximum ${Math.round(this.AUDIO_MAX_SIZE / (1024 * 1024))} MB allowed`;
+      return;
+    }
+
+    this.audioForm.file = file;
+    this.audioForm.fileName = file.name;
+    this.audioForm.fileSize = file.size;
+    this.audioUploadError = null;
+
+    // Extract audio metadata
+    this.audioUploadService.extractAudioMetadata(file)
+      .then(metadata => {
+        this.audioForm.metadata = {
+          duration: metadata.duration,
+          durationFormatted: this.formatDuration(metadata.duration),
+          fileSize: file.size,
+          fileName: file.name,
+          bitrate: metadata.bitrate,
+          sampleRate: metadata.sampleRate
+        };
+        this.cdr.detectChanges();
+      })
+      .catch(error => {
+        console.error('Failed to extract audio metadata:', error);
+        this.audioForm.metadata = {
+          duration: 0,
+          durationFormatted: '0:00',
+          fileSize: file.size,
+          fileName: file.name
+        };
+        this.cdr.detectChanges();
+      });
+  }
+
+  canSaveAudio(): boolean {
+    if (!this.audioForm.source) {
+      return false;
+    }
+    
+    if (!this.audioForm.title.trim()) {
+      return false;
+    }
+    
+    if (this.audioForm.source === 'upload') {
+      return !!this.audioForm.file;
+    }
+    
+    if (this.audioForm.source === 'convert') {
+      return !!this.audioForm.selectedTextLessonId;
+    }
+    
+    if (this.audioForm.source === 'generate') {
+      return !!this.audioForm.textContent.trim();
+    }
+    
+    return false;
+  }
+
+  getTextLessons(): ContentItem[] {
+    return this.contentItems.filter(item => item.type === 'text');
+  }
+
+  selectTextLesson(lesson: ContentItem): void {
+    this.audioForm.selectedTextLessonId = lesson.id;
+    this.audioForm.selectedTextLesson = lesson;
+  }
+
+  deleteAudioContent(): void {
+    if (!this.audioContentItem || this.deletingAudio) {
+      return;
+    }
+    
+    // Use the same warning modal system as other content
+    this.itemToDelete = this.audioContentItem.id;
+    this.warningModalType = 'deleteContent';
+    this.showWarningModal = true;
+  }
+
+  async saveAudioContent(): Promise<void> {
+    if (!this.canSaveAudio() || this.savingAudio || !this.activeSectionId) {
+      return;
+    }
+    
+    this.savingAudio = true;
+    
+    try {
+      // Prepare initial metadata for the database
+      const meta: Record<string, unknown> = {
+        source: this.audioForm.source,
+        title: this.audioForm.title.trim()
+      };
+      
+      // Add description only if provided
+      if (this.audioForm.description.trim()) {
+        meta['description'] = this.audioForm.description.trim();
+      }
+
+      // Create content record first to get content ID
+      const payload: CreateSectionContentPayload = {
+        type: 'audio',
+        title: this.audioForm.title.trim(),
+        body_html: undefined,
+        meta: meta,
+        status: true
+      };
+      
+      const response = await this.ai.createSectionContent(this.activeSectionId, payload).toPromise();
+      
+      if (!response || !response.content) {
+        throw new Error('Failed to create audio content record');
+      }
+      
+      const contentId = response.content.id;
+      let audioUrl: string | undefined;
+
+      // Handle different audio sources
+      if (this.audioForm.source === 'upload' && this.audioForm.file) {
+        audioUrl = await this.handleAudioUpload(contentId);
+      } else if (this.audioForm.source === 'convert' && this.audioForm.selectedTextLessonId) {
+        audioUrl = await this.handleTextToAudioConversion(contentId);
+      } else if (this.audioForm.source === 'generate' && this.audioForm.textContent.trim()) {
+        audioUrl = await this.handleAudioGeneration(contentId);
+      }
+
+      console.log('Audio URL generated:', audioUrl);
+
+      // Update content record with audio URL and metadata
+      if (audioUrl) {
+        const updatedMeta = { ...meta };
+        updatedMeta['provider'] = this.audioForm.source;
+        updatedMeta['dataUrl'] = audioUrl;
+        
+        if (this.audioForm.metadata) {
+          updatedMeta['duration'] = this.audioForm.metadata.duration;
+          updatedMeta['durationFormatted'] = this.audioForm.metadata.durationFormatted;
+          updatedMeta['fileSize'] = this.audioForm.metadata.fileSize;
+          updatedMeta['fileName'] = this.audioForm.metadata.fileName;
+        }
+
+        const updatePayload: CreateSectionContentPayload = {
+          type: 'audio',
+          title: this.audioForm.title.trim(),
+          body_html: undefined,
+          meta: updatedMeta,
+          status: true
+        };
+        
+        console.log('Updating audio content with meta:', updatedMeta);
+        const updateResult = await this.ai.updateSectionContent(this.activeSectionId, contentId, updatePayload).toPromise();
+        console.log('Update result:', updateResult);
+      } else {
+        console.warn('No audio URL generated, skipping meta update');
+      }
+
+      // Get the final content record and update UI
+      const updatedResponse = await this.ai.getSectionContent(this.activeSectionId).toPromise();
+      if (updatedResponse && updatedResponse.content) {
+        const finalContentRecord = updatedResponse.content.find(c => c.id === contentId);
+        if (finalContentRecord) {
+          const contentItem: ContentItem = {
+            id: String(finalContentRecord.id),
+            type: finalContentRecord.type as 'audio',
+            title: finalContentRecord.title,
+            section_id: String(finalContentRecord.section_id),
+            status: Boolean(finalContentRecord.status),
+            meta: finalContentRecord.meta || {},
+            createdAt: finalContentRecord.created_at,
+            updatedAt: finalContentRecord.updated_at
+          };
+          
+          this.contentItems.push(contentItem);
+          
+          const section = this.sections.find(s => s.id === this.activeSectionId);
+          if (section) {
+            if (!section.content_items) {
+              section.content_items = [];
+            }
+            section.content_items.push(contentItem);
+          }
+        }
+      }
+
+      this.closeAudioModal();
+      this.toastr.success(
+        this.currentLang === 'ar' ? 'تم حفظ الملف الصوتي بنجاح' : 'Audio saved successfully'
+      );
+
+    } catch (error) {
+      console.error('Error saving audio content:', error);
+      this.toastr.error(
+        this.currentLang === 'ar' ? 'حدث خطأ أثناء حفظ الملف الصوتي' : 'Error saving audio content'
+      );
+    } finally {
+      this.savingAudio = false;
+      this.audioUploadInProgress = false;
+      this.audioUploadProgress = 0;
+      this.generatingAudio = false;
+      this.audioGenerationProgress = 0;
+    }
+  }
+
+  private async handleAudioUpload(contentId: number): Promise<string> {
+    this.audioUploadInProgress = true;
+    this.audioUploadProgress = 0;
+    this.cdr.detectChanges();
+    
+    const progressSub = this.audioUploadService.getUploadProgress().subscribe(progress => {
+      this.audioUploadProgress = Math.min(99, Math.max(10, progress));
+      this.cdr.detectChanges();
+    });
+    
+    this.audioUploadProgress = 5;
+    
+    const metadata = this.audioForm.metadata;
+    const uploadResponse = await new Promise<any>((resolve, reject) => {
+      this.audioUploadService.uploadAudio(
+        this.audioForm.file!,
+        contentId,
+        metadata ? {
+          duration: metadata.duration,
+          bitrate: metadata.bitrate,
+          sampleRate: metadata.sampleRate
+        } : undefined
+      ).subscribe({
+        next: (response) => {
+          progressSub.unsubscribe();
+          this.audioUploadProgress = 100;
+          this.cdr.detectChanges();
+          resolve(response);
+        },
+        error: (error) => {
+          progressSub.unsubscribe();
+          this.audioUploadInProgress = false;
+          this.audioUploadProgress = 0;
+          this.cdr.detectChanges();
+          
+          if (error.status === 413) {
+            this.audioUploadError = this.currentLang === 'ar' 
+              ? 'حجم الملف كبير جداً. الحد الأقصى 50 ميجابايت'
+              : 'File size too large. Maximum 50 MB allowed';
+          } else {
+            this.audioUploadError = this.currentLang === 'ar'
+              ? 'حدث خطأ أثناء رفع الملف الصوتي'
+              : 'Error uploading audio file';
+          }
+          
+          reject(error);
+        }
+      });
+    });
+    
+    this.audioUploadInProgress = false;
+    this.audioUploadProgress = 100;
+    return uploadResponse.asset.url;
+  }
+
+  private async handleTextToAudioConversion(contentId: number): Promise<string> {
+    this.generatingAudio = true;
+    this.audioGenerationProgress = 0;
+    this.cdr.detectChanges();
+
+    const response = await this.audioUploadService.convertTextLessonToAudio(
+      Number(this.audioForm.selectedTextLessonId!),
+      this.audioForm.voice,
+      this.audioForm.speed,
+      contentId // Pass content ID for folder structure
+    ).toPromise();
+
+    if (!response) {
+      throw new Error('Failed to convert text to audio');
+    }
+
+    // Update metadata with generated audio info
+    this.audioForm.metadata = {
+      duration: response.duration,
+      durationFormatted: this.formatDuration(response.duration),
+      fileSize: response.fileSize,
+      fileName: response.fileName
+    };
+
+    this.generatingAudio = false;
+    this.audioGenerationProgress = 100;
+    return response.audioUrl;
+  }
+
+  private async handleAudioGeneration(contentId: number): Promise<string> {
+    this.generatingAudio = true;
+    this.audioGenerationProgress = 0;
+    this.cdr.detectChanges();
+
+    const request: AudioGenerationRequest = {
+      text: this.audioForm.textContent.trim(),
+      voice: this.audioForm.voice,
+      speed: this.audioForm.speed
+    };
+
+    const response = await this.audioUploadService.generateAudioFromText(request, contentId).toPromise();
+
+    if (!response) {
+      throw new Error('Failed to generate audio from text');
+    }
+
+    // Update metadata with generated audio info
+    this.audioForm.metadata = {
+      duration: response.duration,
+      durationFormatted: this.formatDuration(response.duration),
+      fileSize: response.fileSize,
+      fileName: response.fileName
+    };
+
+    this.generatingAudio = false;
+    this.audioGenerationProgress = 100;
+    return response.audioUrl;
   }
 
  }
