@@ -1665,8 +1665,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.itemToDelete = null;
       this.isDeletingContent = false;
       const successMessage = this.currentLang === 'ar'
-        ? 'تم حذف الدرس بنجاح'
-        : 'Lesson deleted successfully';
+        ? 'تم حذف المحتوى بنجاح'
+        : 'Content deleted successfully';
       this.toastr.success(successMessage);
       this.cdr.detectChanges();
     };
@@ -1681,8 +1681,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           console.error('Failed to delete section content from server:', error);
           this.isDeletingContent = false;
           const errorMessage = this.currentLang === 'ar'
-            ? 'تعذر حذف الدرس من الخادم. حاول مرة أخرى.'
-            : 'Unable to delete the lesson from the server. Please try again.';
+            ? 'تعذر حذف المحتوى من الخادم. حاول مرة أخرى.'
+            : 'Failed to delete content from the server. Please try again.';
           this.toastr.error(errorMessage);
           this.cdr.detectChanges();
         }

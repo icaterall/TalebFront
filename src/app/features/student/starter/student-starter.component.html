@@ -289,6 +289,11 @@
                             {{ getTextPreview(item.content) }}
                           </p>
                         </div>
+                        <div class="content-item-preview" *ngIf="item.type === 'resources' && item.resourceDetails">
+                          <ng-container *ngFor="let entry of getResourceDetailEntries(item.resourceDetails); let last = last">
+                            <span class="content-detail"><strong>{{ entry.label }}:</strong> {{ entry.value }}</span><span *ngIf="!last">{{ getResourceDetailSeparator() }}</span>
+                          </ng-container>
+                        </div>
                       </div>
                     </div>
 
