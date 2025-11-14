@@ -516,6 +516,13 @@
     gap: 6px;
     flex: 1;
     min-width: 0;
+    cursor: pointer;
+    
+    &:hover {
+      .content-item-title {
+        color: #2563EB;
+      }
+    }
   }
 
   .content-item-title {
@@ -629,6 +636,15 @@
   // Content Item Preview
   .content-item-preview {
     margin-bottom: 12px;
+    
+    .content-detail {
+      font-size: 13px;
+      color: #64748b;
+      
+      strong {
+        color: #475569;
+      }
+    }
   }
 
   .content-text-preview {
