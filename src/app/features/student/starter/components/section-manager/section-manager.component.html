@@ -1,0 +1,78 @@
+<div class="sections-container" [dir]="isRTL ? 'rtl' : 'ltr'">
+  <div class="sections-list">
+    <div 
+      *ngFor="let section of sections; let i = index" 
+      class="section-item"
+      [class.active]="section.id === activeSectionId"
+      [class.unavailable]="section.available === false">
+      
+      <div class="section-header" (click)="selectSection(section.id)">
+        <div class="section-number">{{ getSectionNumber(i) }}</div>
+        <div class="section-content">
+          <div class="section-name" *ngIf="editingSectionId !== section.id">
+            {{ section.name }}
+          </div>
+          <input 
+            *ngIf="editingSectionId === section.id"
+            type="text"
+            class="section-edit-input"
+            [(ngModel)]="editingSectionValue"
+            (keyup.enter)="saveSection(section.id)"
+            (keyup.escape)="cancelEditingSection()"
+            [dir]="isRTL ? 'rtl' : 'ltr'"
+            maxlength="200">
+          
+          <div class="section-status" *ngIf="section.available === false">
+            <span class="status-badge">{{ unavailableText }}</span>
+          </div>
+        </div>
+        
+        <div class="section-actions">
+          <button 
+            *ngIf="editingSectionId !== section.id"
+            type="button"
+            class="btn-icon"
+            (click)="startEditingSection(section); $event.stopPropagation()"
+            [attr.aria-label]="editText">
+            ✏️
+          </button>
+          <button 
+            *ngIf="editingSectionId === section.id"
+            type="button"
+            class="btn-icon btn-save"
+            (click)="saveSection(section.id); $event.stopPropagation()"
+            [attr.aria-label]="'Save'">
+            ✔️
+          </button>
+          <button 
+            *ngIf="editingSectionId === section.id"
+            type="button"
+            class="btn-icon btn-cancel"
+            (click)="cancelEditingSection(); $event.stopPropagation()"
+            [attr.aria-label]="'Cancel'">
+            ❌
+          </button>
+          <button 
+            type="button"
+            class="btn-icon btn-menu"
+            (click)="openSectionMenu(section.id); $event.stopPropagation()"
+            [attr.aria-label]="'Menu'">
+            ⋮
+          </button>
+        </div>
+      </div>
+      
+      <div class="section-items-count" *ngIf="section.content_items?.length">
+        <span class="count-badge">{{ section.content_items.length }} items</span>
+      </div>
+    </div>
+    
+    <button 
+      type="button" 
+      class="btn-add-section"
+      (click)="onAddNewSection()">
+      <span class="btn-icon">➕</span>
+      <span class="btn-text">{{ addSectionText }}</span>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,16 @@
+<div class="wizard-progress">
+  <div 
+    *ngFor="let step of steps" 
+    class="progress-step" 
+    [ngClass]="getStepClass(step.number)">
+    <div class="step-circle">
+      <ng-container *ngIf="isStepCompleted(step.number); else stepNumber">
+        <span class="check-icon">✔</span>
+      </ng-container>
+      <ng-template #stepNumber>{{ step.number }}</ng-template>
+    </div>
+    <div class="step-labels">
+      <span class="step-name">{{ getStepName(step) }}</span>
+    </div>
+  </div>
+</div>

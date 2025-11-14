@@ -282,7 +282,7 @@
                         <span *ngIf="item.type === 'audio'">🎧</span>
                         <span *ngIf="item.type === 'quiz'">📋</span>
                       </div>
-                      <div class="content-item-text" (click)="item.type === 'text' ? viewContentItem(item) : null">
+                      <div class="content-item-text" (click)="viewContentItem(item)">
                         <h4 class="content-item-title">{{ item.title }}</h4>
                         <div class="content-item-preview" *ngIf="item.type === 'text' && item.content">
                           <p class="content-text-preview">
@@ -299,14 +299,6 @@
 
                     <div class="content-item-header-actions">
                       <div class="content-action-icons">
-                        <button
-                          *ngIf="item.type !== 'text'"
-                          type="button"
-                          class="content-icon-btn edit"
-                          (click)="$event.stopPropagation(); viewContentItem(item)"
-                          [attr.aria-label]="currentLang === 'ar' ? 'تعديل المحتوى' : 'Edit content'">
-                          ✏️
-                        </button>
                         <button
                           type="button"
                           class="content-toggle-switch"

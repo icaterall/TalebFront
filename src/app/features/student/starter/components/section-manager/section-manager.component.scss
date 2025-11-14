@@ -1,0 +1,174 @@
+.sections-container {
+  padding: 20px;
+}
+
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  &.active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+  
+  &.unavailable {
+    opacity: 0.7;
+    
+    .section-header {
+      background: #f9fafb;
+    }
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.section-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.section-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.section-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.section-edit-input {
+  padding: 6px 10px;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+}
+
+.section-status {
+  display: flex;
+  gap: 8px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.section-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f3f4f6;
+  }
+  
+  &.btn-save {
+    &:hover {
+      background: #dcfce7;
+    }
+  }
+  
+  &.btn-cancel {
+    &:hover {
+      background: #fee2e2;
+    }
+  }
+  
+  &.btn-menu {
+    font-size: 1.2rem;
+  }
+}
+
+.section-items-count {
+  padding: 8px 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.count-badge {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.btn-add-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+  
+  .btn-icon {
+    font-size: 1.2rem;
+  }
+  
+  .btn-text {
+    font-weight: 500;
+    color: #4b5563;
+  }
+}
