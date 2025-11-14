@@ -5118,6 +5118,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       fileName: '',
       fileSize: 0,
       metadata: null,
+      textSource: 'lesson', // Default to selecting a lesson
       selectedTextLessonId: null,
       selectedTextLesson: null,
       textContent: '',
@@ -5198,11 +5199,35 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   selectAudioSource(source: AudioSource): void {
     this.audioForm.source = source;
     this.audioUploadError = null;
+
+    if (source === 'convert') {
+      this.getTextLessons();
+    }
   }
 
   resetAudioSource(): void {
     this.audioForm.source = null;
     this.audioUploadError = null;
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).classList.add('dragover');
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).classList.remove('dragover');
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).classList.remove('dragover');
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const customEvent = { target: { files: files } } as unknown as Event;
+      this.onAudioFileSelected(customEvent);
+    }
   }
 
   onAudioFileSelected(event: Event): void {
@@ -5277,18 +5302,27 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     
     if (this.audioForm.source === 'convert') {
-      return !!this.audioForm.selectedTextLessonId;
-    }
-    
-    if (this.audioForm.source === 'generate') {
-      return !!this.audioForm.textContent.trim();
+      return !!this.audioForm.selectedTextLessonId || !!this.audioForm.textContent.trim();
     }
     
     return false;
   }
 
-  getTextLessons(): ContentItem[] {
-    return this.contentItems.filter(item => item.type === 'text');
+  textLessons: ContentItem[] = [];
+
+  getTextLessons(): void {
+    if (!this.activeSectionId) return;
+
+    this.audioUploadService.getTextLessons(this.activeSectionId).subscribe({
+      next: (response) => {
+        this.textLessons = response.lessons;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to fetch text lessons:', error);
+        this.toastr.error(this.currentLang === 'ar' ? 'فشل في جلب الدروس النصية' : 'Failed to fetch text lessons');
+      }
+    });
   }
 
   selectTextLesson(lesson: ContentItem): void {
@@ -5347,10 +5381,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       // Handle different audio sources
       if (this.audioForm.source === 'upload' && this.audioForm.file) {
         audioUrl = await this.handleAudioUpload(contentId);
-      } else if (this.audioForm.source === 'convert' && this.audioForm.selectedTextLessonId) {
+      } else if (this.audioForm.source === 'convert') {
         audioUrl = await this.handleTextToAudioConversion(contentId);
-      } else if (this.audioForm.source === 'generate' && this.audioForm.textContent.trim()) {
-        audioUrl = await this.handleAudioGeneration(contentId);
       }
 
       console.log('Audio URL generated:', audioUrl);

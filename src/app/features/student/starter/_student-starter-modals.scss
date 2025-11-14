@@ -12,7 +12,15 @@
     z-index: 999 !important;
     backdrop-filter: blur(6px);
   }
-  
+  .warning-modal-text {
+    font-size: 0.85rem !important;
+    font-weight: 600;
+    color: #111827;
+    border-radius: 10px;
+    padding: 4px 3px;
+    text-align: center;
+    letter-spacing: 0.2px;
+  }
   // AI Hint Modal should appear above Text Editor Modal
   .ai-hint-overlay {
     z-index: 10001 !important;

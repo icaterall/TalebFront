@@ -85,6 +85,10 @@ export class AudioUploadService {
     });
   }
 
+  getTextLessons(sectionId: string): Observable<{ lessons: any[] }> {
+    return this.http.get<{ lessons: any[] }>(`${this.baseUrl}/courses/draft/sections/${sectionId}/lessons`);
+  }
+
   convertTextLessonToAudio(textContentId: number, voice?: string, speed?: number, contentId?: number): Observable<AudioGenerationResponse> {
     return this.http.post<AudioGenerationResponse>(`${this.baseUrl}/courses/draft/content/audios/convert`, {
       textContentId: textContentId,

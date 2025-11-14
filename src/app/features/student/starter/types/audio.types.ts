@@ -1,4 +1,4 @@
-export type AudioSource = 'upload' | 'convert' | 'generate';
+export type AudioSource = 'upload' | 'convert';
 
 export interface AudioMetadata {
   duration: number; // Duration in seconds
@@ -21,6 +21,7 @@ export interface AudioFormState {
   metadata: AudioMetadata | null;
   
   // Convert text lesson
+  textSource: 'lesson' | 'custom';
   selectedTextLessonId: string | null;
   selectedTextLesson: any | null;
   

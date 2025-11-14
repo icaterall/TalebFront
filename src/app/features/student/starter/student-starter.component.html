@@ -803,10 +803,10 @@
           <h3>{{ currentLang === 'ar' ? '⚠️ تحذير' : '⚠️ Warning' }}</h3>
         </div>
         <div class="modal-body">
-          <p *ngIf="warningModalType === 'goBack'">{{ currentLang === 'ar' 
+          <p class="warning-modal-text" *ngIf="warningModalType === 'goBack'">{{ currentLang === 'ar' 
             ? 'سيتم حذف جميع البيانات المدخلة. هل أنت متأكد أنك تريد العودة؟ ستحتاج إلى البدء من جديد.' 
             : 'All entered data will be deleted. Are you sure you want to go back? You will need to start from scratch.' }}</p>
-          <p *ngIf="warningModalType === 'deleteContent'">{{ currentLang === 'ar' 
+          <p class="warning-modal-text" *ngIf="warningModalType === 'deleteContent'">{{ currentLang === 'ar' 
             ? 'هل أنت متأكد أنك تريد حذف هذا المحتوى؟ لا يمكن التراجع عن هذا الإجراء.' 
             : 'Are you sure you want to delete this content? This action cannot be undone.' }}</p>
         </div>
@@ -1607,38 +1607,21 @@
             <p class="source-subtitle">{{ currentLang === 'ar' ? 'حدد كيف تريد إضافة المحتوى الصوتي الخاص بك' : 'Select how you want to add your audio content' }}</p>
           </div>
           
-          <div class="source-options">
-            <button 
-              type="button" 
-              class="source-option-btn"
-              (click)="selectAudioSource('upload')">
+          <div class="source-options two-options">
+            <button type="button" class="source-option-btn" (click)="selectAudioSource('upload')">
               <div class="option-icon-wrapper">
                 <span class="option-icon">📤</span>
               </div>
               <h4 class="option-title">{{ currentLang === 'ar' ? 'رفع ملف صوتي' : 'Upload Audio File' }}</h4>
-              <p class="option-description">{{ currentLang === 'ar' ? 'ارفع ملف صوتي من جهازك (MP3, WAV, M4A, OGG)' : 'Upload an audio file from your device (MP3, WAV, M4A, OGG)' }}</p>
+              <p class="option-description">{{ currentLang === 'ar' ? 'رفع ملف صوتي من جهازك' : 'Upload an audio file from your device' }}</p>
             </button>
             
-            <button 
-              type="button" 
-              class="source-option-btn"
-              (click)="selectAudioSource('convert')">
+            <button type="button" class="source-option-btn" (click)="selectAudioSource('convert')">
               <div class="option-icon-wrapper">
                 <span class="option-icon">🔄</span>
               </div>
-              <h4 class="option-title">{{ currentLang === 'ar' ? 'تحويل درس نصي' : 'Convert Text Lesson' }}</h4>
-              <p class="option-description">{{ currentLang === 'ar' ? 'اختر درساً نصياً موجوداً وحوله إلى صوت' : 'Select an existing text lesson and convert it to audio' }}</p>
-            </button>
-            
-            <button 
-              type="button" 
-              class="source-option-btn"
-              (click)="selectAudioSource('generate')">
-              <div class="option-icon-wrapper">
-                <span class="option-icon">🤖</span>
-              </div>
-              <h4 class="option-title">{{ currentLang === 'ar' ? 'توليد بالذكاء الاصطناعي' : 'AI Generate Audio' }}</h4>
-              <p class="option-description">{{ currentLang === 'ar' ? 'اكتب نصاً واتركه للذكاء الاصطناعي ليحوله إلى صوت' : 'Write text and let AI convert it to natural speech' }}</p>
+              <h4 class="option-title">{{ currentLang === 'ar' ? 'تحويل نص إلى صوت' : 'Convert Text to Audio' }}</h4>
+              <p class="option-description">{{ currentLang === 'ar' ? 'اختر درسًا نصيًا أو أدخل نصًا مخصصًا' : 'Select a text lesson or enter custom text' }}</p>
             </button>
           </div>
         </div>
@@ -1650,81 +1633,46 @@
             {{ currentLang === 'ar' ? 'رفع ملف صوتي' : 'Upload Audio File' }}
           </h3>
           
-          <!-- Show existing audio player when editing -->
-          <div *ngIf="audioForm.existingUrl && !audioForm.file" class="existing-audio-preview">
-            <p class="preview-label">{{ currentLang === 'ar' ? 'الملف الصوتي الحالي:' : 'Current Audio:' }}</p>
-            <audio 
-              [src]="audioForm.existingUrl"
-              controls
-              preload="metadata"
-              class="existing-audio-player">
-            </audio>
-            <p class="preview-hint">{{ currentLang === 'ar' ? 'ارفع ملفاً جديداً لاستبدال هذا الملف' : 'Upload a new file to replace this audio' }}</p>
+          <!-- Existing Audio Preview (in edit mode) -->
+          <div class="existing-audio-preview" *ngIf="audioForm.existingUrl">
+            <p class="preview-label">{{ currentLang === 'ar' ? 'الصوت الحالي:' : 'Current Audio:' }}</p>
+            <audio [src]="audioForm.existingUrl" controls class="existing-audio-player"></audio>
+            <p class="preview-hint">{{ currentLang === 'ar' ? 'رفع ملف جديد سيستبدل هذا الملف.' : 'Uploading a new file will replace this one.' }}</p>
+          </div>
+
+          <!-- Common Fields: Title and Description -->
+          <div class="form-field">
+            <label for="audio-upload-title" class="field-label">{{ currentLang === 'ar' ? 'العنوان' : 'Title' }}</label>
+            <input id="audio-upload-title" type="text" class="field-input" [(ngModel)]="audioForm.title" [placeholder]="currentLang === 'ar' ? 'أدخل عنوانًا للملف الصوتي' : 'Enter a title for the audio'">
           </div>
           
-          <div class="file-upload-area" 
-               (click)="audioFileInput.click()"
-               (dragover)="$event.preventDefault(); $event.currentTarget.classList.add('dragover')"
-               (dragleave)="$event.currentTarget.classList.remove('dragover')"
-               (drop)="$event.preventDefault(); $event.currentTarget.classList.remove('dragover'); onAudioFileSelected($event)">
-            <div class="upload-icon">🎵</div>
-            <p class="upload-text">{{ currentLang === 'ar' ? 'اضغط لاختيار ملف أو اسحبه هنا' : 'Click to select file or drag it here' }}</p>
-            <p class="upload-hint">{{ currentLang === 'ar' ? 'MP3, WAV, M4A, OGG - حتى 50 ميجابايت' : 'MP3, WAV, M4A, OGG - Up to 50 MB' }}</p>
-            <input #audioFileInput type="file" class="file-input" accept=".mp3,.wav,.m4a,.ogg,audio/*" (change)="onAudioFileSelected($event)">
+          <div class="form-field">
+            <label for="audio-upload-description" class="field-label">{{ currentLang === 'ar' ? 'الوصف (اختياري)' : 'Description (Optional)' }}</label>
+            <textarea id="audio-upload-description" class="field-textarea" [(ngModel)]="audioForm.description" [placeholder]="currentLang === 'ar' ? 'أضف وصفًا موجزًا' : 'Add a brief description'"></textarea>
           </div>
-          
-          <div *ngIf="audioForm.file" class="selected-file-info">
-            <div class="file-details">
+
+          <!-- File Upload Area -->
+          <div class="file-upload-container">
+            <div class="file-drop-zone" (click)="audioFileInput.click()" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+              <input #audioFileInput type="file" (change)="onAudioFileSelected($event)" accept=".mp3,.wav,.m4a,.ogg" class="file-input">
+              <div class="upload-icon">📤</div>
+              <p class="upload-text">{{ currentLang === 'ar' ? 'اسحب وأفلت ملفًا صوتيًا أو انقر للتصفح' : 'Drag & drop an audio file or click to browse' }}</p>
+              <p class="upload-hint">{{ currentLang === 'ar' ? 'MP3, WAV, M4A, OGG (الحد الأقصى 50 ميجابايت)' : 'MP3, WAV, M4A, OGG (Max 50MB)' }}</p>
+            </div>
+            <div *ngIf="audioUploadError" class="upload-error">{{ audioUploadError }}</div>
+            <div *ngIf="audioForm.fileName" class="file-preview">
               <span class="file-icon">🎵</span>
               <div class="file-info">
                 <p class="file-name">{{ audioForm.fileName }}</p>
-                <p class="file-meta">
-                  {{ formatFileSize(audioForm.fileSize) }}
-                  <span *ngIf="audioForm.metadata?.durationFormatted"> • {{ audioForm.metadata?.durationFormatted }}</span>
-                </p>
+                <p class="file-size">{{ formatFileSize(audioForm.fileSize) }}</p>
               </div>
-              <button type="button" class="remove-file-btn" (click)="audioForm.file = null; audioForm.fileName = ''; audioForm.fileSize = 0; audioForm.metadata = null">
-                ✕
-              </button>
+              <button type="button" class="remove-file-btn" (click)="audioForm.file = null; audioForm.fileName = ''">✕</button>
             </div>
-          </div>
-          
-          <div class="form-fields">
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'عنوان الملف الصوتي' : 'Audio Title' }}</label>
-              <input 
-                type="text" 
-                [(ngModel)]="audioForm.title"
-                [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الملف الصوتي' : 'Enter audio title'"
-                maxlength="200"
-                required>
-            </div>
-            
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'وصف الملف الصوتي' : 'Audio Description' }}</label>
-              <textarea 
-                [(ngModel)]="audioForm.description"
-                [placeholder]="currentLang === 'ar' ? 'أدخل وصف مختصر للملف الصوتي (اختياري)' : 'Enter a brief description (optional)'"
-                rows="3"
-                maxlength="500">
-              </textarea>
-            </div>
-          </div>
-          
-          <div class="upload-error" *ngIf="audioUploadError">
-            <span class="error-icon">⚠️</span>
-            <span class="error-text">{{ audioUploadError }}</span>
           </div>
           
           <div class="form-actions">
-            <button type="button" class="btn-cancel" (click)="resetAudioSource()">
-              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-            </button>
-            <button 
-              type="button" 
-              class="btn-primary"
-              (click)="saveAudioContent()"
-              [disabled]="!canSaveAudio() || savingAudio || audioUploadInProgress">
+            <button type="button" class="btn-cancel" (click)="resetAudioSource()">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
+            <button type="button" class="btn-primary" (click)="saveAudioContent()" [disabled]="!canSaveAudio() || savingAudio || audioUploadInProgress">
               <span *ngIf="savingAudio" class="btn-spinner"></span>
               <span *ngIf="!savingAudio">{{ currentLang === 'ar' ? 'حفظ الملف الصوتي' : 'Save Audio' }}</span>
               <span *ngIf="savingAudio">{{ currentLang === 'ar' ? '⏳ جاري الحفظ...' : '⏳ Saving...' }}</span>
@@ -1733,64 +1681,64 @@
         </div>
         
         <!-- Convert Text Lesson Form -->
-        <div *ngIf="audioForm.source === 'convert'" class="text-lesson-selection">
+        <div *ngIf="audioForm.source === 'convert'" class="audio-convert-form">
           <h3 class="form-section-title">
             <span>🔄</span>
-            {{ currentLang === 'ar' ? 'تحويل درس نصي إلى صوت' : 'Convert Text Lesson to Audio' }}
+            {{ currentLang === 'ar' ? 'تحويل نص إلى صوت' : 'Convert Text to Audio' }}
           </h3>
-          
-          <div class="lesson-list">
-            <div *ngIf="getTextLessons().length === 0" class="no-lessons">
-              {{ currentLang === 'ar' ? 'لا توجد دروس نصية متاحة للتحويل' : 'No text lessons available for conversion' }}
-            </div>
-            <div *ngFor="let lesson of getTextLessons()" 
-                 class="lesson-item"
-                 [class.selected]="audioForm.selectedTextLessonId === lesson.id"
-                 (click)="selectTextLesson(lesson)">
-              <h4 class="lesson-title">{{ lesson.title }}</h4>
-              <p class="lesson-preview" *ngIf="lesson.body_html">{{ lesson.body_html | slice:0:150 }}...</p>
+
+          <!-- Common Fields: Title and Description -->
+          <div class="form-field">
+            <label for="audio-convert-title" class="field-label">{{ currentLang === 'ar' ? 'العنوان' : 'Title' }}</label>
+            <input id="audio-convert-title" type="text" class="field-input" [(ngModel)]="audioForm.title" [placeholder]="currentLang === 'ar' ? 'أدخل عنوانًا للملف الصوتي' : 'Enter a title for the audio'">
+          </div>
+
+          <div class="form-field">
+            <label for="audio-convert-description" class="field-label">{{ currentLang === 'ar' ? 'الوصف (اختياري)' : 'Description (Optional)' }}</label>
+            <textarea id="audio-convert-description" class="field-textarea" [(ngModel)]="audioForm.description" [placeholder]="currentLang === 'ar' ? 'أضف وصفًا موجزًا' : 'Add a brief description'"></textarea>
+          </div>
+
+          <!-- Text Source Selection -->
+          <div class="form-field">
+            <label class="field-label">{{ currentLang === 'ar' ? 'اختر مصدر النص' : 'Choose Text Source' }}</label>
+            <div class="text-source-options">
+              <button type="button" [class.active]="audioForm.textSource === 'lesson'" (click)="audioForm.textSource = 'lesson'">{{ currentLang === 'ar' ? 'من درس نصي' : 'From Text Lesson' }}</button>
+              <button type="button" [class.active]="audioForm.textSource === 'custom'" (click)="audioForm.textSource = 'custom'">{{ currentLang === 'ar' ? 'نص مخصص' : 'Custom Text' }}</button>
             </div>
           </div>
-          
-          <div *ngIf="audioForm.selectedTextLesson" class="voice-settings">
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'الصوت' : 'Voice' }}</label>
-              <select [(ngModel)]="audioForm.voice">
-                <option *ngFor="let voice of ttsVoices" [value]="voice.value">
-                  {{ currentLang === 'ar' ? voice.labelAr : voice.labelEn }}
-                </option>
+
+          <!-- Text Lesson Selection -->
+          <div *ngIf="audioForm.textSource === 'lesson'" class="form-field">
+            <div class="lesson-list">
+              <div *ngFor="let lesson of textLessons" class="lesson-item" [class.selected]="audioForm.selectedTextLessonId === lesson.id" (click)="selectTextLesson(lesson)">
+                <h5 class="lesson-title">{{ lesson.title }}</h5>
+                <p class="lesson-preview">{{ lesson.meta?.['preview'] || '' }}</p>
+              </div>
+              <div *ngIf="textLessons.length === 0" class="no-lessons">
+                {{ currentLang === 'ar' ? 'لا توجد دروس نصية في هذا القسم بعد.' : 'No text lessons in this section yet.' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Text Input -->
+          <div *ngIf="audioForm.textSource === 'custom'" class="form-field">
+            <textarea class="field-textarea text-content-input" [(ngModel)]="audioForm.textContent" [placeholder]="currentLang === 'ar' ? 'اكتب أو الصق النص هنا...' : 'Type or paste your text here...'"></textarea>
+          </div>
+
+          <!-- Voice & Speed Controls -->
+          <div class="tts-controls">
+            <div class="form-field">
+              <label for="audio-convert-voice" class="field-label">{{ currentLang === 'ar' ? 'الصوت' : 'Voice' }}</label>
+              <select id="audio-convert-voice" class="field-select" [(ngModel)]="audioForm.voice">
+                <option *ngFor="let voice of ttsVoices" [value]="voice.value">{{ currentLang === 'ar' ? voice.labelAr : voice.labelEn }}</option>
               </select>
             </div>
-            
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'سرعة الكلام' : 'Speech Speed' }}</label>
-              <input type="range" [(ngModel)]="audioForm.speed" min="0.5" max="2.0" step="0.1">
-              <span>{{ audioForm.speed }}x</span>
+            <div class="form-field">
+              <label for="audio-convert-speed" class="field-label">{{ currentLang === 'ar' ? 'السرعة' : 'Speed' }} ({{ audioForm.speed.toFixed(1) }}x)</label>
+              <input id="audio-convert-speed" type="range" class="field-range" [(ngModel)]="audioForm.speed" min="0.5" max="2.0" step="0.1">
             </div>
           </div>
-          
-          <div class="form-fields">
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'عنوان الملف الصوتي' : 'Audio Title' }}</label>
-              <input 
-                type="text" 
-                [(ngModel)]="audioForm.title"
-                [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الملف الصوتي' : 'Enter audio title'"
-                maxlength="200"
-                required>
-            </div>
-            
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'وصف الملف الصوتي' : 'Audio Description' }}</label>
-              <textarea 
-                [(ngModel)]="audioForm.description"
-                [placeholder]="currentLang === 'ar' ? 'أدخل وصف مختصر للملف الصوتي (اختياري)' : 'Enter a brief description (optional)'"
-                rows="3"
-                maxlength="500">
-              </textarea>
-            </div>
-          </div>
-          
+
           <div class="form-actions">
             <button type="button" class="btn-cancel" (click)="resetAudioSource()">
               {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
@@ -1803,78 +1751,6 @@
               <span *ngIf="generatingAudio" class="btn-spinner"></span>
               <span *ngIf="!generatingAudio">{{ currentLang === 'ar' ? 'تحويل إلى صوت' : 'Convert to Audio' }}</span>
               <span *ngIf="generatingAudio">{{ currentLang === 'ar' ? '⏳ جاري التحويل...' : '⏳ Converting...' }}</span>
-            </button>
-          </div>
-        </div>
-        
-        <!-- Generate Audio Form -->
-        <div *ngIf="audioForm.source === 'generate'" class="text-generation-form">
-          <h3 class="form-section-title">
-            <span>🤖</span>
-            {{ currentLang === 'ar' ? 'توليد صوت بالذكاء الاصطناعي' : 'AI Generate Audio' }}
-          </h3>
-          
-          <div class="text-input-area">
-            <label>{{ currentLang === 'ar' ? 'النص المراد تحويله إلى صوت' : 'Text to Convert to Speech' }}</label>
-            <textarea 
-              [(ngModel)]="audioForm.textContent"
-              [placeholder]="currentLang === 'ar' ? 'اكتب النص الذي تريد تحويله إلى صوت...' : 'Write the text you want to convert to speech...'"
-              rows="6"
-              maxlength="4000">
-            </textarea>
-          </div>
-          
-          <div class="voice-settings">
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'الصوت' : 'Voice' }}</label>
-              <select [(ngModel)]="audioForm.voice">
-                <option *ngFor="let voice of ttsVoices" [value]="voice.value">
-                  {{ currentLang === 'ar' ? voice.labelAr : voice.labelEn }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'سرعة الكلام' : 'Speech Speed' }}</label>
-              <input type="range" [(ngModel)]="audioForm.speed" min="0.5" max="2.0" step="0.1">
-              <span>{{ audioForm.speed }}x</span>
-            </div>
-          </div>
-          
-          <div class="form-fields">
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'عنوان الملف الصوتي' : 'Audio Title' }}</label>
-              <input 
-                type="text" 
-                [(ngModel)]="audioForm.title"
-                [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الملف الصوتي' : 'Enter audio title'"
-                maxlength="200"
-                required>
-            </div>
-            
-            <div class="form-group">
-              <label>{{ currentLang === 'ar' ? 'وصف الملف الصوتي' : 'Audio Description' }}</label>
-              <textarea 
-                [(ngModel)]="audioForm.description"
-                [placeholder]="currentLang === 'ar' ? 'أدخل وصف مختصر للملف الصوتي (اختياري)' : 'Enter a brief description (optional)'"
-                rows="3"
-                maxlength="500">
-              </textarea>
-            </div>
-          </div>
-          
-          <div class="form-actions">
-            <button type="button" class="btn-cancel" (click)="resetAudioSource()">
-              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-            </button>
-            <button 
-              type="button" 
-              class="btn-primary"
-              (click)="saveAudioContent()"
-              [disabled]="!canSaveAudio() || savingAudio || generatingAudio">
-              <span *ngIf="generatingAudio" class="btn-spinner"></span>
-              <span *ngIf="!generatingAudio">{{ currentLang === 'ar' ? 'توليد الصوت' : 'Generate Audio' }}</span>
-              <span *ngIf="generatingAudio">{{ currentLang === 'ar' ? '⏳ جاري التوليد...' : '⏳ Generating...' }}</span>
             </button>
           </div>
         </div>
