@@ -294,6 +294,11 @@
                             <span class="content-detail"><strong>{{ entry.label }}:</strong> {{ entry.value }}</span><span *ngIf="!last">{{ getResourceDetailSeparator() }}</span>
                           </ng-container>
                         </div>
+                        <div class="content-item-preview" *ngIf="item.type === 'video' && item.meta">
+                          <ng-container *ngFor="let entry of getVideoDetailEntries(item); let last = last">
+                            <span class="content-detail"><strong>{{ entry.label }}:</strong> {{ entry.value }}</span><span *ngIf="!last">{{ getResourceDetailSeparator() }}</span>
+                          </ng-container>
+                        </div>
                       </div>
                     </div>
 
@@ -772,7 +777,7 @@
     </div>
 
     <!-- Warning Modal -->
-    <div class="modal-overlay" *ngIf="showWarningModal" (click)="cancelGoBack()">
+    <div class="modal-overlay warning-modal-overlay" *ngIf="showWarningModal" (click)="cancelGoBack()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ currentLang === 'ar' ? '⚠️ تحذير' : '⚠️ Warning' }}</h3>
@@ -1028,6 +1033,298 @@
                 <div class="upload-progress-fill" [style.width.%]="resourceUploadProgress"></div>
               </div>
               <span class="upload-progress-value">{{ resourceUploadProgress }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Content Modal -->
+    <div class="modal-overlay" *ngIf="showVideoModal" (click)="closeVideoModal()">
+      <div class="modal-content video-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <!-- Back button for form modes -->
+            <button 
+              *ngIf="!viewingVideoContent && videoForm.source"
+              type="button" 
+              class="btn-back-header"
+              (click)="resetVideoSource()">
+              <span class="back-arrow">{{ currentLang === 'ar' ? '→' : '←' }}</span>
+            </button>
+            <h3>{{ viewingVideoContent ? (currentLang === 'ar' ? '🎥 عرض الفيديو' : '🎥 View Video') : (currentLang === 'ar' ? '🎥 إضافة فيديو' : '🎥 Add Video') }}</h3>
+            
+            <!-- Delete button for view mode -->
+            <button 
+              *ngIf="viewingVideoContent && videoContentItem"
+              type="button" 
+              class="btn-delete-header"
+              (click)="deleteVideoContent()"
+              [disabled]="deletingVideo"
+              [attr.aria-label]="currentLang === 'ar' ? 'حذف الفيديو' : 'Delete Video'">
+              <span *ngIf="!deletingVideo">🗑️</span>
+              <span *ngIf="deletingVideo">⏳</span>
+            </button>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeVideoModal()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <!-- View/Delete Mode -->
+          <div *ngIf="viewingVideoContent && videoContentItem" class="video-view-mode">
+            <div class="video-info">
+              <h4 class="video-title">{{ videoContentItem.title }}</h4>
+              <p class="video-description" *ngIf="videoContentItem.meta && videoContentItem.meta['description']">{{ videoContentItem.meta['description'] }}</p>
+              <div class="video-metadata">
+                <span class="video-duration" *ngIf="videoContentItem.meta && videoContentItem.meta['durationFormatted']">
+                  <span class="meta-label">{{ currentLang === 'ar' ? 'المدة:' : 'Duration:' }}</span>
+                  <span class="meta-value">{{ videoContentItem.meta['durationFormatted'] }}</span>
+                </span>
+                <span class="video-source">
+                  <span class="meta-label">{{ currentLang === 'ar' ? 'المصدر:' : 'Source:' }}</span>
+                  <span class="meta-value">{{ videoContentItem.meta && videoContentItem.meta['source'] === 'youtube' ? 'YouTube' : (currentLang === 'ar' ? 'ملف محلي' : 'Local File') }}</span>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Video Preview -->
+            <div class="video-preview-container">
+              <!-- YouTube Video -->
+              <iframe 
+                *ngIf="videoContentItem.meta && videoContentItem.meta['source'] === 'youtube' && videoContentItem.meta['youtubeEmbedUrl']"
+                [src]="getYouTubeSafeUrl(videoContentItem.meta['youtubeEmbedUrl'])"
+                class="video-iframe"
+                frameborder="0"
+                allowfullscreen
+                loading="lazy">
+              </iframe>
+              
+              <!-- Local Video -->
+              <video 
+                *ngIf="videoContentItem.meta && videoContentItem.meta['source'] === 'local' && videoContentItem.meta['dataUrl']"
+                [src]="videoContentItem.meta['dataUrl']"
+                class="video-player"
+                controls
+                preload="metadata">
+              </video>
+            </div>
+            
+          </div>
+          
+          <!-- Add/Edit Mode -->
+          <div *ngIf="!viewingVideoContent" class="video-add-mode">
+            <!-- Source Selection -->
+            <div class="video-source-selection" *ngIf="!videoForm.source">
+              <div class="selection-header">
+                <div class="source-icon">🎥</div>
+                <h3 class="source-prompt">{{ currentLang === 'ar' ? 'اختر مصدر الفيديو' : 'Choose Video Source' }}</h3>
+                <p class="source-subtitle">{{ currentLang === 'ar' ? 'حدد كيف تريد إضافة محتوى الفيديو الخاص بك' : 'Select how you want to add your video content' }}</p>
+              </div>
+              
+              <div class="source-options">
+                <button 
+                  type="button" 
+                  class="source-option-btn"
+                  (click)="selectVideoSource('local')">
+                  <div class="option-icon-wrapper">
+                    <span class="option-icon">📤</span>
+                  </div>
+                  <div class="option-content">
+                    <span class="option-label">{{ currentLang === 'ar' ? 'رفع ملف فيديو' : 'Upload Video File' }}</span>
+                    <span class="option-desc">{{ currentLang === 'ar' ? 'MP4 أو AVI • حتى 100 ميجابايت' : 'MP4 or AVI • Up to 100 MB' }}</span>
+                  </div>
+                  <span class="option-arrow">→</span>
+                </button>
+                
+                <button 
+                  type="button" 
+                  class="source-option-btn"
+                  (click)="selectVideoSource('youtube')">
+                  <div class="option-icon-wrapper">
+                    <span class="option-icon">🔗</span>
+                  </div>
+                  <div class="option-content">
+                    <span class="option-label">{{ currentLang === 'ar' ? 'فيديو يوتيوب' : 'YouTube Video' }}</span>
+                    <span class="option-desc">{{ currentLang === 'ar' ? 'أضف رابط فيديو من يوتيوب' : 'Add a video link from YouTube' }}</span>
+                  </div>
+                  <span class="option-arrow">→</span>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Local Upload Form -->
+            <div *ngIf="videoForm.source === 'local'" class="video-upload-form">
+              <div class="form-section">
+                
+                <div class="file-upload-area" *ngIf="!videoForm.file">
+                  <input 
+                    type="file" 
+                    #videoFileInput
+                    accept=".mp4,.avi,video/mp4,video/x-msvideo"
+                    (change)="onVideoFileSelected($event)"
+                    class="file-input-hidden">
+                  <button 
+                    type="button"
+                    class="upload-trigger-btn"
+                    (click)="videoFileInput.click()">
+                    <span class="upload-icon">📹</span>
+                    <span class="upload-text">{{ currentLang === 'ar' ? 'اختر ملف فيديو' : 'Choose Video File' }}</span>
+                    <span class="upload-hint">{{ currentLang === 'ar' ? 'MP4 أو AVI (حتى 100 ميجابايت)' : 'MP4 or AVI (up to 100 MB)' }}</span>
+                  </button>
+                </div>
+                
+                <div *ngIf="videoForm.file" class="selected-file-info">
+                  <div class="file-details">
+                    <span class="file-icon">🎥</span>
+                    <div class="file-meta">
+                      <span class="file-name">{{ videoForm.fileName }}</span>
+                      <span class="file-size">{{ formatFileSize(videoForm.fileSize || 0) }}</span>
+                      <span class="file-duration" *ngIf="videoForm.metadata?.durationFormatted">
+                        {{ currentLang === 'ar' ? 'المدة:' : 'Duration:' }} {{ videoForm.metadata?.durationFormatted }}
+                      </span>
+                    </div>
+                    <button 
+                      type="button"
+                      class="remove-file-btn"
+                      (click)="removeVideoFile()">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="form-fields" *ngIf="videoForm.file">
+                  <div class="form-group">
+                    <label>{{ currentLang === 'ar' ? 'عنوان الفيديو' : 'Video Title' }} *</label>
+                    <input 
+                      type="text"
+                      [(ngModel)]="videoForm.title"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الفيديو' : 'Enter video title'"
+                      maxlength="200"
+                      required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>{{ currentLang === 'ar' ? 'وصف الفيديو' : 'Video Description' }}</label>
+                    <textarea 
+                      [(ngModel)]="videoForm.description"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل وصف مختصر للفيديو (اختياري)' : 'Enter a brief description (optional)'"
+                      rows="3"
+                      maxlength="500">
+                    </textarea>
+                  </div>
+                </div>
+                
+                <div class="upload-error" *ngIf="videoUploadError">
+                  <span class="error-icon">⚠️</span>
+                  <span class="error-text">{{ videoUploadError }}</span>
+                </div>
+                
+                <div class="upload-progress" *ngIf="videoUploadInProgress">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="videoUploadProgress"></div>
+                  </div>
+                  <span class="progress-text">{{ currentLang === 'ar' ? 'جاري الرفع...' : 'Uploading...' }} {{ videoUploadProgress }}%</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- YouTube Link Form -->
+            <div *ngIf="videoForm.source === 'youtube'" class="youtube-link-form">
+              <div class="form-section">
+                <div class="form-group">
+                  <label>{{ currentLang === 'ar' ? 'رابط فيديو يوتيوب' : 'YouTube Video URL' }} *</label>
+                  <input 
+                    type="url"
+                    [(ngModel)]="videoForm.youtubeUrl"
+                    (blur)="validateYouTubeUrl()"
+                    [placeholder]="currentLang === 'ar' ? 'https://www.youtube.com/watch?v=...' : 'https://www.youtube.com/watch?v=...'"
+                    required>
+                </div>
+                
+                <div class="form-actions-row">
+                  <button 
+                    type="button"
+                    class="btn-fetch"
+                    (click)="fetchYouTubeMetadata()"
+                    [disabled]="!videoForm.youtubeUrl || fetchingYouTubeData">
+                    <span *ngIf="!fetchingYouTubeData">{{ currentLang === 'ar' ? 'جلب المعلومات' : 'Fetch Info' }}</span>
+                    <span *ngIf="fetchingYouTubeData">{{ currentLang === 'ar' ? '⏳ جاري الجلب...' : '⏳ Fetching...' }}</span>
+                  </button>
+                </div>
+                
+                <div class="youtube-preview" *ngIf="videoForm.youtubeData">
+                  <div class="youtube-thumbnail">
+                    <img [src]="videoForm.youtubeData.thumbnail" [alt]="videoForm.youtubeData.title">
+                  </div>
+                  <div class="youtube-info">
+                    <h5>{{ videoForm.youtubeData.title }}</h5>
+                    <p>{{ videoForm.youtubeData.description | slice:0:200 }}{{ videoForm.youtubeData.description.length > 200 ? '...' : '' }}</p>
+                    <span class="youtube-duration">
+                      {{ currentLang === 'ar' ? 'المدة:' : 'Duration:' }} {{ formatDuration(videoForm.youtubeData.duration) }}
+                    </span>
+                  </div>
+                </div>
+                
+                <div class="form-fields" *ngIf="videoForm.youtubeData">
+                  <div class="form-group">
+                    <label>{{ currentLang === 'ar' ? 'عنوان الفيديو' : 'Video Title' }} *</label>
+                    <input 
+                      type="text"
+                      [(ngModel)]="videoForm.title"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الفيديو' : 'Enter video title'"
+                      maxlength="200"
+                      required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>{{ currentLang === 'ar' ? 'وصف الفيديو' : 'Video Description' }}</label>
+                    <textarea 
+                      [(ngModel)]="videoForm.description"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل وصف مختصر للفيديو (اختياري)' : 'Enter a brief description (optional)'"
+                      rows="3"
+                      maxlength="500">
+                    </textarea>
+                  </div>
+                </div>
+                
+                <div class="youtube-error" *ngIf="youtubeError">
+                  <span class="error-icon">⚠️</span>
+                  <span class="error-text">{{ youtubeError }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Modal Actions -->
+        <div class="modal-actions" *ngIf="!viewingVideoContent && videoForm.source && (videoForm.file || videoForm.youtubeData)">
+          <button 
+            type="button" 
+            class="btn-cancel"
+            (click)="closeVideoModal()"
+            [disabled]="savingVideo || videoUploadInProgress">
+            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+          </button>
+          <button 
+            type="button" 
+            class="btn-primary"
+            (click)="saveVideoContent()"
+            [disabled]="!canSaveVideo() || savingVideo || videoUploadInProgress">
+            <span *ngIf="!savingVideo">{{ currentLang === 'ar' ? 'حفظ الفيديو' : 'Save Video' }}</span>
+            <span *ngIf="savingVideo">{{ currentLang === 'ar' ? '⏳ جاري الحفظ...' : '⏳ Saving...' }}</span>
+          </button>
+        </div>
+        
+        <!-- Video Upload Progress Overlay -->
+        <div class="video-upload-overlay" *ngIf="videoUploadInProgress">
+          <div class="video-upload-dialog">
+            <div class="upload-spinner"></div>
+            <div class="upload-progress-info">
+              <span class="upload-text">{{ currentLang === 'ar' ? 'جاري رفع الفيديو...' : 'Uploading video...' }}</span>
+              <div class="upload-progress-bar">
+                <div class="upload-progress-fill" [style.width.%]="videoUploadProgress"></div>
+              </div>
+              <span class="upload-progress-value">{{ videoUploadProgress }}%</span>
             </div>
           </div>
         </div>

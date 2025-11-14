@@ -491,6 +491,24 @@
         background: #dbeafe;
       }
     }
+
+    &.content-type-video {
+      cursor: pointer;
+
+      &:hover {
+        border-color: #8b5cf6;
+        background: #f3e8ff;
+      }
+    }
+
+    &.content-type-resources {
+      cursor: pointer;
+
+      &:hover {
+        border-color: #10b981;
+        background: #d1fae5;
+      }
+    }
   }
 
   // Content Item Header

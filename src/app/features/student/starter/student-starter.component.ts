@@ -31,6 +31,8 @@ import { CKEditor5CustomUploadAdapter, UploadedEditorImageAsset } from './custom
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { CategorySelectorComponent } from './components/category-selector/category-selector.component';
 import { CoverImageComponent } from './components/cover-image/cover-image.component';
+import { VideoSource, VideoFormState, VideoDetails, YouTubeVideoData } from './types/video.types';
+import { VideoUploadService } from './services/video-upload.service';
 interface Category {
   id: number;
   name_en: string;
@@ -74,6 +76,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly contentImageUploadUrl = `${this.baseUrl}/courses/draft/content/images`;
   private readonly sanitizer = inject(DomSanitizer);
   private readonly toastr = inject(ToastrService);
+  private readonly videoUploadService = inject(VideoUploadService);
   
   private readonly RESOURCE_MAX_SIZE = 100 * 1024 * 1024; // 100MB
   private readonly RESOURCE_INLINE_PREVIEW_LIMIT = 5 * 1024 * 1024; // 5MB for inline previews
@@ -98,6 +101,22 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   resourceUploadInProgress: boolean = false;
   resourceUploadProgress: number = 0;
   resourceForm: ResourceFormState = this.createDefaultResourceForm();
+  
+  // Video Modal States
+  showVideoModal: boolean = false;
+  viewingVideoContent: boolean = false;
+  videoContentItem: ContentItem | null = null;
+  videoForm: VideoFormState = this.createDefaultVideoForm();
+  videoUploadError: string | null = null;
+  videoUploadInProgress: boolean = false;
+  videoUploadProgress: number = 0;
+  savingVideo: boolean = false;
+  deletingVideo: boolean = false;
+  fetchingYouTubeData: boolean = false;
+  youtubeError: string | null = null;
+  
+  private readonly VIDEO_MAX_SIZE = 100 * 1024 * 1024; // 100MB
+  private readonly VIDEO_ACCEPTED_FORMATS = ['video/mp4', 'video/x-msvideo', '.mp4', '.avi'];
   
   private languageChangeSubscription?: Subscription;
   private draftCourseId: number | null = null;
@@ -1044,6 +1063,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
     
+    if (contentType === 'video') {
+      this.openVideoModal();
+      return;
+    }
+    
     // For other content types, show the AI/Manual choice modal
     this.selectedContentType = contentType;
     this.showContentTypeModal = true;
@@ -1597,8 +1621,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     } else if (item.type === 'resources') {
       this.openResourcePreview(item);
+    } else if (item.type === 'video') {
+      // Open video modal in view mode
+      this.videoContentItem = item;
+      this.viewingVideoContent = true;
+      this.showVideoModal = true;
+      this.selectedContentType = 'video';
+      this.cdr.detectChanges();
     }
-    // TODO: Handle other content types (video, audio, quiz)
+    // TODO: Handle other content types (audio, quiz)
   }
   // Update content item when editing existing content
   updateContentItem(itemId: string, title: string, content: string): void {
@@ -1660,6 +1691,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.contentItems = this.contentItems.filter((item) => item.id !== this.itemToDelete);
       this.saveSections();
 
+      // Close video modal if deleting the currently viewed video
+      if (this.viewingVideoContent && this.videoContentItem && this.videoContentItem.id === this.itemToDelete) {
+        this.showVideoModal = false;
+        this.videoContentItem = null;
+        this.viewingVideoContent = false;
+      }
+      
       this.showWarningModal = false;
       this.warningModalType = null;
       this.itemToDelete = null;
@@ -1672,10 +1710,37 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     };
 
     if (targetSection && Number.isFinite(numericSectionId) && Number.isFinite(numericContentId)) {
+      // Check if this is a video content item that needs S3 deletion
+      const contentItem = this.contentItems.find(item => item.id === this.itemToDelete);
+      const isVideoContent = contentItem?.type === 'video';
+      
+      // Delete from database first
       this.ai.deleteSectionContent(numericSectionId, numericContentId).subscribe({
         next: () => {
           this.loadedSectionContentIds.add(String(numericSectionId));
-          removeLocally();
+          
+          // If it's a video with local file, delete from S3
+          if (isVideoContent && contentItem?.meta && contentItem.meta['provider'] === 'local' && contentItem.meta['dataUrl']) {
+            const videoUrl = contentItem.meta['dataUrl'] as string;
+            this.videoUploadService.deleteVideos([videoUrl]).subscribe({
+              next: () => {
+                console.log('Video file deleted from S3 successfully');
+                removeLocally();
+              },
+              error: (s3Error) => {
+                console.error('Failed to delete video file from S3:', s3Error);
+                // Still remove locally even if S3 deletion fails
+                removeLocally();
+                const warningMessage = this.currentLang === 'ar'
+                  ? 'تم حذف المحتوى ولكن فشل حذف الملف من التخزين'
+                  : 'Content deleted but failed to remove file from storage';
+                this.toastr.warning(warningMessage);
+              }
+            });
+          } else {
+            // Not a local video or no file to delete
+            removeLocally();
+          }
         },
         error: (error) => {
           console.error('Failed to delete section content from server:', error);
@@ -3657,6 +3722,44 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return entries;
   }
 
+  getVideoDetailEntries(item: ContentItem): { label: string; value: string }[] {
+    if (!item || item.type !== 'video' || !item.meta) {
+      return [];
+    }
+
+    const labelSource = this.currentLang === 'ar' ? 'المصدر' : 'Source';
+    const labelDuration = this.currentLang === 'ar' ? 'المدة' : 'Duration';
+    const labelProvider = this.currentLang === 'ar' ? 'المنصة' : 'Platform';
+    const labelSize = this.currentLang === 'ar' ? 'الحجم' : 'Size';
+
+    const entries: { label: string; value: string }[] = [];
+    const meta = item.meta as any;
+
+    // Video source/provider
+    if (meta.provider) {
+      const providerLabel = meta.provider === 'youtube' 
+        ? 'YouTube' 
+        : meta.provider === 'local' 
+          ? (this.currentLang === 'ar' ? 'ملف محلي' : 'Local File')
+          : meta.provider;
+      entries.push({ label: labelProvider, value: providerLabel });
+    }
+
+    // Duration
+    if (meta.duration) {
+      const durationFormatted = this.formatDuration(meta.duration);
+      entries.push({ label: labelDuration, value: durationFormatted });
+    }
+
+    // File size (for local videos)
+    if (meta.provider === 'local' && meta.fileSize) {
+      entries.push({ label: labelSize, value: this.formatFileSize(meta.fileSize) });
+    }
+
+    return entries;
+  }
+
+
   getResourceDetailEntriesFromForm(): { label: string; value: string }[] {
     if (!this.resourceForm.fileName) {
       return [];
@@ -4402,4 +4505,510 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   private pendingContentStatus: Set<string> = new Set<string>();
+
+  // ============= Video Modal Methods =============
+  
+  private createDefaultVideoForm(): VideoFormState {
+    return {
+      source: null,
+      title: '',
+      description: '',
+      file: null,
+      fileName: undefined,
+      fileSize: undefined,
+      dataUrl: undefined,
+      youtubeUrl: '',
+      youtubeData: null,
+      metadata: undefined
+    };
+  }
+
+  openVideoModal(): void {
+    this.resetVideoForm();
+    this.showVideoModal = true;
+    this.viewingVideoContent = false;
+    this.videoContentItem = null;
+    this.selectedContentType = 'video';
+    this.cdr.detectChanges();
+  }
+
+  closeVideoModal(): void {
+    if (this.videoUploadInProgress && !confirm(this.currentLang === 'ar' ? 'هل أنت متأكد؟ سيتم إلغاء الرفع الجاري.' : 'Are you sure? The upload in progress will be cancelled.')) {
+      return;
+    }
+    this.showVideoModal = false;
+    this.selectedContentType = null;
+    this.resetVideoForm();
+    this.cdr.detectChanges();
+  }
+
+  private resetVideoForm(): void {
+    this.videoForm = this.createDefaultVideoForm();
+    this.videoUploadError = null;
+    this.videoUploadInProgress = false;
+    this.videoUploadProgress = 0;
+    this.youtubeError = null;
+    this.fetchingYouTubeData = false;
+    this.savingVideo = false;
+    this.deletingVideo = false;
+  }
+
+  selectVideoSource(source: VideoSource): void {
+    this.videoForm.source = source;
+    this.videoUploadError = null;
+    this.youtubeError = null;
+    
+    if (source === 'youtube') {
+      // Pre-fill with title from YouTube if available
+      if (this.videoForm.youtubeData) {
+        this.videoForm.title = this.videoForm.youtubeData.title;
+        this.videoForm.description = this.videoForm.youtubeData.description.substring(0, 500);
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
+  resetVideoSource(): void {
+    this.videoForm.source = null;
+    this.videoForm.file = null;
+    this.videoForm.fileName = undefined;
+    this.videoForm.fileSize = undefined;
+    this.videoForm.dataUrl = undefined;
+    this.videoForm.youtubeUrl = '';
+    this.videoForm.youtubeData = null;
+    this.videoForm.metadata = undefined;
+    this.videoUploadError = null;
+    this.youtubeError = null;
+    this.cdr.detectChanges();
+  }
+
+  onVideoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) {
+      return;
+    }
+    
+    // Validate file type
+    const isValidType = this.VIDEO_ACCEPTED_FORMATS.some(format => {
+      if (format.startsWith('.')) {
+        return file.name.toLowerCase().endsWith(format);
+      }
+      return file.type === format;
+    });
+    
+    if (!isValidType) {
+      this.videoUploadError = this.currentLang === 'ar' 
+        ? 'نوع الملف غير مدعوم. الصيغ المسموح بها: MP4, AVI.'
+        : 'Unsupported file type. Allowed formats are MP4, AVI.';
+      return;
+    }
+    
+    // Validate file size
+    if (file.size > this.VIDEO_MAX_SIZE) {
+      this.videoUploadError = this.currentLang === 'ar'
+        ? 'الملف كبير جدًا. الحد الأقصى 100 ميجابايت.'
+        : 'File is too large. Maximum allowed size is 100 MB.';
+      return;
+    }
+    
+    this.videoUploadError = null;
+    this.videoForm.file = file;
+    this.videoForm.fileName = file.name;
+    this.videoForm.fileSize = file.size;
+    
+    // Extract video metadata
+    this.extractVideoMetadata(file);
+    
+    // Reset input
+    input.value = '';
+    this.cdr.detectChanges();
+  }
+
+  private extractVideoMetadata(file: File): void {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    
+    video.onloadedmetadata = () => {
+      const duration = Math.floor(video.duration);
+      this.videoForm.metadata = {
+        duration: duration,
+        durationFormatted: this.formatDuration(duration),
+        width: video.videoWidth,
+        height: video.videoHeight
+      };
+      
+      // Create thumbnail from video
+      video.currentTime = Math.min(1, duration / 10); // Get frame at 10% or 1 second
+      this.cdr.detectChanges();
+    };
+    
+    video.onseeked = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        if (this.videoForm.metadata) {
+          this.videoForm.metadata.thumbnail = canvas.toDataURL('image/jpeg', 0.7);
+        }
+      }
+      URL.revokeObjectURL(video.src);
+      this.cdr.detectChanges();
+    };
+    
+    video.src = URL.createObjectURL(file);
+  }
+
+  removeVideoFile(): void {
+    this.videoForm.file = null;
+    this.videoForm.fileName = undefined;
+    this.videoForm.fileSize = undefined;
+    this.videoForm.dataUrl = undefined;
+    this.videoForm.metadata = undefined;
+    this.videoUploadError = null;
+    this.cdr.detectChanges();
+  }
+
+  validateYouTubeUrl(): void {
+    const url = this.videoForm.youtubeUrl.trim();
+    if (!url) {
+      this.youtubeError = null;
+      return;
+    }
+    
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w-]+/;
+    if (!youtubeRegex.test(url)) {
+      this.youtubeError = this.currentLang === 'ar'
+        ? 'رابط يوتيوب غير صالح. يرجى إدخال رابط صحيح.'
+        : 'Invalid YouTube URL. Please enter a valid YouTube link.';
+    } else {
+      this.youtubeError = null;
+    }
+  }
+
+  fetchYouTubeMetadata(): void {
+    const url = this.videoForm.youtubeUrl.trim();
+    if (!url || this.youtubeError) {
+      return;
+    }
+    
+    // Extract video ID from URL
+    const videoId = this.extractYouTubeVideoId(url);
+    if (!videoId) {
+      this.youtubeError = this.currentLang === 'ar'
+        ? 'لا يمكن استخراج معرف الفيديو من الرابط.'
+        : 'Could not extract video ID from URL.';
+      return;
+    }
+    
+    this.fetchingYouTubeData = true;
+    this.youtubeError = null;
+    
+    // Call backend API to fetch YouTube metadata
+    const apiUrl = `${this.baseUrl}/courses/youtube/metadata?videoId=${videoId}`;
+    
+    this.http.get<any>(apiUrl).subscribe({
+      next: (response) => {
+        // Parse ISO 8601 duration (e.g., PT1H2M10S) to seconds
+        const duration = this.parseYouTubeDuration(response.duration);
+        
+        this.videoForm.youtubeData = {
+          videoId: response.videoId,
+          title: response.title,
+          description: response.description,
+          duration: duration,
+          thumbnail: response.thumbnail,
+          embedUrl: response.embedUrl
+        };
+        
+        // Auto-fill title and description
+        this.videoForm.title = this.videoForm.youtubeData.title;
+        this.videoForm.description = this.videoForm.youtubeData.description.substring(0, 500);
+        
+        this.fetchingYouTubeData = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('YouTube API error:', error);
+        this.youtubeError = error.error?.error || (this.currentLang === 'ar'
+          ? 'حدث خطأ أثناء جلب بيانات الفيديو. يرجى المحاولة مرة أخرى.'
+          : 'Error fetching video data. Please try again.');
+        this.fetchingYouTubeData = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private extractYouTubeVideoId(url: string): string | null {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    return null;
+  }
+
+  private parseYouTubeDuration(duration: string): number {
+    // Parse ISO 8601 duration format (e.g., PT1H2M10S, PT15M33S, PT43S)
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    
+    if (!match) {
+      return 0;
+    }
+    
+    const hours = parseInt(match[1] || '0', 10);
+    const minutes = parseInt(match[2] || '0', 10);
+    const seconds = parseInt(match[3] || '0', 10);
+    
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
+  formatDuration(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  getYouTubeSafeUrl(embedUrl: string | unknown): SafeResourceUrl {
+    const url = typeof embedUrl === 'string' ? embedUrl : '';
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  canSaveVideo(): boolean {
+    if (!this.videoForm.source) {
+      return false;
+    }
+    
+    if (!this.videoForm.title.trim()) {
+      return false;
+    }
+    
+    if (this.videoForm.source === 'local') {
+      return !!this.videoForm.file;
+    }
+    
+    if (this.videoForm.source === 'youtube') {
+      return !!this.videoForm.youtubeData && !this.youtubeError;
+    }
+    
+    return false;
+  }
+
+  async saveVideoContent(): Promise<void> {
+    if (!this.canSaveVideo() || this.savingVideo || !this.activeSectionId) {
+      return;
+    }
+    
+    this.savingVideo = true;
+    
+    try {
+      // Prepare initial metadata for the database
+      const meta: Record<string, unknown> = {
+        source: this.videoForm.source,
+        title: this.videoForm.title.trim()
+      };
+      
+      // Add description only if provided
+      if (this.videoForm.description.trim()) {
+        meta['description'] = this.videoForm.description.trim();
+      }
+      
+      if (this.videoForm.source === 'youtube' && this.videoForm.youtubeData) {
+        // Add YouTube metadata
+        meta['provider'] = 'youtube';
+        meta['url'] = this.videoForm.youtubeUrl;
+        meta['youtubeVideoId'] = this.videoForm.youtubeData.videoId;
+        meta['youtubeEmbedUrl'] = this.videoForm.youtubeData.embedUrl;
+        meta['duration'] = this.videoForm.youtubeData.duration;
+        meta['durationFormatted'] = this.formatDuration(this.videoForm.youtubeData.duration);
+        meta['thumbnail'] = this.videoForm.youtubeData.thumbnail;
+      } else if (this.videoForm.source === 'local' && this.videoForm.file) {
+        // Add basic local video metadata (before upload)
+        meta['provider'] = 'local';
+        meta['fileName'] = this.videoForm.fileName;
+        meta['fileSize'] = this.videoForm.fileSize;
+        
+        if (this.videoForm.metadata) {
+          meta['duration'] = this.videoForm.metadata.duration;
+          meta['durationFormatted'] = this.videoForm.metadata.durationFormatted;
+        }
+      }
+      
+      // Create content record first to get content ID
+      const payload: CreateSectionContentPayload = {
+        type: 'video',
+        title: this.videoForm.title.trim(),
+        body_html: undefined,
+        meta: meta,
+        status: true
+      };
+      
+      const response = await this.ai.createSectionContent(this.activeSectionId, payload).toPromise();
+      
+      if (!response || !response.content) {
+        throw new Error('Failed to create video content record');
+      }
+      
+      const contentId = response.content.id;
+      
+      // Now upload video file with content ID for proper folder structure
+      if (this.videoForm.source === 'local' && this.videoForm.file) {
+        this.videoUploadInProgress = true;
+        this.videoUploadProgress = 0;
+        this.cdr.detectChanges();
+        
+        // Subscribe to upload progress
+        const progressSub = this.videoUploadService.getUploadProgress().subscribe(progress => {
+          this.videoUploadProgress = Math.min(99, Math.max(10, progress));
+          this.cdr.detectChanges();
+        });
+        
+        // Set initial progress to ensure overlay is visible
+        this.videoUploadProgress = 5;
+        
+        const metadata = this.videoForm.metadata;
+        const uploadResponse = await new Promise<any>((resolve, reject) => {
+          this.videoUploadService.uploadVideo(
+            this.videoForm.file!,
+            contentId, // Use content ID for folder structure
+            metadata ? {
+              duration: metadata.duration,
+              width: metadata.width,
+              height: metadata.height
+            } : undefined
+          ).subscribe({
+            next: (response) => {
+              progressSub.unsubscribe();
+              this.videoUploadProgress = 100;
+              this.cdr.detectChanges();
+              resolve(response);
+            },
+            error: (error) => {
+              progressSub.unsubscribe();
+              this.videoUploadInProgress = false;
+              this.videoUploadProgress = 0;
+              this.cdr.detectChanges();
+              
+              // Handle specific error cases
+              if (error.status === 413) {
+                this.videoUploadError = this.currentLang === 'ar' 
+                  ? 'حجم الملف كبير جداً. الحد الأقصى 100 ميجابايت'
+                  : 'File size too large. Maximum 100 MB allowed';
+              } else {
+                this.videoUploadError = this.currentLang === 'ar'
+                  ? 'حدث خطأ أثناء رفع الفيديو'
+                  : 'Error uploading video';
+              }
+              
+              reject(error);
+            }
+          });
+        });
+        
+        // Update content record with S3 URL
+        const updatedMeta = { ...meta };
+        updatedMeta['dataUrl'] = uploadResponse.asset.url;
+        
+        const updatePayload: CreateSectionContentPayload = {
+          type: 'video',
+          title: this.videoForm.title.trim(),
+          body_html: undefined,
+          meta: updatedMeta,
+          status: true
+        };
+        
+        await this.ai.updateSectionContent(this.activeSectionId, contentId, updatePayload).toPromise();
+        
+        this.videoUploadInProgress = false;
+        this.videoUploadProgress = 100;
+      }
+      
+      // Get the final content record (with updated metadata if video was uploaded)
+      let finalContentRecord = response.content;
+      if (this.videoForm.source === 'local' && this.videoForm.file) {
+        // Fetch updated record after S3 URL was added
+        const updatedResponse = await this.ai.getSectionContent(this.activeSectionId).toPromise();
+        if (updatedResponse && updatedResponse.content) {
+          finalContentRecord = updatedResponse.content.find(c => c.id === contentId) || finalContentRecord;
+        }
+      }
+      
+      if (finalContentRecord) {
+        // Convert SectionContentRecord to ContentItem
+        const contentItem: ContentItem = {
+          id: String(finalContentRecord.id),
+          type: finalContentRecord.type as 'video' | 'resources' | 'text' | 'audio' | 'quiz',
+          title: finalContentRecord.title,
+          section_id: String(finalContentRecord.section_id),
+          status: Boolean(finalContentRecord.status),
+          meta: finalContentRecord.meta || {},
+          createdAt: finalContentRecord.created_at,
+          updatedAt: finalContentRecord.updated_at
+        };
+        
+        // Add to local content items
+        this.contentItems.push(contentItem);
+        
+        // Update sections
+        const section = this.sections.find(s => s.id === this.activeSectionId);
+        if (section) {
+          if (!section.content_items) {
+            section.content_items = [];
+          }
+          section.content_items.push(contentItem);
+        }
+      }
+      
+      // Close modal
+      this.showVideoModal = false;
+      this.resetVideoForm();
+      
+      this.toastr.success(
+        this.currentLang === 'ar' ? 'تم حفظ الفيديو بنجاح' : 'Video saved successfully'
+      );
+    } catch (error) {
+      console.error('Error saving video:', error);
+      this.toastr.error(
+        this.currentLang === 'ar' ? 'حدث خطأ أثناء حفظ الفيديو' : 'Error saving video'
+      );
+    } finally {
+      this.savingVideo = false;
+      this.videoUploadInProgress = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  deleteVideoContent(): void {
+    if (!this.videoContentItem || this.deletingVideo) {
+      return;
+    }
+    
+    // Use the same warning modal system as other content
+    this.itemToDelete = this.videoContentItem.id;
+    this.warningModalType = 'deleteContent';
+    this.showWarningModal = true;
+  }
+
  }

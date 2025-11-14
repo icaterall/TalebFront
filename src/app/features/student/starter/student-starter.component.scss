@@ -3,6 +3,7 @@
 @use './student-starter-sections' as *;
 @use './student-starter-modals' as *;
 @use './student-starter-toast' as *;
+@use './student-starter-video-modal' as *;
 
 .btn-spinner {
 	width: 20px;
@@ -21,8 +22,68 @@
 }
 
 .continue-error {
-	margin-top: 12px;
-	color: #c0392b;
-	font-size: 0.95rem;
-	text-align: center;
+  margin-top: 12px;
+  color: #c0392b;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.video-modal[dir='rtl'] {
+  text-align: right;
+}
+
+.video-modal[dir='rtl'] .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+}
+
+.video-modal[dir='rtl'] .modal-header h3 {
+  text-align: right;
+}
+
+.video-modal[dir='rtl'] .modal-close-btn {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
+.video-modal[dir='rtl'] .modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  flex-direction: row-reverse;
+}
+
+.video-modal[dir='rtl'] .btn-cancel,
+.video-modal[dir='rtl'] .btn-primary,
+.video-modal[dir='rtl'] .btn-danger {
+  direction: rtl;
+}
+
+.video-modal[dir='rtl'] .video-info,
+.video-modal[dir='rtl'] .video-metadata,
+.video-modal[dir='rtl'] .youtube-info,
+.video-modal[dir='rtl'] .source-options,
+.video-modal[dir='rtl'] .form-section,
+.video-modal[dir='rtl'] .form-fields,
+.video-modal[dir='rtl'] .form-group,
+.video-modal[dir='rtl'] .selected-file-info {
+  text-align: right;
+}
+
+.video-modal[dir='rtl'] .form-group label,
+.video-modal[dir='rtl'] .form-group input,
+.video-modal[dir='rtl'] .form-group textarea {
+  text-align: right;
+}
+
+.video-modal[dir='rtl'] .btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-modal[dir='rtl'] .video-preview-container {
+  text-align: right;
 }
