@@ -1657,7 +1657,7 @@
               <input #audioFileInput type="file" (change)="onAudioFileSelected($event)" accept=".mp3,.wav,.m4a,.ogg" class="file-input">
               <div class="upload-icon">📤</div>
               <p class="upload-text">{{ currentLang === 'ar' ? 'اسحب وأفلت ملفًا صوتيًا أو انقر للتصفح' : 'Drag & drop an audio file or click to browse' }}</p>
-              <p class="upload-hint">{{ currentLang === 'ar' ? 'MP3, WAV, M4A, OGG (الحد الأقصى 50 ميجابايت)' : 'MP3, WAV, M4A, OGG (Max 50MB)' }}</p>
+              <p class="upload-hint">{{ currentLang === 'ar' ? 'MP3, WAV, M4A, OGG (الحد الأقصى 10 ميجابايت)' : 'MP3, WAV, M4A, OGG (Max 10MB)' }}</p>
             </div>
             <div *ngIf="audioUploadError" class="upload-error">{{ audioUploadError }}</div>
             <div *ngIf="audioForm.fileName" class="file-preview">
@@ -1750,7 +1750,7 @@
               [disabled]="!canSaveAudio() || savingAudio || generatingAudio">
               <span *ngIf="generatingAudio" class="btn-spinner"></span>
               <span *ngIf="!generatingAudio">{{ currentLang === 'ar' ? 'تحويل إلى صوت' : 'Convert to Audio' }}</span>
-              <span *ngIf="generatingAudio">{{ currentLang === 'ar' ? '⏳ جاري التحويل...' : '⏳ Converting...' }}</span>
+              <span *ngIf="generatingAudio">{{ currentLang === 'ar' ? 'يرجى الانتظار...' : 'Please wait...' }}</span>
             </button>
           </div>
         </div>
@@ -1764,7 +1764,7 @@
             <span class="upload-text">
               {{ audioUploadInProgress ? 
                 (currentLang === 'ar' ? 'جاري رفع الملف الصوتي...' : 'Uploading audio file...') :
-                (currentLang === 'ar' ? 'جاري توليد الصوت...' : 'Generating audio...') }}
+                (currentLang === 'ar' ? 'يرجى الانتظار... جاري توليد الصوت' : 'Please wait... Generating audio') }}
             </span>
             <div class="upload-progress-bar" *ngIf="audioUploadInProgress">
               <div class="upload-progress-fill" [style.width.%]="audioUploadProgress"></div>

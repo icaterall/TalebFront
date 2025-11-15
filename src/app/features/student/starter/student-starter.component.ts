@@ -134,7 +134,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   generatingAudio: boolean = false;
   audioGenerationProgress: number = 0;
   
-  private readonly AUDIO_MAX_SIZE = 50 * 1024 * 1024; // 50MB
+  private readonly AUDIO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
   private readonly AUDIO_ACCEPTED_FORMATS = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg', '.mp3', '.wav', '.m4a', '.ogg'];
   
   // Available TTS voices

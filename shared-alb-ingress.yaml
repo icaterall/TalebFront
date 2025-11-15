@@ -278,4 +278,24 @@ spec:
                 name: pickpickgo-store-service
                 port:
                   number: 80
+    - host: kadi.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kadi-frontend-service
+                port:
+                  number: 80
+    - host: kadibackend.anataleb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kadi-backend-service
+                port:
+                  number: 3000
 #kubectl apply -f shared-alb-ingress.yaml
