@@ -428,7 +428,7 @@
           <button
             type="button"
             class="btn-add-section"
-            (click)="addNewSection()"
+            (click)="openAddSectionModal()"
             [disabled]="hasUnnamedSection()"
             [attr.aria-label]="currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add new section'">
             <span class="btn-icon">➕</span>
@@ -1475,6 +1475,106 @@
         <span class="preview-title">{{ currentLang === 'ar' ? 'الخطوة 3: مراجعة ونشر' : 'Step 3: Review & Publish' }}</span>
         <span class="preview-desc">{{ currentLang === 'ar' ? 'تحديد الرؤية والنشر مع قسم اختياري' : 'Set visibility and publish with optional section' }}</span>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Section Modal -->
+<div class="modal-overlay" *ngIf="showAddSectionModal" (click)="closeAddSectionModal()">
+  <div class="modal-content add-section-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add New Section' }}</h2>
+      <button type="button" class="modal-close" (click)="closeAddSectionModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="add-section-options">
+        <!-- Manual Entry Option -->
+        <button
+          type="button"
+          class="section-option-btn"
+          (click)="addNewSectionManually()">
+          <div class="option-icon">✏️</div>
+          <div class="option-content">
+            <h3>{{ currentLang === 'ar' ? 'إدخال يدوي' : 'Manual Entry' }}</h3>
+            <p>{{ currentLang === 'ar' ? 'اكتب عنوان القسم وأضف المحتوى يدوياً' : 'Write section title and add content manually' }}</p>
+          </div>
+        </button>
+
+        <!-- Upload File Option -->
+        <button
+          type="button"
+          class="section-option-btn"
+          (click)="sectionFileInput.click()">
+          <div class="option-icon">📄</div>
+          <div class="option-content">
+            <h3>{{ currentLang === 'ar' ? 'رفع ملف' : 'Upload File' }}</h3>
+            <p>{{ currentLang === 'ar' ? 'ارفع ملف Word/PDF/PPT وسيقوم الذكاء الاصطناعي بإنشاء العنوان والمحتوى' : 'Upload Word/PDF/PPT file and AI will generate title and content' }}</p>
+          </div>
+        </button>
+        <input
+          #sectionFileInput
+          id="sectionFileInput"
+          type="file"
+          accept=".doc,.docx,.pdf,.ppt,.pptx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          (change)="onSectionFileSelected($event)"
+          style="display: none;"
+        />
+      </div>
+
+      <!-- Language Conversion Option (shown when file is selected) -->
+      <div class="section-language-option" *ngIf="sectionFileSelected && !sectionFileUploading">
+        <label class="language-option-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="sectionFileConvertToArabic"
+            class="language-checkbox"
+          />
+          <span class="language-option-text">
+            {{ currentLang === 'ar' 
+              ? 'تحويل المحتوى إلى العربية (إذا كان الملف باللغة الإنجليزية)' 
+              : 'Convert content to Arabic (if file is in English)' }}
+          </span>
+        </label>
+        <p class="language-option-hint">
+          {{ currentLang === 'ar' 
+            ? 'سيتم إنشاء المحتوى باللغة العربية. إذا كان الملف بالعربية، سيتم الاحتفاظ باللغة الأصلية.' 
+            : 'Content will be generated in Arabic. If the file is already in Arabic, the original language will be preserved.' }}
+        </p>
+        <div class="language-option-actions">
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="uploadSelectedSectionFile()"
+            [disabled]="sectionFileUploading">
+            {{ currentLang === 'ar' ? 'إنشاء القسم' : 'Create Section' }}
+          </button>
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="clearSelectedSectionFile()"
+            [disabled]="sectionFileUploading">
+            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- File Upload Progress -->
+      <div class="section-file-upload" *ngIf="sectionFileUploading">
+        <div class="upload-progress">
+          <div class="spinner"></div>
+          <p>{{ currentLang === 'ar' ? 'جاري معالجة الملف وإنشاء المحتوى...' : 'Processing file and generating content...' }}</p>
+        </div>
+      </div>
+
+      <!-- File Upload Error -->
+      <div class="section-file-error" *ngIf="sectionFileUploadError">
+        <p class="error-message">{{ sectionFileUploadError }}</p>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="closeAddSectionModal()" [disabled]="sectionFileUploading">
+        {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+      </button>
     </div>
   </div>
 </div>

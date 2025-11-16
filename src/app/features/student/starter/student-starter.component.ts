@@ -245,6 +245,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   sectionSaving: boolean = false;   // waiting state when saving/creating section name
   showStartFromScratchModal: boolean = false; // Track start from scratch modal visibility
   
+  // Add Section Modal
+  showAddSectionModal: boolean = false; // Track add section modal visibility
+  sectionFileUploading: boolean = false; // Track section file upload state
+  sectionFileUploadError: string | null = null; // Track section file upload errors
+  sectionFileConvertToArabic: boolean = false; // Track if user wants to convert English content to Arabic
+  sectionFileSelected: boolean = false; // Track if a file has been selected
+  
   // Undo Toast
   showUndoToast: boolean = false; // Track undo toast visibility
   deletedSection: Section | null = null; // Store deleted section for undo
@@ -2675,8 +2682,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
   }
   
-  // Add New Section
-  addNewSection(): void {
+  // Open Add Section Modal
+  openAddSectionModal(): void {
     // Block creating a new section if there is any unnamed section
     const unnamed = this.sections.find(s => !s.name || !s.name.trim());
     if (unnamed) {
@@ -2691,6 +2698,45 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       );
       return;
     }
+    this.showAddSectionModal = true;
+    this.sectionFileUploadError = null;
+    this.sectionFileConvertToArabic = false; // Reset language option
+    this.sectionFileSelected = false; // Reset file selection
+  }
+  
+  // Clear selected file
+  clearSelectedSectionFile(): void {
+    this.sectionFileSelected = false;
+    this.sectionFileUploadError = null;
+    this.sectionFileConvertToArabic = false;
+    // Clear the file input
+    const fileInput = document.querySelector('input[type="file"]#sectionFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    this.cdr.detectChanges();
+  }
+  
+  // Upload the selected file
+  uploadSelectedSectionFile(): void {
+    const fileInput = document.querySelector('input[type="file"]#sectionFileInput') as HTMLInputElement;
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+      return;
+    }
+    this.uploadSectionFile(fileInput.files[0]);
+  }
+
+  // Close Add Section Modal
+  closeAddSectionModal(): void {
+    if (!this.sectionFileUploading) {
+      this.showAddSectionModal = false;
+      this.sectionFileUploadError = null;
+    }
+  }
+
+  // Add New Section Manually
+  addNewSectionManually(): void {
+    this.closeAddSectionModal();
     const newSectionNumber = this.sections.length + 1;
     const newSection: Section & { available: boolean } = {
       id: `section-${Date.now()}`,
@@ -2712,6 +2758,127 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.editingSection = true;
     this.normalizeSectionOrdering();
     this.cdr.detectChanges();
+  }
+
+  // Handle Section File Selection
+  onSectionFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      this.sectionFileSelected = false;
+      return;
+    }
+
+    // Mark file as selected
+    this.sectionFileSelected = true;
+
+    // Validate file type
+    const validTypes = [
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/pdf',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
+    const validExtensions = ['.doc', '.docx', '.pdf', '.ppt', '.pptx'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+      this.sectionFileUploadError = this.currentLang === 'ar'
+        ? 'نوع الملف غير مدعوم. يرجى رفع ملف Word (.doc, .docx)، PDF (.pdf)، أو PowerPoint (.ppt, .pptx)'
+        : 'Unsupported file type. Please upload a Word (.doc, .docx), PDF (.pdf), or PowerPoint (.ppt, .pptx) file';
+      input.value = '';
+      this.sectionFileSelected = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      this.sectionFileUploadError = this.currentLang === 'ar'
+        ? 'حجم الملف كبير جداً. الحد الأقصى 50 ميجابايت'
+        : 'File size is too large. Maximum size is 50MB';
+      input.value = '';
+      this.sectionFileSelected = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.sectionFileUploadError = null;
+    // Don't auto-upload, wait for user to confirm language option
+    this.cdr.detectChanges();
+  }
+
+  // Upload Section File and Generate Content
+  uploadSectionFile(file: File): void {
+    this.sectionFileUploading = true;
+    this.sectionFileUploadError = null;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('convertToArabic', String(this.sectionFileConvertToArabic));
+
+    // Get draft course ID
+    if (!this.draftCourseId) {
+      this.sectionFileUploadError = this.currentLang === 'ar'
+        ? 'خطأ: لم يتم العثور على مسودة الدورة'
+        : 'Error: Draft course not found';
+      this.sectionFileUploading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.http.post<{ success: boolean; section: Section; message?: string }>(
+      `${this.baseUrl}/courses/draft/sections/upload-and-generate`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${this.universalAuth.getAccessToken()}`
+        }
+      }
+    ).subscribe({
+      next: (response) => {
+        if (response.success && response.section) {
+          // Add the new section
+          const newSection: Section & { available: boolean } = {
+            ...response.section,
+            available: true,
+            isCollapsed: false
+          };
+          this.sections.push(newSection);
+          this.setActiveSection(newSection.id);
+          this.normalizeSectionOrdering();
+          this.saveSections();
+          
+          // Section content will be loaded automatically when setActiveSection is called
+          // The backend returns the section with content_items already populated
+          
+          this.showAddSectionModal = false;
+          this.sectionFileUploading = false;
+          this.toastr?.success?.(
+            this.currentLang === 'ar'
+              ? 'تم إنشاء القسم والمحتوى بنجاح'
+              : 'Section and content created successfully'
+          );
+          this.cdr.detectChanges();
+        } else {
+          this.sectionFileUploadError = response.message || (this.currentLang === 'ar'
+            ? 'فشل في إنشاء القسم'
+            : 'Failed to create section');
+          this.sectionFileUploading = false;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Error uploading section file:', error);
+        this.sectionFileUploadError = error.error?.message || (this.currentLang === 'ar'
+          ? 'حدث خطأ أثناء معالجة الملف'
+          : 'An error occurred while processing the file');
+        this.sectionFileUploading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   hasUnnamedSection(): boolean {
@@ -3246,7 +3413,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           target.tagName !== 'TEXTAREA' && 
           !target.isContentEditable) {
         event.preventDefault();
-        this.addNewSection();
+        this.openAddSectionModal();
       }
     }
     
