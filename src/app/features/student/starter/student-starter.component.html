@@ -362,23 +362,23 @@
               
               <!-- Add Content Buttons -->
               <div class="add-content-actions">
-                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('text')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('text')" [disabled]="!section.name || !section.name.trim()">
                   <span class="btn-icon">📝</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة درس نصي' : 'Add Text Lesson' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('resources')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('resources')" [disabled]="!section.name || !section.name.trim()">
                   <span class="btn-icon">📄</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة ملفات' : 'Add Resources' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('video')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('video')" [disabled]="!section.name || !section.name.trim()">
                   <span class="btn-icon">🎥</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة فيديو' : 'Add Video' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('audio')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('audio')" [disabled]="!section.name || !section.name.trim()">
                   <span class="btn-icon">🎧</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة صوت' : 'Add Audio' }}</span>
                 </button>
-                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('quiz')">
+                <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('quiz')" [disabled]="!section.name || !section.name.trim()">
                   <span class="btn-icon">📋</span>
                   <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة اختبار' : 'Add Quiz' }}</span>
                 </button>
@@ -927,7 +927,7 @@
     </div>
 
     <!-- Content Type Creation Modal (AI-assisted or Manual) -->
-    <div class="modal-overlay" *ngIf="showContentTypeModal" (click)="closeContentTypeModal()">
+    <div class="modal-overlay" *ngIf="showContentTypeModal">
       <div class="modal-content content-type-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ getContentTypeModalTitle() }}</h3>
@@ -959,7 +959,7 @@
     </div>
 
     <!-- Resource Creation Modal -->
-    <div class="modal-overlay" *ngIf="showResourceModal" (click)="closeResourceModal()">
+    <div class="modal-overlay" *ngIf="showResourceModal">
       <div class="modal-content resource-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
         <div class="modal-header">
           <h3>{{ currentLang === 'ar' ? '📄 إضافة ملف' : '📄 Add Resource' }}</h3>
@@ -990,7 +990,7 @@
 
           <div class="field-group">
             <label class="field-label" for="resourceFile">{{ currentLang === 'ar' ? 'تحميل الملف *' : 'Upload File *' }}</label>
-            <input id="resourceFile" type="file" class="field-input" (change)="onResourceFileSelected($event)" />
+            <input id="resourceFile" type="file" class="field-input" (change)="onResourceFileSelected($event)" [attr.accept]="getResourceAcceptForSelectedType()" />
             <div class="field-error" *ngIf="resourceUploadError">{{ resourceUploadError }}</div>
             <div class="resource-uploading" *ngIf="resourceUploading">
               <span class="resource-uploading-spinner"></span>
@@ -1026,6 +1026,13 @@
             <div class="resource-preview-header">
               <span class="preview-label">{{ currentLang === 'ar' ? 'معاينة سريعة' : 'Quick Preview' }}</span>
               <span class="preview-hint">{{ currentLang === 'ar' ? 'هذه المعاينة للاطلاع فقط.' : 'Preview for reference only.' }}</span>
+              <a 
+                *ngIf="resourceForm.dataUrl" 
+                class="btn-download-inline" 
+                [href]="resourceForm.dataUrl" 
+                [attr.download]="resourceForm.fileName || 'resource'">
+                {{ currentLang === 'ar' ? 'تنزيل' : 'Download' }}
+              </a>
             </div>
             <div class="resource-preview-frame" *ngIf="resourceForm.displayType === 'pdf'">
               <iframe [src]="resourcePreviewSafeUrl" title="Resource preview" loading="lazy"></iframe>
@@ -1033,7 +1040,16 @@
           </div>
 
           <div class="resource-preview-placeholder" *ngIf="resourceForm.previewMode === 'download' && resourceForm.fileName">
-            {{ currentLang === 'ar' ? 'لن يتم عرض معاينة لهذا الملف. سيكون متاحاً للتنزيل.' : 'Preview is not available for this file. It will be provided as a download.' }}
+            <span>
+              {{ currentLang === 'ar' ? 'لن يتم عرض معاينة لهذا الملف. سيكون متاحاً للتنزيل.' : 'Preview is not available for this file. It will be provided as a download.' }}
+            </span>
+            <a 
+              *ngIf="resourceForm.dataUrl" 
+              class="btn-download-inline" 
+              [href]="resourceForm.dataUrl" 
+              [attr.download]="resourceForm.fileName || 'resource'">
+              {{ currentLang === 'ar' ? 'تنزيل الملف' : 'Download File' }}
+            </a>
           </div>
         </div>
         <div class="modal-actions">
@@ -1060,7 +1076,7 @@
     </div>
 
     <!-- Video Content Modal -->
-    <div class="modal-overlay" *ngIf="showVideoModal" (click)="closeVideoModal()">
+    <div class="modal-overlay" *ngIf="showVideoModal">
       <div class="modal-content video-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
         <div class="modal-header">
           <div class="modal-header-left">
@@ -1352,7 +1368,7 @@
     </div>
 
     <!-- Resource Preview Modal -->
-    <div class="modal-overlay" *ngIf="showResourcePreviewModal" (click)="closeResourcePreview()">
+    <div class="modal-overlay" *ngIf="showResourcePreviewModal">
       <div class="modal-content resource-preview-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
         <div class="modal-header">
           <h3>{{ currentLang === 'ar' ? 'عرض الملف' : 'View Resource' }}</h3>
@@ -1385,9 +1401,9 @@
         <div class="modal-actions">
           <ng-container *ngIf="resourcePreviewItem?.resourceDetails as previewDetails">
             <a
-              *ngIf="previewDetails.dataUrl"
+              *ngIf="previewDetails.downloadUrl || previewDetails.dataUrl"
               class="btn-primary"
-              [href]="previewDetails.dataUrl"
+              [href]="previewDetails.downloadUrl || previewDetails.dataUrl"
               [attr.download]="getResourceDownloadName(previewDetails)">
               {{ currentLang === 'ar' ? 'تنزيل الملف' : 'Download File' }}
             </a>
@@ -1522,7 +1538,7 @@
 </div>
 
 <!-- Audio Content Modal -->
-<div class="modal-overlay" *ngIf="showAudioModal" (click)="closeAudioModal()">
+<div class="modal-overlay" *ngIf="showAudioModal">
   <div class="modal-content audio-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
     <div class="modal-header">
       <div class="modal-header-left">

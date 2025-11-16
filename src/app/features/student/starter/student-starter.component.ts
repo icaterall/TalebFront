@@ -2045,7 +2045,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       id: `section-${Date.now()}`,
       number: newSectionNumber,
       sort_order: newSectionNumber,
-      name: `${this.currentLang === 'ar' ? 'القسم' : 'Section'} ${newSectionNumber}`,
+      name: '',
       content_items: [],
       isCollapsed: false,
       available: true,
@@ -2054,7 +2054,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     };
     
     this.sections.push(newSection);
-  this.setActiveSection(newSection.id);
+    this.setActiveSection(newSection.id);
+    // Force immediate rename for the new section; block actions until named
+    this.editingSectionId = newSection.id;
+    this.editingSectionValue = '';
+    this.editingSection = true;
     this.normalizeSectionOrdering();
     this.saveSections();
     this.cdr.detectChanges();
@@ -3224,6 +3228,24 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     const option = this.resourceTypeOptions.find(opt => opt.value === displayType);
     return option ? option.previewable : false;
+  }
+
+  getResourceAcceptForSelectedType(): string {
+    const type = this.resourceForm.displayType;
+    switch (type) {
+      case 'compressed':
+        return '.zip,.rar,application/zip,application/x-zip-compressed,application/x-rar-compressed';
+      case 'pdf':
+        return '.pdf,application/pdf';
+      case 'word':
+        return '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'excel':
+        return '.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'ppt':
+        return '.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      default:
+        return '.zip,.rar,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+    }
   }
 
   openResourceModal(): void {
