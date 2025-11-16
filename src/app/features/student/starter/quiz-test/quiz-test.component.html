@@ -1,0 +1,332 @@
+<div class="quiz-test-container" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+  <!-- Quiz Header -->
+  <div class="quiz-header" *ngIf="!showResults">
+    <div class="quiz-header-top">
+      <div class="quiz-timer" *ngIf="timeLimit && timeLimit > 0" [class.time-warning]="getTimeWarning()" [class.time-up]="isTimeUp">
+        <span class="timer-icon">⏱️</span>
+        <span class="timer-label">{{ currentLang === 'ar' ? 'الوقت المتبقي' : 'Time Remaining' }}:</span>
+        <span class="timer-value">{{ getFormattedTime() }}</span>
+      </div>
+      <button type="button" class="btn-cancel-test" (click)="closeTest()" [attr.aria-label]="currentLang === 'ar' ? 'إلغاء والعودة' : 'Cancel and go back'">
+        {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+      </button>
+    </div>
+    <div class="quiz-header-content">
+      <h1 class="quiz-title">{{ quizTitle }}</h1>
+      <div class="quiz-meta">
+        <span class="quiz-meta-item">
+          <ng-container *ngIf="currentLang === 'ar'">
+            <strong>عدد الأسئلة</strong> <span class="meta-value" dir="ltr">{{ quizQuestions.length }}</span>
+          </ng-container>
+          <ng-container *ngIf="currentLang !== 'ar'">
+            <strong>Questions:</strong> <span class="meta-value">{{ quizQuestions.length }}</span>
+          </ng-container>
+        </span>
+        <span class="quiz-meta-item" *ngIf="totalScore > 0">
+          <ng-container *ngIf="currentLang === 'ar'">
+            <strong>المجموع الكلي</strong> <span class="meta-value" dir="ltr">{{ totalScore }}</span>
+          </ng-container>
+          <ng-container *ngIf="currentLang !== 'ar'">
+            <strong>Total Score:</strong> <span class="meta-value">{{ totalScore }}</span>
+          </ng-container>
+        </span>
+        <span class="quiz-meta-item">
+          <ng-container *ngIf="currentLang === 'ar'">
+            <strong>تم الإجابة على</strong> <span class="meta-value" dir="ltr">{{ answeredCount }} / {{ quizQuestions.length }}</span>
+          </ng-container>
+          <ng-container *ngIf="currentLang !== 'ar'">
+            <strong>Answered:</strong> <span class="meta-value">{{ answeredCount }} / {{ quizQuestions.length }}</span>
+          </ng-container>
+        </span>
+      </div>
+    </div>
+    <div class="quiz-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="progress"></div>
+      </div>
+      <span class="progress-text">{{ currentLang === 'ar' ? 'السؤال' : 'Question' }} {{ currentQuestionIndex + 1 }} {{ currentLang === 'ar' ? 'من' : 'of' }} {{ quizQuestions.length }}</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="quiz-loading" *ngIf="loading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>{{ currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading quiz...' }}</p>
+    </div>
+  </div>
+
+  <!-- Quiz Content -->
+  <div class="quiz-content" *ngIf="!loading && !showResults && currentQuestion">
+    <!-- Question Navigation Grid -->
+    <div class="question-grid">
+      <div class="grid-header">
+        <h3>{{ currentLang === 'ar' ? 'الأسئلة' : 'Questions' }}</h3>
+      </div>
+      <div class="grid-items">
+        <button
+          *ngFor="let question of quizQuestions; let i = index"
+          type="button"
+          class="grid-item"
+          [class.current]="i === currentQuestionIndex"
+          [class.answered]="isQuestionAnswered(question.id!)"
+          (click)="goToQuestion(i)">
+          {{ i + 1 }}
+        </button>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-header">
+        <span class="question-number">{{ currentLang === 'ar' ? 'السؤال' : 'Question' }} {{ currentQuestionIndex + 1 }}</span>
+        <span class="question-points">{{ currentQuestion.points }} {{ currentLang === 'ar' ? 'نقطة' : 'points' }}</span>
+      </div>
+
+      <div class="question-body">
+        <p class="question-text">{{ currentQuestion.prompt }}</p>
+
+        <!-- MCQ Answer -->
+        <div class="answer-section mcq-answer-section" *ngIf="currentQuestion.question_type === 'mcq'">
+          <div 
+            *ngFor="let choice of currentQuestion.payload.choices; let i = index" 
+            class="answer-option"
+            [class.selected]="getAnswer(currentQuestion.id!) === i">
+            <label class="option-label">
+              <input
+                type="radio"
+                [name]="'question-' + currentQuestion.id"
+                [value]="i"
+                [checked]="getAnswer(currentQuestion.id!) === i"
+                (change)="setAnswer(i)"
+              />
+              <span class="option-text">{{ choice }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- True/False Answer -->
+        <div class="answer-section true-false-answer-section" *ngIf="currentQuestion.question_type === 'true_false'">
+          <div 
+            class="answer-option"
+            [class.selected]="getAnswer(currentQuestion.id!) === true">
+            <label class="option-label">
+              <input
+                type="radio"
+                [name]="'question-' + currentQuestion.id"
+                [value]="true"
+                [checked]="getAnswer(currentQuestion.id!) === true"
+                (change)="setAnswer(true)"
+              />
+              <span class="option-text">{{ currentLang === 'ar' ? 'صحيح' : 'True' }}</span>
+            </label>
+          </div>
+          <div 
+            class="answer-option"
+            [class.selected]="getAnswer(currentQuestion.id!) === false">
+            <label class="option-label">
+              <input
+                type="radio"
+                [name]="'question-' + currentQuestion.id"
+                [value]="false"
+                [checked]="getAnswer(currentQuestion.id!) === false"
+                (change)="setAnswer(false)"
+              />
+              <span class="option-text">{{ currentLang === 'ar' ? 'خطأ' : 'False' }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Matching Answer -->
+        <div class="answer-section matching-answer-section" *ngIf="currentQuestion.question_type === 'matching'">
+          <!-- Draggable Options (Horizontal) -->
+          <div class="matching-options-container">
+            <div class="matching-options-label">{{ currentLang === 'ar' ? 'الخيارات' : 'Options' }}</div>
+            <div class="matching-options-list">
+              <div 
+                *ngFor="let rightItem of currentQuestion.payload.rightItems; let j = index"
+                class="matching-option"
+                [class.dragging]="draggedOptionIndex === j"
+                [class.used]="isMatchingOptionUsed(currentQuestion.id!, j)"
+                draggable="true"
+                (dragstart)="onDragStart($event, j)"
+                (dragend)="onDragEnd()">
+                <div class="matching-option-letter">
+                  {{ getChoiceLetter(j) }}
+                </div>
+                <div class="matching-option-text">
+                  {{ rightItem }}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Questions with Drop Zones (Vertical) -->
+          <div class="matching-questions-container">
+            <div 
+              *ngFor="let leftItem of currentQuestion.payload.leftItems; let i = index" 
+              class="matching-question-row">
+              <div class="matching-question-number" [style.background-color]="getMatchingColor(i, 'number')">
+                {{ i + 1 }}
+              </div>
+              <div class="matching-question-text">
+                {{ leftItem }}
+              </div>
+              <div 
+                class="matching-drop-zone"
+                [class.has-answer]="getMatchingAnswer(currentQuestion.id!, i) !== ''"
+                [class.drag-over]="dragOverIndex === i"
+                (dragover)="onDragOver($event, i)"
+                (dragleave)="onDragLeave()"
+                (drop)="onDrop($event, currentQuestion.id!, i)">
+                <div class="drop-zone-content" *ngIf="getMatchingAnswer(currentQuestion.id!, i) === ''">
+                  <span class="drop-zone-placeholder">{{ currentLang === 'ar' ? 'اسحب الإجابة هنا' : 'Drop answer here' }}</span>
+                </div>
+                <div class="drop-zone-answer" *ngIf="getMatchingAnswer(currentQuestion.id!, i) !== ''">
+                  <span class="answer-letter">{{ getMatchingAnswerLetter(currentQuestion.id!, i) }}</span>
+                  <span class="answer-text">{{ getMatchingAnswerText(currentQuestion.id!, i) }}</span>
+                  <button 
+                    type="button"
+                    class="remove-answer-btn"
+                    (click)="removeMatchingAnswer(currentQuestion.id!, i)"
+                    [attr.aria-label]="currentLang === 'ar' ? 'إزالة الإجابة' : 'Remove answer'">
+                    ×
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ordering Answer -->
+        <div class="answer-section ordering-answer-section" *ngIf="currentQuestion.question_type === 'ordering' && currentQuestion.payload?.items">
+          <!-- Drag and Drop Items -->
+          <p class="ordering-hint">{{ currentLang === 'ar' ? 'اسحب العناصر لترتيبها بالترتيب الصحيح' : 'Drag items to arrange them in the correct order' }}</p>
+          <div class="ordering-items-container">
+            <div 
+              *ngFor="let item of getOrderingItems(currentQuestion.id!); let i = index; trackBy: trackByItemIndex" 
+              class="ordering-drag-item"
+              [class.dragging]="orderingDragIndex === i"
+              [class.drag-over]="orderingDragOverIndex === i && orderingDragIndex !== i"
+              draggable="true"
+              (dragstart)="onOrderingDragStart($event, i)"
+              (dragend)="onOrderingDragEnd()"
+              (dragover)="onOrderingDragOver($event, i)"
+              (dragleave)="onOrderingDragLeave()"
+              (drop)="onOrderingDrop($event, currentQuestion.id!, i)">
+              <div class="ordering-item-handle">
+                <span class="drag-icon">☰</span>
+              </div>
+              <div class="ordering-item-number">{{ i + 1 }}</div>
+              <div class="ordering-item-text">{{ item }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question Navigation Buttons -->
+    <div class="question-navigation">
+      <ng-container *ngIf="currentLang === 'ar'">
+        <!-- Arabic: Next on left, Previous on right (arrows flipped for RTL) -->
+        <button 
+          type="button" 
+          class="nav-btn next" 
+          (click)="nextQuestion()" 
+          [disabled]="currentQuestionIndex === quizQuestions.length - 1"
+          [attr.aria-label]="'السؤال التالي'">
+          ← {{ 'التالي' }}
+        </button>
+        <button 
+          type="button" 
+          class="nav-btn prev" 
+          (click)="previousQuestion()" 
+          [disabled]="currentQuestionIndex === 0"
+          [attr.aria-label]="'السؤال السابق'">
+          {{ 'السابق' }} →
+        </button>
+      </ng-container>
+      <ng-container *ngIf="currentLang !== 'ar'">
+        <!-- English: Previous on left, Next on right -->
+        <button 
+          type="button" 
+          class="nav-btn prev" 
+          (click)="previousQuestion()" 
+          [disabled]="currentQuestionIndex === 0"
+          [attr.aria-label]="'Previous question'">
+          ← Previous
+        </button>
+        <button 
+          type="button" 
+          class="nav-btn next" 
+          (click)="nextQuestion()" 
+          [disabled]="currentQuestionIndex === quizQuestions.length - 1"
+          [attr.aria-label]="'Next question'">
+          Next →
+        </button>
+      </ng-container>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="quiz-actions">
+      <button
+        type="button"
+        class="btn-submit"
+        (click)="submitQuiz()"
+        [disabled]="submittingQuiz"
+        [attr.aria-busy]="submittingQuiz ? 'true' : null">
+        <span *ngIf="!submittingQuiz">{{ currentLang === 'ar' ? 'إرسال الاختبار' : 'Submit Quiz' }}</span>
+        <span *ngIf="submittingQuiz" class="btn-loading">
+          <span class="spinner"></span>
+          <span>{{ currentLang === 'ar' ? 'جارٍ الإرسال...' : 'Submitting...' }}</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Results View -->
+  <div class="quiz-results" *ngIf="!loading && showResults">
+    <div class="results-header">
+      <h2>{{ currentLang === 'ar' ? 'نتائج الاختبار' : 'Quiz Results' }}</h2>
+      <p class="results-subtitle">{{ quizTitle }}</p>
+    </div>
+
+    <div class="results-summary">
+      <div class="summary-card score">
+        <div class="summary-label">{{ currentLang === 'ar' ? 'النتيجة' : 'Score' }}</div>
+        <div class="summary-value">{{ score }} / {{ totalScore }}</div>
+        <div class="summary-percentage">{{ Math.round((score / totalScore) * 100) }}%</div>
+      </div>
+      <div class="summary-card correct">
+        <div class="summary-label">{{ currentLang === 'ar' ? 'صحيح' : 'Correct' }}</div>
+        <div class="summary-value">{{ getCorrectCount() }} / {{ quizQuestions.length }}</div>
+      </div>
+    </div>
+
+    <div class="results-questions">
+      <h3>{{ currentLang === 'ar' ? 'مراجعة الأسئلة' : 'Question Review' }}</h3>
+      <div 
+        *ngFor="let question of quizQuestions; let i = index" 
+        class="result-question"
+        [class.correct]="isAnswerCorrect(question)"
+        [class.incorrect]="!isAnswerCorrect(question) && isQuestionAnswered(question.id!)">
+        <div class="result-question-header">
+          <span class="result-question-number">{{ currentLang === 'ar' ? 'السؤال' : 'Question' }} {{ i + 1 }}</span>
+          <span class="result-question-status">
+            <span *ngIf="isAnswerCorrect(question)" class="status-correct">✓ {{ currentLang === 'ar' ? 'صحيح' : 'Correct' }}</span>
+            <span *ngIf="!isAnswerCorrect(question) && isQuestionAnswered(question.id!)" class="status-incorrect">✗ {{ currentLang === 'ar' ? 'خطأ' : 'Incorrect' }}</span>
+            <span *ngIf="!isQuestionAnswered(question.id!)" class="status-unanswered">{{ currentLang === 'ar' ? 'لم يتم الإجابة' : 'Not Answered' }}</span>
+          </span>
+          <span class="result-question-points">{{ question.points }} {{ currentLang === 'ar' ? 'نقطة' : 'points' }}</span>
+        </div>
+        <p class="result-question-text">{{ question.prompt }}</p>
+      </div>
+    </div>
+
+    <div class="results-actions">
+      <button type="button" class="btn-close" (click)="closeTest()">
+        {{ currentLang === 'ar' ? 'إغلاق' : 'Close' }}
+      </button>
+    </div>
+  </div>
+</div>
+

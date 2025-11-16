@@ -20,7 +20,11 @@ import {
   CreateDraftCoursePayload,
   SectionContentRecord,
   CreateSectionContentPayload,
-  UploadResourceResponse
+  UploadResourceResponse,
+  QuizQuestion,
+  QuizQuestionPayload,
+  CreateQuizQuestionPayload,
+  GenerateQuizPayload
 } from '../../../core/services/ai-builder.service';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -123,6 +127,29 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Audio Modal Properties
   showAudioModal: boolean = false;
+  showQuizWizardModal: boolean = false; // Quiz creation wizard (mode selection + settings)
+  showQuizEditorModal: boolean = false; // Quiz editor (manual/AI questions)
+  currentQuizId: string | null = null; // Current quiz being edited
+  quizMode: 'manual' | 'ai' | null = null; // Selected quiz mode
+  quizSettings: {
+    title: string;
+    full_score: number;
+    time_limit: number | null; // Time limit in minutes
+    allowed_types: string[];
+    auto_weighting: boolean;
+  } = {
+    title: '',
+    full_score: 40,
+    time_limit: null,
+    allowed_types: ['mcq', 'true_false', 'matching', 'ordering'],
+    auto_weighting: true
+  };
+  quizQuestions: QuizQuestion[] = []; // Questions for current quiz
+  currentQuestion: QuizQuestion | null = null; // Currently editing question
+  showQuestionEditor: boolean = false; // Question editor modal
+  generatingQuiz: boolean = false; // AI quiz generation in progress
+  quizLoading: boolean = false; // Loading quiz questions
+  creatingQuiz: boolean = false; // Creating quiz in progress
   viewingAudioContent: boolean = false;
   audioContentItem: ContentItem | null = null;
   audioForm: AudioFormState = this.createDefaultAudioForm();
@@ -158,6 +185,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private currentEditingContentId: string | null = null;
   private resourceUploadSub?: Subscription;
   private contentReorderLoading: Set<string> = new Set<string>();
+  private sectionReorderLoading: Set<string> = new Set<string>();
   savingDraftCourse: boolean = false;
   deletingDraftCourse: boolean = false;
   continueErrorMessage: string | null = null;
@@ -213,6 +241,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   sectionToDelete: Section | null = null; // Track which section is being deleted
   deleteConfirmationInput: string = '';
   readonly deleteKeyword: string = 'delete';
+  sectionDeleting: boolean = false; // waiting state when deleting a section
+  sectionSaving: boolean = false;   // waiting state when saving/creating section name
   showStartFromScratchModal: boolean = false; // Track start from scratch modal visibility
   
   // Undo Toast
@@ -1101,6 +1131,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
     
+    if (contentType === 'quiz') {
+      this.openQuizWizard();
+      return;
+    }
+    
     // For other content types, show the AI/Manual choice modal
     this.selectedContentType = contentType;
     this.showContentTypeModal = true;
@@ -1121,7 +1156,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       resources: this.currentLang === 'ar' ? 'إضافة موارد' : 'Add Resources',
       text: this.currentLang === 'ar' ? 'إضافة درس نصي' : 'Add Text Lesson',
       audio: this.currentLang === 'ar' ? 'إضافة صوت' : 'Add Audio',
-      quiz: this.currentLang === 'ar' ? 'إضافة اختبار وواجبات' : 'Add Quiz & Assignments'
+      quiz: this.currentLang === 'ar' ? 'إنشاء اختبار / لعبة' : 'Create Quiz / Game'
     };
     
     return titles[this.selectedContentType];
@@ -1144,16 +1179,21 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         ? 'اختر طريقة إنشاء المحتوى للصوت' 
         : 'Choose how to create audio content',
       quiz: this.currentLang === 'ar' 
-        ? 'اختر طريقة إنشاء المحتوى للاختبار والواجبات' 
-        : 'Choose how to create quiz and assignment content'
+        ? 'اختر طريقة إنشاء المحتوى للاختبار / اللعبة' 
+        : 'Choose how to create quiz / game content'
     };
     
     return descriptions[this.selectedContentType];
   }
 
   selectCreationMode(mode: 'ai' | 'manual'): void {
-    // TODO: Implement creation mode logic
-    // This will navigate to the appropriate content creation page
+    if (this.selectedContentType === 'quiz') {
+      // For quiz, directly open wizard
+      this.openQuizWizard();
+      return;
+    }
+    
+    // TODO: Implement creation mode logic for other types
     console.log(`Selected ${mode} mode for ${this.selectedContentType}`);
     
     // Close modal
@@ -1162,6 +1202,599 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Here you would typically navigate to the content creation page
     // For now, we'll just log the action
     // Example: this.router.navigate(['/student/content/create'], { queryParams: { type: this.selectedContentType, mode } });
+  }
+
+  // ============ QUIZ WIZARD METHODS ============
+  openQuizWizard(): void {
+    if (!this.activeSectionId) {
+      this.toastr?.warning?.(this.currentLang === 'ar' ? 'يرجى تحديد قسم أولاً' : 'Please select a section first');
+      return;
+    }
+
+    const activeSection = this.sections.find(s => s.id === this.activeSectionId);
+    if (!activeSection || !activeSection.name || !activeSection.name.trim()) {
+      this.toastr?.warning?.(this.currentLang === 'ar' ? 'يرجى تسمية القسم أولاً' : 'Please name the section first');
+      return;
+    }
+
+    // Reset quiz wizard state
+    this.quizMode = null;
+    this.quizSettings = {
+      title: activeSection.name || '',
+      full_score: 40,
+      time_limit: null,
+      allowed_types: ['mcq', 'true_false', 'matching', 'ordering'],
+      auto_weighting: true
+    };
+    this.currentQuizId = null;
+    this.quizQuestions = [];
+    this.showQuizWizardModal = true;
+    this.closeContentTypeModal();
+    this.cdr.detectChanges();
+  }
+
+  closeQuizWizard(): void {
+    this.showQuizWizardModal = false;
+    this.quizMode = null;
+    this.currentQuizId = null;
+    this.cdr.detectChanges();
+  }
+
+  selectQuizMode(mode: 'manual' | 'ai' | 'game'): void {
+    if (mode === 'game') {
+      this.toastr?.info?.(this.currentLang === 'ar' ? 'قريباً: الألعاب التفاعلية' : 'Coming soon: Interactive Games');
+      return;
+    }
+    this.quizMode = mode;
+    this.cdr.detectChanges();
+  }
+
+  async saveQuizSettings(): Promise<void> {
+    if (!this.activeSectionId) {
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'لا يوجد قسم نشط' : 'No active section');
+      return;
+    }
+
+    if (!this.quizSettings.title || !this.quizSettings.title.trim()) {
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'عنوان الاختبار مطلوب' : 'Quiz title is required');
+      return;
+    }
+
+    if (this.quizSettings.full_score <= 0) {
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'يجب أن يكون المجموع الكلي أكبر من صفر' : 'Full score must be greater than zero');
+      return;
+    }
+
+    if (!this.quizMode) {
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'يرجى اختيار نمط الاختبار' : 'Please select quiz mode');
+      return;
+    }
+
+    try {
+      const sectionId = Number(this.activeSectionId);
+      if (isNaN(sectionId)) {
+        this.toastr?.error?.(this.currentLang === 'ar' ? 'معرف القسم غير صالح' : 'Invalid section ID');
+        return;
+      }
+
+      const meta: Record<string, unknown> = {
+        mode: this.quizMode,
+        full_score: this.quizSettings.full_score,
+        time_limit: this.quizSettings.time_limit || null,
+        question_count: 0,
+        auto_weighting: this.quizSettings.auto_weighting,
+        allowed_types: this.quizSettings.allowed_types,
+        ...(this.quizMode === 'ai' ? {
+          ai_generation_info: {
+            used: true,
+            source: 'section_context'
+          }
+        } : {})
+      };
+
+      const payload: CreateSectionContentPayload = {
+        type: 'quiz',
+        title: this.quizSettings.title.trim(),
+        body_html: undefined,
+        status: true,
+        meta
+      };
+
+      this.creatingQuiz = true;
+      this.cdr.detectChanges();
+
+      this.ai.createSectionContent(sectionId, payload).subscribe({
+        next: (response) => {
+          this.creatingQuiz = false;
+          this.currentQuizId = String(response.content.id);
+          this.showQuizWizardModal = false;
+          
+          if (this.quizMode === 'manual') {
+            this.openQuizEditor();
+          } else if (this.quizMode === 'ai') {
+            this.openQuizEditor();
+            // Optionally auto-trigger AI generation
+            // this.generateAIQuizQuestions();
+          }
+          
+          // Refresh section content
+          if (this.activeSectionId) {
+            this.loadedSectionContentIds.delete(this.activeSectionId);
+            this.ensureSectionContentLoaded(this.activeSectionId);
+          }
+          this.toastr?.success?.(this.currentLang === 'ar' ? 'تم إنشاء الاختبار بنجاح' : 'Quiz created successfully');
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          this.creatingQuiz = false;
+          console.error('Error creating quiz:', error);
+          this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في إنشاء الاختبار' : 'Failed to create quiz');
+          this.cdr.detectChanges();
+        }
+      });
+    } catch (error) {
+      console.error('Error saving quiz settings:', error);
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في حفظ إعدادات الاختبار' : 'Failed to save quiz settings');
+    }
+  }
+
+  // ============ QUIZ EDITOR METHODS ============
+  openQuizEditor(): void {
+    if (!this.currentQuizId || !this.activeSectionId) {
+      return;
+    }
+
+    // Load quiz metadata from section content if available
+    const activeSection = this.sections.find(s => s.id === this.activeSectionId);
+    if (activeSection && activeSection.content_items) {
+      const quizItem = activeSection.content_items.find(item => item.id === this.currentQuizId && item.type === 'quiz');
+      if (quizItem && quizItem.meta) {
+        const meta = quizItem.meta as Record<string, unknown>;
+        this.quizMode = (meta['mode'] as 'manual' | 'ai') || 'manual';
+        this.quizSettings.title = quizItem.title;
+        this.quizSettings.full_score = Number(meta['full_score']) || 40;
+        this.quizSettings.time_limit = meta['time_limit'] ? Number(meta['time_limit']) : null;
+        this.quizSettings.allowed_types = Array.isArray(meta['allowed_types']) ? meta['allowed_types'] as string[] : ['mcq', 'true_false', 'matching', 'ordering'];
+        this.quizSettings.auto_weighting = meta['auto_weighting'] !== false;
+      }
+    }
+
+    this.showQuizEditorModal = true;
+    this.loadQuizQuestions();
+    this.cdr.detectChanges();
+  }
+
+  closeQuizEditor(): void {
+    this.showQuizEditorModal = false;
+    this.currentQuizId = null;
+    this.quizQuestions = [];
+    this.currentQuestion = null;
+    this.showQuestionEditor = false;
+    this.cdr.detectChanges();
+  }
+
+  testQuiz(): void {
+    if (!this.currentQuizId || !this.activeSectionId) {
+      return;
+    }
+
+    if (this.quizQuestions.length === 0) {
+      this.toastr?.warning?.(this.currentLang === 'ar' ? 'لا توجد أسئلة في الاختبار' : 'No questions in the quiz');
+      return;
+    }
+
+    // Navigate to quiz test page with query parameters
+    this.router.navigate(['/student/starter/quiz-test'], {
+      queryParams: {
+        quizId: this.currentQuizId,
+        sectionId: this.activeSectionId
+      }
+    });
+  }
+
+  loadQuizQuestions(): void {
+    if (!this.currentQuizId || !this.activeSectionId) {
+      return;
+    }
+
+    this.quizLoading = true;
+    this.cdr.detectChanges();
+
+    const sectionId = Number(this.activeSectionId);
+    const contentId = Number(this.currentQuizId);
+
+    if (isNaN(sectionId) || isNaN(contentId)) {
+      this.quizLoading = false;
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'معرفات غير صالحة' : 'Invalid IDs');
+      return;
+    }
+
+    this.ai.getQuizQuestions(sectionId, contentId).subscribe({
+      next: (response) => {
+        this.quizQuestions = response.questions || [];
+        this.quizLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading quiz questions:', error);
+        this.quizQuestions = [];
+        this.quizLoading = false;
+        this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في تحميل الأسئلة' : 'Failed to load questions');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+
+  // ============ QUIZ QUESTION METHODS ============
+  addNewQuestion(questionType: 'mcq' | 'true_false' | 'matching' | 'ordering'): void {
+    const newQuestion: Partial<QuizQuestion> = {
+      question_type: questionType,
+      prompt: '',
+      payload: this.createDefaultPayload(questionType),
+      position: this.quizQuestions.length + 1,
+      points: 0,
+      explanation: null
+    };
+    
+    this.currentQuestion = newQuestion as QuizQuestion;
+    this.showQuestionEditor = true;
+    this.cdr.detectChanges();
+  }
+
+  editQuestion(question: QuizQuestion): void {
+    this.currentQuestion = { ...question };
+    this.showQuestionEditor = true;
+    this.cdr.detectChanges();
+  }
+
+  deleteQuestion(question: QuizQuestion): void {
+    if (!this.currentQuizId || !this.activeSectionId) {
+      return;
+    }
+
+    const confirmed = confirm(
+      this.currentLang === 'ar' 
+        ? 'هل أنت متأكد من حذف هذا السؤال؟'
+        : 'Are you sure you want to delete this question?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const sectionId = Number(this.activeSectionId);
+    const contentId = Number(this.currentQuizId);
+
+    if (isNaN(sectionId) || isNaN(contentId)) {
+      return;
+    }
+
+    this.ai.deleteQuizQuestion(sectionId, contentId, question.id).subscribe({
+      next: () => {
+        this.quizQuestions = this.quizQuestions.filter(q => q.id !== question.id);
+        this.loadQuizQuestions(); // Reload to get updated points
+        this.toastr?.success?.(this.currentLang === 'ar' ? 'تم حذف السؤال بنجاح' : 'Question deleted successfully');
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error deleting question:', error);
+        this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في حذف السؤال' : 'Failed to delete question');
+      }
+    });
+  }
+
+  savingQuestion: boolean = false;
+
+  saveQuestion(question: Partial<QuizQuestion>): void {
+    if (!this.currentQuizId || !this.activeSectionId) {
+      return;
+    }
+
+    if (!question.prompt || !question.prompt.trim()) {
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'نص السؤال مطلوب' : 'Question prompt is required');
+      return;
+    }
+
+    const sectionId = Number(this.activeSectionId);
+    const contentId = Number(this.currentQuizId);
+
+    if (isNaN(sectionId) || isNaN(contentId)) {
+      return;
+    }
+
+    this.savingQuestion = true;
+
+    const payload: CreateQuizQuestionPayload = {
+      question_type: question.question_type!,
+      prompt: question.prompt.trim(),
+      payload: question.payload!,
+      explanation: question.explanation || null,
+      position: question.position
+    };
+
+    if (question.id) {
+      // Update existing question
+      this.ai.updateQuizQuestion(sectionId, contentId, question.id, payload).subscribe({
+        next: (response) => {
+          const index = this.quizQuestions.findIndex(q => q.id === question.id);
+          if (index >= 0) {
+            this.quizQuestions[index] = response.question;
+          }
+          this.savingQuestion = false;
+          this.showQuestionEditor = false;
+          this.currentQuestion = null;
+          this.loadQuizQuestions(); // Reload to get updated points
+          this.toastr?.success?.(this.currentLang === 'ar' ? 'تم تحديث السؤال بنجاح' : 'Question updated successfully');
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error updating question:', error);
+          this.savingQuestion = false;
+          this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في تحديث السؤال' : 'Failed to update question');
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      // Create new question
+      this.ai.createQuizQuestion(sectionId, contentId, payload).subscribe({
+        next: (response) => {
+          this.quizQuestions.push(response.question);
+          this.savingQuestion = false;
+          this.showQuestionEditor = false;
+          this.currentQuestion = null;
+          this.loadQuizQuestions(); // Reload to get updated points
+          this.toastr?.success?.(this.currentLang === 'ar' ? 'تم إضافة السؤال بنجاح' : 'Question added successfully');
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error creating question:', error);
+          this.savingQuestion = false;
+          this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في إضافة السؤال' : 'Failed to add question');
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  cancelQuestionEdit(): void {
+    this.showQuestionEditor = false;
+    this.currentQuestion = null;
+    this.cdr.detectChanges();
+  }
+
+  moveQuestionUp(question: QuizQuestion): void {
+    const index = this.quizQuestions.findIndex(q => q.id === question.id);
+    if (index <= 0) {
+      return;
+    }
+
+    const newQuestions = [...this.quizQuestions];
+    [newQuestions[index], newQuestions[index - 1]] = [newQuestions[index - 1], newQuestions[index]];
+    
+    this.reorderQuestions(newQuestions);
+  }
+
+  moveQuestionDown(question: QuizQuestion): void {
+    const index = this.quizQuestions.findIndex(q => q.id === question.id);
+    if (index >= this.quizQuestions.length - 1) {
+      return;
+    }
+
+    const newQuestions = [...this.quizQuestions];
+    [newQuestions[index], newQuestions[index + 1]] = [newQuestions[index + 1], newQuestions[index]];
+    
+    this.reorderQuestions(newQuestions);
+  }
+
+  reorderQuestions(questions: QuizQuestion[]): void {
+    if (!this.currentQuizId || !this.activeSectionId) {
+      return;
+    }
+
+    const sectionId = Number(this.activeSectionId);
+    const contentId = Number(this.currentQuizId);
+
+    if (isNaN(sectionId) || isNaN(contentId)) {
+      return;
+    }
+
+    const reorderPayload = questions.map((q, index) => ({
+      id: q.id,
+      position: index + 1
+    }));
+
+    this.ai.reorderQuizQuestions(sectionId, contentId, reorderPayload).subscribe({
+      next: () => {
+        this.quizQuestions = questions;
+        this.loadQuizQuestions(); // Reload to ensure sync
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error reordering questions:', error);
+        this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في إعادة ترتيب الأسئلة' : 'Failed to reorder questions');
+        this.loadQuizQuestions(); // Reload on error
+      }
+    });
+  }
+
+  generateAIQuizQuestions(): void {
+    if (!this.currentQuizId || !this.activeSectionId) {
+      return;
+    }
+
+    const sectionId = Number(this.activeSectionId);
+    const contentId = Number(this.currentQuizId);
+
+    if (isNaN(sectionId) || isNaN(contentId)) {
+      return;
+    }
+
+    this.generatingQuiz = true;
+    this.cdr.detectChanges();
+
+    const payload: GenerateQuizPayload = {
+      question_count: 10, // Default, can be made configurable
+      allowed_types: this.quizSettings.allowed_types
+    };
+
+    this.ai.generateAIQuizQuestions(sectionId, contentId, payload).subscribe({
+      next: (response) => {
+        this.generatingQuiz = false;
+        if (response.questions && response.questions.length > 0) {
+          this.quizQuestions = response.questions;
+          this.toastr?.success?.(
+            this.currentLang === 'ar' 
+              ? `تم إنشاء ${response.questions.length} سؤال بنجاح`
+              : `Generated ${response.questions.length} questions successfully`
+          );
+          this.loadQuizQuestions(); // Reload to get distributed points
+        } else {
+          this.toastr?.warning?.(this.currentLang === 'ar' ? 'لم يتم إنشاء أي أسئلة' : 'No questions generated');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error generating quiz questions:', error);
+        this.generatingQuiz = false;
+        this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في إنشاء الأسئلة' : 'Failed to generate questions');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  createDefaultPayload(questionType: 'mcq' | 'true_false' | 'matching' | 'ordering'): QuizQuestionPayload {
+    switch (questionType) {
+      case 'mcq':
+        return {
+          choices: ['', '', '', ''],
+          correct_index: 0
+        };
+      case 'true_false':
+        return {
+          correct_answer: true
+        };
+      case 'matching':
+        return {
+          pairs: [
+            { left: '', right: '' },
+            { left: '', right: '' }
+          ]
+        };
+      case 'ordering':
+        return {
+          items: ['', ''],
+          correct_order: [0, 1]
+        };
+      default:
+        return {};
+    }
+  }
+
+  getQuizInfo(quizItem: ContentItem): { questionCount: number; fullScore: number; pointsPerQuestion: number } {
+    const meta = (quizItem.meta || {}) as Record<string, unknown>;
+    const questionCount = Number(meta['question_count']) || 0;
+    const fullScore = Number(meta['full_score']) || 0;
+    const pointsPerQuestion = questionCount > 0 ? fullScore / questionCount : 0;
+    
+    return {
+      questionCount,
+      fullScore,
+      pointsPerQuestion: Math.round(pointsPerQuestion * 100) / 100
+    };
+  }
+
+  toggleQuestionType(type: string): void {
+    const index = this.quizSettings.allowed_types.indexOf(type);
+    if (index >= 0) {
+      this.quizSettings.allowed_types.splice(index, 1);
+    } else {
+      this.quizSettings.allowed_types.push(type);
+    }
+    this.cdr.detectChanges();
+  }
+
+  getQuestionTypeLabel(type: string): string {
+    const labels: Record<string, { ar: string; en: string }> = {
+      mcq: { ar: 'اختيار من متعدد', en: 'Multiple Choice' },
+      true_false: { ar: 'صحيح/خطأ', en: 'True/False' },
+      matching: { ar: 'مطابقة', en: 'Matching' },
+      ordering: { ar: 'ترتيب', en: 'Ordering' }
+    };
+    const label = labels[type] || { ar: type, en: type };
+    return this.currentLang === 'ar' ? label.ar : label.en;
+  }
+
+  Math = Math; // Expose Math for template use
+  String = String; // Expose String for template use
+
+  // Question Editor Helpers
+  trackByChoiceIndex(index: number, item: string): number {
+    return index;
+  }
+
+  updateMcqChoice(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (this.currentQuestion && this.currentQuestion.payload.choices) {
+      this.currentQuestion.payload.choices[index] = input.value;
+    }
+  }
+
+  addMcqChoice(): void {
+    if (this.currentQuestion && this.currentQuestion.payload.choices && this.currentQuestion.payload.choices.length < 10) {
+      this.currentQuestion.payload.choices.push('');
+    }
+  }
+
+  removeMcqChoice(index: number): void {
+    if (this.currentQuestion && this.currentQuestion.payload.choices && this.currentQuestion.payload.choices.length > 2) {
+      const correctIndex = this.currentQuestion.payload.correct_index || 0;
+      this.currentQuestion.payload.choices.splice(index, 1);
+      if (correctIndex >= index && correctIndex > 0) {
+        this.currentQuestion.payload.correct_index = correctIndex - 1;
+      } else if (correctIndex === index) {
+        this.currentQuestion.payload.correct_index = 0;
+      }
+    }
+  }
+
+  addMatchingPair(): void {
+    if (this.currentQuestion && this.currentQuestion.payload.pairs) {
+      this.currentQuestion.payload.pairs.push({ left: '', right: '' });
+    }
+  }
+
+  removeMatchingPair(index: number): void {
+    if (this.currentQuestion && this.currentQuestion.payload.pairs && this.currentQuestion.payload.pairs.length > 2) {
+      this.currentQuestion.payload.pairs.splice(index, 1);
+    }
+  }
+
+  addOrderingItem(): void {
+    if (this.currentQuestion && this.currentQuestion.payload.items) {
+      this.currentQuestion.payload.items.push('');
+      this.currentQuestion.payload.correct_order = this.currentQuestion.payload.items.map((_, i) => i);
+    }
+  }
+
+  removeOrderingItem(index: number): void {
+    if (this.currentQuestion && this.currentQuestion.payload.items && this.currentQuestion.payload.items.length > 2) {
+      this.currentQuestion.payload.items.splice(index, 1);
+      this.currentQuestion.payload.correct_order = this.currentQuestion.payload.items.map((_, i) => i);
+    }
+  }
+
+  // TrackBy function for ordering items to prevent focus loss
+  trackByOrderingItemIndex(index: number, item: string): number {
+    return index;
+  }
+
+  // Update ordering item value manually to prevent focus loss
+  updateOrderingItem(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (this.currentQuestion && this.currentQuestion.payload.items) {
+      this.currentQuestion.payload.items[index] = input.value;
+    }
   }
 
   // Text Editor Methods
@@ -1400,7 +2033,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       type: 'text',
       title: trimmedTitle,
       body_html: editorContent,
-      status: false
+      status: true
     };
 
     const editingItem = this.viewingContentItem;
@@ -1422,7 +2055,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
             ...targetSection.content_items[targetSectionIndex],
             title: trimmedTitle,
             content: editorContent,
-            status: false,
+          status: true,
             updatedAt: new Date().toISOString()
           };
           this.setContentStatusPending(previousItemSnapshot.id, true);
@@ -1439,7 +2072,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           createdAt: nowIso,
           updatedAt: nowIso,
           position: targetSection.content_items.length + 1,
-          status: false
+          status: true
         };
         targetSectionIndex = targetSection.content_items.length;
         targetSection.content_items = [...targetSection.content_items, placeholder];
@@ -1985,6 +2618,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   isReordering(contentId: string): boolean {
     return this.contentReorderLoading.has(String(contentId));
   }
+
+  isReorderingSection(sectionId: string): boolean {
+    return this.sectionReorderLoading.has(String(sectionId));
+  }
   
   // Track by function for sections
   trackBySectionId(index: number, section: Section): string {
@@ -2040,6 +2677,20 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Add New Section
   addNewSection(): void {
+    // Block creating a new section if there is any unnamed section
+    const unnamed = this.sections.find(s => !s.name || !s.name.trim());
+    if (unnamed) {
+      this.editingSectionId = unnamed.id;
+      this.editingSectionValue = unnamed.name || '';
+      this.editingSection = true;
+      this.cdr.detectChanges();
+      this.toastr?.warning?.(
+        this.currentLang === 'ar'
+          ? 'يرجى تسمية القسم الحالي قبل إنشاء قسم جديد.'
+          : 'Please name the current section before creating a new one.'
+      );
+      return;
+    }
     const newSectionNumber = this.sections.length + 1;
     const newSection: Section & { available: boolean } = {
       id: `section-${Date.now()}`,
@@ -2060,8 +2711,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.editingSectionValue = '';
     this.editingSection = true;
     this.normalizeSectionOrdering();
-    this.saveSections();
     this.cdr.detectChanges();
+  }
+
+  hasUnnamedSection(): boolean {
+    try {
+      return (this.sections || []).some(s => !s.name || !s.name.trim());
+    } catch {
+      return false;
+    }
   }
   
   moveSectionUp(sectionId: string): void {
@@ -2070,10 +2728,61 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const movedSection = this.sections[index];
+    const swappedSection = this.sections[index - 1];
+
+    // Optimistic update: swap sections immediately
     [this.sections[index], this.sections[index - 1]] = [this.sections[index - 1], this.sections[index]];
     this.normalizeSectionOrdering();
-    this.saveSections();
-    this.cdr.detectChanges();
+
+    // Check if all sections are persisted (have numeric IDs)
+    const allPersisted = this.sections.every(s => !isNaN(Number(s.id)) && Number(s.id) > 0);
+
+    if (allPersisted) {
+      // Mark sections as reordering
+      this.sectionReorderLoading.add(String(movedSection.id));
+      this.sectionReorderLoading.add(String(swappedSection.id));
+      this.cdr.detectChanges();
+
+      // Build payload for backend
+      const sectionsPayload = this.sections.map((s, idx) => ({
+        id: Number(s.id),
+        position: idx + 1
+      }));
+
+      this.ai.reorderDraftSections(sectionsPayload).subscribe({
+        next: (response) => {
+          // Update sections from response if available
+          if (response.sections && Array.isArray(response.sections)) {
+            response.sections.forEach((updatedSection: any) => {
+              const localSection = this.sections.find(s => String(s.id) === String(updatedSection.id));
+              if (localSection) {
+                localSection.number = updatedSection.position;
+                localSection.sort_order = updatedSection.position;
+              }
+            });
+          }
+          this.sectionReorderLoading.delete(String(movedSection.id));
+          this.sectionReorderLoading.delete(String(swappedSection.id));
+          this.saveSections();
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to reorder sections:', error);
+          // Rollback: swap back
+          [this.sections[index - 1], this.sections[index]] = [this.sections[index], this.sections[index - 1]];
+          this.normalizeSectionOrdering();
+          this.sectionReorderLoading.delete(String(movedSection.id));
+          this.sectionReorderLoading.delete(String(swappedSection.id));
+          this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في إعادة ترتيب الأقسام.' : 'Failed to reorder sections.');
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      // Some sections are temporary, just save locally
+      this.saveSections();
+      this.cdr.detectChanges();
+    }
   }
 
   moveSectionDown(sectionId: string): void {
@@ -2082,17 +2791,78 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const movedSection = this.sections[index];
+    const swappedSection = this.sections[index + 1];
+
+    // Optimistic update: swap sections immediately
     [this.sections[index], this.sections[index + 1]] = [this.sections[index + 1], this.sections[index]];
     this.normalizeSectionOrdering();
-    this.saveSections();
-    this.cdr.detectChanges();
+
+    // Check if all sections are persisted (have numeric IDs)
+    const allPersisted = this.sections.every(s => !isNaN(Number(s.id)) && Number(s.id) > 0);
+
+    if (allPersisted) {
+      // Mark sections as reordering
+      this.sectionReorderLoading.add(String(movedSection.id));
+      this.sectionReorderLoading.add(String(swappedSection.id));
+      this.cdr.detectChanges();
+
+      // Build payload for backend
+      const sectionsPayload = this.sections.map((s, idx) => ({
+        id: Number(s.id),
+        position: idx + 1
+      }));
+
+      this.ai.reorderDraftSections(sectionsPayload).subscribe({
+        next: (response) => {
+          // Update sections from response if available
+          if (response.sections && Array.isArray(response.sections)) {
+            response.sections.forEach((updatedSection: any) => {
+              const localSection = this.sections.find(s => String(s.id) === String(updatedSection.id));
+              if (localSection) {
+                localSection.number = updatedSection.position;
+                localSection.sort_order = updatedSection.position;
+              }
+            });
+          }
+          this.sectionReorderLoading.delete(String(movedSection.id));
+          this.sectionReorderLoading.delete(String(swappedSection.id));
+          this.saveSections();
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to reorder sections:', error);
+          // Rollback: swap back
+          [this.sections[index + 1], this.sections[index]] = [this.sections[index], this.sections[index + 1]];
+          this.normalizeSectionOrdering();
+          this.sectionReorderLoading.delete(String(movedSection.id));
+          this.sectionReorderLoading.delete(String(swappedSection.id));
+          this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في إعادة ترتيب الأقسام.' : 'Failed to reorder sections.');
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      // Some sections are temporary, just save locally
+      this.saveSections();
+      this.cdr.detectChanges();
+    }
   }
   
   // Toggle Section Fold/Unfold
   toggleSectionFold(sectionId: string): void {
     const section = this.sections.find(s => s.id === sectionId);
     if (section) {
+      // Toggle current section
       section.isCollapsed = !section.isCollapsed;
+      // If we just opened this section, close all others (accordion behavior)
+      if (!section.isCollapsed) {
+        for (const other of this.sections) {
+          if (other.id === section.id) continue;
+          // Close regardless of previous state (treat undefined as open)
+          other.isCollapsed = true;
+          this.setSectionCollapseState(other.id, true);
+        }
+      }
       this.setSectionCollapseState(sectionId, section.isCollapsed);
       this.saveSections();
       this.cdr.detectChanges();
@@ -2194,32 +2964,41 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (this.sectionRequiresConfirmation() && !this.canConfirmDeleteSection()) {
       return;
     }
-    
-    // Store deleted section for undo
-    this.deletedSection = { ...this.sectionToDelete };
-    const deletedIndex = this.sections.findIndex(s => s.id === this.sectionToDelete!.id);
-    
-    // Remove section
-    this.sections = this.sections.filter(s => s.id !== this.sectionToDelete!.id);
-    this.normalizeSectionOrdering();
-    
-    // If deleted section was active, select first section or null
-    if (this.activeSectionId === this.sectionToDelete.id) {
-  this.setActiveSection(this.sections.length > 0 ? this.sections[0].id : null);
+
+    const sectionId = this.sectionToDelete.id;
+    const proceedLocalRemoval = () => {
+      // Store deleted section for undo
+      this.deletedSection = { ...this.sectionToDelete! };
+      // Remove section locally
+      this.sections = this.sections.filter(s => s.id !== sectionId);
+      this.normalizeSectionOrdering();
+      if (this.activeSectionId === sectionId) {
+        this.setActiveSection(this.sections.length > 0 ? this.sections[0].id : null);
+      }
+      this.saveSections();
+      this.showDeleteSectionModal = false;
+      this.sectionToDelete = null;
+      this.deleteConfirmationInput = '';
+      // Show undo toast
+      this.showUndoToast = true;
+      this.undoToastTimeout = setTimeout(() => {
+        this.hideUndoToast();
+      }, 5000);
+      this.sectionDeleting = false;
+      this.cdr.detectChanges();
+    };
+
+    // If this section exists on backend (numeric id), delete there first
+    const isPersisted = !isNaN(Number(sectionId));
+    this.sectionDeleting = true;
+    if (isPersisted) {
+      this.ai.deleteDraftSection(sectionId).subscribe({
+        next: () => proceedLocalRemoval(),
+        error: () => proceedLocalRemoval()
+      });
+    } else {
+      proceedLocalRemoval();
     }
-    
-    this.saveSections();
-    this.showDeleteSectionModal = false;
-    this.sectionToDelete = null;
-    this.deleteConfirmationInput = '';
-    
-    // Show undo toast
-    this.showUndoToast = true;
-    this.undoToastTimeout = setTimeout(() => {
-      this.hideUndoToast();
-    }, 5000); // Auto-hide after 5 seconds
-    
-    this.cdr.detectChanges();
   }
 
   cancelDeleteSection(): void {
@@ -2382,21 +3161,53 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     const section = this.sections.find(s => s.id === this.editingSectionId);
     if (section) {
-      section.name = this.editingSectionValue.trim();
-      section.updatedAt = new Date().toISOString();
-      
-      // Also update selectedTopic/subjectSlug if this is the first section
-      if (section.number === 1) {
-        this.selectedTopic = section.name;
-        this.subjectSlug = section.name;
+      const newName = this.editingSectionValue.trim();
+      const isTemporary = isNaN(Number(section.id));
+
+      const finalizeLocal = () => {
+        section.name = newName;
+        section.updatedAt = new Date().toISOString();
+        if (section.number === 1) {
+          this.selectedTopic = section.name;
+          this.subjectSlug = section.name;
+        }
+        this.saveSections();
+        this.saveDraftStep2();
+        this.editingSection = false;
+        this.editingSectionId = null;
+        this.editingSectionValue = '';
+        this.sectionSaving = false;
+        this.cdr.detectChanges();
+      };
+
+      this.sectionSaving = true;
+      if (isTemporary) {
+        // Create on backend and replace local temp id with real numeric id
+        this.ai.createDraftSection({ name: newName, available: true }).subscribe({
+          next: (response) => {
+            // Find the created section by name at end of list (backend returns full draft)
+            const created = (response.sections || []).find(s => s.name === newName);
+            if (created) {
+              section.id = String(created.id);
+              section.number = created.position;
+              section.sort_order = created.position;
+              section.createdAt = created.created_at;
+              section.updatedAt = created.updated_at;
+            }
+            finalizeLocal();
+          },
+          error: () => {
+            // Fallback to local only (should rarely happen)
+            finalizeLocal();
+          }
+        });
+      } else {
+        // Persist name change on backend
+        this.ai.updateDraftSection(section.id, { name: newName }).subscribe({
+          next: () => finalizeLocal(),
+          error: () => finalizeLocal()
+        });
       }
-      
-      this.saveSections();
-      this.saveDraftStep2();
-      this.editingSection = false;
-      this.editingSectionId = null;
-      this.editingSectionValue = '';
-      this.cdr.detectChanges();
     }
   }
   
@@ -3427,7 +4238,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.ai.createSectionContent(numericSectionId, {
       type: 'resources',
       title: trimmedTitle,
-      status: false,
+      status: true,
       meta
     }).subscribe({
       next: (response) => {
@@ -5199,7 +6010,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   openContentItem(item: ContentItem): void {
-    if (item.type === 'video') {
+    if (item.type === 'quiz') {
+      this.currentQuizId = item.id;
+      this.openQuizEditor();
+    } else if (item.type === 'video') {
       this.videoContentItem = item;
       this.viewingVideoContent = true;
       this.showVideoModal = true;
@@ -5208,6 +6022,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     } else if (item.type === 'resources') {
       // Handle resource modal opening if needed
       // For now, resources might not have a preview modal
+    } else {
+      this.viewContentItem(item);
     }
   }
 

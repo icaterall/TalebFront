@@ -156,34 +156,59 @@
                     type="button"
                     class="section-order-btn"
                     (click)="$event.stopPropagation(); moveSectionUp(section.id)"
-                    [disabled]="i === 0"
+                    [disabled]="i === 0 || isReorderingSection(section.id)"
+                    [attr.aria-busy]="isReorderingSection(section.id) ? 'true' : null"
                     [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأعلى' : 'Move up'">
-                    <span class="order-icon">⬆️</span>
+                    <span class="order-icon" *ngIf="!isReorderingSection(section.id)">⬆️</span>
+                    <span class="order-loading" *ngIf="isReorderingSection(section.id)">⏳</span>
                   </button>
                   <button
                     type="button"
                     class="section-order-btn"
                     (click)="$event.stopPropagation(); moveSectionDown(section.id)"
-                    [disabled]="i === sections.length - 1"
+                    [disabled]="i === sections.length - 1 || isReorderingSection(section.id)"
+                    [attr.aria-busy]="isReorderingSection(section.id) ? 'true' : null"
                     [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأسفل' : 'Move down'">
-                    <span class="order-icon">⬇️</span>
+                    <span class="order-icon" *ngIf="!isReorderingSection(section.id)">⬇️</span>
+                    <span class="order-loading" *ngIf="isReorderingSection(section.id)">⏳</span>
                   </button>
                 </div>
 
                 <div class="section-header-info">
                   <div class="section-title-row">
                     <ng-container *ngIf="editingSection && editingSectionId === section.id; else sectionTitleDisplay">
-                      <input
-                        type="text"
-                        class="section-name-edit-input"
-                        [(ngModel)]="editingSectionValue"
-                        (click)="$event.stopPropagation()"
-                        (keyup.enter)="saveSectionEdit()"
-                        (keyup.escape)="cancelSectionEdit()"
-                        [placeholder]="currentLang === 'ar' ? 'اسم القسم' : 'Section name'"
-                        [dir]="isRTL ? 'rtl' : 'ltr'"
-                        maxlength="200"
-                        autofocus>
+                      <div class="section-name-edit-wrapper">
+                        <input
+                          type="text"
+                          class="section-name-edit-input"
+                          [(ngModel)]="editingSectionValue"
+                          (click)="$event.stopPropagation()"
+                          (keyup.enter)="saveSectionEdit()"
+                          (keyup.escape)="cancelSectionEdit()"
+                          [placeholder]="currentLang === 'ar' ? 'اسم القسم' : 'Section name'"
+                          [dir]="isRTL ? 'rtl' : 'ltr'"
+                          maxlength="200"
+                          autofocus>
+                        <div class="section-name-input-actions">
+                          <button
+                            type="button"
+                            class="section-name-save-btn"
+                            (click)="$event.stopPropagation(); saveSectionEdit()"
+                            [disabled]="sectionSaving || !editingSectionValue || !editingSectionValue.trim()"
+                            [attr.aria-label]="currentLang === 'ar' ? 'حفظ اسم القسم' : 'Save section name'">
+                            <ng-container *ngIf="!sectionSaving">✓</ng-container>
+                            <span *ngIf="sectionSaving" class="btn-spinner" aria-hidden="true"></span>
+                          </button>
+                          <button
+                            *ngIf="section.name && section.name.trim()"
+                            type="button"
+                            class="section-name-cancel-btn"
+                            (click)="$event.stopPropagation(); cancelSectionEdit()"
+                            [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">
+                            ✕
+                          </button>
+                        </div>
+                      </div>
                     </ng-container>
                     <ng-template #sectionTitleDisplay>
                       <h3 class="section-name"
@@ -252,7 +277,7 @@
                   [class.content-type-audio]="item.type === 'audio'"
                   [class.content-type-quiz]="item.type === 'quiz'"
                   (click)="openContentItem(item)"
-                  [style.cursor]="(item.type === 'video' || item.type === 'audio' || item.type === 'resources') ? 'pointer' : 'default'">
+                  [style.cursor]="(item.type === 'video' || item.type === 'audio' || item.type === 'resources' || item.type === 'quiz') ? 'pointer' : 'default'">
                   
                   <div class="content-item-header">
                     <div class="content-item-main">
@@ -319,6 +344,19 @@
                             </ng-container>
                           </div>
                         </div>
+                        <div class="content-item-preview" *ngIf="item.type === 'quiz' && item.meta">
+                          <ng-container *ngIf="getQuizInfo(item) as quizInfo">
+                            <span class="content-detail" *ngIf="quizInfo.questionCount > 0">
+                              <strong>{{ currentLang === 'ar' ? 'عدد الأسئلة' : 'Questions' }}:</strong> {{ quizInfo.questionCount }}
+                            </span>
+                            <span class="content-detail" *ngIf="quizInfo.fullScore > 0">
+                              <strong>{{ currentLang === 'ar' ? 'المجموع الكلي' : 'Total Score' }}:</strong> {{ quizInfo.fullScore }}
+                            </span>
+                            <span class="content-detail" *ngIf="quizInfo.questionCount > 0 && quizInfo.pointsPerQuestion > 0">
+                              <strong>{{ currentLang === 'ar' ? 'نقاط لكل سؤال' : 'Points per Question' }}:</strong> {{ quizInfo.pointsPerQuestion }}
+                            </span>
+                          </ng-container>
+                        </div>
                       </div>
                     </div>
 
@@ -380,7 +418,7 @@
                 </button>
                 <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('quiz')" [disabled]="!section.name || !section.name.trim()">
                   <span class="btn-icon">📋</span>
-                  <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة اختبار' : 'Add Quiz' }}</span>
+                  <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء اختبار / لعبة' : 'Create Quiz / Game' }}</span>
                 </button>
               </div>
             </div>
@@ -391,6 +429,7 @@
             type="button"
             class="btn-add-section"
             (click)="addNewSection()"
+            [disabled]="hasUnnamedSection()"
             [attr.aria-label]="currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add new section'">
             <span class="btn-icon">➕</span>
             <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add New Section' }}</span>
@@ -1449,7 +1488,9 @@
     </div>
     <div class="modal-body">
       <p class="delete-message">{{ currentLang === 'ar' ? 'سيتم حذف هذا القسم وجميع المحتويات بداخله بشكل نهائي.' : 'This will permanently delete the section and everything inside it.' }}</p>
-      <p class="delete-warning">{{ currentLang === 'ar' ? 'لا يمكن التراجع عن هذا الإجراء. يرجى كتابة delete للتأكيد.' : 'This action cannot be undone. Please type delete to confirm.' }}</p>
+      <p class="delete-warning" *ngIf="sectionToDelete?.content_items?.length">
+        {{ currentLang === 'ar' ? 'لا يمكن التراجع عن هذا الإجراء. يرجى كتابة delete للتأكيد.' : 'This action cannot be undone. Please type delete to confirm.' }}
+      </p>
       <p class="delete-section-name" *ngIf="sectionToDelete">{{ sectionToDelete.name }}</p>
       <div class="delete-confirm-field" *ngIf="sectionToDelete?.content_items?.length">
         <label for="delete-confirm-input">{{ currentLang === 'ar' ? 'اكتب delete للتأكيد' : 'Type delete to confirm' }}</label>
@@ -1464,11 +1505,12 @@
       </div>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn-cancel" (click)="cancelDeleteSection()">
+      <button type="button" class="btn-cancel" (click)="cancelDeleteSection()" [disabled]="sectionDeleting">
         {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
       </button>
-      <button type="button" class="btn-delete" (click)="confirmDeleteSection()" [disabled]="sectionRequiresConfirmation() && !canConfirmDeleteSection()">
-        {{ currentLang === 'ar' ? 'نعم، حذف' : 'Yes, delete' }}
+      <button type="button" class="btn-delete" (click)="confirmDeleteSection()" [disabled]="sectionDeleting || (sectionRequiresConfirmation() && !canConfirmDeleteSection())" [attr.aria-busy]="sectionDeleting">
+        <span *ngIf="sectionDeleting" class="btn-spinner" aria-hidden="true"></span>
+        <span>{{ currentLang === 'ar' ? 'نعم، حذف' : 'Yes, delete' }}</span>
       </button>
     </div>
   </div>
@@ -1799,6 +1841,341 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz Creation Wizard Modal -->
+<div class="modal-overlay" *ngIf="showQuizWizardModal">
+  <div class="modal-content quiz-wizard-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ currentLang === 'ar' ? 'إنشاء اختبار / لعبة' : 'Create Quiz / Game' }}</h3>
+      <button type="button" class="modal-close-btn" (click)="closeQuizWizard()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Step 1: Mode Selection -->
+      <div class="wizard-step" *ngIf="!quizMode">
+        <h4>{{ currentLang === 'ar' ? 'اختر نمط الاختبار' : 'Choose Quiz Mode' }}</h4>
+        <div class="mode-options">
+          <button type="button" class="mode-option-btn" (click)="selectQuizMode('manual')">
+            <div class="mode-icon">✍️</div>
+            <div class="mode-title">{{ currentLang === 'ar' ? 'اختبار يدوي' : 'Manual Quiz' }}</div>
+            <div class="mode-description">{{ currentLang === 'ar' ? 'إنشاء الأسئلة يدوياً' : 'Create questions manually' }}</div>
+          </button>
+          <button type="button" class="mode-option-btn" (click)="selectQuizMode('ai')">
+            <div class="mode-icon">🤖</div>
+            <div class="mode-title">{{ currentLang === 'ar' ? 'اختبار بالذكاء الاصطناعي' : 'AI Quiz' }}</div>
+            <div class="mode-description">{{ currentLang === 'ar' ? 'إنشاء الأسئلة تلقائياً من محتوى القسم' : 'Generate questions automatically from section content' }}</div>
+          </button>
+          <button type="button" class="mode-option-btn disabled" (click)="selectQuizMode('game')" disabled>
+            <div class="mode-icon">🎮</div>
+            <div class="mode-title">{{ currentLang === 'ar' ? 'لعبة تفاعلية' : 'Interactive Game' }}</div>
+            <div class="mode-description">{{ currentLang === 'ar' ? 'قريباً...' : 'Coming soon...' }}</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Settings -->
+      <div class="wizard-step" *ngIf="quizMode">
+        <h4>{{ currentLang === 'ar' ? 'إعدادات الاختبار' : 'Quiz Settings' }}</h4>
+        <div class="form-field">
+          <label for="quizTitle">{{ currentLang === 'ar' ? 'عنوان الاختبار' : 'Quiz Title' }}</label>
+          <input
+            id="quizTitle"
+            type="text"
+            class="field-input"
+            [(ngModel)]="quizSettings.title"
+            [placeholder]="currentLang === 'ar' ? 'عنوان الاختبار' : 'Quiz Title'"
+            maxlength="200"
+          />
+        </div>
+        <div class="form-field">
+          <label for="fullScore">{{ currentLang === 'ar' ? 'المجموع الكلي' : 'Full Score' }}</label>
+          <input
+            id="fullScore"
+            type="number"
+            class="field-input"
+            [(ngModel)]="quizSettings.full_score"
+            min="1"
+            [placeholder]="currentLang === 'ar' ? 'مثال: 40' : 'e.g. 40'"
+          />
+        </div>
+        <div class="form-field">
+          <label for="timeLimit">{{ currentLang === 'ar' ? 'الوقت المحدد (بالدقائق)' : 'Time Limit (in minutes)' }}</label>
+          <input
+            id="timeLimit"
+            type="number"
+            class="field-input"
+            [(ngModel)]="quizSettings.time_limit"
+            min="1"
+            [placeholder]="currentLang === 'ar' ? 'مثال: 30 (اختياري)' : 'e.g. 30 (optional)'"
+          />
+          <p class="field-hint">{{ currentLang === 'ar' ? 'اتركه فارغاً إذا لم يكن هناك حد زمني' : 'Leave empty if there is no time limit' }}</p>
+        </div>
+        <div class="form-field">
+          <label>{{ currentLang === 'ar' ? 'أنواع الأسئلة المسموحة' : 'Allowed Question Types' }}</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [checked]="quizSettings.allowed_types.includes('mcq')" (change)="toggleQuestionType('mcq')" />
+              {{ currentLang === 'ar' ? 'اختيار من متعدد' : 'Multiple Choice' }}
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" [checked]="quizSettings.allowed_types.includes('true_false')" (change)="toggleQuestionType('true_false')" />
+              {{ currentLang === 'ar' ? 'صحيح/خطأ' : 'True/False' }}
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" [checked]="quizSettings.allowed_types.includes('matching')" (change)="toggleQuestionType('matching')" />
+              {{ currentLang === 'ar' ? 'مطابقة' : 'Matching' }}
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" [checked]="quizSettings.allowed_types.includes('ordering')" (change)="toggleQuestionType('ordering')" />
+              {{ currentLang === 'ar' ? 'ترتيب' : 'Ordering' }}
+            </label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="quizSettings.auto_weighting" />
+            {{ currentLang === 'ar' ? 'توزيع النقاط تلقائياً' : 'Auto-distribute points' }}
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="quizMode = null" [disabled]="creatingQuiz">
+            {{ currentLang === 'ar' ? 'رجوع' : 'Back' }}
+          </button>
+          <button type="button" class="btn-primary" (click)="saveQuizSettings()" [disabled]="creatingQuiz" [attr.aria-busy]="creatingQuiz ? 'true' : null">
+            <span *ngIf="!creatingQuiz">{{ currentLang === 'ar' ? 'إنشاء الاختبار' : 'Create Quiz' }}</span>
+            <span *ngIf="creatingQuiz" class="btn-loading">
+              <span class="spinner"></span>
+              <span>{{ currentLang === 'ar' ? 'جارٍ الإنشاء...' : 'Creating...' }}</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz Editor Modal -->
+<div class="modal-overlay" *ngIf="showQuizEditorModal">
+  <div class="modal-content quiz-editor-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ quizSettings.title || (currentLang === 'ar' ? 'محرر الاختبار' : 'Quiz Editor') }}</h3>
+      <button type="button" class="modal-close-btn" (click)="closeQuizEditor()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="quiz-info-bar">
+        <span *ngIf="quizSettings.full_score > 0">
+          <strong>{{ currentLang === 'ar' ? 'المجموع الكلي' : 'Total Score' }}:</strong> {{ quizSettings.full_score }}
+        </span>
+        <span *ngIf="quizQuestions.length > 0">
+          <strong>{{ currentLang === 'ar' ? 'عدد الأسئلة' : 'Questions' }}:</strong> {{ quizQuestions.length }}
+        </span>
+        <span *ngIf="quizQuestions.length > 0 && quizSettings.full_score > 0">
+          <strong>{{ currentLang === 'ar' ? 'نقاط لكل سؤال' : 'Points per Question' }}:</strong> 
+          {{ Math.round((quizSettings.full_score / quizQuestions.length) * 100) / 100 }}
+        </span>
+      </div>
+
+      <!-- AI Generation Button (for AI mode) -->
+      <div class="quiz-actions" *ngIf="quizMode === 'ai' && quizQuestions.length === 0">
+        <button type="button" class="btn-primary" (click)="generateAIQuizQuestions()" [disabled]="generatingQuiz">
+          <span *ngIf="!generatingQuiz">{{ currentLang === 'ar' ? 'إنشاء الأسئلة بالذكاء الاصطناعي' : 'Generate Questions with AI' }}</span>
+          <span *ngIf="generatingQuiz">{{ currentLang === 'ar' ? 'جارٍ الإنشاء...' : 'Generating...' }}</span>
+        </button>
+      </div>
+
+      <!-- Add Question Button (for manual mode or editing) -->
+      <div class="quiz-actions" *ngIf="quizMode === 'manual' || quizQuestions.length > 0">
+        <button type="button" class="btn-primary" (click)="addNewQuestion('mcq')" *ngIf="quizSettings.allowed_types.includes('mcq')">
+          + {{ currentLang === 'ar' ? 'اختيار من متعدد' : 'Multiple Choice' }}
+        </button>
+        <button type="button" class="btn-primary" (click)="addNewQuestion('true_false')" *ngIf="quizSettings.allowed_types.includes('true_false')">
+          + {{ currentLang === 'ar' ? 'صحيح/خطأ' : 'True/False' }}
+        </button>
+        <button type="button" class="btn-primary" (click)="addNewQuestion('matching')" *ngIf="quizSettings.allowed_types.includes('matching')">
+          + {{ currentLang === 'ar' ? 'مطابقة' : 'Matching' }}
+        </button>
+        <button type="button" class="btn-primary" (click)="addNewQuestion('ordering')" *ngIf="quizSettings.allowed_types.includes('ordering')">
+          + {{ currentLang === 'ar' ? 'ترتيب' : 'Ordering' }}
+        </button>
+      </div>
+
+      <!-- Questions List -->
+      <div class="quiz-questions-list" *ngIf="quizLoading">
+        <div class="loading-spinner">
+          <span class="spinner"></span>
+          <span>{{ currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading...' }}</span>
+        </div>
+      </div>
+      <div class="quiz-questions-list" *ngIf="!quizLoading && quizQuestions.length === 0">
+        <p class="empty-state">{{ currentLang === 'ar' ? 'لا توجد أسئلة بعد. أضف سؤالاً جديداً.' : 'No questions yet. Add a new question.' }}</p>
+      </div>
+      <div class="quiz-questions-list" *ngIf="!quizLoading && quizQuestions.length > 0">
+        <div *ngFor="let question of quizQuestions; let i = index" class="question-item">
+          <div class="question-header">
+            <span class="question-number">{{ i + 1 }}.</span>
+            <span class="question-type-badge">{{ getQuestionTypeLabel(question.question_type) }}</span>
+            <span class="question-points">{{ question.points }} {{ currentLang === 'ar' ? 'نقطة' : 'points' }}</span>
+          </div>
+          <div class="question-content">
+            <p class="question-prompt">{{ question.prompt }}</p>
+            <div class="question-preview" *ngIf="question.question_type === 'mcq' && question.payload.choices">
+              <div *ngFor="let choice of question.payload.choices; let j = index" class="choice-preview">
+                <span class="choice-label">{{ String.fromCharCode(65 + j) }}.</span>
+                <span>{{ choice }}</span>
+                <span class="correct-indicator" *ngIf="j === question.payload.correct_index">✓</span>
+              </div>
+            </div>
+            <div class="question-preview" *ngIf="question.question_type === 'true_false'">
+              <span>{{ question.payload.correct_answer ? (currentLang === 'ar' ? 'صحيح' : 'True') : (currentLang === 'ar' ? 'خطأ' : 'False') }}</span>
+            </div>
+          </div>
+          <div class="question-actions">
+            <button type="button" class="btn-icon" (click)="moveQuestionUp(question)" [disabled]="i === 0" [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأعلى' : 'Move up'">⬆️</button>
+            <button type="button" class="btn-icon" (click)="moveQuestionDown(question)" [disabled]="i === quizQuestions.length - 1" [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأسفل' : 'Move down'">⬇️</button>
+            <button type="button" class="btn-icon" (click)="editQuestion(question)" [attr.aria-label]="currentLang === 'ar' ? 'تعديل' : 'Edit'">✏️</button>
+            <button type="button" class="btn-icon delete" (click)="deleteQuestion(question)" [attr.aria-label]="currentLang === 'ar' ? 'حذف' : 'Delete'">🗑️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="testQuiz()" *ngIf="quizQuestions.length > 0">
+                {{ currentLang === 'ar' ? 'اختبار الاختبار' : 'Test Quiz' }}
+              </button>
+              <button type="button" class="btn-cancel" (click)="closeQuizEditor()">
+                {{ currentLang === 'ar' ? 'إغلاق' : 'Close' }}
+              </button>
+            </div>
+  </div>
+</div>
+
+<!-- Question Editor Modal -->
+<div class="modal-overlay" *ngIf="showQuestionEditor && currentQuestion">
+  <div class="modal-content question-editor-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ currentQuestion.id ? (currentLang === 'ar' ? 'تعديل السؤال' : 'Edit Question') : (currentLang === 'ar' ? 'إضافة سؤال جديد' : 'Add New Question') }}</h3>
+      <button type="button" class="modal-close-btn" (click)="cancelQuestionEdit()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label for="questionPrompt">{{ currentLang === 'ar' ? 'نص السؤال' : 'Question Prompt' }}</label>
+        <textarea
+          id="questionPrompt"
+          class="field-input"
+          [(ngModel)]="currentQuestion.prompt"
+          [placeholder]="currentLang === 'ar' ? 'أدخل نص السؤال هنا' : 'Enter question text here'"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <!-- MCQ Options -->
+      <div class="form-field" *ngIf="currentQuestion.question_type === 'mcq' && currentQuestion.payload?.choices">
+        <label>{{ currentLang === 'ar' ? 'الخيارات' : 'Choices' }}</label>
+        <p class="field-hint">{{ currentLang === 'ar' ? 'حدد الإجابة الصحيحة بالنقر على الزر الدائري' : 'Select the correct answer by clicking the radio button' }}</p>
+          <div *ngFor="let choice of currentQuestion.payload.choices; let i = index; trackBy: trackByChoiceIndex" class="choice-input-row" [class.correct-answer]="currentQuestion.payload!.correct_index === i">
+            <label class="radio-wrapper">
+              <input
+                type="radio"
+                name="correctChoice"
+                [value]="i"
+                [checked]="currentQuestion.payload!.correct_index === i"
+                (change)="currentQuestion.payload!.correct_index = i"
+                [attr.aria-label]="(currentLang === 'ar' ? 'الإجابة الصحيحة' : 'Correct answer') + ' ' + String.fromCharCode(65 + i)"
+                class="correct-answer-radio"
+              />
+              <span class="radio-label-text">{{ String.fromCharCode(65 + i) }}.</span>
+            </label>
+            <input
+              type="text"
+              class="field-input"
+              [value]="currentQuestion.payload!.choices![i]"
+              (input)="updateMcqChoice(i, $event)"
+              [placeholder]="(currentLang === 'ar' ? 'الخيار' : 'Option') + ' ' + String.fromCharCode(65 + i)"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <span class="correct-badge" *ngIf="currentQuestion.payload!.correct_index === i">
+              {{ currentLang === 'ar' ? '✓ الإجابة الصحيحة' : '✓ Correct Answer' }}
+            </span>
+            <button type="button" class="btn-icon" (click)="removeMcqChoice(i)" *ngIf="currentQuestion.payload.choices && currentQuestion.payload.choices.length > 2" [attr.aria-label]="currentLang === 'ar' ? 'حذف الخيار' : 'Remove choice'">🗑️</button>
+          </div>
+        <button type="button" class="btn-secondary" (click)="addMcqChoice()" *ngIf="currentQuestion.payload.choices && currentQuestion.payload.choices.length < 10">
+          + {{ currentLang === 'ar' ? 'إضافة خيار' : 'Add Choice' }}
+        </button>
+      </div>
+
+      <!-- True/False Options -->
+      <div class="form-field" *ngIf="currentQuestion.question_type === 'true_false'">
+        <label>{{ currentLang === 'ar' ? 'الإجابة الصحيحة' : 'Correct Answer' }}</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="trueFalse" [value]="true" [(ngModel)]="currentQuestion.payload.correct_answer" />
+            {{ currentLang === 'ar' ? 'صحيح' : 'True' }}
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="trueFalse" [value]="false" [(ngModel)]="currentQuestion.payload.correct_answer" />
+            {{ currentLang === 'ar' ? 'خطأ' : 'False' }}
+          </label>
+        </div>
+      </div>
+
+      <!-- Matching Options -->
+      <div class="form-field" *ngIf="currentQuestion.question_type === 'matching' && currentQuestion.payload?.pairs">
+        <label>{{ currentLang === 'ar' ? 'أزواج المطابقة' : 'Matching Pairs' }}</label>
+        <div *ngFor="let pair of currentQuestion.payload.pairs; let i = index" class="matching-pair-row">
+          <input
+            type="text"
+            class="field-input"
+            [(ngModel)]="pair.left"
+            [placeholder]="currentLang === 'ar' ? 'العنصر الأيسر' : 'Left item'"
+          />
+          <span>→</span>
+          <input
+            type="text"
+            class="field-input"
+            [(ngModel)]="pair.right"
+            [placeholder]="currentLang === 'ar' ? 'العنصر الأيمن' : 'Right item'"
+          />
+          <button type="button" class="btn-icon" (click)="removeMatchingPair(i)" *ngIf="currentQuestion.payload.pairs && currentQuestion.payload.pairs.length > 2" [attr.aria-label]="currentLang === 'ar' ? 'حذف الزوج' : 'Remove pair'">🗑️</button>
+        </div>
+        <button type="button" class="btn-secondary" (click)="addMatchingPair()">
+          + {{ currentLang === 'ar' ? 'إضافة زوج' : 'Add Pair' }}
+        </button>
+      </div>
+
+      <!-- Ordering Options -->
+      <div class="form-field" *ngIf="currentQuestion.question_type === 'ordering' && currentQuestion.payload?.items">
+        <label>{{ currentLang === 'ar' ? 'العناصر بالترتيب الصحيح' : 'Items in Correct Order' }}</label>
+        <div *ngFor="let item of currentQuestion.payload.items; let i = index; trackBy: trackByOrderingItemIndex" class="ordering-item-row">
+          <span class="order-number">{{ i + 1 }}.</span>
+          <input
+            type="text"
+            class="field-input"
+            [value]="currentQuestion.payload!.items![i]"
+            (input)="updateOrderingItem(i, $event)"
+            [placeholder]="(currentLang === 'ar' ? 'العنصر' : 'Item') + ' ' + (i + 1)"
+          />
+          <button type="button" class="btn-icon" (click)="removeOrderingItem(i)" *ngIf="currentQuestion.payload.items && currentQuestion.payload.items.length > 2" [attr.aria-label]="currentLang === 'ar' ? 'حذف العنصر' : 'Remove item'">🗑️</button>
+        </div>
+        <button type="button" class="btn-secondary" (click)="addOrderingItem()">
+          + {{ currentLang === 'ar' ? 'إضافة عنصر' : 'Add Item' }}
+        </button>
+        <p class="form-hint">{{ currentLang === 'ar' ? 'الترتيب الصحيح هو 1، 2، 3... (الترتيب الذي أدخلته)' : 'Correct order is 1, 2, 3... (the order you entered)' }}</p>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="cancelQuestionEdit()">
+        {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+      </button>
+      <button type="button" class="btn-primary" (click)="saveQuestion(currentQuestion)" [disabled]="!currentQuestion.prompt || !currentQuestion.prompt.trim() || savingQuestion" [attr.aria-busy]="savingQuestion ? 'true' : null">
+        <span *ngIf="!savingQuestion">{{ currentLang === 'ar' ? 'حفظ' : 'Save' }}</span>
+        <span *ngIf="savingQuestion" class="btn-loading">
+          <span class="spinner"></span>
+          <span>{{ currentLang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...' }}</span>
+        </span>
+      </button>
     </div>
   </div>
 </div>

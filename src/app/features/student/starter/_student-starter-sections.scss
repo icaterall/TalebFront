@@ -93,6 +93,12 @@
       font-size: 16px;
       line-height: 1;
     }
+
+    .order-loading {
+      font-size: 14px;
+      line-height: 1;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
   }
 
   // Section Header Info
@@ -244,10 +250,73 @@
     color: #1a1a1a;
     width: 100%;
     box-sizing: border-box;
+    padding-right: 84px; // space for action buttons
 
     &:focus {
       outline: none;
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    &::placeholder {
+      color: #9aa4b2; // light grey placeholder
+    }
+  }
+
+  .section-name-edit-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .section-name-input-actions {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    inset-inline-end: 8px;
+    display: inline-flex;
+    gap: 6px;
+
+    .section-name-save-btn,
+    .section-name-cancel-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .section-name-save-btn {
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+      color: #16a34a;
+
+      &:hover:not(:disabled) {
+        background: #dcfce7;
+        border-color: #86efac;
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .section-name-cancel-btn {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #dc2626;
+
+      &:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        transform: translateY(-1px);
+      }
     }
   }
 
@@ -1256,5 +1325,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 

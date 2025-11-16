@@ -281,6 +281,38 @@ export class AiBuilderService {
     );
   }
 
+  // Sections (Draft) CRUD
+  createDraftSection(payload: { name: string; description?: string; available?: boolean }): Observable<DraftCourseResponse> {
+    return this.http.post<DraftCourseResponse>(
+      `${this.baseUrl}/courses/draft/sections`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  updateDraftSection(sectionId: number | string, payload: Partial<{ name: string; description?: string; available?: boolean; position?: number }>): Observable<DraftCourseResponse> {
+    return this.http.put<DraftCourseResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  deleteDraftSection(sectionId: number | string): Observable<DraftCourseResponse> {
+    return this.http.delete<DraftCourseResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  reorderDraftSections(sections: Array<{ id: number; position: number }>): Observable<DraftCourseResponse> {
+    return this.http.put<DraftCourseResponse>(
+      `${this.baseUrl}/courses/draft/sections/reorder`,
+      { sections },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   createSectionContent(sectionId: number | string, payload: CreateSectionContentPayload): Observable<SectionContentResponse> {
     return this.http.post<SectionContentResponse>(
       `${this.baseUrl}/courses/draft/sections/${sectionId}/content`,
@@ -343,6 +375,129 @@ export class AiBuilderService {
       }
     );
   }
+
+  // Quiz Question Methods
+  getQuizQuestions(sectionId: number | string, contentId: number | string): Observable<QuizQuestionsResponse> {
+    return this.http.get<QuizQuestionsResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/questions`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  createQuizQuestion(sectionId: number | string, contentId: number | string, payload: CreateQuizQuestionPayload): Observable<QuizQuestionResponse> {
+    return this.http.post<QuizQuestionResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/questions`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  updateQuizQuestion(sectionId: number | string, contentId: number | string, questionId: number | string, payload: Partial<CreateQuizQuestionPayload>): Observable<QuizQuestionResponse> {
+    return this.http.put<QuizQuestionResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/questions/${questionId}`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  deleteQuizQuestion(sectionId: number | string, contentId: number | string, questionId: number | string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/questions/${questionId}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  reorderQuizQuestions(sectionId: number | string, contentId: number | string, questions: Array<{ id: number; position: number }>): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/questions/reorder`,
+      { questions },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  generateAIQuizQuestions(sectionId: number | string, contentId: number | string, payload: GenerateQuizPayload): Observable<QuizQuestionsResponse> {
+    return this.http.post<QuizQuestionsResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/questions/generate`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  submitQuiz(sectionId: number | string, contentId: number | string, answers: Record<number, any>, shuffleMaps?: Record<number, number[]>): Observable<QuizSubmitResponse> {
+    return this.http.post<QuizSubmitResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/submit`,
+      { answers, shuffleMaps: shuffleMaps || {} },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+}
+
+// Quiz Interfaces
+export interface QuizQuestion {
+  id: number;
+  content_id: number;
+  question_type: 'mcq' | 'true_false' | 'matching' | 'ordering';
+  prompt: string;
+  payload: QuizQuestionPayload;
+  position: number;
+  points: number;
+  explanation?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuizQuestionPayload {
+  // For MCQ
+  choices?: string[];
+  correct_index?: number;
+  // For True/False
+  correct_answer?: boolean;
+  // For Matching
+  pairs?: Array<{ left: string; right: string }>; // Used in editor (question creation)
+  // For Matching (sent as separate arrays in quiz test to hide correct matches)
+  leftItems?: string[]; // Shuffled left items (questions) - only in quiz test response
+  rightItems?: string[]; // Shuffled right items (options) - only in quiz test response
+  // For MCQ shuffle mapping (sent to frontend, used for answer validation)
+  choice_shuffle_map?: number[]; // Maps shuffled index to original index
+  // For Ordering
+  items?: string[];
+  correct_order?: number[];
+}
+
+export interface CreateQuizQuestionPayload {
+  question_type: 'mcq' | 'true_false' | 'matching' | 'ordering';
+  prompt: string;
+  payload: QuizQuestionPayload;
+  explanation?: string | null;
+  position?: number;
+}
+
+export interface GenerateQuizPayload {
+  question_count?: number;
+  allowed_types?: string[];
+}
+
+export interface QuizQuestionsResponse {
+  message?: string;
+  questions: QuizQuestion[];
+  errors?: string[];
+}
+
+export interface QuizQuestionResponse {
+  message: string;
+  question: QuizQuestion;
+}
+
+export interface QuizSubmitResponse {
+  score: number;
+  totalScore: number;
+  correctCount: number;
+  totalQuestions: number;
+  questionResults: Array<{
+    questionId: number;
+    isCorrect: boolean;
+    points: number;
+  }>;
 }
 
 export interface UploadResourceResponse {
