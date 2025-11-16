@@ -5309,18 +5309,24 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   textLessons: ContentItem[] = [];
+  textLessonsLoading = false;
 
   getTextLessons(): void {
     if (!this.activeSectionId) return;
 
+    this.textLessonsLoading = true;
+    this.cdr.detectChanges();
     this.audioUploadService.getTextLessons(this.activeSectionId).subscribe({
       next: (response) => {
         this.textLessons = response.lessons;
+        this.textLessonsLoading = false;
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Failed to fetch text lessons:', error);
         this.toastr.error(this.currentLang === 'ar' ? 'فشل في جلب الدروس النصية' : 'Failed to fetch text lessons');
+        this.textLessonsLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

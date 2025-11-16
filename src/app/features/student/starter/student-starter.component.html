@@ -1710,11 +1710,21 @@
           <!-- Text Lesson Selection -->
           <div *ngIf="audioForm.textSource === 'lesson'" class="form-field">
             <div class="lesson-list">
-              <div *ngFor="let lesson of textLessons" class="lesson-item" [class.selected]="audioForm.selectedTextLessonId === lesson.id" (click)="selectTextLesson(lesson)">
-                <h5 class="lesson-title">{{ lesson.title }}</h5>
-                <p class="lesson-preview">{{ lesson.meta?.['preview'] || '' }}</p>
+              <div class="lesson-loading" *ngIf="textLessonsLoading">
+                <span class="spinner-sm" aria-hidden="true"></span>
+                <span class="loading-text">{{ currentLang === 'ar' ? 'جاري تحميل الدروس...' : 'Loading lessons...' }}</span>
               </div>
-              <div *ngIf="textLessons.length === 0" class="no-lessons">
+              <div *ngFor="let lesson of textLessons" class="lesson-item" [class.selected]="audioForm.selectedTextLessonId === lesson.id" (click)="selectTextLesson(lesson)">
+                <div class="lesson-item-inner">
+                  <div class="lesson-icon" aria-hidden="true">📝</div>
+                  <div class="lesson-text">
+                    <h5 class="lesson-title">{{ lesson.title }}</h5>
+                    <p class="lesson-preview">{{ lesson.meta?.['preview'] || '' }}</p>
+                  </div>
+                  <div class="lesson-select-indicator" *ngIf="audioForm.selectedTextLessonId === lesson.id" aria-hidden="true">✔️</div>
+                </div>
+              </div>
+              <div *ngIf="!textLessonsLoading && textLessons.length === 0" class="no-lessons">
                 {{ currentLang === 'ar' ? 'لا توجد دروس نصية في هذا القسم بعد.' : 'No text lessons in this section yet.' }}
               </div>
             </div>
