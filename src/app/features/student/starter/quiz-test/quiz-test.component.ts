@@ -148,10 +148,9 @@ export class QuizTestComponent implements OnInit, OnDestroy {
           this.totalScore = Number(this.quizSettings.full_score) || 0;
           this.timeLimit = this.quizSettings.time_limit ? Number(this.quizSettings.time_limit) : null;
           
-          // Initialize timer if time limit is set
+          // Start or resume quiz attempt to get persistent timer
           if (this.timeLimit && this.timeLimit > 0) {
-            this.timeRemaining = this.timeLimit * 60; // Convert minutes to seconds
-            this.startTimer();
+            this.startOrResumeQuizAttempt(sectionId);
           }
         }
       },
@@ -161,19 +160,124 @@ export class QuizTestComponent implements OnInit, OnDestroy {
     });
   }
 
+  startOrResumeQuizAttempt(sectionId: number): void {
+    if (!this.quizId) return;
+    
+    const quizIdNum = Number(this.quizId);
+    if (isNaN(quizIdNum)) return;
+
+    // Try to get existing attempt first
+    this.ai.getQuizAttempt(sectionId, quizIdNum).subscribe({
+      next: (response) => {
+        if (response.success && response.attempt) {
+          // Resume existing attempt
+          if (response.attempt.is_expired) {
+            // Time is up, auto-submit
+            this.handleTimeUp();
+            return;
+          }
+          this.timeRemaining = response.attempt.remaining_seconds || 0;
+          this.startTimer();
+        } else {
+          // No existing attempt, start new one
+          this.startNewQuizAttempt(sectionId);
+        }
+      },
+      error: (error) => {
+        // If no attempt found (404), start a new one
+        if (error.status === 404) {
+          this.startNewQuizAttempt(sectionId);
+        } else {
+          console.error('Error getting quiz attempt:', error);
+          // Fallback to local timer
+          if (this.timeLimit && this.timeLimit > 0) {
+            this.timeRemaining = this.timeLimit * 60;
+            this.startTimer();
+          }
+        }
+      }
+    });
+  }
+
+  startNewQuizAttempt(sectionId: number): void {
+    if (!this.quizId) return;
+    
+    const quizIdNum = Number(this.quizId);
+    if (isNaN(quizIdNum)) return;
+
+    this.ai.startQuizAttempt(sectionId, quizIdNum).subscribe({
+      next: (response) => {
+        if (response.success && response.attempt) {
+          if (response.attempt.is_expired) {
+            // Time is up (shouldn't happen on start, but handle it)
+            this.handleTimeUp();
+            return;
+          }
+          this.timeRemaining = response.attempt.remaining_seconds || 0;
+          this.startTimer();
+        }
+      },
+      error: (error) => {
+        console.error('Error starting quiz attempt:', error);
+        // Fallback to local timer
+        if (this.timeLimit && this.timeLimit > 0) {
+          this.timeRemaining = this.timeLimit * 60;
+          this.startTimer();
+        }
+      }
+    });
+  }
+
   startTimer(): void {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
     
+    // Sync with backend every 30 seconds to ensure accuracy
+    let syncCounter = 0;
+    
     this.timerInterval = setInterval(() => {
       if (this.timeRemaining > 0) {
         this.timeRemaining--;
+        syncCounter++;
+        
+        // Sync with backend every 30 seconds
+        if (syncCounter >= 30 && this.quizId && this.sectionId) {
+          syncCounter = 0;
+          this.syncTimerWithBackend();
+        }
+        
         this.cdr.detectChanges();
       } else {
         this.handleTimeUp();
       }
     }, 1000);
+  }
+
+  syncTimerWithBackend(): void {
+    if (!this.quizId || !this.sectionId) return;
+    
+    const sectionIdNum = Number(this.sectionId);
+    const quizIdNum = Number(this.quizId);
+    if (isNaN(sectionIdNum) || isNaN(quizIdNum)) return;
+
+    this.ai.getQuizAttempt(sectionIdNum, quizIdNum).subscribe({
+      next: (response) => {
+        if (response.success && response.attempt) {
+          if (response.attempt.is_expired) {
+            this.handleTimeUp();
+            return;
+          }
+          // Update remaining time from backend
+          this.timeRemaining = response.attempt.remaining_seconds || 0;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        // Silently fail - continue with local timer
+        console.warn('Timer sync failed:', error);
+      }
+    });
   }
 
   handleTimeUp(): void {

@@ -125,8 +125,29 @@
           </app-cover-image>
         </div>
 
+        <!-- Empty State: Show Add Section Button when no sections exist -->
+        <div class="sections-empty-state" *ngIf="step2Locked && selectedCategory && sections.length === 0" [dir]="isRTL ? 'rtl' : 'ltr'">
+          <div class="empty-state-content">
+            <div class="empty-state-icon">📚</div>
+            <h3 class="empty-state-title">{{ currentLang === 'ar' ? 'ابدأ بإضافة قسم جديد' : 'Start by adding a new section' }}</h3>
+            <p class="empty-state-description">
+              {{ currentLang === 'ar' 
+                ? 'يمكنك إضافة قسم يدوياً أو رفع ملف Word/PDF/PPT لإنشاء المحتوى تلقائياً' 
+                : 'You can add a section manually or upload a Word/PDF/PPT file to generate content automatically' }}
+            </p>
+            <button
+              type="button"
+              class="btn-add-section-empty"
+              (click)="openAddSectionModal()"
+              [attr.aria-label]="currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add new section'">
+              <span class="btn-icon">➕</span>
+              <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add New Section' }}</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Sections List (Multiple Sections Support) -->
-        <div class="sections-list" *ngIf="step2Locked && selectedCategory && (selectedTopic || subjectSlug || sections.length > 0)" [dir]="isRTL ? 'rtl' : 'ltr'">
+        <div class="sections-list" *ngIf="step2Locked && selectedCategory && sections.length > 0" [dir]="isRTL ? 'rtl' : 'ltr'">
           <!-- Loop through sections -->
           <div 
             *ngFor="let section of sections; let i = index; trackBy: trackBySectionId"
@@ -527,111 +548,7 @@
             </div>
           </div>
 
-          <!-- Topic Selection (shown when title card is selected in Step 1) -->
-          <!-- Show topic field only if AI was not used (manual course name entry) -->
-          <div class="field-group" *ngIf="courseName && !step2Locked && courseTitleSuggestions.length === 0">
-            <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
-              <span class="required">*</span>
-            </label>
 
-            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
-            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
-            </div>
-
-            <!-- Manual Topic Input (shown when no AI was used) -->
-            <div class="topics-section" *ngIf="courseName && !step2Locked && !selectedTopic">
-              <div class="topic-input-wrapper">
-                <input
-                  type="text"
-                  class="topic-input-manual"
-                  [(ngModel)]="subjectSlug"
-                  (input)="onSubjectSlugChange()"
-                  [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
-                  maxlength="100" />
-              </div>
-              <div class="field-help">
-                {{ currentLang === 'ar' ? 'اكتب اسم القسم يدوياً' : 'Enter the section name manually' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Topic Selection Cards (shown when AI title card is selected) -->
-          <div class="field-group" *ngIf="courseName && !step2Locked && courseTitleSuggestions.length > 0 && availableTopics.length > 0">
-            <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
-              <span class="required">*</span>
-            </label>
-
-            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
-            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
-            </div>
-
-            <!-- Topic Selection Cards (shown until Continue is clicked) -->
-            <div class="topics-section" *ngIf="courseName && !step2Locked && availableTopics.length > 0">
-              <div class="topics-grid">
-                <div
-                  *ngFor="let topic of availableTopics; let i = index"
-                  class="topic-card"
-                  [class.selected]="selectedTopic === topic && editingTopic !== topic"
-                  [class.editing]="editingTopic === topic"
-                  (click)="selectTopic(topic)">
-                  <div class="topic-edit-wrapper">
-                    <ng-container *ngIf="editingTopic === topic; else topicDisplayStep1">
-                      <input
-                        type="text"
-                        class="topic-input"
-                        [attr.data-topic]="topic"
-                        [(ngModel)]="editingTopicValue"
-                        (click)="$event.stopPropagation()"
-                        (keyup.enter)="saveTopicEdit()"
-                        (keyup.escape)="cancelTopicEdit()"
-                        [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
-                        (blur)="$event.stopPropagation()" />
-                    </ng-container>
-                    <ng-template #topicDisplayStep1>
-                      <span class="topic-text">{{ topic }}</span>
-                    </ng-template>
-                    <div class="topic-edit-actions">
-                      <ng-container *ngIf="editingTopic === topic; else editIconTemplate">
-                        <button
-                          type="button"
-                          class="topic-action-btn topic-cancel-btn"
-                          (click)="$event.stopPropagation(); cancelTopicEdit()"
-                          [attr.aria-label]="currentLang === 'ar' ? 'إلغاء' : 'Cancel'">
-                          <span class="topic-action-icon">✕</span>
-                        </button>
-                        <button
-                          type="button"
-                          class="topic-action-btn topic-confirm-btn"
-                          (click)="$event.stopPropagation(); saveTopicEdit()"
-                          [attr.aria-label]="currentLang === 'ar' ? 'تأكيد' : 'Confirm'">
-                          <span class="topic-action-icon">✓</span>
-                        </button>
-                      </ng-container>
-                      <ng-template #editIconTemplate>
-                        <button
-                          *ngIf="selectedTopic === topic && editingTopic !== topic"
-                          type="button"
-                          class="topic-action-btn topic-edit-btn"
-                          (click)="$event.stopPropagation(); enterTopicEdit(topic)"
-                          [attr.aria-label]="currentLang === 'ar' ? 'تعديل القسم' : 'Edit section'">
-                          <span class="topic-action-icon">✏️</span>
-                        </button>
-                      </ng-template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="field-help">
-                {{ currentLang === 'ar' ? 'انقر للاختيار، ثم انقر على أيقونة التعديل للتعديل' : 'Click to select a section, then click the edit icon to edit' }}
-              </div>
-            </div>
-          </div>
 
         </div>
 
@@ -706,101 +623,6 @@
             {{ currentLang === 'ar' ? 'جاري تحميل الاقتراحات...' : 'Loading suggestions...' }}
           </div>
 
-          <!-- Topic Selection -->
-          <!-- Show topic field only if AI was not used (manual course name entry) -->
-          <div class="field-group" *ngIf="courseName && courseTitleSuggestions.length === 0">
-            <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
-              <span class="required">*</span>
-            </label>
-
-            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
-            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
-            </div>
-
-            <!-- Manual Topic Input (shown when no AI was used) -->
-            <div class="topics-section" *ngIf="courseName && !step2Locked && !selectedTopic">
-              <div class="topic-input-wrapper">
-                <input
-                  type="text"
-                  class="topic-input-manual"
-                  [(ngModel)]="subjectSlug"
-                  (input)="onSubjectSlugChange()"
-                  [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
-                  maxlength="100" />
-              </div>
-              <div class="field-help">
-                {{ currentLang === 'ar' ? 'اكتب اسم القسم يدوياً' : 'Enter the section name manually' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Topic Selection Cards (shown when AI title card is selected) -->
-          <div class="field-group" *ngIf="courseName && courseTitleSuggestions.length > 0 && availableTopics.length > 0">
-            <label class="field-label" *ngIf="!selectedTopic">
-              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
-              <span class="required">*</span>
-            </label>
-
-            <!-- Stored Topic (one line with underline) - only show when locked (after Continue) -->
-            <div class="inline-field-display" *ngIf="selectedTopic && step2Locked" [dir]="isRTL ? 'rtl' : 'ltr'">
-              <span class="inline-label">{{ currentLang === 'ar' ? 'القسم:' : 'Section:' }}</span>
-              <span class="inline-value underlined">{{ selectedTopic }}</span>
-            </div>
-
-            <!-- Topic Selection Cards (shown until Continue is clicked) -->
-            <div class="topics-section" *ngIf="courseName && !step2Locked && availableTopics.length > 0">
-              <div class="topics-grid">
-                <div
-                  *ngFor="let topic of availableTopics; let i = index"
-                  class="topic-card"
-                  [class.selected]="selectedTopic === topic && editingTopic !== topic"
-                  [class.editing]="editingTopic === topic"
-                  (click)="selectTopic(topic)">
-                  <ng-container *ngIf="editingTopic === topic; else topicDisplay">
-                    <input
-                      type="text"
-                      class="topic-input"
-                      [(ngModel)]="editingTopicValue"
-                      (click)="$event.stopPropagation()"
-                      (keyup.enter)="saveTopicEdit()"
-                      (keyup.escape)="cancelTopicEdit()"
-                      [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
-                      (blur)="saveTopicEdit()" />
-                  </ng-container>
-                  <ng-template #topicDisplay>
-                    <div class="topic-content">
-                      <span class="topic-text">{{ topic }}</span>
-                    </div>
-                  </ng-template>
-                </div>
-              </div>
-              <div class="field-help">
-                {{ currentLang === 'ar' ? 'انقر للاختيار، ثم انقر على أيقونة التعديل للتعديل' : 'Click to select a section, then click the edit icon to edit' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Fallback Topic Input (if no topics from title card) -->
-          <div class="field-group" *ngIf="courseName && availableTopics.length === 0 && !selectedTopic && !editingTopic">
-            <label class="field-label">
-              {{ currentLang === 'ar' ? 'القسم' : 'Section' }}
-              <span class="required">*</span>
-            </label>
-            <ng-select
-              [(ngModel)]="subjectSlug"
-              (change)="onSubjectSlugChange()"
-              [items]="subjectSlugSuggestions"
-              [searchable]="true"
-              [clearable]="false"
-              [placeholder]="currentLang === 'ar' ? 'اختر أو ابحث عن وحدة...' : 'Select or search for topic...'">
-            </ng-select>
-            <div class="field-help">
-              {{ currentLang === 'ar' ? 'مثال: physics, algebra, programming' : 'Example: physics, algebra, programming' }}
-            </div>
-          </div>
       </div>
     </div>
 
@@ -1558,23 +1380,102 @@
         </div>
       </div>
 
-      <!-- File Upload Progress -->
-      <div class="section-file-upload" *ngIf="sectionFileUploading">
-        <div class="upload-progress">
-          <div class="spinner"></div>
-          <p>{{ currentLang === 'ar' ? 'جاري معالجة الملف وإنشاء المحتوى...' : 'Processing file and generating content...' }}</p>
-        </div>
-      </div>
-
-      <!-- File Upload Error -->
-      <div class="section-file-error" *ngIf="sectionFileUploadError">
-        <p class="error-message">{{ sectionFileUploadError }}</p>
-      </div>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn-cancel" (click)="closeAddSectionModal()" [disabled]="sectionFileUploading">
         {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- File Upload Progress Modal (Separate Modal) -->
+<div class="modal-overlay file-upload-progress-overlay" *ngIf="sectionFileUploading">
+  <div class="modal-content file-upload-progress-modal" [dir]="isRTL ? 'rtl' : 'ltr'">
+    <div class="progress-modal-header">
+      <h2 class="progress-modal-title">{{ currentLang === 'ar' ? 'جاري معالجة الملف' : 'Processing File' }}</h2>
+      <div class="progress-percentage-badge">{{ sectionFileUploadProgress }}%</div>
+    </div>
+    
+    <div class="progress-modal-body">
+      <!-- Main Progress Bar -->
+      <div class="main-progress-section">
+        <div class="progress-bar-container">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" [style.width.%]="sectionFileUploadProgress"></div>
+          </div>
+        </div>
+        <p class="current-step-text">{{ sectionFileUploadStep || (currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...') }}</p>
+      </div>
+      
+      <!-- Steps List -->
+      <div class="progress-steps-container">
+        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 20 && sectionFileUploadProgress < 50" [class.completed]="sectionFileUploadProgress >= 50">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-icon-wrapper">
+              <span class="step-icon" *ngIf="sectionFileUploadProgress < 20">📤</span>
+              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 20 && sectionFileUploadProgress < 50">⏳</span>
+              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 50">✅</span>
+            </div>
+            <div class="step-info">
+              <h4 class="step-title">{{ currentLang === 'ar' ? 'رفع الملف' : 'Uploading File' }}</h4>
+              <p class="step-description">{{ currentLang === 'ar' ? 'جاري رفع الملف إلى الخادم' : 'Uploading file to server' }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 50 && sectionFileUploadProgress < 70" [class.completed]="sectionFileUploadProgress >= 70">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-icon-wrapper">
+              <span class="step-icon" *ngIf="sectionFileUploadProgress < 50">📄</span>
+              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 50 && sectionFileUploadProgress < 70">⏳</span>
+              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 70">✅</span>
+            </div>
+            <div class="step-info">
+              <h4 class="step-title">{{ currentLang === 'ar' ? 'استخراج النص' : 'Extracting Text' }}</h4>
+              <p class="step-description">{{ currentLang === 'ar' ? 'جاري استخراج النص من الملف' : 'Extracting text from file' }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 70 && sectionFileUploadProgress < 90" [class.completed]="sectionFileUploadProgress >= 90">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-icon-wrapper">
+              <span class="step-icon" *ngIf="sectionFileUploadProgress < 70">🔍</span>
+              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 70 && sectionFileUploadProgress < 90">⏳</span>
+              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 90">✅</span>
+            </div>
+            <div class="step-info">
+              <h4 class="step-title">{{ currentLang === 'ar' ? 'تحليل المحتوى' : 'Analyzing Content' }}</h4>
+              <p class="step-description">{{ currentLang === 'ar' ? 'جاري تحليل المحتوى وفهمه' : 'Analyzing and understanding content' }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 90 && sectionFileUploadProgress < 100" [class.completed]="sectionFileUploadProgress >= 100">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-icon-wrapper">
+              <span class="step-icon" *ngIf="sectionFileUploadProgress < 90">✨</span>
+              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 90 && sectionFileUploadProgress < 100">⏳</span>
+              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 100">✅</span>
+            </div>
+            <div class="step-info">
+              <h4 class="step-title">{{ currentLang === 'ar' ? 'إنشاء الدروس' : 'Generating Lessons' }}</h4>
+              <p class="step-description">{{ currentLang === 'ar' ? 'جاري إنشاء الدروس والمحتوى التعليمي' : 'Generating lessons and educational content' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Error Display -->
+      <div class="progress-error" *ngIf="sectionFileUploadError">
+        <div class="error-icon">⚠️</div>
+        <p class="error-message">{{ sectionFileUploadError }}</p>
+      </div>
     </div>
   </div>
 </div>

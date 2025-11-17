@@ -423,6 +423,21 @@ export class AiBuilderService {
     );
   }
 
+  startQuizAttempt(sectionId: number | string, contentId: number | string): Observable<QuizAttemptResponse> {
+    return this.http.post<QuizAttemptResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/start`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  getQuizAttempt(sectionId: number | string, contentId: number | string): Observable<QuizAttemptResponse> {
+    return this.http.get<QuizAttemptResponse>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/attempt`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   submitQuiz(sectionId: number | string, contentId: number | string, answers: Record<number, any>, shuffleMaps?: Record<number, number[]>): Observable<QuizSubmitResponse> {
     return this.http.post<QuizSubmitResponse>(
       `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/submit`,
@@ -430,6 +445,18 @@ export class AiBuilderService {
       { headers: this.getAuthHeaders() }
     );
   }
+}
+
+// Quiz Attempt Interfaces
+export interface QuizAttemptResponse {
+  success: boolean;
+  attempt: {
+    id: number;
+    started_at: string;
+    time_limit_minutes: number | null;
+    remaining_seconds: number | null;
+    is_expired: boolean;
+  };
 }
 
 // Quiz Interfaces

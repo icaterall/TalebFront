@@ -251,6 +251,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   sectionFileUploadError: string | null = null; // Track section file upload errors
   sectionFileConvertToArabic: boolean = false; // Track if user wants to convert English content to Arabic
   sectionFileSelected: boolean = false; // Track if a file has been selected
+  sectionFileUploadProgress: number = 0; // Track upload progress percentage (0-100)
+  sectionFileUploadStep: string = ''; // Track current upload step
+  sectionFileUploadInterval: any = null; // Interval for progress simulation
   
   // Undo Toast
   showUndoToast: boolean = false; // Track undo toast visibility
@@ -376,15 +379,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   get canContinue(): boolean {
     if (this.currentStep === 1) {
-      // In Step 1, require category AND course name (min 3 chars) AND topic selected
-      const hasTopic = this.selectedTopic.trim().length > 0 || (this.availableTopics.length === 0 && this.subjectSlug.trim().length > 0);
+      // In Step 1, require category AND course name (min 3 chars) - no section required
       return this.selectedCategory !== null && 
-             this.courseName.trim().length >= 3 &&
-             hasTopic;
+             this.courseName.trim().length >= 3;
     }
     if (this.currentStep === 2) {
-      return this.courseName.trim().length >= 3 && 
-             this.subjectSlug.trim().length > 0;
+      return this.courseName.trim().length >= 3;
     }
     return false;
   }
@@ -505,6 +505,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clean up progress interval
+    this.stopProgressSimulation();
     if (this.languageChangeSubscription) {
       this.languageChangeSubscription.unsubscribe();
     }
@@ -854,21 +856,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   onCourseNameChange(): void {
     // Auto-save on change
     if (this.courseName.trim().length >= 3) {
-      // Check if course name matches a title card with topics
-      const titleCard = this.courseTitleSuggestions.find(t => t.title === this.courseName);
-      if (titleCard && titleCard.topics && titleCard.topics.length > 0) {
-        // If matches a title card, use its topics
-        this.availableTopics = titleCard.topics.slice(0, 4);
-        if (!this.selectedTopic && this.availableTopics.length > 0) {
-          this.selectedTopic = this.availableTopics[0];
-          this.subjectSlug = this.selectedTopic;
-        }
-      } else if (!titleCard) {
-        // If manually typed and doesn't match a title card, clear topics
-        this.availableTopics = [];
-        this.selectedTopic = '';
-        this.subjectSlug = '';
-      }
+      // Don't populate topics/sections - sections will be created in step 2
+      this.availableTopics = [];
+      this.selectedTopic = '';
+      this.subjectSlug = '';
       this.saveDraftStep2();
     }
   }
@@ -2657,29 +2648,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // Migrate from legacy contentItems or create first section
-    if (this.selectedTopic || this.subjectSlug) {
-      const sectionName = (this.selectedTopic || this.subjectSlug || '').trim();
-      if (!sectionName) {
-        return;
-      }
-      const firstSection: Section & { available: boolean } = {
-        id: `section-${Date.now()}`,
-        number: 1,
-        sort_order: 1,
-        name: sectionName,
-        content_items: draft.content_items || this.contentItems || [],
-        isCollapsed: this.getSectionCollapseState(`section-1`) ?? false,
-        available: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      this.sections = [firstSection];
-  this.setActiveSection(firstSection.id);
-      this.normalizeSectionOrdering();
-      this.saveSections();
-      this.saveCourseCoverToDraft();
-    }
+    // Don't create default section - user will add sections manually or via file upload
+    this.sections = [];
   }
   
   // Open Add Section Modal
@@ -2731,6 +2701,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (!this.sectionFileUploading) {
       this.showAddSectionModal = false;
       this.sectionFileUploadError = null;
+      this.stopProgressSimulation();
+      this.sectionFileUploadProgress = 0;
+      this.sectionFileUploadStep = '';
     }
   }
 
@@ -2812,8 +2785,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   // Upload Section File and Generate Content
   uploadSectionFile(file: File): void {
+    // Close add section modal and open progress modal
+    this.showAddSectionModal = false;
     this.sectionFileUploading = true;
     this.sectionFileUploadError = null;
+    this.sectionFileUploadProgress = 0;
+    this.sectionFileUploadStep = this.currentLang === 'ar' ? 'جاري رفع الملف...' : 'Uploading file...';
 
     const formData = new FormData();
     formData.append('file', file);
@@ -2825,9 +2802,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         ? 'خطأ: لم يتم العثور على مسودة الدورة'
         : 'Error: Draft course not found';
       this.sectionFileUploading = false;
+      this.sectionFileUploadProgress = 0;
+      this.sectionFileUploadStep = '';
+      this.stopProgressSimulation();
       this.cdr.detectChanges();
       return;
     }
+
+    // Start progress simulation
+    this.startProgressSimulation();
 
     this.http.post<{ success: boolean; section: Section; message?: string }>(
       `${this.baseUrl}/courses/draft/sections/upload-and-generate`,
@@ -2839,6 +2822,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
     ).subscribe({
       next: (response) => {
+        this.stopProgressSimulation();
+        this.sectionFileUploadProgress = 100;
+        this.sectionFileUploadStep = this.currentLang === 'ar' ? 'اكتمل!' : 'Complete!';
+        
         if (response.success && response.section) {
           // Add the new section
           const newSection: Section & { available: boolean } = {
@@ -2854,31 +2841,93 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           // Section content will be loaded automatically when setActiveSection is called
           // The backend returns the section with content_items already populated
           
-          this.showAddSectionModal = false;
-          this.sectionFileUploading = false;
-          this.toastr?.success?.(
-            this.currentLang === 'ar'
-              ? 'تم إنشاء القسم والمحتوى بنجاح'
-              : 'Section and content created successfully'
-          );
-          this.cdr.detectChanges();
+          // Small delay to show completion, then close progress modal
+          setTimeout(() => {
+            this.sectionFileUploading = false;
+            this.sectionFileUploadProgress = 0;
+            this.sectionFileUploadStep = '';
+            this.clearSelectedSectionFile(); // Reset file selection
+            this.toastr?.success?.(
+              this.currentLang === 'ar'
+                ? 'تم إنشاء القسم والمحتوى بنجاح'
+                : 'Section and content created successfully'
+            );
+            this.cdr.detectChanges();
+          }, 1000);
         } else {
           this.sectionFileUploadError = response.message || (this.currentLang === 'ar'
             ? 'فشل في إنشاء القسم'
             : 'Failed to create section');
           this.sectionFileUploading = false;
+          this.sectionFileUploadProgress = 0;
+          this.sectionFileUploadStep = '';
           this.cdr.detectChanges();
         }
       },
       error: (error) => {
+        this.stopProgressSimulation();
         console.error('Error uploading section file:', error);
         this.sectionFileUploadError = error.error?.message || (this.currentLang === 'ar'
           ? 'حدث خطأ أثناء معالجة الملف'
           : 'An error occurred while processing the file');
         this.sectionFileUploading = false;
+        this.sectionFileUploadProgress = 0;
+        this.sectionFileUploadStep = '';
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // Simulate progress with steps
+  startProgressSimulation(): void {
+    const steps = [
+      { progress: 20, step: this.currentLang === 'ar' ? 'جاري رفع الملف...' : 'Uploading file...' },
+      { progress: 50, step: this.currentLang === 'ar' ? 'جاري استخراج النص من الملف...' : 'Extracting text from file...' },
+      { progress: 70, step: this.currentLang === 'ar' ? 'جاري تحليل المحتوى...' : 'Analyzing content...' },
+      { progress: 90, step: this.currentLang === 'ar' ? 'جاري إنشاء الدروس...' : 'Generating lessons...' },
+      { progress: 95, step: this.currentLang === 'ar' ? 'جاري إكمال المعالجة...' : 'Finalizing...' }
+    ];
+
+    let currentStepIndex = 0;
+    let currentProgress = 0;
+
+    this.sectionFileUploadInterval = setInterval(() => {
+      // Move to next step if progress threshold reached
+      if (currentStepIndex < steps.length - 1 && currentProgress >= steps[currentStepIndex].progress) {
+        currentStepIndex++;
+        this.sectionFileUploadStep = steps[currentStepIndex].step;
+      }
+
+      // Increment progress (slower as we approach 95%)
+      if (currentProgress < 95) {
+        if (currentProgress < 20) {
+          currentProgress += 2; // Fast initial progress
+        } else if (currentProgress < 50) {
+          currentProgress += 1.5;
+        } else if (currentProgress < 70) {
+          currentProgress += 1;
+        } else if (currentProgress < 90) {
+          currentProgress += 0.8;
+        } else {
+          currentProgress += 0.3; // Slow down near completion
+        }
+        
+        // Cap at 95% until actual completion
+        if (currentProgress > 95) {
+          currentProgress = 95;
+        }
+        
+        this.sectionFileUploadProgress = Math.round(currentProgress);
+        this.cdr.detectChanges();
+      }
+    }, 300); // Update every 300ms
+  }
+
+  stopProgressSimulation(): void {
+    if (this.sectionFileUploadInterval) {
+      clearInterval(this.sectionFileUploadInterval);
+      this.sectionFileUploadInterval = null;
+    }
   }
 
   hasUnnamedSection(): boolean {
@@ -3669,24 +3718,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         }));
         this.loadingTitles = false;
         
-        // Restore topics if course name matches a title card
-        if (this.courseName) {
-          const titleCard = this.courseTitleSuggestions.find(t => t.title === this.courseName);
-          if (titleCard && titleCard.topics && titleCard.topics.length > 0) {
-            this.availableTopics = titleCard.topics.slice(0, 4);
-            if (!this.selectedTopic || !this.availableTopics.includes(this.selectedTopic)) {
-              // If subjectSlug exists, try to match it
-              if (this.subjectSlug) {
-                const matchingTopic = this.availableTopics.find(t => t === this.subjectSlug);
-                this.selectedTopic = matchingTopic || this.availableTopics[0];
-                this.subjectSlug = this.selectedTopic;
-              } else {
-                this.selectedTopic = this.availableTopics[0];
-                this.subjectSlug = this.selectedTopic;
-              }
-            }
-          }
-        }
+        // Don't populate topics/sections - sections will be created in step 2
+        this.availableTopics = [];
+        this.selectedTopic = '';
+        this.subjectSlug = '';
         
         this.cdr.detectChanges();
         console.log(`Title suggestions loaded (provider: ${res.provider || 'openai'}):`, this.courseTitleSuggestions.length);
@@ -3703,32 +3738,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   selectTitleSuggestion(titleCard: { title: string; rationale?: string; topics?: string[] }): void {
     this.courseName = titleCard.title;
     
-    console.log('Selected title card:', titleCard);
-    console.log('Title card topics:', titleCard.topics);
-    
-    // Set available topics from title card (exactly 4 topics)
-    if (titleCard.topics && Array.isArray(titleCard.topics) && titleCard.topics.length > 0) {
-      this.availableTopics = titleCard.topics.slice(0, 4);
-      console.log('Available topics set:', this.availableTopics);
-      // Don't auto-select - let user choose from the 4 topics
-      // Clear any previously selected topic when a new title is selected
-      this.selectedTopic = '';
-      this.subjectSlug = '';
-    } else {
-      console.warn('No topics found in title card');
-      this.availableTopics = [];
-      this.selectedTopic = '';
-      this.subjectSlug = '';
-    }
+    // Don't populate topics/sections - sections will be created in step 2
+    this.availableTopics = [];
+    this.selectedTopic = '';
+    this.subjectSlug = '';
     
     this.saveDraftStep2();
-    this.cdr.detectChanges(); // Force view update to show topics
-    
-    // Log state after change detection
-    setTimeout(() => {
-      console.log('After selectTitleSuggestion - availableTopics:', this.availableTopics);
-      console.log('After selectTitleSuggestion - selectedTopic:', this.selectedTopic);
-    }, 10);
+    this.cdr.detectChanges();
   }
   
   selectTopic(topic: string): void {
@@ -4149,10 +4165,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   private buildDraftCoursePayload(): CreateDraftCoursePayload {
-    const defaultSectionName = this.sections.length > 0
-      ? this.sections[0].name
-      : (this.selectedTopic || this.subjectSlug || this.courseName || 'Section 1');
-
     const sectionsPayload = this.sections.map((section, index) => ({
       name: section.name,
       position: section.sort_order ?? section.number ?? index + 1,
@@ -4166,10 +4178,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         subject_slug: (this.selectedTopic || this.subjectSlug || this.courseName).trim(),
         category_id: this.selectedCategory?.id,
         country_id: this.student?.country_id ?? undefined,
-        cover_image_url: this.courseCoverPreview ?? undefined,
-        default_section_name: defaultSectionName
+        cover_image_url: this.courseCoverPreview ?? undefined
       },
-      sections: sectionsPayload.length ? sectionsPayload : undefined
+      sections: sectionsPayload.length > 0 ? sectionsPayload : undefined
     };
   }
 
