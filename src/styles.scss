@@ -247,6 +247,46 @@ h4, .h4 { font-size: var(--fs-2xl); }
 h5, .h5 { font-size: var(--fs-xl); }
 h6, .h6 { font-size: var(--fs-lg); }
 
+.ck-content h1,
+.ck.ck-editor__editable h1,
+.ck.ck-editor__editable_inline h1 {
+  font-size: 1.65rem !important;
+  line-height: 1.4 !important;
+  font-weight: 700 !important;
+  margin: 0.5rem 0 0.375rem 0 !important;
+  color: #1e293b !important;
+}
+
+.ck-content h2,
+.ck.ck-editor__editable h2,
+.ck.ck-editor__editable_inline h2 {
+  font-size: 1.45rem !important;
+  line-height: 1.5 !important;
+  font-weight: 700 !important;
+  margin: 0.5rem 0 0.25rem 0 !important;
+  color: #1e293b !important;
+}
+
+.ck-content h3,
+.ck.ck-editor__editable h3,
+.ck.ck-editor__editable_inline h3 {
+  font-size: 1.2rem !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  margin: 0.375rem 0 0.25rem 0 !important;
+  color: #334155 !important;
+}
+
+.ck-content h4,
+.ck.ck-editor__editable h4,
+.ck.ck-editor__editable_inline h4 {
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  margin: 0.375rem 0 0.25rem 0 !important;
+  color: #475569 !important;
+}
+
 p { margin: 0 0 1rem; }
 a { color: var(--primary); text-decoration: none; }
 
