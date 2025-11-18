@@ -1407,6 +1407,23 @@
         <p class="current-step-text">{{ sectionFileUploadStep || (currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...') }}</p>
       </div>
       
+      <!-- Dhikr / Istighfar Display -->
+      <div class="dhikr-container" *ngIf="sectionFileUploading && !sectionFileUploadError">
+        <div class="dhikr-wrapper">
+          <div class="dhikr-text" [@fadeInOut]>
+            {{ currentDhikr }}
+          </div>
+          <div class="dhikr-translation" *ngIf="currentDhikrTranslation">
+            {{ currentDhikrTranslation }}
+          </div>
+        </div>
+        <p class="dhikr-reminder">
+          {{ currentLang === 'ar' 
+            ? '✨ اذكر الله أثناء الانتظار ✨' 
+            : '✨ Remember Allah while waiting ✨' }}
+        </p>
+      </div>
+      
       <!-- Steps List -->
       <div class="progress-steps-container">
         <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 20 && sectionFileUploadProgress < 50" [class.completed]="sectionFileUploadProgress >= 50">

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
@@ -69,7 +70,18 @@ interface ResourceFormState {
   imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule, CKEditorModule, CategorySelectorComponent, CoverImageComponent],
   templateUrl: './student-starter.component.html',
   styleUrls: ['./student-starter.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('600ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('600ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
@@ -253,6 +265,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   sectionFileUploadProgress: number = 0; // Track upload progress percentage (0-100)
   sectionFileUploadStep: string = ''; // Track current upload step
   sectionFileUploadInterval: any = null; // Interval for progress simulation
+  
+  // Dhikr/Istighfar display
+  currentDhikr: string = '';
+  currentDhikrTranslation: string = '';
+  dhikrInterval: any = null;
+  dhikrIndex: number = 0;
   
   // Undo Toast
   showUndoToast: boolean = false; // Track undo toast visibility
@@ -2906,17 +2924,82 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Dhikr/Istighfar phrases for display during loading
+  private getDhikrPhrases() {
+    if (this.currentLang === 'ar') {
+      return [
+        { text: 'سُبْحَانَ اللَّهِ', translation: '' },
+        { text: 'الْحَمْدُ لِلَّهِ', translation: '' },
+        { text: 'لَا إِلَٰهَ إِلَّا اللَّهُ', translation: '' },
+        { text: 'اللَّهُ أَكْبَرُ', translation: '' },
+        { text: 'أَسْتَغْفِرُ اللَّهَ', translation: '' },
+        { text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', translation: '' },
+        { text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ', translation: '' },
+        { text: 'سُبْحَانَ اللَّهِ الْعَظِيمِ', translation: '' }
+      ];
+    } else {
+      return [
+        { text: 'Subhan Allah', translation: 'Glory be to Allah' },
+        { text: 'Alhamdulillah', translation: 'All praise is due to Allah' },
+        { text: 'La ilaha illa Allah', translation: 'There is no god but Allah' },
+        { text: 'Allahu Akbar', translation: 'Allah is the Greatest' },
+        { text: 'Astaghfirullah', translation: 'I seek forgiveness from Allah' },
+        { text: 'La hawla wa la quwwata illa billah', translation: 'There is no power nor strength except with Allah' },
+        { text: 'Subhan Allah wa bihamdihi', translation: 'Glory be to Allah and praise Him' },
+        { text: 'Subhan Allah al-Azeem', translation: 'Glory be to Allah, the Magnificent' }
+      ];
+    }
+  }
+
+  // Start dhikr rotation
+  private startDhikrRotation(): void {
+    this.stopDhikrRotation(); // Clear any existing interval
+    
+    const dhikrPhrases = this.getDhikrPhrases();
+    this.dhikrIndex = 0;
+    
+    // Set initial dhikr
+    this.updateCurrentDhikr(dhikrPhrases[this.dhikrIndex]);
+    
+    // Rotate every 3 seconds
+    this.dhikrInterval = setInterval(() => {
+      this.dhikrIndex = (this.dhikrIndex + 1) % dhikrPhrases.length;
+      this.updateCurrentDhikr(dhikrPhrases[this.dhikrIndex]);
+    }, 3000);
+  }
+  
+  // Update current dhikr display
+  private updateCurrentDhikr(dhikr: { text: string; translation: string }): void {
+    this.currentDhikr = dhikr.text;
+    this.currentDhikrTranslation = dhikr.translation;
+    this.cdr.detectChanges();
+  }
+  
+  // Stop dhikr rotation
+  private stopDhikrRotation(): void {
+    if (this.dhikrInterval) {
+      clearInterval(this.dhikrInterval);
+      this.dhikrInterval = null;
+    }
+    this.currentDhikr = '';
+    this.currentDhikrTranslation = '';
+  }
+
   // Simulate progress with steps
   startProgressSimulation(): void {
     const steps = [
-      { progress: 15, step: this.currentLang === 'ar' ? '📤 جاري رفع الملف...' : '📤 Uploading file...' },
-      { progress: 30, step: this.currentLang === 'ar' ? '📄 استخراج النص من الملف...' : '📄 Extracting text from file...' },
-      { progress: 45, step: this.currentLang === 'ar' ? '🔍 تحليل المحتوى بذكاء...' : '🔍 Intelligently analyzing content...' },
-      { progress: 60, step: this.currentLang === 'ar' ? '🧠 استخراج عنوان القسم الذكي...' : '🧠 Extracting smart section title...' },
-      { progress: 75, step: this.currentLang === 'ar' ? '📚 إنشاء دروس كاملة بمحتوى غني...' : '📚 Generating complete lessons with rich content...' },
-      { progress: 85, step: this.currentLang === 'ar' ? '✨ إضافة الجداول والأمثلة والرموز...' : '✨ Adding tables, examples and emojis...' },
-      { progress: 95, step: this.currentLang === 'ar' ? '💾 حفظ القسم والدروس...' : '💾 Saving section and lessons...' }
+      { progress: 10, step: this.currentLang === 'ar' ? '📤 جاري رفع الملف...' : '📤 Uploading file...' },
+      { progress: 20, step: this.currentLang === 'ar' ? '📄 استخراج النص من الملف...' : '📄 Extracting text from file...' },
+      { progress: 35, step: this.currentLang === 'ar' ? '🔍 تحليل المحتوى وتحديد اللغة...' : '🔍 Analyzing content & detecting language...' },
+      { progress: 50, step: this.currentLang === 'ar' ? '🎯 الخطوة 1: إنشاء عنوان القسم...' : '🎯 Step 1: Creating section title...' },
+      { progress: 65, step: this.currentLang === 'ar' ? '📝 الخطوة 2: إنشاء عناوين الدروس...' : '📝 Step 2: Creating lesson titles...' },
+      { progress: 80, step: this.currentLang === 'ar' ? '📚 الخطوة 3: كتابة محتوى كامل لكل درس...' : '📚 Step 3: Writing full content for each lesson...' },
+      { progress: 90, step: this.currentLang === 'ar' ? '✨ إضافة التنسيق والأمثلة...' : '✨ Adding formatting and examples...' },
+      { progress: 95, step: this.currentLang === 'ar' ? '💾 حفظ القسم والدروس في قاعدة البيانات...' : '💾 Saving section and lessons to database...' }
     ];
+    
+    // Start dhikr rotation when progress starts
+    this.startDhikrRotation();
 
     let currentStepIndex = 0;
     let currentProgress = 0;
@@ -2958,6 +3041,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       clearInterval(this.sectionFileUploadInterval);
       this.sectionFileUploadInterval = null;
     }
+    // Also stop dhikr rotation when progress stops
+    this.stopDhikrRotation();
   }
 
   clearSectionFileError(): void {
