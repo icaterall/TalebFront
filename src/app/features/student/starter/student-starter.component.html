@@ -1326,13 +1326,31 @@
         <button
           type="button"
           class="section-option-btn"
-          (click)="sectionFileInput.click()">
+          (click)="showFileUploadSection()"
+          [class.active]="sectionCreationMode === 'upload'">
           <div class="option-icon">📄</div>
           <div class="option-content">
             <h3>{{ currentLang === 'ar' ? 'رفع ملف' : 'Upload File' }}</h3>
-            <p>{{ currentLang === 'ar' ? 'ارفع ملف Word/PDF/PPT وسيقوم الذكاء الاصطناعي بإنشاء العنوان والمحتوى' : 'Upload Word/PDF/PPT file and AI will generate title and content' }}</p>
+            <p>{{ currentLang === 'ar' ? 'ارفع ملف Word/PDF/PPT وسيقوم الذكاء الاصطناعي بإنشاء المحتوى' : 'Upload Word/PDF/PPT file and AI will generate content' }}</p>
           </div>
         </button>
+
+        <!-- AI Generation Option -->
+        <button
+          type="button"
+          class="section-option-btn"
+          (click)="showAIInstructionSection()"
+          [class.active]="sectionCreationMode === 'ai'">
+          <div class="option-icon">🤖</div>
+          <div class="option-content">
+            <h3>{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'AI Generation' }}</h3>
+            <p>{{ currentLang === 'ar' ? 'اكتب وصفاً أو تعليمات للذكاء الاصطناعي لإنشاء المحتوى' : 'Write description or instructions for AI to generate content' }}</p>
+          </div>
+        </button>
+      </div>
+
+      <!-- File Upload Section -->
+      <div class="section-creation-panel" *ngIf="sectionCreationMode === 'upload'">
         <input
           #sectionFileInput
           id="sectionFileInput"
@@ -1341,12 +1359,78 @@
           (change)="onSectionFileSelected($event)"
           style="display: none;"
         />
+        <button class="upload-trigger-btn" (click)="sectionFileInput.click()">
+          <span class="upload-icon">📤</span>
+          <span>{{ currentLang === 'ar' ? 'اختر ملف للرفع' : 'Choose file to upload' }}</span>
+        </button>
         <div class="section-upload-hint">
           <p>
             {{ currentLang === 'ar'
-              ? '📝 ارفع ملفًا يحتوي على قسم واحد فقط (بحد أقصى 2000 كلمة). إذا كان الملف أطول، رجاءً قسّمه إلى ملفات لكل قسم ليعمل الذكاء الاصطناعي بدقة.'
-              : '📝 Please upload one section per file (max 2,000 words). If your file is longer, split it into separate files per section so AI can work accurately.' }}
+              ? '📝 ارفع ملفًا يحتوي على قسم واحد فقط (بحد أقصى 2000 كلمة).'
+              : '📝 Upload one section per file (max 2,000 words).' }}
           </p>
+          <div class="ai-upload-tips">
+            <h4>{{ currentLang === 'ar' ? '💡 نصائح لرفع الملفات:' : '💡 File Upload Tips:' }}</h4>
+            <ul>
+              <li>{{ currentLang === 'ar' ? 'استخدم لغة واحدة فقط في الملف' : 'Use a single language in the file' }}</li>
+              <li>{{ currentLang === 'ar' ? 'أضف عناوين واضحة للأقسام' : 'Add clear section headings' }}</li>
+              <li>{{ currentLang === 'ar' ? 'نظم الأفكار في نقاط' : 'Organize ideas in bullet points' }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Instruction Section -->
+      <div class="section-creation-panel" *ngIf="sectionCreationMode === 'ai'">
+        <div class="ai-instruction-form">
+          <label class="instruction-label">
+            {{ currentLang === 'ar' ? 'اكتب تعليماتك للذكاء الاصطناعي:' : 'Write your instructions to AI:' }}
+          </label>
+          <textarea
+            class="ai-instruction-input"
+            [(ngModel)]="aiInstructionText"
+            [placeholder]="currentLang === 'ar' 
+              ? 'مثال: أريد قسماً عن الفيزياء الكمية للطلاب الجامعيين، يتضمن 3 دروس عن المفاهيم الأساسية والتطبيقات العملية والتجارب الشهيرة...' 
+              : 'Example: I want a section about quantum physics for university students, including 3 lessons about basic concepts, practical applications, and famous experiments...'"
+            rows="6">
+          </textarea>
+          
+          <div class="ai-instruction-tips">
+            <h4>{{ currentLang === 'ar' ? '🎯 للحصول على أفضل النتائج من الذكاء الاصطناعي:' : '🎯 For best AI results:' }}</h4>
+            <ul>
+              <li>{{ currentLang === 'ar' ? '📚 حدد الموضوع بوضوح والمستوى الدراسي المستهدف' : '📚 Clearly specify the topic and target education level' }}</li>
+              <li>{{ currentLang === 'ar' ? '🔢 اذكر عدد الدروس المطلوبة (1-3 دروس)' : '🔢 Mention number of lessons needed (1-3 lessons)' }}</li>
+              <li>{{ currentLang === 'ar' ? '📝 حدد النقاط الرئيسية التي تريد تغطيتها' : '📝 Specify key points you want covered' }}</li>
+              <li>{{ currentLang === 'ar' ? '🌍 اذكر اللغة المطلوبة (عربي أو إنجليزي)' : '🌍 Mention the required language (Arabic or English)' }}</li>
+              <li>{{ currentLang === 'ar' ? '💡 أضف أمثلة أو أنشطة تريد تضمينها' : '💡 Add examples or activities you want included' }}</li>
+              <li>{{ currentLang === 'ar' ? '🎨 اطلب جداول أو رسوم بيانية إذا لزم الأمر' : '🎨 Request tables or diagrams if needed' }}</li>
+            </ul>
+            
+            <div class="example-prompts">
+              <h5>{{ currentLang === 'ar' ? '✨ أمثلة على التعليمات الجيدة:' : '✨ Good instruction examples:' }}</h5>
+              <div class="prompt-examples">
+                <div class="prompt-example" (click)="useExamplePrompt(1)">
+                  <span class="example-icon">📖</span>
+                  <p>{{ currentLang === 'ar' 
+                    ? 'قسم عن التسويق الرقمي للمبتدئين، 3 دروس: أساسيات التسويق الإلكتروني، وسائل التواصل الاجتماعي، قياس الأداء. أضف أمثلة عملية وجداول مقارنة.'
+                    : 'Section about digital marketing for beginners, 3 lessons: e-marketing basics, social media, performance metrics. Add practical examples and comparison tables.' }}</p>
+                </div>
+                <div class="prompt-example" (click)="useExamplePrompt(2)">
+                  <span class="example-icon">🔬</span>
+                  <p>{{ currentLang === 'ar'
+                    ? 'درس واحد شامل عن التنفس الخلوي لطلاب الثانوية، يشرح المراحل الثلاث بالتفصيل مع رسوم توضيحية وأسئلة تطبيقية.'
+                    : 'One comprehensive lesson about cellular respiration for high school, explaining the three stages in detail with diagrams and practice questions.' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            class="generate-ai-content-btn"
+            (click)="generateAIContent()"
+            [disabled]="!aiInstructionText || aiInstructionText.trim().length < 20">
+            <span>{{ currentLang === 'ar' ? '✨ إنشاء المحتوى بالذكاء الاصطناعي' : '✨ Generate Content with AI' }}</span>
+          </button>
         </div>
       </div>
 

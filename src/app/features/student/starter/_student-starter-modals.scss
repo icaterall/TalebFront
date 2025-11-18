@@ -2486,6 +2486,16 @@
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
       }
       
+      &.active {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-color: #3b82f6;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+        
+        .option-icon {
+          transform: scale(1.1);
+        }
+      }
+      
       .option-icon {
         font-size: 2.25rem;
         flex-shrink: 0;
@@ -2573,6 +2583,44 @@
     }
   }
   
+  .section-creation-panel {
+    margin-top: 1.5rem;
+    animation: fadeIn 0.3s ease-in-out;
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .upload-trigger-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 2px dashed #3b82f6;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e40af;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      
+      .upload-icon {
+        font-size: 1.5rem;
+      }
+      
+      &:hover {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%);
+        border-color: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      }
+    }
+  }
+  
   .section-upload-hint {
     margin-top: 0.75rem;
     padding: 0.9rem 1rem;
@@ -2582,6 +2630,168 @@
     font-size: 0.9rem;
     line-height: 1.5;
     color: #0f172a;
+
+    .ai-upload-tips {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+
+      h4 {
+        margin: 0 0 6px 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e1b4b;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+        font-size: 13px;
+        color: #1e293b;
+        line-height: 1.45;
+
+        li {
+          margin-bottom: 4px;
+        }
+      }
+    }
+  }
+  
+  // AI Instruction Form Styles
+  .ai-instruction-form {
+    .instruction-label {
+      display: block;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+    }
+    
+    .ai-instruction-input {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      resize: vertical;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      
+      &::placeholder {
+        color: #94a3b8;
+        font-style: italic;
+      }
+    }
+    
+    .ai-instruction-tips {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 10px;
+      
+      h4 {
+        margin: 0 0 0.75rem 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #92400e;
+      }
+      
+      ul {
+        margin: 0 0 1rem 0;
+        padding-left: 1.5rem;
+        
+        li {
+          margin-bottom: 0.5rem;
+          color: #78350f;
+          font-size: 0.875rem;
+          line-height: 1.5;
+        }
+      }
+      
+      .example-prompts {
+        margin-top: 1rem;
+        
+        h5 {
+          margin: 0 0 0.75rem 0;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          color: #92400e;
+        }
+        
+        .prompt-examples {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          
+          .prompt-example {
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            
+            .example-icon {
+              font-size: 1.25rem;
+              flex-shrink: 0;
+            }
+            
+            p {
+              margin: 0;
+              font-size: 0.8125rem;
+              color: #451a03;
+              line-height: 1.5;
+              flex: 1;
+            }
+            
+            &:hover {
+              background: #fffbeb;
+              border-color: #fb923c;
+              transform: translateX(4px);
+            }
+          }
+        }
+      }
+    }
+    
+    .generate-ai-content-btn {
+      width: 100%;
+      margin-top: 1.25rem;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #cbd5e1;
+      }
+    }
   }
 
   .section-upload-actions {

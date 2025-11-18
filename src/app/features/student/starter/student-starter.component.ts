@@ -259,12 +259,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Add Section Modal
   showAddSectionModal: boolean = false; // Track add section modal visibility
+  sectionCreationMode: 'upload' | 'ai' | null = null; // Track current section creation mode
   sectionFileUploading: boolean = false; // Track section file upload state
   sectionFileUploadError: string | null = null; // Track section file upload errors
   sectionFileSelected: boolean = false; // Track if a file has been selected
   sectionFileUploadProgress: number = 0; // Track upload progress percentage (0-100)
   sectionFileUploadStep: string = ''; // Track current upload step
   sectionFileUploadInterval: any = null; // Interval for progress simulation
+  
+  // AI Instruction Generation
+  aiInstructionText: string = '';
+  aiGenerating: boolean = false;
   
   // Dhikr/Istighfar display
   currentDhikr: string = '';
@@ -2692,12 +2697,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Open Add Section Modal
   openAddSectionModal(): void {
-    // Block creating a new section if there is any unnamed section
-    const unnamed = this.sections.find(s => !s.name || !s.name.trim());
-    if (unnamed) {
-      this.editingSectionId = unnamed.id;
-      this.editingSectionValue = unnamed.name || '';
-      this.editingSection = true;
+    // Check if there's an unnamed section
+    if (this.sections.some(section => !section.name || section.name.trim() === '')) {
       this.cdr.detectChanges();
       this.toastr?.warning?.(
         this.currentLang === 'ar'
@@ -2707,8 +2708,59 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
     this.showAddSectionModal = true;
+    this.sectionCreationMode = null; // Reset mode selection
     this.sectionFileUploadError = null;
     this.sectionFileSelected = false; // Reset file selection
+    this.aiInstructionText = ''; // Reset AI instruction text
+  }
+  
+  // Show file upload section
+  showFileUploadSection(): void {
+    this.sectionCreationMode = 'upload';
+    this.aiInstructionText = ''; // Clear AI instruction when switching
+    this.cdr.detectChanges();
+  }
+  
+  // Show AI instruction section
+  showAIInstructionSection(): void {
+    this.sectionCreationMode = 'ai';
+    this.sectionFileSelected = false; // Clear file selection when switching
+    this.clearSelectedSectionFile();
+    this.cdr.detectChanges();
+  }
+  
+  // Use example prompt
+  useExamplePrompt(exampleNumber: number): void {
+    if (exampleNumber === 1) {
+      this.aiInstructionText = this.currentLang === 'ar'
+        ? 'قسم عن التسويق الرقمي للمبتدئين، 3 دروس: أساسيات التسويق الإلكتروني، وسائل التواصل الاجتماعي، قياس الأداء. أضف أمثلة عملية وجداول مقارنة.'
+        : 'Section about digital marketing for beginners, 3 lessons: e-marketing basics, social media, performance metrics. Add practical examples and comparison tables.';
+    } else if (exampleNumber === 2) {
+      this.aiInstructionText = this.currentLang === 'ar'
+        ? 'درس واحد شامل عن التنفس الخلوي لطلاب الثانوية، يشرح المراحل الثلاث بالتفصيل مع رسوم توضيحية وأسئلة تطبيقية.'
+        : 'One comprehensive lesson about cellular respiration for high school, explaining the three stages in detail with diagrams and practice questions.';
+    }
+    this.cdr.detectChanges();
+  }
+  
+  // Generate AI content from instructions
+  async generateAIContent(): Promise<void> {
+    if (!this.aiInstructionText || this.aiInstructionText.trim().length < 20) {
+      this.toastr?.warning?.(
+        this.currentLang === 'ar'
+          ? 'يرجى كتابة تعليمات واضحة (20 حرف على الأقل)'
+          : 'Please write clear instructions (at least 20 characters)'
+      );
+      return;
+    }
+    
+    // Will implement AI generation logic here
+    console.log('Generating AI content with instructions:', this.aiInstructionText);
+    this.toastr?.info?.(
+      this.currentLang === 'ar'
+        ? 'ميزة إنشاء المحتوى بالذكاء الاصطناعي قيد التطوير'
+        : 'AI content generation feature is under development'
+    );
   }
   
   // Clear selected file
