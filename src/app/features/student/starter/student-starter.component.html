@@ -692,30 +692,36 @@
     <div class="modal-overlay ai-hint-overlay" *ngIf="showAIHintModal" (click)="cancelAIHint()" style="z-index: 10001;">
       <div class="modal-content ai-hint-modal" (click)="$event.stopPropagation()" style="z-index: 10001;">
         <div class="modal-header">
-          <h3>{{ currentLang === 'ar' ? '🤖 تلميح للذكاء الاصطناعي' : '🤖 AI Hint (Optional)' }}</h3>
+          <h3>{{ currentLang === 'ar' ? '🤖 تلميح للذكاء الاصطناعي' : '🤖 AI Hint' }}</h3>
           <button type="button" class="modal-close-btn" (click)="cancelAIHint()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
         </div>
         <div class="modal-body">
           <div class="hint-field">
-            <label class="field-label">{{ currentLang === 'ar' ? 'أضف تلميحاً (اختياري)' : 'Add a hint (optional)' }}</label>
+            <label class="field-label">
+              {{ viewingContentItem?.meta?.['hint'] 
+                ? (currentLang === 'ar' ? '🤖 تلميح من الذكاء الاصطناعي (يمكنك التعديل)' : '🤖 AI-Generated Hint (You can modify)')
+                : (currentLang === 'ar' ? 'أضف تلميحاً للذكاء الاصطناعي' : 'Add hint for AI') }}
+            </label>
             <textarea 
               class="hint-input"
+              [class.ai-generated]="viewingContentItem?.meta?.['hint']"
               [(ngModel)]="aiHint"
               [placeholder]="currentLang === 'ar' ? 'مثال: ركز على الأساسيات، استخدم أمثلة عملية، اجعل المحتوى مناسباً للمبتدئين...' : 'Example: Focus on fundamentals, use practical examples, make content suitable for beginners...'"
               [dir]="isRTL ? 'rtl' : 'ltr'"
               rows="4"
-              maxlength="500"></textarea>
+              maxlength="250"></textarea>
             <div class="field-help">
-              {{ currentLang === 'ar' ? 'أضف أي توجيهات أو متطلبات إضافية لتحسين جودة المحتوى المولّد' : 'Add any additional guidance or requirements to improve the quality of generated content' }}
+              {{ viewingContentItem?.meta?.['hint']
+                ? (currentLang === 'ar' ? 'هذا التلميح تم إنشاؤه بواسطة الذكاء الاصطناعي (50 كلمة كحد أقصى). يمكنك تعديله أو إضافة المزيد من التفاصيل.' : 'This hint was AI-generated (max 50 words). You can modify it or add more details.')
+                : (currentLang === 'ar' ? 'التلميح مطلوب لتوجيه الذكاء الاصطناعي لإنشاء محتوى مناسب (50 كلمة كحد أقصى)' : 'Hint is required to guide AI for appropriate content generation (max 50 words)') }}
             </div>
           </div>
           
           <div class="hint-actions">
-            <button type="button" class="btn-skip" (click)="proceedWithAIGeneration(false)">
-              {{ currentLang === 'ar' ? 'تجاهل والمتابعة' : 'Skip & Continue' }}
-            </button>
-            <button type="button" class="btn-continue" (click)="proceedWithAIGeneration(true)">
-              {{ currentLang === 'ar' ? 'متابعة بالتلميح' : 'Continue with Hint' }}
+            <button type="button" class="btn-continue" 
+              [disabled]="!aiHint || !aiHint.trim()"
+              (click)="proceedWithAIGeneration(true)">
+              {{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}
             </button>
           </div>
         </div>
@@ -743,18 +749,22 @@
           </div>
           
           <div class="editor-toolbar">
-            <button 
-              type="button"
-              class="btn-generate-ai"
-              [disabled]="generatingWithAI || !subsectionTitle || !subsectionTitle.trim()"
-              (click)="generateTextWithAI()">
-              <span class="btn-icon">🤖</span>
-              <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء محتوى بالذكاء الاصطناعي' : 'Generate Text with AI' }}</span>
-              <span class="btn-hint">{{ currentLang === 'ar' ? '(سوف يستغرق دقيقة)' : '(Will take a minute)' }}</span>
-            </button>
-            <div class="ai-generating" *ngIf="generatingWithAI">
-              <span class="spinner"></span>
-              <span>{{ currentLang === 'ar' ? 'جاري الاقتراح...' : 'Suggesting...' }}</span>
+            <div class="ai-button-group">
+              <button 
+                type="button"
+                class="btn-generate-ai"
+                [disabled]="generatingWithAI || !subsectionTitle || !subsectionTitle.trim()"
+                (click)="generateTextWithAI()">
+                <span class="btn-icon">🤖</span>
+                <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء محتوى بالذكاء الاصطناعي' : 'Generate Text with AI' }}</span>
+                <span class="btn-hint">{{ currentLang === 'ar' ? '(سوف يستغرق دقيقة)' : '(Will take a minute)' }}</span>
+              </button>
+              <div class="ai-generating-dhikr" *ngIf="generatingWithAI">
+                <div class="dhikr-badge">
+                  <span class="dhikr-icon">✨</span>
+                  <span class="dhikr-phrase">{{ currentDhikr }}</span>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -1399,8 +1409,8 @@
             class="ai-instruction-input"
             [(ngModel)]="aiInstructionText"
             [placeholder]="currentLang === 'ar' 
-              ? 'مثال: أريد قسماً عن الفيزياء الكمية للطلاب الجامعيين، يتضمن 3 دروس عن المفاهيم الأساسية والتطبيقات العملية والتجارب الشهيرة...' 
-              : 'Example: I want a section about quantum physics for university students, including 3 lessons about basic concepts, practical applications, and famous experiments...'"
+              ? 'مثال: أريد قسماً عن الفيزياء الكمية للطلاب الجامعيين، يتضمن دروس عن المفاهيم الأساسية والتطبيقات العملية والتجارب الشهيرة...' 
+              : 'Example: I want a section about quantum physics for university students, including lessons about basic concepts, practical applications, and famous experiments...'"
             rows="6">
           </textarea>
           
@@ -1408,30 +1418,12 @@
             <h4>{{ currentLang === 'ar' ? '🎯 للحصول على أفضل النتائج من الذكاء الاصطناعي:' : '🎯 For best AI results:' }}</h4>
             <ul>
               <li>{{ currentLang === 'ar' ? '📚 حدد الموضوع بوضوح والمستوى الدراسي المستهدف' : '📚 Clearly specify the topic and target education level' }}</li>
-              <li>{{ currentLang === 'ar' ? '🔢 اذكر عدد الدروس المطلوبة (1-3 دروس)' : '🔢 Mention number of lessons needed (1-3 lessons)' }}</li>
+              <li>{{ currentLang === 'ar' ? '🔢 اذكر عدد الدروس المطلوبة (1-10 دروس)' : '🔢 Mention number of lessons needed (1-10 lessons)' }}</li>
               <li>{{ currentLang === 'ar' ? '📝 حدد النقاط الرئيسية التي تريد تغطيتها' : '📝 Specify key points you want covered' }}</li>
               <li>{{ currentLang === 'ar' ? '🌍 اذكر اللغة المطلوبة (عربي أو إنجليزي)' : '🌍 Mention the required language (Arabic or English)' }}</li>
               <li>{{ currentLang === 'ar' ? '💡 أضف أمثلة أو أنشطة تريد تضمينها' : '💡 Add examples or activities you want included' }}</li>
               <li>{{ currentLang === 'ar' ? '🎨 اطلب جداول أو رسوم بيانية إذا لزم الأمر' : '🎨 Request tables or diagrams if needed' }}</li>
             </ul>
-            
-            <div class="example-prompts">
-              <h5>{{ currentLang === 'ar' ? '✨ أمثلة على التعليمات الجيدة:' : '✨ Good instruction examples:' }}</h5>
-              <div class="prompt-examples">
-                <div class="prompt-example" (click)="useExamplePrompt(1)">
-                  <span class="example-icon">📖</span>
-                  <p>{{ currentLang === 'ar' 
-                    ? 'قسم عن التسويق الرقمي للمبتدئين، 3 دروس: أساسيات التسويق الإلكتروني، وسائل التواصل الاجتماعي، قياس الأداء. أضف أمثلة عملية وجداول مقارنة.'
-                    : 'Section about digital marketing for beginners, 3 lessons: e-marketing basics, social media, performance metrics. Add practical examples and comparison tables.' }}</p>
-                </div>
-                <div class="prompt-example" (click)="useExamplePrompt(2)">
-                  <span class="example-icon">🔬</span>
-                  <p>{{ currentLang === 'ar'
-                    ? 'درس واحد شامل عن التنفس الخلوي لطلاب الثانوية، يشرح المراحل الثلاث بالتفصيل مع رسوم توضيحية وأسئلة تطبيقية.'
-                    : 'One comprehensive lesson about cellular respiration for high school, explaining the three stages in detail with diagrams and practice questions.' }}</p>
-                </div>
-              </div>
-            </div>
           </div>
           
           <button 
@@ -1477,14 +1469,18 @@
   </div>
 </div>
 
-<!-- File Upload Progress Modal (Separate Modal) -->
+<!-- Progress Modal (Used for both File Upload and AI Generation) -->
 <div class="modal-overlay file-upload-progress-overlay" *ngIf="sectionFileUploading || sectionFileUploadError">
   <div class="modal-content file-upload-progress-modal" [dir]="isRTL ? 'rtl' : 'ltr'">
     <div class="progress-modal-header">
       <h2 class="progress-modal-title">
         {{ sectionFileUploadError
-          ? (currentLang === 'ar' ? 'تعذر معالجة الملف' : 'File Processing Issue')
-          : (currentLang === 'ar' ? 'جاري معالجة الملف' : 'Processing File') }}
+          ? (aiGenerating 
+            ? (currentLang === 'ar' ? 'تعذر إنشاء المحتوى' : 'Content Generation Issue')
+            : (currentLang === 'ar' ? 'تعذر معالجة الملف' : 'File Processing Issue'))
+          : (aiGenerating
+            ? (currentLang === 'ar' ? '🤖 جاري إنشاء المحتوى بالذكاء الاصطناعي' : '🤖 AI Content Generation')
+            : (currentLang === 'ar' ? 'جاري معالجة الملف' : 'Processing File')) }}
       </h2>
       <div class="progress-percentage-badge" *ngIf="!sectionFileUploadError">{{ sectionFileUploadProgress }}%</div>
     </div>
@@ -1519,65 +1515,100 @@
       
       <!-- Steps List -->
       <div class="progress-steps-container">
-        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 20 && sectionFileUploadProgress < 50" [class.completed]="sectionFileUploadProgress >= 50">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <div class="step-icon-wrapper">
-              <span class="step-icon" *ngIf="sectionFileUploadProgress < 20">📤</span>
-              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 20 && sectionFileUploadProgress < 50">⏳</span>
-              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 50">✅</span>
-            </div>
-            <div class="step-info">
-              <h4 class="step-title">{{ currentLang === 'ar' ? 'رفع الملف' : 'Uploading File' }}</h4>
-              <p class="step-description">{{ currentLang === 'ar' ? 'جاري رفع الملف إلى الخادم' : 'Uploading file to server' }}</p>
+        <!-- File Upload Steps (shown when not AI generation) -->
+        <ng-container *ngIf="!aiGenerating">
+          <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 20 && sectionFileUploadProgress < 50" [class.completed]="sectionFileUploadProgress >= 50">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-icon-wrapper">
+                <span class="step-icon" *ngIf="sectionFileUploadProgress < 20">📤</span>
+                <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 20 && sectionFileUploadProgress < 50">⏳</span>
+                <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 50">✅</span>
+              </div>
+              <div class="step-info">
+                <h4 class="step-title">{{ currentLang === 'ar' ? 'رفع الملف' : 'Uploading File' }}</h4>
+                <p class="step-description">{{ currentLang === 'ar' ? 'جاري رفع الملف إلى الخادم' : 'Uploading file to server' }}</p>
+              </div>
             </div>
           </div>
-        </div>
+          
+          <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 50 && sectionFileUploadProgress < 70" [class.completed]="sectionFileUploadProgress >= 70">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-icon-wrapper">
+                <span class="step-icon" *ngIf="sectionFileUploadProgress < 50">📄</span>
+                <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 50 && sectionFileUploadProgress < 70">⏳</span>
+                <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 70">✅</span>
+              </div>
+              <div class="step-info">
+                <h4 class="step-title">{{ currentLang === 'ar' ? 'استخراج النص' : 'Extracting Text' }}</h4>
+                <p class="step-description">{{ currentLang === 'ar' ? 'جاري استخراج النص من الملف' : 'Extracting text from file' }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 70 && sectionFileUploadProgress < 90" [class.completed]="sectionFileUploadProgress >= 90">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-icon-wrapper">
+                <span class="step-icon" *ngIf="sectionFileUploadProgress < 70">🔍</span>
+                <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 70 && sectionFileUploadProgress < 90">⏳</span>
+                <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 90">✅</span>
+              </div>
+              <div class="step-info">
+                <h4 class="step-title">{{ currentLang === 'ar' ? 'تحليل المحتوى' : 'Analyzing Content' }}</h4>
+                <p class="step-description">{{ currentLang === 'ar' ? 'جاري تحليل المحتوى وفهمه' : 'Analyzing and understanding content' }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 90 && sectionFileUploadProgress < 100" [class.completed]="sectionFileUploadProgress >= 100">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-icon-wrapper">
+                <span class="step-icon" *ngIf="sectionFileUploadProgress < 90">✨</span>
+                <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 90 && sectionFileUploadProgress < 100">⏳</span>
+                <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 100">✅</span>
+              </div>
+              <div class="step-info">
+                <h4 class="step-title">{{ currentLang === 'ar' ? 'إنشاء الدروس' : 'Generating Lessons' }}</h4>
+                <p class="step-description">{{ currentLang === 'ar' ? 'جاري إنشاء الدروس والمحتوى التعليمي' : 'Generating lessons and educational content' }}</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
         
-        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 50 && sectionFileUploadProgress < 70" [class.completed]="sectionFileUploadProgress >= 70">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <div class="step-icon-wrapper">
-              <span class="step-icon" *ngIf="sectionFileUploadProgress < 50">📄</span>
-              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 50 && sectionFileUploadProgress < 70">⏳</span>
-              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 70">✅</span>
-            </div>
-            <div class="step-info">
-              <h4 class="step-title">{{ currentLang === 'ar' ? 'استخراج النص' : 'Extracting Text' }}</h4>
-              <p class="step-description">{{ currentLang === 'ar' ? 'جاري استخراج النص من الملف' : 'Extracting text from file' }}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 70 && sectionFileUploadProgress < 90" [class.completed]="sectionFileUploadProgress >= 90">
-          <div class="step-number">3</div>
-          <div class="step-content">
-            <div class="step-icon-wrapper">
-              <span class="step-icon" *ngIf="sectionFileUploadProgress < 70">🔍</span>
-              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 70 && sectionFileUploadProgress < 90">⏳</span>
-              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 90">✅</span>
-            </div>
-            <div class="step-info">
-              <h4 class="step-title">{{ currentLang === 'ar' ? 'تحليل المحتوى' : 'Analyzing Content' }}</h4>
-              <p class="step-description">{{ currentLang === 'ar' ? 'جاري تحليل المحتوى وفهمه' : 'Analyzing and understanding content' }}</p>
+        <!-- AI Generation Steps (shown only during AI generation, hide completed steps) -->
+        <ng-container *ngIf="aiGenerating">
+          <!-- Step 1: Generate Section Title (shown only when active) -->
+          <div class="progress-step-card" *ngIf="aiGenerationStep === 1" [class.active]="true">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-icon-wrapper">
+                <span class="step-icon loading">⏳</span>
+              </div>
+              <div class="step-info">
+                <h4 class="step-title">{{ currentLang === 'ar' ? 'إنشاء عنوان القسم' : 'Creating Section Title' }}</h4>
+                <p class="step-description">{{ currentLang === 'ar' ? 'جاري إنشاء عنوان مناسب للقسم' : 'Creating an appropriate section title' }}</p>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div class="progress-step-card" [class.active]="sectionFileUploadProgress >= 90 && sectionFileUploadProgress < 100" [class.completed]="sectionFileUploadProgress >= 100">
-          <div class="step-number">4</div>
-          <div class="step-content">
-            <div class="step-icon-wrapper">
-              <span class="step-icon" *ngIf="sectionFileUploadProgress < 90">✨</span>
-              <span class="step-icon loading" *ngIf="sectionFileUploadProgress >= 90 && sectionFileUploadProgress < 100">⏳</span>
-              <span class="step-icon completed" *ngIf="sectionFileUploadProgress >= 100">✅</span>
-            </div>
-            <div class="step-info">
-              <h4 class="step-title">{{ currentLang === 'ar' ? 'إنشاء الدروس' : 'Generating Lessons' }}</h4>
-              <p class="step-description">{{ currentLang === 'ar' ? 'جاري إنشاء الدروس والمحتوى التعليمي' : 'Generating lessons and educational content' }}</p>
+          
+          <!-- Step 2: Generate Lesson Titles (shown only when active) -->
+          <div class="progress-step-card" *ngIf="aiGenerationStep === 2" [class.active]="true">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-icon-wrapper">
+                <span class="step-icon loading">⏳</span>
+              </div>
+              <div class="step-info">
+                <h4 class="step-title">{{ currentLang === 'ar' ? 'إنشاء عناوين الدروس' : 'Creating Lesson Titles' }}</h4>
+                <p class="step-description">{{ currentLang === 'ar' ? 'جاري إنشاء عناوين مناسبة للدروس' : 'Creating appropriate lesson titles' }}</p>
+              </div>
             </div>
           </div>
-        </div>
+          
+        </ng-container>
       </div>
       
       <!-- Error Display -->

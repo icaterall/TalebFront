@@ -270,12 +270,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // AI Instruction Generation
   aiInstructionText: string = '';
   aiGenerating: boolean = false;
+  aiGenerationStep: 1 | 2 | null = null; // Track which AI generation step is active (1, 2 only - no content generation)
+  aiGenerationCurrentLesson: number = 0; // Current lesson being generated (1-based)
+  aiGenerationTotalLessons: number = 0; // Total number of lessons to generate
   
   // Dhikr/Istighfar display
   currentDhikr: string = '';
   currentDhikrTranslation: string = '';
   dhikrInterval: any = null;
   dhikrIndex: number = 0;
+  textEditorDhikrInterval: any = null;
   
   // Undo Toast
   showUndoToast: boolean = false; // Track undo toast visibility
@@ -1886,7 +1890,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
     // Show hint modal first
     this.pendingAiAction = 'textContent';
-    this.aiHint = '';
+    
+    // Pre-fill hint from meta field if it exists (max 50 words from AI generation)
+    if (this.viewingContentItem?.meta && typeof this.viewingContentItem.meta === 'object') {
+      const meta = this.viewingContentItem.meta as any;
+      if (meta.hint && typeof meta.hint === 'string') {
+        this.aiHint = meta.hint;
+      } else {
+        this.aiHint = '';
+      }
+    } else {
+      this.aiHint = '';
+    }
+    
     this.showAIHintModal = true;
   }
   
@@ -1908,6 +1924,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (this.generatingWithAI) return;
     
     this.generatingWithAI = true;
+    this.startTextEditorDhikrRotation();
     
     const grade = this.stageName || '';
     const country = this.countryName || '';
@@ -1993,12 +2010,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.textContent = response.content || '<p>No content generated.</p>';
         this.generatingWithAI = false;
+        this.stopTextEditorDhikrRotation();
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('AI text generation error:', error);
         this.textContent = `<p>${this.currentLang === 'ar' ? 'فشل في إنشاء المحتوى. يرجى المحاولة مرة أخرى.' : 'Failed to generate content. Please try again.'}</p>`;
         this.generatingWithAI = false;
+        this.stopTextEditorDhikrRotation();
         this.cdr.detectChanges();
       }
     });
@@ -2729,20 +2748,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
   
-  // Use example prompt
-  useExamplePrompt(exampleNumber: number): void {
-    if (exampleNumber === 1) {
-      this.aiInstructionText = this.currentLang === 'ar'
-        ? 'قسم عن التسويق الرقمي للمبتدئين، 3 دروس: أساسيات التسويق الإلكتروني، وسائل التواصل الاجتماعي، قياس الأداء. أضف أمثلة عملية وجداول مقارنة.'
-        : 'Section about digital marketing for beginners, 3 lessons: e-marketing basics, social media, performance metrics. Add practical examples and comparison tables.';
-    } else if (exampleNumber === 2) {
-      this.aiInstructionText = this.currentLang === 'ar'
-        ? 'درس واحد شامل عن التنفس الخلوي لطلاب الثانوية، يشرح المراحل الثلاث بالتفصيل مع رسوم توضيحية وأسئلة تطبيقية.'
-        : 'One comprehensive lesson about cellular respiration for high school, explaining the three stages in detail with diagrams and practice questions.';
-    }
-    this.cdr.detectChanges();
-  }
-  
   // Generate AI content from instructions
   async generateAIContent(): Promise<void> {
     if (!this.aiInstructionText || this.aiInstructionText.trim().length < 20) {
@@ -2753,14 +2758,202 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       );
       return;
     }
+
+    if (!this.draftCourseId) {
+      this.toastr?.error?.(
+        this.currentLang === 'ar'
+          ? 'لم يتم العثور على معرف الدورة'
+          : 'Course ID not found'
+      );
+      return;
+    }
+
+    // Start generation process
+    this.aiGenerating = true;
+    this.sectionFileUploading = true; // Reuse the upload progress UI
+    this.sectionFileUploadError = null;
+    this.sectionFileUploadProgress = 0;
+    this.sectionFileUploadStep = this.currentLang === 'ar' 
+      ? '🤖 جاري إنشاء المحتوى بالذكاء الاصطناعي...'
+      : '🤖 Creating content with AI...';
     
-    // Will implement AI generation logic here
-    console.log('Generating AI content with instructions:', this.aiInstructionText);
-    this.toastr?.info?.(
-      this.currentLang === 'ar'
-        ? 'ميزة إنشاء المحتوى بالذكاء الاصطناعي قيد التطوير'
-        : 'AI content generation feature is under development'
-    );
+    // Start progress simulation for AI generation
+    this.startAIProgressSimulation();
+
+    const requestData = {
+      courseId: this.draftCourseId,
+      instructions: this.aiInstructionText.trim()
+    };
+
+    this.http.post<any>(`${this.baseUrl}/courses/draft/sections/ai-generate`, requestData).subscribe({
+      next: (response) => {
+        this.stopProgressSimulation();
+        console.log('AI content generated successfully:', response);
+        
+        // Update total lessons if available in response
+        if (response.section?.content_items?.length) {
+          this.aiGenerationTotalLessons = response.section.content_items.length;
+          this.aiGenerationCurrentLesson = this.aiGenerationTotalLessons;
+          console.log(`AI generated ${this.aiGenerationTotalLessons} lesson(s) based on content complexity`);
+        }
+        
+        // Show completion
+        this.sectionFileUploadProgress = 100;
+        this.sectionFileUploadStep = this.currentLang === 'ar' ? '✅ اكتمل!' : '✅ Complete!';
+        
+        if (response.success && response.section) {
+          // Add the new section to the sections array
+          const newSection: Section & { available: boolean } = {
+            id: response.section.id,
+            number: response.section.number || response.section.sort_order,
+            sort_order: response.section.sort_order,
+            name: response.section.name,
+            content_items: response.section.content_items || [],
+            available: response.section.available,
+            isCollapsed: false,
+            createdAt: response.section.createdAt,
+            updatedAt: response.section.updatedAt
+          };
+          this.sections.push(newSection);
+          
+          // Normalize section ordering
+          this.normalizeSectionOrdering();
+          
+          // Save sections to storage
+          this.saveSections();
+          
+          // Set the new section as active
+          this.setActiveSection(newSection.id);
+          
+          // Small delay to show completion, then close
+          setTimeout(() => {
+            this.aiGenerating = false;
+            this.sectionFileUploading = false;
+            this.sectionFileUploadProgress = 0;
+            this.sectionFileUploadStep = '';
+            this.aiGenerationStep = null;
+            this.aiGenerationCurrentLesson = 0;
+            this.aiGenerationTotalLessons = 0;
+            
+            // Show success message
+            this.toastr?.success?.(
+              response.message || (this.currentLang === 'ar'
+                ? 'تم إنشاء القسم مع عناوين الدروس والتلميحات!'
+                : 'Section created with lesson titles and hints!')
+            );
+            
+            // Close the modal
+            this.closeAddSectionModal();
+            
+            // Clear the instruction text
+            this.aiInstructionText = '';
+            this.cdr.detectChanges();
+          }, 1000);
+        } else {
+          this.aiGenerating = false;
+          this.sectionFileUploading = false;
+          this.sectionFileUploadProgress = 0;
+          this.sectionFileUploadStep = '';
+          this.aiGenerationStep = null;
+          this.aiGenerationCurrentLesson = 0;
+          this.aiGenerationTotalLessons = 0;
+          
+          this.toastr?.error?.(
+            this.currentLang === 'ar'
+              ? 'فشل في إنشاء القسم. يرجى المحاولة مرة أخرى.'
+              : 'Failed to create section. Please try again.'
+          );
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        this.stopProgressSimulation();
+        console.error('Error generating AI content:', error);
+        
+        this.sectionFileUploadError = error.error?.message || (this.currentLang === 'ar'
+          ? 'حدث خطأ أثناء إنشاء المحتوى بالذكاء الاصطناعي'
+          : 'An error occurred while generating AI content');
+        
+        this.aiGenerating = false;
+        this.sectionFileUploading = false;
+        this.sectionFileUploadProgress = 0;
+        this.sectionFileUploadStep = '';
+        this.aiGenerationStep = null;
+        this.aiGenerationCurrentLesson = 0;
+        this.aiGenerationTotalLessons = 0;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+  
+  // Start AI progress simulation (similar to file upload but with AI-specific steps)
+  startAIProgressSimulation(): void {
+    // Reset step tracking
+    this.aiGenerationStep = null;
+    this.aiGenerationCurrentLesson = 0;
+    this.aiGenerationTotalLessons = 0;
+    
+    // Start dhikr rotation for AI generation too
+    this.startDhikrRotation();
+    
+    let currentProgress = 0;
+    let stepACompleted = false;
+    let stepBCompleted = false;
+    let stepCStarted = false;
+
+    this.sectionFileUploadInterval = setInterval(() => {
+      // Step 1: Generate section title (0-30%)
+      if (!stepACompleted && currentProgress < 30) {
+        this.aiGenerationStep = 1;
+        this.sectionFileUploadStep = this.currentLang === 'ar' 
+          ? '🎯 إنشاء عنوان القسم...' 
+          : '🎯 Creating section title...';
+        currentProgress += 1.2;
+      } else if (!stepACompleted && currentProgress >= 30) {
+        stepACompleted = true;
+        this.aiGenerationStep = null; // Hide Step 1
+        currentProgress = 30;
+      }
+      // Step 2: Generate lesson titles (30-50%)
+      else if (!stepBCompleted && currentProgress < 50) {
+        this.aiGenerationStep = 2;
+        this.sectionFileUploadStep = this.currentLang === 'ar' 
+          ? '📝 إنشاء عناوين الدروس...' 
+          : '📝 Creating lesson titles...';
+        currentProgress += 1.0;
+      } else if (!stepBCompleted && currentProgress >= 50) {
+        stepBCompleted = true;
+        this.aiGenerationStep = null; // Hide Step 2
+        // Estimate total lessons (will be updated from actual response)
+        // Use a reasonable estimate based on typical generation
+        this.aiGenerationTotalLessons = Math.floor(3 + Math.random() * 4); // Random 3-6 for better UX
+        currentProgress = 50;
+      }
+      // Step 3 removed - only generating titles and hints, not full content
+      // After Step 2, we jump to saving (50-95%)
+      else if (!stepCStarted) {
+        stepCStarted = true;
+        this.aiGenerationStep = null; // Hide steps during saving
+        this.sectionFileUploadStep = this.currentLang === 'ar' 
+          ? `💾 حفظ القسم والدروس...` 
+          : `💾 Saving section and lessons...`;
+        currentProgress = 70;
+      } else if (stepCStarted && currentProgress < 95) {
+        // Simulate saving progress
+        this.sectionFileUploadStep = this.currentLang === 'ar' 
+          ? `💾 حفظ القسم مع ${this.aiGenerationTotalLessons} دروس...` 
+          : `💾 Saving section with ${this.aiGenerationTotalLessons} lessons...`;
+        currentProgress += 1.5;
+      }
+      
+      // Cap at 95% until actual completion
+      if (currentProgress > 95) {
+        currentProgress = 95;
+      }
+      
+      this.sectionFileUploadProgress = Math.round(currentProgress);
+      this.cdr.detectChanges();
+    }, 300); // Update every 300ms
   }
   
   // Clear selected file
@@ -2786,9 +2979,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   // Close Add Section Modal
   closeAddSectionModal(): void {
-    if (!this.sectionFileUploading) {
+    if (!this.sectionFileUploading && !this.aiGenerating) {
       this.showAddSectionModal = false;
+      this.sectionCreationMode = null;
       this.sectionFileUploadError = null;
+      this.aiInstructionText = '';
       this.stopProgressSimulation();
       this.sectionFileUploadProgress = 0;
       this.sectionFileUploadStep = '';
@@ -3035,6 +3230,37 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     this.currentDhikr = '';
     this.currentDhikrTranslation = '';
+    this.dhikrIndex = 0;
+    this.cdr.detectChanges();
+  }
+
+  // Start dhikr rotation for text editor AI generation
+  private startTextEditorDhikrRotation(): void {
+    this.stopTextEditorDhikrRotation(); // Clear any existing interval
+    
+    const dhikrPhrases = this.currentLang === 'ar' 
+      ? ['أستغفر الله العظيم', 'سبحان الله', 'الحمد لله', 'لا إله إلا الله', 'الله أكبر']
+      : ['Astaghfirullah', 'SubhanAllah', 'Alhamdulillah', 'La ilaha illallah', 'Allahu Akbar'];
+    
+    let index = 0;
+    this.currentDhikr = dhikrPhrases[0];
+    
+    // Rotate every 2 seconds with fade effect
+    this.textEditorDhikrInterval = setInterval(() => {
+      index = (index + 1) % dhikrPhrases.length;
+      this.currentDhikr = dhikrPhrases[index];
+      this.cdr.detectChanges();
+    }, 2000);
+  }
+
+  // Stop text editor dhikr rotation
+  private stopTextEditorDhikrRotation(): void {
+    if (this.textEditorDhikrInterval) {
+      clearInterval(this.textEditorDhikrInterval);
+      this.textEditorDhikrInterval = null;
+    }
+    this.currentDhikr = '';
+    this.cdr.detectChanges();
   }
 
   // Simulate progress with steps
