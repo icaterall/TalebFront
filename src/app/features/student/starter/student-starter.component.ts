@@ -249,7 +249,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   showAddSectionModal: boolean = false; // Track add section modal visibility
   sectionFileUploading: boolean = false; // Track section file upload state
   sectionFileUploadError: string | null = null; // Track section file upload errors
-  sectionFileConvertToArabic: boolean = false; // Track if user wants to convert English content to Arabic
   sectionFileSelected: boolean = false; // Track if a file has been selected
   sectionFileUploadProgress: number = 0; // Track upload progress percentage (0-100)
   sectionFileUploadStep: string = ''; // Track current upload step
@@ -2010,15 +2009,33 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const activeSection = this.getActiveSection() || this.sections[0];
-    if (!activeSection) {
+    // When editing existing content, use its section ID; otherwise use active section
+    let targetSectionId: string | undefined;
+    if (this.viewingContentItem && this.viewingContentItem.section_id) {
+      targetSectionId = this.viewingContentItem.section_id;
+    } else {
+      const activeSection = this.getActiveSection() || this.sections[0];
+      if (activeSection) {
+        targetSectionId = activeSection.id;
+      }
+    }
+    
+    if (!targetSectionId) {
       this.textSaveError = this.currentLang === 'ar'
         ? 'لا يوجد قسم متاح لحفظ الدرس.'
         : 'No section is available to attach the lesson.';
       return;
     }
+    
+    const targetSection = this.getSection(targetSectionId);
+    if (!targetSection) {
+      this.textSaveError = this.currentLang === 'ar'
+        ? 'القسم المحدد غير موجود.'
+        : 'The specified section does not exist.';
+      return;
+    }
 
-    const numericSectionId = Number(activeSection.id);
+    const numericSectionId = Number(targetSectionId);
     if (!Number.isFinite(numericSectionId)) {
       this.textSaveError = this.currentLang === 'ar'
         ? 'يرجى حفظ القسم في الخادم قبل إضافة الدروس.'
@@ -2038,8 +2055,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const editingContentId = editingItem ? Number(editingItem.id) : NaN;
     const isUpdatingExisting = Number.isFinite(editingContentId);
 
-    const sectionKey = String(activeSection.id);
-    const targetSection = this.getSection(sectionKey);
+    const sectionKey = targetSectionId;
     let placeholderItemId: string | null = null;
     let targetSectionIndex = -1;
     let previousItemSnapshot: ContentItem | null = null;
@@ -2257,6 +2273,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // View Content Item
   viewContentItem(item: ContentItem): void {
     this.viewingContentItem = item;
+    // Set active section to match the content's section
+    if (item.section_id) {
+      this.setActiveSection(item.section_id);
+    }
     if (item.type === 'text') {
       // Open text editor with this content
       this.subsectionTitle = item.title;
@@ -2670,7 +2690,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
     this.showAddSectionModal = true;
     this.sectionFileUploadError = null;
-    this.sectionFileConvertToArabic = false; // Reset language option
     this.sectionFileSelected = false; // Reset file selection
   }
   
@@ -2678,7 +2697,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   clearSelectedSectionFile(): void {
     this.sectionFileSelected = false;
     this.sectionFileUploadError = null;
-    this.sectionFileConvertToArabic = false;
     // Clear the file input
     const fileInput = document.querySelector('input[type="file"]#sectionFileInput') as HTMLInputElement;
     if (fileInput) {
@@ -2794,7 +2812,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('convertToArabic', String(this.sectionFileConvertToArabic));
 
     // Get draft course ID
     if (!this.draftCourseId) {
@@ -2849,12 +2866,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
             this.clearSelectedSectionFile(); // Reset file selection
             this.toastr?.success?.(
               this.currentLang === 'ar'
-                ? 'تم إنشاء القسم والمحتوى بنجاح'
-                : 'Section and content created successfully'
+                ? 'تم إنشاء القسم مع دروس كاملة وغنية بالمحتوى! 🎉'
+                : 'Section created with complete and rich lesson content! 🎉'
             );
-            this.cdr.detectChanges();
-          }, 1000);
-        } else {
+          this.cdr.detectChanges();
+        }, 1000);
+      } else {
           this.sectionFileUploadError = response.message || (this.currentLang === 'ar'
             ? 'فشل في إنشاء القسم'
             : 'Failed to create section');
@@ -2870,6 +2887,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.sectionFileUploadError = error.error?.message || (this.currentLang === 'ar'
           ? 'حدث خطأ أثناء معالجة الملف'
           : 'An error occurred while processing the file');
+
+        // Friendly hint for word-limit errors
+        if (error.status === 400 && error.error?.message) {
+          const tooLong = error.error.message.includes('2000') || error.error.message.includes('2,000');
+          if (tooLong) {
+            this.sectionFileUploadError = this.currentLang === 'ar'
+              ? 'الملف يتجاوز 2000 كلمة. يرجى تقسيمه بحيث يحتوي كل ملف على قسم واحد لا يزيد عن 2000 كلمة.'
+              : 'File exceeds 2,000 words. Please split it so each file contains one section and stays under 2,000 words.';
+          }
+        }
+
         this.sectionFileUploading = false;
         this.sectionFileUploadProgress = 0;
         this.sectionFileUploadStep = '';
@@ -2881,11 +2909,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Simulate progress with steps
   startProgressSimulation(): void {
     const steps = [
-      { progress: 20, step: this.currentLang === 'ar' ? 'جاري رفع الملف...' : 'Uploading file...' },
-      { progress: 50, step: this.currentLang === 'ar' ? 'جاري استخراج النص من الملف...' : 'Extracting text from file...' },
-      { progress: 70, step: this.currentLang === 'ar' ? 'جاري تحليل المحتوى...' : 'Analyzing content...' },
-      { progress: 90, step: this.currentLang === 'ar' ? 'جاري إنشاء الدروس...' : 'Generating lessons...' },
-      { progress: 95, step: this.currentLang === 'ar' ? 'جاري إكمال المعالجة...' : 'Finalizing...' }
+      { progress: 15, step: this.currentLang === 'ar' ? '📤 جاري رفع الملف...' : '📤 Uploading file...' },
+      { progress: 30, step: this.currentLang === 'ar' ? '📄 استخراج النص من الملف...' : '📄 Extracting text from file...' },
+      { progress: 45, step: this.currentLang === 'ar' ? '🔍 تحليل المحتوى بذكاء...' : '🔍 Intelligently analyzing content...' },
+      { progress: 60, step: this.currentLang === 'ar' ? '🧠 استخراج عنوان القسم الذكي...' : '🧠 Extracting smart section title...' },
+      { progress: 75, step: this.currentLang === 'ar' ? '📚 إنشاء دروس كاملة بمحتوى غني...' : '📚 Generating complete lessons with rich content...' },
+      { progress: 85, step: this.currentLang === 'ar' ? '✨ إضافة الجداول والأمثلة والرموز...' : '✨ Adding tables, examples and emojis...' },
+      { progress: 95, step: this.currentLang === 'ar' ? '💾 حفظ القسم والدروس...' : '💾 Saving section and lessons...' }
     ];
 
     let currentStepIndex = 0;
@@ -2928,6 +2958,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       clearInterval(this.sectionFileUploadInterval);
       this.sectionFileUploadInterval = null;
     }
+  }
+
+  clearSectionFileError(): void {
+    this.sectionFileUploadError = null;
+    this.sectionFileUploading = false;
+    this.sectionFileUploadProgress = 0;
+    this.sectionFileUploadStep = '';
+    this.clearSelectedSectionFile();
+    this.cdr.detectChanges();
   }
 
   hasUnnamedSection(): boolean {

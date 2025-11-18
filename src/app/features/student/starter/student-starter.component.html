@@ -1341,34 +1341,29 @@
           (change)="onSectionFileSelected($event)"
           style="display: none;"
         />
+        <div class="section-upload-hint">
+          <p>
+            {{ currentLang === 'ar'
+              ? '📝 ارفع ملفًا يحتوي على قسم واحد فقط (بحد أقصى 2000 كلمة). إذا كان الملف أطول، رجاءً قسّمه إلى ملفات لكل قسم ليعمل الذكاء الاصطناعي بدقة.'
+              : '📝 Please upload one section per file (max 2,000 words). If your file is longer, split it into separate files per section so AI can work accurately.' }}
+          </p>
+        </div>
       </div>
 
-      <!-- Language Conversion Option (shown when file is selected) -->
-      <div class="section-language-option" *ngIf="sectionFileSelected && !sectionFileUploading">
-        <label class="language-option-label">
-          <input
-            type="checkbox"
-            [(ngModel)]="sectionFileConvertToArabic"
-            class="language-checkbox"
-          />
-          <span class="language-option-text">
-            {{ currentLang === 'ar' 
-              ? 'تحويل المحتوى إلى العربية (إذا كان الملف باللغة الإنجليزية)' 
-              : 'Convert content to Arabic (if file is in English)' }}
-          </span>
-        </label>
-        <p class="language-option-hint">
+      <!-- File Selected Actions (shown when file is selected) -->
+      <div class="section-upload-actions" *ngIf="sectionFileSelected && !sectionFileUploading">
+        <p class="upload-info-text">
           {{ currentLang === 'ar' 
-            ? 'سيتم إنشاء المحتوى باللغة العربية. إذا كان الملف بالعربية، سيتم الاحتفاظ باللغة الأصلية.' 
-            : 'Content will be generated in Arabic. If the file is already in Arabic, the original language will be preserved.' }}
+            ? '📄 الملف جاهز للمعالجة. سيتم تحليل المحتوى وإنشاء القسم والدروس بنفس لغة الملف.' 
+            : '📄 File ready to process. Content will be analyzed and section/lessons will be created in the same language as the file.' }}
         </p>
-        <div class="language-option-actions">
+        <div class="upload-action-buttons">
           <button
             type="button"
             class="btn-primary"
             (click)="uploadSelectedSectionFile()"
             [disabled]="sectionFileUploading">
-            {{ currentLang === 'ar' ? 'إنشاء القسم' : 'Create Section' }}
+            {{ currentLang === 'ar' ? '🚀 إنشاء القسم' : '🚀 Create Section' }}
           </button>
           <button
             type="button"
@@ -1390,16 +1385,20 @@
 </div>
 
 <!-- File Upload Progress Modal (Separate Modal) -->
-<div class="modal-overlay file-upload-progress-overlay" *ngIf="sectionFileUploading">
+<div class="modal-overlay file-upload-progress-overlay" *ngIf="sectionFileUploading || sectionFileUploadError">
   <div class="modal-content file-upload-progress-modal" [dir]="isRTL ? 'rtl' : 'ltr'">
     <div class="progress-modal-header">
-      <h2 class="progress-modal-title">{{ currentLang === 'ar' ? 'جاري معالجة الملف' : 'Processing File' }}</h2>
-      <div class="progress-percentage-badge">{{ sectionFileUploadProgress }}%</div>
+      <h2 class="progress-modal-title">
+        {{ sectionFileUploadError
+          ? (currentLang === 'ar' ? 'تعذر معالجة الملف' : 'File Processing Issue')
+          : (currentLang === 'ar' ? 'جاري معالجة الملف' : 'Processing File') }}
+      </h2>
+      <div class="progress-percentage-badge" *ngIf="!sectionFileUploadError">{{ sectionFileUploadProgress }}%</div>
     </div>
     
     <div class="progress-modal-body">
       <!-- Main Progress Bar -->
-      <div class="main-progress-section">
+      <div class="main-progress-section" *ngIf="!sectionFileUploadError">
         <div class="progress-bar-container">
           <div class="progress-bar-track">
             <div class="progress-bar-fill" [style.width.%]="sectionFileUploadProgress"></div>
@@ -1475,6 +1474,9 @@
       <div class="progress-error" *ngIf="sectionFileUploadError">
         <div class="error-icon">⚠️</div>
         <p class="error-message">{{ sectionFileUploadError }}</p>
+        <button type="button" class="btn-primary retry-btn" (click)="clearSectionFileError()">
+          {{ currentLang === 'ar' ? 'فهمت، سأقسم الملف' : 'Got it, I will split the file' }}
+        </button>
       </div>
     </div>
   </div>
