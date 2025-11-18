@@ -439,7 +439,7 @@
                 </button>
                 <button type="button" class="add-content-btn" (click)="setActiveSection(section.id); openContentTypeModal('quiz')" [disabled]="!section.name || !section.name.trim()">
                   <span class="btn-icon">📋</span>
-                  <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء اختبار / لعبة' : 'Create Quiz / Game' }}</span>
+                  <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء اختبار' : 'Create Quiz' }}</span>
                 </button>
               </div>
             </div>
@@ -489,32 +489,7 @@
 
         <!-- Course Title Section (Shows after category selection) -->
         <div class="course-title-section" *ngIf="selectedCategory && !step2Locked">
-          <!-- Loading Spinner - hidden when locked -->
-          <div class="loading-container" *ngIf="!step2Locked && loadingTitles">
-            <div class="spinner"></div>
-            <p class="loading-text">{{ currentLang === 'ar' ? 'جاري تحميل اقتراحات الأسماء...' : 'Loading course name suggestions...' }}</p>
-          </div>
-
-          <!-- AI Title Suggestions (Cards) - hidden when locked - shown at top -->
-          <div class="title-cards-container" *ngIf="!step2Locked && !loadingTitles && courseTitleSuggestions.length > 0">
-            <div class="title-cards-grid">
-              <div
-                *ngFor="let titleCard of courseTitleSuggestions"
-                class="title-card"
-                [class.selected]="courseName === titleCard.title"
-                (click)="selectTitleSuggestion(titleCard)">
-                <div class="title-card-header">
-                  <h3 class="title-card-title">{{ titleCard.title }}</h3>
-                  <div class="title-card-info" *ngIf="titleCard.rationale" [title]="titleCard.rationale">
-                    <span class="info-icon">ℹ️</span>
-                  </div>
-                </div>
-                <p class="title-card-rationale" *ngIf="titleCard.rationale">{{ titleCard.rationale }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Course Name Input with AI Generate Button -->
+          <!-- Course Name Input -->
           <div class="field-group course-name-input-group" *ngIf="!step2Locked">
             <label class="field-label">
               {{ currentLang === 'ar' ? 'اسم المادة الدراسية' : 'Course Name' }}
@@ -528,23 +503,9 @@
                 (input)="onCourseNameChange()"
                 [placeholder]="currentLang === 'ar' ? 'أدخل اسم المادة الدراسية...' : 'Enter course name...'"
                 maxlength="80" />
-              <button
-                type="button"
-                class="btn-generate-ai"
-                *ngIf="!loadingTitles && courseTitleSuggestions.length === 0"
-                (click)="loadTitleSuggestions()"
-                [disabled]="loadingTitles">
-                <span class="ai-icon">🤖</span>
-                <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'Generate with AI' }}</span>
-              </button>
             </div>
             <div class="field-help">
-              <span *ngIf="courseTitleSuggestions.length === 0">
-                {{ currentLang === 'ar' ? 'اكتب اسم المادة الدراسية يدوياً أو انقر على الزر لإنشاء اقتراحات بالذكاء الاصطناعي' : 'Type the course name manually or click the button to generate suggestions with AI' }}
-              </span>
-              <span *ngIf="courseTitleSuggestions.length > 0">
-                {{ currentLang === 'ar' ? 'اختر عنواناً من الاقتراحات أعلاه أو اكتب اسم المادة الدراسية يدوياً' : 'Select a title from suggestions above or type the course name manually' }}
-              </span>
+              {{ currentLang === 'ar' ? 'اكتب اسم المادة الدراسية يدوياً' : 'Type the course name manually' }}
             </div>
           </div>
 
@@ -761,6 +722,11 @@
               </button>
               <div class="ai-generating-dhikr" *ngIf="generatingWithAI">
                 <div class="dhikr-badge">
+                  <div class="dhikr-spinner">
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                  </div>
                   <span class="dhikr-icon">✨</span>
                   <span class="dhikr-phrase">{{ currentDhikr }}</span>
                 </div>
@@ -1993,7 +1959,7 @@
 <div class="modal-overlay" *ngIf="showQuizWizardModal">
   <div class="modal-content quiz-wizard-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ currentLang === 'ar' ? 'إنشاء اختبار / لعبة' : 'Create Quiz / Game' }}</h3>
+      <h3>{{ currentLang === 'ar' ? 'إنشاء اختبار' : 'Create Quiz' }}</h3>
       <button type="button" class="modal-close-btn" (click)="closeQuizWizard()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
     </div>
     <div class="modal-body">
@@ -2010,11 +1976,6 @@
             <div class="mode-icon">🤖</div>
             <div class="mode-title">{{ currentLang === 'ar' ? 'اختبار بالذكاء الاصطناعي' : 'AI Quiz' }}</div>
             <div class="mode-description">{{ currentLang === 'ar' ? 'إنشاء الأسئلة تلقائياً من محتوى القسم' : 'Generate questions automatically from section content' }}</div>
-          </button>
-          <button type="button" class="mode-option-btn disabled" (click)="selectQuizMode('game')" disabled>
-            <div class="mode-icon">🎮</div>
-            <div class="mode-title">{{ currentLang === 'ar' ? 'لعبة تفاعلية' : 'Interactive Game' }}</div>
-            <div class="mode-description">{{ currentLang === 'ar' ? 'قريباً...' : 'Coming soon...' }}</div>
           </button>
         </div>
       </div>
@@ -2124,9 +2085,21 @@
       <!-- AI Generation Button (for AI mode) -->
       <div class="quiz-actions" *ngIf="quizMode === 'ai' && quizQuestions.length === 0">
         <button type="button" class="btn-primary" (click)="generateAIQuizQuestions()" [disabled]="generatingQuiz">
+          <span class="btn-icon" *ngIf="!generatingQuiz">🤖</span>
           <span *ngIf="!generatingQuiz">{{ currentLang === 'ar' ? 'إنشاء الأسئلة بالذكاء الاصطناعي' : 'Generate Questions with AI' }}</span>
           <span *ngIf="generatingQuiz">{{ currentLang === 'ar' ? 'جارٍ الإنشاء...' : 'Generating...' }}</span>
         </button>
+        <div class="ai-generating-dhikr" *ngIf="generatingQuiz">
+          <div class="dhikr-badge">
+            <div class="dhikr-spinner">
+              <div class="spinner-ring"></div>
+              <div class="spinner-ring"></div>
+              <div class="spinner-ring"></div>
+            </div>
+            <span class="dhikr-icon">✨</span>
+            <span class="dhikr-phrase">{{ currentDhikr }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- Add Question Button (for manual mode or editing) -->

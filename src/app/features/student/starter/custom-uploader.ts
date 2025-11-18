@@ -12,6 +12,7 @@ interface UploadAdapterOptions {
     uploadUrl: string;
     token?: string | null;
     contentId?: string | null;
+    onUploadStart?: (file: File) => void;
     onUploaded?: (asset: UploadedEditorImageAsset) => void;
     onError?: (error: Error) => void;
     onAbort?: (asset: UploadedEditorImageAsset | null) => void;
@@ -32,6 +33,9 @@ export class CKEditor5CustomUploadAdapter {
         return this.loader.file.then((file: File) => {
             return new Promise(async (resolve, reject) => {
                 try {
+                    // Notify that upload is starting
+                    this.options.onUploadStart?.(file);
+                    
                     this.abortController = new AbortController();
                     const formData = new FormData();
                     formData.append('image', file);

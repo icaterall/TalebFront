@@ -190,6 +190,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private draftSyncCompleted: boolean = false;
   private loadedSectionContentIds: Set<string> = new Set();
   private pendingImageUploads: Map<string, UploadedEditorImageAsset> = new Map<string, UploadedEditorImageAsset>();
+  private uploadingImageUrls: Set<string> = new Set<string>(); // Track images currently uploading
   private editorActiveImageKeys: Set<string> = new Set<string>();
   private editorKnownImageMap: Map<string, string> = new Map<string, string>();
   private editorDeletedImageKeys: Set<string> = new Set<string>();
@@ -610,13 +611,49 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         uploadUrl,
         token: this.universalAuth.getAccessToken(),
         contentId: currentContentId ? String(currentContentId) : undefined,
-        onUploaded: (asset) => this.registerPendingImageAsset(asset),
+        onUploadStart: (file: File) => {
+          // Track that an upload is starting - we'll find the image in the editor
+          const tempUrl = URL.createObjectURL(file);
+          this.uploadingImageUrls.add(tempUrl);
+          // Mark images as uploading - check periodically for blob URLs
+          this.markImageAsUploading(editor, tempUrl);
+          
+          // Also listen for when the image is inserted
+          const model = editor.model;
+          const imageInsertListener = () => {
+            model.document.off('change:data', imageInsertListener);
+            setTimeout(() => {
+              this.markImageAsUploading(editor, tempUrl);
+            }, 50);
+          };
+          model.document.on('change:data', imageInsertListener);
+        },
+        onUploaded: (asset) => {
+          this.registerPendingImageAsset(asset);
+          // Remove loading state once upload is complete - check both blob URLs and the final URL
+          this.uploadingImageUrls.forEach((url) => {
+            this.removeImageUploadingState(editor, url);
+          });
+          if (asset.url) {
+            this.removeImageUploadingState(editor, asset.url);
+          }
+          // Clean up blob URLs
+          this.uploadingImageUrls.forEach((url) => {
+            if (url.startsWith('blob:')) {
+              URL.revokeObjectURL(url);
+            }
+          });
+          this.uploadingImageUrls.clear();
+        },
         onError: (error) => {
           console.error('CKEditor image upload failed:', error);
           const message = this.currentLang === 'ar'
             ? 'فشل رفع الصورة. حاول مرة أخرى.'
             : 'Failed to upload the image. Please try again.';
           this.toastr.error(message);
+          // Clean up any uploading states
+          this.uploadingImageUrls.clear();
+          this.removeAllImageUploadingStates(editor);
         },
         onAbort: (asset) => {
           if (asset?.key) {
@@ -626,6 +663,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
                 console.error('Failed to delete aborted editor image:', error);
               }
             });
+          }
+          // Clean up uploading state
+          if (asset?.url) {
+            this.removeImageUploadingState(editor, asset.url);
           }
         }
       });
@@ -908,18 +949,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Toggle between curriculum and general skills mode
   toggleCourseMode(): void {
     this.courseMode = this.courseMode === 'curriculum' ? 'general' : 'curriculum';
-    if (this.selectedCategory) {
-      this.loadTitleSuggestions();
-    }
     this.saveDraftStep2();
   }
 
   // Toggle term (Term 1 <-> Term 2)
   toggleTerm(): void {
     this.currentTerm = this.currentTerm === 1 ? 2 : 1;
-    if (this.selectedCategory) {
-      this.loadTitleSuggestions();
-    }
     this.saveDraftStep2();
   }
 
@@ -1180,7 +1215,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       resources: this.currentLang === 'ar' ? 'إضافة موارد' : 'Add Resources',
       text: this.currentLang === 'ar' ? 'إضافة درس نصي' : 'Add Text Lesson',
       audio: this.currentLang === 'ar' ? 'إضافة صوت' : 'Add Audio',
-      quiz: this.currentLang === 'ar' ? 'إنشاء اختبار / لعبة' : 'Create Quiz / Game'
+      quiz: this.currentLang === 'ar' ? 'إنشاء اختبار' : 'Create Quiz'
     };
     
     return titles[this.selectedContentType];
@@ -1203,8 +1238,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         ? 'اختر طريقة إنشاء المحتوى للصوت' 
         : 'Choose how to create audio content',
       quiz: this.currentLang === 'ar' 
-        ? 'اختر طريقة إنشاء المحتوى للاختبار / اللعبة' 
-        : 'Choose how to create quiz / game content'
+        ? 'اختر طريقة إنشاء المحتوى للاختبار' 
+        : 'Choose how to create quiz content'
     };
     
     return descriptions[this.selectedContentType];
@@ -1264,11 +1299,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  selectQuizMode(mode: 'manual' | 'ai' | 'game'): void {
-    if (mode === 'game') {
-      this.toastr?.info?.(this.currentLang === 'ar' ? 'قريباً: الألعاب التفاعلية' : 'Coming soon: Interactive Games');
-      return;
-    }
+  selectQuizMode(mode: 'manual' | 'ai'): void {
     this.quizMode = mode;
     this.cdr.detectChanges();
   }
@@ -1655,6 +1686,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
 
     this.generatingQuiz = true;
+    this.startTextEditorDhikrRotation(); // Start istighfar rotation
     this.cdr.detectChanges();
 
     const payload: GenerateQuizPayload = {
@@ -1665,6 +1697,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.ai.generateAIQuizQuestions(sectionId, contentId, payload).subscribe({
       next: (response) => {
         this.generatingQuiz = false;
+        this.stopTextEditorDhikrRotation(); // Stop istighfar rotation
         if (response.questions && response.questions.length > 0) {
           this.quizQuestions = response.questions;
           this.toastr?.success?.(
@@ -1681,6 +1714,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error generating quiz questions:', error);
         this.generatingQuiz = false;
+        this.stopTextEditorDhikrRotation(); // Stop istighfar rotation on error
         this.toastr?.error?.(this.currentLang === 'ar' ? 'فشل في إنشاء الأسئلة' : 'Failed to generate questions');
         this.cdr.detectChanges();
       }
@@ -2008,7 +2042,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
     }).subscribe({
       next: (response) => {
-        this.textContent = response.content || '<p>No content generated.</p>';
+        const generatedContent = response.content || '<p>No content generated.</p>';
+        this.textContent = generatedContent;
+        
+        // Update CKEditor if it exists
+        if (this.currentEditor) {
+          this.currentEditor.setData(generatedContent);
+        }
+        
         this.generatingWithAI = false;
         this.stopTextEditorDhikrRotation();
         this.cdr.detectChanges();
@@ -2030,7 +2071,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   saveTextContent(): void {
+    console.log('=== saveTextContent called ===');
+    console.log('savingTextContent:', this.savingTextContent);
+    console.log('subsectionTitle:', this.subsectionTitle);
+    console.log('viewingContentItem:', this.viewingContentItem);
+    console.log('currentEditingContentId:', this.currentEditingContentId);
+    console.log('currentEditor exists:', !!this.currentEditor);
+    console.log('textContent length:', this.textContent?.length || 0);
+    
     if (this.savingTextContent) {
+      console.log('Already saving, returning early');
       return;
     }
 
@@ -2040,6 +2090,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         : 'Please wait until all image uploads have finished before saving.';
       this.textSaveError = message;
       this.toastr.warning(message);
+      console.log('Active uploads detected, returning early');
       return;
     }
 
@@ -2048,6 +2099,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.textSaveError = this.currentLang === 'ar'
         ? 'يرجى إدخال عنوان للدرس.'
         : 'Please provide a lesson title.';
+      console.log('No title provided, returning early');
       return;
     }
 
@@ -2055,10 +2107,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     let targetSectionId: string | undefined;
     if (this.viewingContentItem && this.viewingContentItem.section_id) {
       targetSectionId = this.viewingContentItem.section_id;
+      console.log('Using section_id from viewingContentItem:', targetSectionId);
     } else {
       const activeSection = this.getActiveSection() || this.sections[0];
       if (activeSection) {
         targetSectionId = activeSection.id;
+        console.log('Using active section ID:', targetSectionId);
       }
     }
     
@@ -2066,32 +2120,74 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.textSaveError = this.currentLang === 'ar'
         ? 'لا يوجد قسم متاح لحفظ الدرس.'
         : 'No section is available to attach the lesson.';
+      console.log('No targetSectionId found, returning early');
       return;
     }
     
-    const targetSection = this.getSection(targetSectionId);
+    let targetSection = this.getSection(targetSectionId);
+    
+    // If section not found, try to ensure it's loaded
     if (!targetSection) {
+      console.log('Target section not found. Available sections:', this.sections.map(s => ({ id: s.id, name: s.name, type: typeof s.id })));
+      console.log('Looking for section ID:', targetSectionId, 'Type:', typeof targetSectionId);
+      
+      // Try to ensure section content is loaded (might trigger section load)
+      this.ensureSectionContentLoaded(targetSectionId);
+      
+      // Try again after ensuring content is loaded
+      targetSection = this.getSection(targetSectionId);
+    }
+    
+    if (!targetSection) {
+      console.error('Section still not found after ensuring content loaded');
       this.textSaveError = this.currentLang === 'ar'
-        ? 'القسم المحدد غير موجود.'
-        : 'The specified section does not exist.';
+        ? 'القسم المحدد غير موجود. يرجى تحديث الصفحة والمحاولة مرة أخرى.'
+        : 'The specified section does not exist. Please refresh the page and try again.';
       return;
     }
+    
+    console.log('Target section found:', { id: targetSection.id, name: targetSection.name, type: typeof targetSection.id });
 
     const numericSectionId = Number(targetSectionId);
     if (!Number.isFinite(numericSectionId)) {
       this.textSaveError = this.currentLang === 'ar'
         ? 'يرجى حفظ القسم في الخادم قبل إضافة الدروس.'
         : 'Please sync the section with the server before adding lessons.';
+      console.log('Section ID is not numeric:', targetSectionId);
       return;
     }
+    
+    console.log('All validations passed, proceeding with API call');
+    console.log('numericSectionId:', numericSectionId);
 
-    const editorContent = this.currentEditor ? this.currentEditor.getData() : this.textContent;
+    // Get content from editor if available, otherwise use textContent
+    let editorContent = '';
+    if (this.currentEditor) {
+      editorContent = this.currentEditor.getData();
+      console.log('Got content from editor, length:', editorContent?.length || 0);
+    } else {
+      editorContent = this.textContent || '';
+      console.log('Got content from textContent, length:', editorContent?.length || 0);
+    }
+    
+    // Ensure we have some content to save
+    if (!editorContent || editorContent.trim().length === 0 || editorContent === '<p></p>' || editorContent === '<p><br></p>') {
+      this.textSaveError = this.currentLang === 'ar'
+        ? 'يرجى إضافة محتوى للدرس قبل الحفظ.'
+        : 'Please add content to the lesson before saving.';
+      this.savingTextContent = false;
+      console.log('No content to save, returning early');
+      return;
+    }
+    
     const payload: CreateSectionContentPayload = {
       type: 'text',
       title: trimmedTitle,
       body_html: editorContent,
       status: true
     };
+    
+    console.log('Payload prepared:', { type: payload.type, title: payload.title, body_html_length: payload.body_html?.length || 0 });
 
     const editingItem = this.viewingContentItem;
     const editingContentId = editingItem ? Number(editingItem.id) : NaN;
@@ -2139,6 +2235,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
 
+    console.log('Preparing to make API call...');
+    console.log('isUpdatingExisting:', isUpdatingExisting);
+    console.log('editingContentId:', editingContentId);
+    console.log('payload:', payload);
+    console.log('editorContent length:', editorContent?.length || 0);
+    
     this.savingTextContent = true;
     this.textSaveError = null;
     this.cdr.detectChanges();
@@ -2147,6 +2249,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       ? this.ai.updateSectionContent(numericSectionId, editingContentId, payload)
       : this.ai.createSectionContent(numericSectionId, payload);
 
+    console.log('API request created, subscribing...');
     request$
       .pipe(finalize(() => {
         this.savingTextContent = false;
@@ -3830,8 +3933,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   // Get Section by ID
-  getSection(sectionId: string): Section | undefined {
-    return this.sections.find(s => s.id === sectionId);
+  getSection(sectionId: string | number): Section | undefined {
+    // Handle both string and number IDs
+    const idStr = String(sectionId);
+    const idNum = Number(sectionId);
+    return this.sections.find(s => 
+      String(s.id) === idStr || Number(s.id) === idNum
+    );
   }
   
   setActiveSection(sectionId: string | null): void {
@@ -4094,48 +4202,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
 
-  loadTitleSuggestions(): void {
-    if (!this.selectedCategory || !this.student) return;
-    
-    this.loadingTitles = true;
-    const payload = {
-      category_id: this.selectedCategory.id,
-      stage_id: this.courseMode === 'curriculum' ? (this.student?.education_stage_id ?? this.student?.stage_id) : undefined,
-      country_id: this.courseMode === 'curriculum' ? this.student?.country_id : undefined,
-      locale: this.currentLang,
-      term: this.courseMode === 'curriculum' ? this.currentTerm : undefined,
-      mode: this.courseMode,
-      category_name: this.getCategoryName(this.selectedCategory),
-      date: new Date().toISOString() // Pass current date for term detection
-    };
-
-    console.log('Loading title suggestions with payload:', payload);
-
-    this.ai.getTitles(payload).subscribe({
-      next: (res) => {
-        this.courseTitleSuggestions = (res.titles || []).map(t => ({
-          title: t.title,
-          rationale: t.rationale,
-          topics: t.topics || []
-        }));
-        this.loadingTitles = false;
-        
-        // Don't populate topics/sections - sections will be created in step 2
-        this.availableTopics = [];
-        this.selectedTopic = '';
-        this.subjectSlug = '';
-        
-        this.cdr.detectChanges();
-        console.log(`Title suggestions loaded (provider: ${res.provider || 'openai'}):`, this.courseTitleSuggestions.length);
-        console.log('Title suggestions with topics:', this.courseTitleSuggestions.map(t => ({ title: t.title, topicsCount: t.topics?.length || 0 })));
-      },
-      error: (err) => {
-        console.error('Failed to load title suggestions:', err);
-        this.loadingTitles = false;
-        this.cdr.detectChanges();
-      }
-    });
-  }
 
   selectTitleSuggestion(titleCard: { title: string; rationale?: string; topics?: string[] }): void {
     this.courseName = titleCard.title;
@@ -5783,6 +5849,97 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   private deleteImagesFromHtml(_html: string | null | undefined): void {
     // No-op: the backend now owns deletion for whole content removal.
+  }
+
+  private markImageAsUploading(editor: DecoupledEditor, imageUrl: string): void {
+    if (!editor) return;
+    
+    const markImages = () => {
+      const editableElement = editor.ui.getEditableElement();
+      if (!editableElement) return;
+      
+      // Find all images, especially blob URLs (which are temporary during upload)
+      const images = editableElement.querySelectorAll('img');
+      images.forEach((img) => {
+        const src = img.getAttribute('src') || '';
+        // Check if this is a blob URL (temporary during upload) or matches our tracking
+        if (src.startsWith('blob:') || this.uploadingImageUrls.has(src) || src === imageUrl) {
+          if (!img.classList.contains('ck-image-uploading')) {
+            img.classList.add('ck-image-uploading');
+            // Add wrapper if not already wrapped
+            if (!img.parentElement?.classList.contains('ck-image-upload-wrapper')) {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'ck-image-upload-wrapper';
+              img.parentNode?.insertBefore(wrapper, img);
+              wrapper.appendChild(img);
+            }
+          }
+        }
+      });
+    };
+    
+    // Try immediately and also after a short delay to catch images that are being inserted
+    markImages();
+    setTimeout(markImages, 50);
+    setTimeout(markImages, 200);
+    setTimeout(markImages, 500);
+  }
+
+  private removeImageUploadingState(editor: DecoupledEditor, imageUrl: string): void {
+    if (!editor) return;
+    
+    const editableElement = editor.ui.getEditableElement();
+    if (!editableElement) return;
+    
+    // Find and remove loading state from the image
+    const images = editableElement.querySelectorAll('img');
+    images.forEach((img) => {
+      const src = img.getAttribute('src') || '';
+      if (src === imageUrl || src.includes(imageUrl)) {
+        img.classList.remove('ck-image-uploading');
+        // Remove wrapper if it exists
+        const wrapper = img.parentElement;
+        if (wrapper?.classList.contains('ck-image-upload-wrapper')) {
+          wrapper.parentNode?.insertBefore(img, wrapper);
+          wrapper.remove();
+        }
+        this.uploadingImageUrls.delete(src);
+      }
+    });
+    
+    // Also check blob URLs that might have been replaced
+    const blobImages = editableElement.querySelectorAll('img[src^="blob:"]');
+    blobImages.forEach((img) => {
+      const src = img.getAttribute('src') || '';
+      if (this.uploadingImageUrls.has(src)) {
+        img.classList.remove('ck-image-uploading');
+        const wrapper = img.parentElement;
+        if (wrapper?.classList.contains('ck-image-upload-wrapper')) {
+          wrapper.parentNode?.insertBefore(img, wrapper);
+          wrapper.remove();
+        }
+        this.uploadingImageUrls.delete(src);
+      }
+    });
+  }
+
+  private removeAllImageUploadingStates(editor: DecoupledEditor): void {
+    if (!editor) return;
+    
+    const editableElement = editor.ui.getEditableElement();
+    if (!editableElement) return;
+    
+    const images = editableElement.querySelectorAll('img.ck-image-uploading');
+    images.forEach((img) => {
+      img.classList.remove('ck-image-uploading');
+      const wrapper = img.parentElement;
+      if (wrapper?.classList.contains('ck-image-upload-wrapper')) {
+        wrapper.parentNode?.insertBefore(img, wrapper);
+        wrapper.remove();
+      }
+    });
+    
+    this.uploadingImageUrls.clear();
   }
 
   private generateDraftContentId(): string {
