@@ -1322,31 +1322,40 @@
           </div>
         </button>
 
-        <!-- Upload File Option -->
-        <button
-          type="button"
-          class="section-option-btn"
-          (click)="showFileUploadSection()"
-          [class.active]="sectionCreationMode === 'upload'">
-          <div class="option-icon">📄</div>
-          <div class="option-content">
-            <h3>{{ currentLang === 'ar' ? 'رفع ملف' : 'Upload File' }}</h3>
-            <p>{{ currentLang === 'ar' ? 'ارفع ملف Word/PDF/PPT وسيقوم الذكاء الاصطناعي بإنشاء المحتوى' : 'Upload Word/PDF/PPT file and AI will generate content' }}</p>
+        <!-- AI Section (Grouped) -->
+        <div class="ai-section-group">
+          <div class="ai-section-header">
+            <div class="option-icon">🤖</div>
+            <h3 class="ai-section-title">{{ currentLang === 'ar' ? 'الذكاء الاصطناعي' : 'AI Generation' }}</h3>
           </div>
-        </button>
+          <div class="ai-section-options">
+            <!-- Upload File Option -->
+            <button
+              type="button"
+              class="ai-sub-option-btn"
+              (click)="showFileUploadSection()"
+              [class.active]="sectionCreationMode === 'upload'">
+              <div class="sub-option-icon">📄</div>
+              <div class="sub-option-content">
+                <h4>{{ currentLang === 'ar' ? 'رفع ملف' : 'Upload File' }}</h4>
+                <p>{{ currentLang === 'ar' ? 'ارفع ملف Word/PDF/PPT وسيقوم الذكاء الاصطناعي بإنشاء المحتوى' : 'Upload Word/PDF/PPT file and AI will generate content' }}</p>
+              </div>
+            </button>
 
-        <!-- AI Generation Option -->
-        <button
-          type="button"
-          class="section-option-btn"
-          (click)="showAIInstructionSection()"
-          [class.active]="sectionCreationMode === 'ai'">
-          <div class="option-icon">🤖</div>
-          <div class="option-content">
-            <h3>{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'AI Generation' }}</h3>
-            <p>{{ currentLang === 'ar' ? 'اكتب وصفاً أو تعليمات للذكاء الاصطناعي لإنشاء المحتوى' : 'Write description or instructions for AI to generate content' }}</p>
+            <!-- AI Generation Option -->
+            <button
+              type="button"
+              class="ai-sub-option-btn"
+              (click)="showAIInstructionSection()"
+              [class.active]="sectionCreationMode === 'ai'">
+              <div class="sub-option-icon">✨</div>
+              <div class="sub-option-content">
+                <h4>{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'Generate with AI' }}</h4>
+                <p>{{ currentLang === 'ar' ? 'اكتب وصفاً أو تعليمات للذكاء الاصطناعي لإنشاء المحتوى' : 'Write description or instructions for AI to generate content' }}</p>
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
       </div>
 
       <!-- File Upload Section -->
