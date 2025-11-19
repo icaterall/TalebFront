@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
@@ -67,7 +68,7 @@ interface ResourceFormState {
 @Component({
   selector: 'app-student-starter',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule, CKEditorModule, CategorySelectorComponent, CoverImageComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, NgSelectModule, CKEditorModule, DragDropModule, CategorySelectorComponent, CoverImageComponent],
   templateUrl: './student-starter.component.html',
   styleUrls: ['./student-starter.component.scss'],
   encapsulation: ViewEncapsulation.None,
@@ -143,18 +144,24 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   showQuizEditorModal: boolean = false; // Quiz editor (manual/AI questions)
   currentQuizId: string | null = null; // Current quiz being edited
   quizMode: 'manual' | 'ai' | null = null; // Selected quiz mode
+  editingQuizSettings: boolean = false; // Track if editing quiz settings
+  savingQuizSettings: boolean = false; // Track if saving quiz settings
   quizSettings: {
     title: string;
     full_score: number;
     time_limit: number | null; // Time limit in minutes
     allowed_types: string[];
     auto_weighting: boolean;
+    question_count: number;
+    max_attempts: number | null; // Maximum attempts allowed (null = unlimited)
   } = {
     title: '',
     full_score: 40,
     time_limit: null,
     allowed_types: ['mcq', 'true_false', 'matching', 'ordering'],
-    auto_weighting: true
+    auto_weighting: true,
+    question_count: 10,
+    max_attempts: null
   };
   quizQuestions: QuizQuestion[] = []; // Questions for current quiz
   currentQuestion: QuizQuestion | null = null; // Currently editing question
@@ -263,6 +270,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   sectionCreationMode: 'upload' | 'ai' | null = null; // Track current section creation mode
   sectionFileUploading: boolean = false; // Track section file upload state
   sectionFileUploadError: string | null = null; // Track section file upload errors
+  sectionFileUploadErrorIsFileSize: boolean = false; // Track if error is file-size related
   sectionFileSelected: boolean = false; // Track if a file has been selected
   sectionFileUploadProgress: number = 0; // Track upload progress percentage (0-100)
   sectionFileUploadStep: string = ''; // Track current upload step
@@ -1283,7 +1291,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       full_score: 40,
       time_limit: null,
       allowed_types: ['mcq', 'true_false', 'matching', 'ordering'],
-      auto_weighting: true
+      auto_weighting: true,
+      question_count: 10,
+      max_attempts: null
     };
     this.currentQuizId = null;
     this.quizQuestions = [];
@@ -1316,13 +1326,27 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
 
     if (this.quizSettings.full_score <= 0) {
-      this.toastr?.error?.(this.currentLang === 'ar' ? 'يجب أن يكون المجموع الكلي أكبر من صفر' : 'Full score must be greater than zero');
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'يجب أن يكون مجموع الدرجات الكلي أكبر من صفر' : 'Full score must be greater than zero');
       return;
     }
 
     if (!this.quizMode) {
       this.toastr?.error?.(this.currentLang === 'ar' ? 'يرجى اختيار نمط الاختبار' : 'Please select quiz mode');
       return;
+    }
+
+    let requestedQuestionCount = Math.round(Number(this.quizSettings.question_count) || 0);
+    requestedQuestionCount = Math.max(1, Math.min(50, requestedQuestionCount));
+    if (this.quizMode === 'ai' && (!requestedQuestionCount || Number.isNaN(requestedQuestionCount))) {
+      this.toastr?.error?.(
+        this.currentLang === 'ar'
+          ? 'يرجى تحديد عدد الأسئلة المطلوب توليدها (من 1 إلى 50)'
+          : 'Please specify how many questions to generate (1-50)'
+      );
+      return;
+    }
+    if (this.quizMode === 'ai') {
+      this.quizSettings.question_count = requestedQuestionCount;
     }
 
     try {
@@ -1336,9 +1360,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         mode: this.quizMode,
         full_score: this.quizSettings.full_score,
         time_limit: this.quizSettings.time_limit || null,
+        max_attempts: this.quizSettings.max_attempts || null,
         question_count: 0,
         auto_weighting: this.quizSettings.auto_weighting,
         allowed_types: this.quizSettings.allowed_types,
+        ...(this.quizMode === 'ai' ? { requested_question_count: requestedQuestionCount } : {}),
         ...(this.quizMode === 'ai' ? {
           ai_generation_info: {
             used: true,
@@ -1411,6 +1437,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.quizSettings.time_limit = meta['time_limit'] ? Number(meta['time_limit']) : null;
         this.quizSettings.allowed_types = Array.isArray(meta['allowed_types']) ? meta['allowed_types'] as string[] : ['mcq', 'true_false', 'matching', 'ordering'];
         this.quizSettings.auto_weighting = meta['auto_weighting'] !== false;
+        const requestedCount = Number(meta['requested_question_count']);
+        const actualCount = Number(meta['question_count']);
+        const fallbackCount = actualCount > 0 ? actualCount : 10;
+        this.quizSettings.question_count = Number.isFinite(requestedCount) && requestedCount > 0
+          ? Math.max(1, Math.min(50, Math.round(requestedCount)))
+          : fallbackCount;
+        this.quizSettings.max_attempts = meta['max_attempts'] !== undefined && meta['max_attempts'] !== null 
+          ? Number(meta['max_attempts']) 
+          : null;
       }
     }
 
@@ -1425,7 +1460,76 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.quizQuestions = [];
     this.currentQuestion = null;
     this.showQuestionEditor = false;
+    this.editingQuizSettings = false;
     this.cdr.detectChanges();
+  }
+
+  updateTimeLimit(value: string): void {
+    this.quizSettings.time_limit = value && value.trim() ? Number(value) : null;
+  }
+
+  updateMaxAttempts(value: string): void {
+    this.quizSettings.max_attempts = value && value.trim() ? Number(value) : null;
+  }
+
+  updateQuizSettings(): void {
+    if (!this.currentQuizId || !this.activeSectionId || this.savingQuizSettings) {
+      return;
+    }
+
+    this.savingQuizSettings = true;
+    const sectionId = Number(this.activeSectionId);
+    const contentId = Number(this.currentQuizId);
+
+    // Build meta object with updated settings
+    const activeSection = this.sections.find(s => s.id === this.activeSectionId);
+    const quizItem = activeSection?.content_items?.find(item => item.id === this.currentQuizId && item.type === 'quiz');
+    const existingMeta = (quizItem?.meta as Record<string, unknown>) || {};
+
+    const meta: Record<string, unknown> = {
+      ...existingMeta,
+      full_score: this.quizSettings.full_score,
+      time_limit: this.quizSettings.time_limit || null,
+      max_attempts: this.quizSettings.max_attempts || null
+      // Preserve other settings (mode, allowed_types, auto_weighting, etc.) from existingMeta
+    };
+
+    const payload = {
+      title: this.quizSettings.title,
+      meta: meta
+    };
+
+    this.ai.updateSectionContent(sectionId, contentId, payload).subscribe({
+      next: (response) => {
+        this.savingQuizSettings = false;
+        this.editingQuizSettings = false;
+        
+        // Update the quiz item in sections (update title and meta)
+        if (activeSection && activeSection.content_items) {
+          const itemIndex = activeSection.content_items.findIndex(item => item.id === this.currentQuizId);
+          if (itemIndex >= 0) {
+            activeSection.content_items[itemIndex] = {
+              ...activeSection.content_items[itemIndex],
+              title: this.quizSettings.title,
+              meta: meta
+            };
+          }
+        }
+
+        this.toastr?.success?.(
+          this.currentLang === 'ar' ? 'تم تحديث إعدادات الاختبار بنجاح' : 'Quiz settings updated successfully'
+        );
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.savingQuizSettings = false;
+        console.error('Error updating quiz settings:', error);
+        this.toastr?.error?.(
+          this.currentLang === 'ar' ? 'فشل في تحديث إعدادات الاختبار' : 'Failed to update quiz settings'
+        );
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   testQuiz(): void {
@@ -1689,8 +1793,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.startTextEditorDhikrRotation(); // Start istighfar rotation
     this.cdr.detectChanges();
 
+    const questionCount = Math.max(1, Math.min(50, Math.round(Number(this.quizSettings.question_count) || 10)));
+    this.quizSettings.question_count = questionCount;
+
     const payload: GenerateQuizPayload = {
-      question_count: 10, // Default, can be made configurable
+      question_count: questionCount,
       allowed_types: this.quizSettings.allowed_types
     };
 
@@ -2457,8 +2564,18 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.showVideoModal = true;
       this.selectedContentType = 'video';
       this.cdr.detectChanges();
+    } else if (item.type === 'quiz') {
+      // Open quiz editor modal
+      this.currentQuizId = item.id;
+      this.openQuizEditor();
+    } else if (item.type === 'audio') {
+      // Open audio modal in view mode
+      this.audioContentItem = item;
+      this.viewingAudioContent = true;
+      this.showAudioModal = true;
+      this.selectedContentType = 'audio';
+      this.cdr.detectChanges();
     }
-    // TODO: Handle other content types (audio, quiz)
   }
   // Update content item when editing existing content
   updateContentItem(itemId: string, title: string, content: string): void {
@@ -2612,6 +2729,68 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
   }
   
+  onContentDrop(event: CdkDragDrop<ContentItem[]>, section: Section): void {
+    if (!section || !Array.isArray(section.content_items) || event.previousIndex === event.currentIndex) {
+      return;
+    }
+
+    const items = section.content_items;
+    const movedItem = items[event.previousIndex];
+    if (!movedItem) {
+      return;
+    }
+
+    const revertOrder = () => {
+      moveItemInArray(items, event.currentIndex, event.previousIndex);
+      this.normalizeSectionContentPositions(section);
+      section.updatedAt = new Date().toISOString();
+      this.saveSections();
+      this.cdr.detectChanges();
+    };
+
+    moveItemInArray(items, event.previousIndex, event.currentIndex);
+    this.normalizeSectionContentPositions(section);
+    section.updatedAt = new Date().toISOString();
+    this.saveSections();
+
+    const numericSectionId = Number(section.id);
+    const numericContentId = Number(movedItem.id);
+    const targetPosition = event.currentIndex + 1;
+
+    if (!Number.isFinite(numericSectionId) || !Number.isFinite(numericContentId)) {
+      return;
+    }
+
+    this.contentReorderLoading.add(String(movedItem.id));
+    this.cdr.markForCheck();
+
+    this.ai.updateSectionContent(numericSectionId, numericContentId, {
+      type: movedItem.type || 'text',
+      title: movedItem.title || '',
+      position: targetPosition
+    }).subscribe({
+      next: (resp) => {
+        this.contentReorderLoading.delete(String(movedItem.id));
+        if (resp?.content) {
+          const idx = items.findIndex(ci => ci.id === String(resp.content.id));
+          if (idx >= 0) {
+            items[idx].position = resp.content.position;
+          }
+        }
+        this.saveSections();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.contentReorderLoading.delete(String(movedItem.id));
+        revertOrder();
+        const msg = this.currentLang === 'ar'
+          ? 'تعذر إعادة ترتيب المحتوى.'
+          : 'Failed to reorder content.';
+        this.toastr.error(msg);
+      }
+    });
+  }
+
   // Move Content Item Up
   moveContentItemUp(index: number, sectionId?: string): void {
     // If sectionId provided, move within section
@@ -2745,6 +2924,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.contentItems = items;
     this.saveContentItemsOrder();
     this.cdr.detectChanges();
+  }
+
+  private normalizeSectionContentPositions(section: Section): void {
+    if (!section || !Array.isArray(section.content_items)) {
+      return;
+    }
+    section.content_items.forEach((item, idx) => {
+      item.position = idx + 1;
+    });
   }
   
   // Save content items order to localStorage
@@ -3255,14 +3443,25 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.sectionFileUploadError = error.error?.message || (this.currentLang === 'ar'
           ? 'حدث خطأ أثناء معالجة الملف'
           : 'An error occurred while processing the file');
+        this.sectionFileUploadErrorIsFileSize = false; // Default to false
 
-        // Friendly hint for word-limit errors
+        // Check if error is file-size related
         if (error.status === 400 && error.error?.message) {
-          const tooLong = error.error.message.includes('2000') || error.error.message.includes('2,000');
+          const errorMessage = error.error.message.toLowerCase();
+          const tooLong = errorMessage.includes('2000') || 
+                         errorMessage.includes('2,000') || 
+                         errorMessage.includes('words') && (errorMessage.includes('exceed') || errorMessage.includes('too large') || errorMessage.includes('split'));
           if (tooLong) {
             this.sectionFileUploadError = this.currentLang === 'ar'
               ? 'الملف يتجاوز 2000 كلمة. يرجى تقسيمه بحيث يحتوي كل ملف على قسم واحد لا يزيد عن 2000 كلمة.'
               : 'File exceeds 2,000 words. Please split it so each file contains one section and stays under 2,000 words.';
+            this.sectionFileUploadErrorIsFileSize = true;
+          }
+        } else if (error.error?.message) {
+          // Check if backend error message mentions file size
+          const errorMessage = error.error.message.toLowerCase();
+          if (errorMessage.includes('split') && (errorMessage.includes('file') || errorMessage.includes('words') || errorMessage.includes('2000'))) {
+            this.sectionFileUploadErrorIsFileSize = true;
           }
         }
 
@@ -3428,6 +3627,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   clearSectionFileError(): void {
     this.sectionFileUploadError = null;
+    this.sectionFileUploadErrorIsFileSize = false;
     this.sectionFileUploading = false;
     this.sectionFileUploadProgress = 0;
     this.sectionFileUploadStep = '';

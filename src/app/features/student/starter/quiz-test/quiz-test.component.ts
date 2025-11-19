@@ -219,6 +219,13 @@ export class QuizTestComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error starting quiz attempt:', error);
+        // Check if error is due to max attempts reached
+        if (error.status === 403 && error.error?.message) {
+          // Show error message and prevent quiz from starting
+          alert(error.error.message); // TODO: Replace with toastr or better UI
+          this.closeTest();
+          return;
+        }
         // Fallback to local timer
         if (this.timeLimit && this.timeLimit > 0) {
           this.timeRemaining = this.timeLimit * 60;
@@ -289,10 +296,8 @@ export class QuizTestComponent implements OnInit, OnDestroy {
       this.timerInterval = null;
     }
     
-    // Auto-submit the quiz
-    this.calculateScore();
-    this.showResults = true;
-    this.cdr.detectChanges();
+    // Auto-submit the quiz to backend (marks attempt as completed)
+    this.submitQuiz();
   }
 
   getFormattedTime(): string {
@@ -521,13 +526,10 @@ export class QuizTestComponent implements OnInit, OnDestroy {
     return index;
   }
 
-  // Get letter indicator (A/B/C/D or أ/ب/ج/د)
+  // Get option indicator (always numeric 1, 2, 3...)
   getChoiceLetter(index: number): string {
-    if (this.currentLang === 'ar') {
-      const arabicLetters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
-      return arabicLetters[index] || String.fromCharCode(65 + index);
-    }
-    return String.fromCharCode(65 + index);
+    const numericIndex = index + 1;
+    return numericIndex.toString();
   }
 
   getMatchingColor(index: number, type: 'number' | 'letter'): string {
@@ -779,4 +781,3 @@ export class QuizTestComponent implements OnInit, OnDestroy {
   String = String; // Expose String for template use
   Math = Math; // Expose Math for template use
 }
-

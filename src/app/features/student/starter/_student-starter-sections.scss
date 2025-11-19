@@ -618,6 +618,7 @@
     border-radius: 5px;
     padding: 16px;
     transition: all 0.2s ease;
+    cursor: default;
 
     &:hover {
       border-color: #cbd5e1;
@@ -625,8 +626,6 @@
     }
 
     &.content-type-text {
-      cursor: pointer;
-
       &:hover {
         border-color: #60a5fa;
         background: #dbeafe;
@@ -634,8 +633,6 @@
     }
 
     &.content-type-video {
-      cursor: pointer;
-
       &:hover {
         border-color: #8b5cf6;
         background: #f3e8ff;
@@ -643,8 +640,6 @@
     }
 
     &.content-type-resources {
-      cursor: pointer;
-
       &:hover {
         border-color: #10b981;
         background: #d1fae5;
@@ -652,8 +647,6 @@
     }
 
     &.content-type-audio {
-      cursor: pointer;
-
       &:hover {
         background-color: rgba(76, 175, 80, 0.05);
         border-color: #4caf50;
@@ -711,19 +704,52 @@
     min-width: 0;
   }
 
+  .content-drag-handle {
+    width: 28px;
+    min-width: 28px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #94a3b8;
+    cursor: grab;
+    user-select: none;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #2563eb;
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  .content-item-card.cdk-drag-disabled {
+    .content-drag-handle {
+      cursor: not-allowed;
+      color: #cbd5e1;
+    }
+  }
+
+  .cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 5px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+    border: 2px dashed #2563eb;
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0;
+  }
+
   .content-item-text {
     display: flex;
     flex-direction: column;
     gap: 6px;
     flex: 1;
     min-width: 0;
-    cursor: pointer;
-    
-    &:hover {
-      .content-item-title {
-        color: #2563EB;
-      }
-    }
   }
 
   .content-item-title {
@@ -736,6 +762,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover,
+    &:focus {
+      color: #2563EB;
+    }
   }
 
   .content-item-header-actions {
@@ -1407,4 +1440,3 @@
     opacity: 0.5;
   }
 }
-

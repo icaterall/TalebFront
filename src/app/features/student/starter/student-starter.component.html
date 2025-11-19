@@ -288,7 +288,12 @@
             <!-- Section Content (collapsible) -->
             <div class="section-content-body" *ngIf="!section.isCollapsed">
               <!-- Content Items List -->
-              <div class="content-items-list" *ngIf="section.content_items && section.content_items.length > 0">
+              <div
+                class="content-items-list"
+                *ngIf="section.content_items && section.content_items.length > 0"
+                cdkDropList
+                [cdkDropListData]="section.content_items"
+                (cdkDropListDropped)="onContentDrop($event, section)">
                 <div 
                   *ngFor="let item of section.content_items; let j = index; trackBy: trackByContentId"
                   class="content-item-card"
@@ -297,31 +302,17 @@
                   [class.content-type-video]="item.type === 'video'"
                   [class.content-type-audio]="item.type === 'audio'"
                   [class.content-type-quiz]="item.type === 'quiz'"
-                  (click)="openContentItem(item)"
-                  [style.cursor]="(item.type === 'video' || item.type === 'audio' || item.type === 'resources' || item.type === 'quiz') ? 'pointer' : 'default'">
+                  cdkDrag
+                  [cdkDragDisabled]="isReordering(item.id)">
                   
                   <div class="content-item-header">
                     <div class="content-item-main">
-                      <div class="content-order-inline">
-                        <button 
-                          type="button" 
-                          class="order-btn" 
-                          (click)="moveContentItemUp(j, section.id)"
-                          [disabled]="isReordering(item.id) || j === 0"
-                          [attr.aria-busy]="isReordering(item.id) ? 'true' : null"
-                          [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأعلى' : 'Move up'">
-                          ⬆️
-                        </button>
-                        <button 
-                          type="button" 
-                          class="order-btn" 
-                          (click)="moveContentItemDown(j, section.id)"
-                          [disabled]="isReordering(item.id) || j === section.content_items.length - 1"
-                          [attr.aria-busy]="isReordering(item.id) ? 'true' : null"
-                          [attr.aria-label]="currentLang === 'ar' ? 'تحريك للأسفل' : 'Move down'">
-                          ⬇️
-                        </button>
-                        <span class="order-loading" *ngIf="isReordering(item.id)">⏳</span>
+                      <div 
+                        class="content-drag-handle"
+                        cdkDragHandle
+                        [attr.aria-label]="currentLang === 'ar' ? 'اسحب لإعادة ترتيب المحتوى' : 'Drag to reorder content'"
+                        [attr.title]="currentLang === 'ar' ? 'اسحب لإعادة الترتيب' : 'Drag to reorder'">
+                        ⋮⋮
                       </div>
                       <div class="content-item-type-icon">
                         <span *ngIf="item.type === 'text'">📝</span>
@@ -330,8 +321,15 @@
                         <span *ngIf="item.type === 'audio'">🎧</span>
                         <span *ngIf="item.type === 'quiz'">📋</span>
                       </div>
-                      <div class="content-item-text" (click)="viewContentItem(item)">
-                        <h4 class="content-item-title">{{ item.title }}</h4>
+                      <div class="content-item-text">
+                        <h4
+                          class="content-item-title"
+                          tabindex="0"
+                          (click)="viewContentItem(item)"
+                          (keydown.enter)="viewContentItem(item)"
+                          (keydown.space)="viewContentItem(item); $event.preventDefault()">
+                          {{ item.title }}
+                        </h4>
                         <div class="content-item-preview" *ngIf="item.type === 'text' && item.content">
                           <p class="content-text-preview">
                             {{ getTextPreview(item.content) }}
@@ -371,7 +369,7 @@
                               <strong>{{ currentLang === 'ar' ? 'عدد الأسئلة' : 'Questions' }}:</strong> {{ quizInfo.questionCount }}
                             </span>
                             <span class="content-detail" *ngIf="quizInfo.fullScore > 0">
-                              <strong>{{ currentLang === 'ar' ? 'المجموع الكلي' : 'Total Score' }}:</strong> {{ quizInfo.fullScore }}
+                              <strong>{{ currentLang === 'ar' ? 'مجموع الدرجات الكلي' : 'Total Score' }}:</strong> {{ quizInfo.fullScore }}
                             </span>
                             <span class="content-detail" *ngIf="quizInfo.questionCount > 0 && quizInfo.pointsPerQuestion > 0">
                               <strong>{{ currentLang === 'ar' ? 'نقاط لكل سؤال' : 'Points per Question' }}:</strong> {{ quizInfo.pointsPerQuestion }}
@@ -1582,7 +1580,12 @@
         <div class="error-icon">⚠️</div>
         <p class="error-message">{{ sectionFileUploadError }}</p>
         <button type="button" class="btn-primary retry-btn" (click)="clearSectionFileError()">
-          {{ currentLang === 'ar' ? 'فهمت، سأقسم الملف' : 'Got it, I will split the file' }}
+          <ng-container *ngIf="sectionFileUploadErrorIsFileSize">
+            {{ currentLang === 'ar' ? 'فهمت، سأقسم الملف' : 'Got it, I will split the file' }}
+          </ng-container>
+          <ng-container *ngIf="!sectionFileUploadErrorIsFileSize">
+            {{ currentLang === 'ar' ? 'حسناً' : 'OK' }}
+          </ng-container>
         </button>
       </div>
     </div>
@@ -1995,7 +1998,7 @@
           />
         </div>
         <div class="form-field">
-          <label for="fullScore">{{ currentLang === 'ar' ? 'المجموع الكلي' : 'Full Score' }}</label>
+          <label for="fullScore">{{ currentLang === 'ar' ? 'مجموع الدرجات الكلي' : 'Full Score' }}</label>
           <input
             id="fullScore"
             type="number"
@@ -2018,6 +2021,18 @@
           <p class="field-hint">{{ currentLang === 'ar' ? 'اتركه فارغاً إذا لم يكن هناك حد زمني' : 'Leave empty if there is no time limit' }}</p>
         </div>
         <div class="form-field">
+          <label for="maxAttemptsWizard">{{ currentLang === 'ar' ? 'عدد المحاولات المسموحة' : 'Maximum Attempts' }}</label>
+          <input
+            id="maxAttemptsWizard"
+            type="number"
+            class="field-input"
+            [(ngModel)]="quizSettings.max_attempts"
+            min="1"
+            [placeholder]="currentLang === 'ar' ? 'مثال: 3 (اتركه فارغاً لغير محدود)' : 'e.g. 3 (leave empty for unlimited)'"
+          />
+          <p class="field-hint">{{ currentLang === 'ar' ? 'اتركه فارغاً للسماح بعدد غير محدود من المحاولات' : 'Leave empty to allow unlimited attempts' }}</p>
+        </div>
+        <div class="form-field">
           <label>{{ currentLang === 'ar' ? 'أنواع الأسئلة المسموحة' : 'Allowed Question Types' }}</label>
           <div class="checkbox-group">
             <label class="checkbox-label">
@@ -2038,11 +2053,22 @@
             </label>
           </div>
         </div>
-        <div class="form-field">
-          <label class="checkbox-label">
-            <input type="checkbox" [(ngModel)]="quizSettings.auto_weighting" />
-            {{ currentLang === 'ar' ? 'توزيع النقاط تلقائياً' : 'Auto-distribute points' }}
-          </label>
+        <div class="form-field" *ngIf="quizMode === 'ai'">
+          <label for="questionCount">{{ currentLang === 'ar' ? 'عدد الأسئلة المطلوب توليدها' : 'Number of Questions to Generate' }}</label>
+          <input
+            id="questionCount"
+            type="number"
+            class="field-input"
+            [(ngModel)]="quizSettings.question_count"
+            min="1"
+            max="50"
+            [placeholder]="currentLang === 'ar' ? 'مثال: 10' : 'e.g. 10'"
+          />
+          <p class="field-hint">
+            {{ currentLang === 'ar'
+              ? 'يمكن طلب ما بين 1 و 50 سؤالاً. سيحاول الذكاء الاصطناعي تغطية المحتوى بأفضل شكل ممكن.'
+              : 'Request between 1 and 50 questions. AI will try to cover the content as accurately as possible.' }}
+          </p>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" (click)="quizMode = null" [disabled]="creatingQuiz">
@@ -2066,20 +2092,131 @@
   <div class="modal-content quiz-editor-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>{{ quizSettings.title || (currentLang === 'ar' ? 'محرر الاختبار' : 'Quiz Editor') }}</h3>
-      <button type="button" class="modal-close-btn" (click)="closeQuizEditor()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="closeQuizEditor()"
+        [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'"
+        *ngIf="!(quizMode === 'ai' && quizQuestions.length > 0)">
+        ✕
+      </button>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="closeQuizEditor()"
+        [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'"
+        *ngIf="quizMode === 'ai' && quizQuestions.length > 0">
+        ✕
+      </button>
     </div>
     <div class="modal-body">
-      <div class="quiz-info-bar">
-        <span *ngIf="quizSettings.full_score > 0">
-          <strong>{{ currentLang === 'ar' ? 'المجموع الكلي' : 'Total Score' }}:</strong> {{ quizSettings.full_score }}
-        </span>
-        <span *ngIf="quizQuestions.length > 0">
-          <strong>{{ currentLang === 'ar' ? 'عدد الأسئلة' : 'Questions' }}:</strong> {{ quizQuestions.length }}
-        </span>
-        <span *ngIf="quizQuestions.length > 0 && quizSettings.full_score > 0">
-          <strong>{{ currentLang === 'ar' ? 'نقاط لكل سؤال' : 'Points per Question' }}:</strong> 
-          {{ Math.round((quizSettings.full_score / quizQuestions.length) * 100) / 100 }}
-        </span>
+      <!-- Quiz Settings Editor -->
+      <div class="quiz-settings-section">
+        <div class="settings-header">
+          <h4>{{ currentLang === 'ar' ? 'إعدادات الاختبار' : 'Quiz Settings' }}</h4>
+          <button 
+            type="button" 
+            class="btn-icon" 
+            (click)="editingQuizSettings = !editingQuizSettings"
+            [attr.aria-label]="currentLang === 'ar' ? (editingQuizSettings ? 'إلغاء التعديل' : 'تعديل الإعدادات') : (editingQuizSettings ? 'Cancel Edit' : 'Edit Settings')">
+            {{ editingQuizSettings ? '✕' : '✏️' }}
+          </button>
+        </div>
+
+        <!-- Display Mode -->
+        <div class="settings-display" *ngIf="!editingQuizSettings">
+          <div class="quiz-info-bar">
+            <span *ngIf="quizSettings.title">
+              <strong>{{ currentLang === 'ar' ? 'عنوان الاختبار' : 'Quiz Title' }}:</strong> {{ quizSettings.title }}
+            </span>
+            <span *ngIf="quizSettings.full_score > 0">
+              <strong>{{ currentLang === 'ar' ? 'مجموع الدرجات الكلي' : 'Total Score' }}:</strong> {{ quizSettings.full_score }}
+            </span>
+            <span *ngIf="quizQuestions.length > 0">
+              <strong>{{ currentLang === 'ar' ? 'عدد الأسئلة' : 'Questions' }}:</strong> {{ quizQuestions.length }}
+            </span>
+            <span *ngIf="quizSettings.time_limit">
+              <strong>{{ currentLang === 'ar' ? 'الوقت المحدد' : 'Time Limit' }}:</strong> {{ quizSettings.time_limit }} {{ currentLang === 'ar' ? 'دقيقة' : 'minutes' }}
+            </span>
+            <span>
+              <strong>{{ currentLang === 'ar' ? 'عدد المحاولات المسموحة' : 'Max Attempts' }}:</strong> 
+              <ng-container *ngIf="quizSettings.max_attempts">{{ quizSettings.max_attempts }}</ng-container>
+              <ng-container *ngIf="!quizSettings.max_attempts">{{ currentLang === 'ar' ? 'غير محدود' : 'Unlimited' }}</ng-container>
+            </span>
+            <span *ngIf="quizQuestions.length > 0 && quizSettings.full_score > 0">
+              <strong>{{ currentLang === 'ar' ? 'نقاط لكل سؤال' : 'Points per Question' }}:</strong> 
+              {{ Math.round((quizSettings.full_score / quizQuestions.length) * 100) / 100 }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="settings-edit" *ngIf="editingQuizSettings">
+          <div class="form-field">
+            <label for="quizTitle">{{ currentLang === 'ar' ? 'عنوان الاختبار' : 'Quiz Title' }}</label>
+            <input
+              id="quizTitle"
+              type="text"
+              class="field-input"
+              [(ngModel)]="quizSettings.title"
+              [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الاختبار' : 'Enter quiz title'"
+              maxlength="200"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="quizFullScore">{{ currentLang === 'ar' ? 'مجموع الدرجات الكلي' : 'Full Score' }}</label>
+            <input
+              id="quizFullScore"
+              type="number"
+              class="field-input"
+              [(ngModel)]="quizSettings.full_score"
+              min="1"
+              [placeholder]="currentLang === 'ar' ? 'مثال: 40' : 'e.g. 40'"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="quizTimeLimit">{{ currentLang === 'ar' ? 'الوقت المحدد (بالدقائق)' : 'Time Limit (in minutes)' }}</label>
+            <input
+              id="quizTimeLimit"
+              type="number"
+              class="field-input"
+              [value]="quizSettings.time_limit || ''"
+              (input)="updateTimeLimit($any($event.target).value)"
+              min="1"
+              [placeholder]="currentLang === 'ar' ? 'مثال: 30 (اختياري)' : 'e.g. 30 (optional)'"
+            />
+            <p class="field-hint">{{ currentLang === 'ar' ? 'اتركه فارغاً إذا لم يكن هناك حد زمني' : 'Leave empty if there is no time limit' }}</p>
+          </div>
+
+          <div class="form-field">
+            <label for="quizMaxAttempts">{{ currentLang === 'ar' ? 'عدد المحاولات المسموحة' : 'Maximum Attempts' }}</label>
+            <input
+              id="quizMaxAttempts"
+              type="number"
+              class="field-input"
+              [value]="quizSettings.max_attempts || ''"
+              (input)="updateMaxAttempts($any($event.target).value)"
+              min="1"
+              [placeholder]="currentLang === 'ar' ? 'مثال: 3 (اتركه فارغاً لغير محدود)' : 'e.g. 3 (leave empty for unlimited)'"
+            />
+            <p class="field-hint">{{ currentLang === 'ar' ? 'اتركه فارغاً للسماح بعدد غير محدود من المحاولات' : 'Leave empty to allow unlimited attempts' }}</p>
+          </div>
+
+          <div class="settings-actions">
+            <button type="button" class="btn-primary" (click)="updateQuizSettings()" [disabled]="savingQuizSettings">
+              <span *ngIf="!savingQuizSettings">{{ currentLang === 'ar' ? 'حفظ' : 'Save' }}</span>
+              <span *ngIf="savingQuizSettings" class="btn-loading">
+                <span class="spinner"></span>
+                <span>{{ currentLang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...' }}</span>
+              </span>
+            </button>
+            <button type="button" class="btn-cancel" (click)="editingQuizSettings = false" [disabled]="savingQuizSettings">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- AI Generation Button (for AI mode) -->
@@ -2139,7 +2276,7 @@
             <p class="question-prompt">{{ question.prompt }}</p>
             <div class="question-preview" *ngIf="question.question_type === 'mcq' && question.payload.choices">
               <div *ngFor="let choice of question.payload.choices; let j = index" class="choice-preview">
-                <span class="choice-label">{{ String.fromCharCode(65 + j) }}.</span>
+                <span class="choice-label">{{ j + 1 }}.</span>
                 <span>{{ choice }}</span>
                 <span class="correct-indicator" *ngIf="j === question.payload.correct_index">✓</span>
               </div>
@@ -2199,17 +2336,17 @@
                 [value]="i"
                 [checked]="currentQuestion.payload!.correct_index === i"
                 (change)="currentQuestion.payload!.correct_index = i"
-                [attr.aria-label]="(currentLang === 'ar' ? 'الإجابة الصحيحة' : 'Correct answer') + ' ' + String.fromCharCode(65 + i)"
+                [attr.aria-label]="(currentLang === 'ar' ? 'الإجابة الصحيحة' : 'Correct answer') + ' ' + (i + 1)"
                 class="correct-answer-radio"
               />
-              <span class="radio-label-text">{{ String.fromCharCode(65 + i) }}.</span>
+              <span class="radio-label-text">{{ i + 1 }}.</span>
             </label>
             <input
               type="text"
               class="field-input"
               [value]="currentQuestion.payload!.choices![i]"
               (input)="updateMcqChoice(i, $event)"
-              [placeholder]="(currentLang === 'ar' ? 'الخيار' : 'Option') + ' ' + String.fromCharCode(65 + i)"
+              [placeholder]="(currentLang === 'ar' ? 'الخيار' : 'Option') + ' ' + (i + 1)"
               autocomplete="off"
               spellcheck="false"
             />
