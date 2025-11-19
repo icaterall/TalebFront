@@ -118,10 +118,12 @@ export class QuizTestComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.quizQuestions = response.questions || []; // Backend already shuffles questions, MCQ choices, and matching pairs
         
-        // Store shuffle maps for MCQ questions (needed for answer validation)
+        // Store shuffle maps for MCQ and Ordering questions (needed for answer validation)
         this.quizQuestions.forEach(question => {
           if (question.question_type === 'mcq' && question.payload?.choice_shuffle_map && question.id) {
             this.shuffleMaps.set(question.id, question.payload.choice_shuffle_map);
+          } else if (question.question_type === 'ordering' && question.payload?.item_shuffle_map && question.id) {
+            this.shuffleMaps.set(question.id, question.payload.item_shuffle_map);
           }
         });
         
@@ -661,32 +663,42 @@ export class QuizTestComponent implements OnInit, OnDestroy {
     if (!question || !question.payload.items) return [];
     
     const answer = this.answers.get(questionId)?.answer;
+    const shuffleMap = this.shuffleMaps.get(questionId);
+    
     if (!answer || !Array.isArray(answer) || answer.length === 0) {
-      // No answer yet, return original items
+      // No answer yet, return shuffled items as-is
       return [...question.payload.items];
     }
     
-    // User has reordered items, return in their order
-    const order = answer as number[];
-    const orderedItems: string[] = [];
-    const originalItems = question.payload.items;
+    // User has reordered items
+    // Answer is in terms of original indices, need to convert back to shuffled positions
+    // then get the items in that order
+    const originalIndices = answer as number[];
+    const shuffledItems = question.payload.items;
     
-    // Build array based on user's order
-    for (let i = 0; i < originalItems.length; i++) {
-      const originalIndex = order[i];
-      if (originalIndex !== undefined && originalIndex >= 0 && originalIndex < originalItems.length) {
-        orderedItems.push(originalItems[originalIndex]);
+    if (!shuffleMap || !Array.isArray(shuffleMap)) {
+      // Fallback: assume answer is already in shuffled positions
+      const orderedItems: string[] = [];
+      for (const pos of originalIndices) {
+        if (pos >= 0 && pos < shuffledItems.length) {
+          orderedItems.push(shuffledItems[pos]);
+        }
       }
+      return orderedItems;
     }
     
-    // Fill in any missing items
-    for (let i = 0; i < originalItems.length; i++) {
-      if (!orderedItems.includes(originalItems[i])) {
-        orderedItems.push(originalItems[i]);
-      }
+    // Convert original indices back to shuffled positions
+    // Create reverse map: original index -> shuffled position
+    const reverseMap: number[] = [];
+    for (let i = 0; i < shuffleMap.length; i++) {
+      reverseMap[shuffleMap[i]] = i;
     }
     
-    return orderedItems;
+    // Get shuffled positions in user's order
+    const shuffledPositions = originalIndices.map(origIdx => reverseMap[origIdx]).filter(p => p !== undefined);
+    
+    // Return items in shuffled positions order
+    return shuffledPositions.map(pos => shuffledItems[pos]).filter(item => item !== undefined);
   }
 
   // Ordering drag and drop methods
@@ -731,11 +743,19 @@ export class QuizTestComponent implements OnInit, OnDestroy {
     const question = this.quizQuestions.find(q => q.id === questionId);
     if (!question || !question.payload.items) return;
 
-    // Get current order
+    // Get shuffle map to convert shuffled positions to original indices
+    const shuffleMap = this.shuffleMaps.get(questionId);
+    if (!shuffleMap || !Array.isArray(shuffleMap)) {
+      console.error('No shuffle map found for ordering question', questionId);
+      return;
+    }
+
+    // Get current order (in terms of original indices)
     let currentOrder = this.answers.get(questionId)?.answer as number[] || [];
     if (currentOrder.length === 0) {
-      // Initialize with original order
-      currentOrder = question.payload.items.map((_, i) => i);
+      // Initialize with original indices based on current shuffled order
+      // This means the user hasn't changed anything, so answer is the shuffled order mapped to original indices
+      currentOrder = shuffleMap.map((origIdx, shuffledPos) => origIdx);
     }
 
     // Get current items in order
@@ -746,17 +766,20 @@ export class QuizTestComponent implements OnInit, OnDestroy {
     currentItems.splice(this.orderingDragIndex, 1);
     currentItems.splice(dropIndex, 0, draggedItem);
     
-    // Find original indices for the new order
-    const newOrder: number[] = [];
-    const originalItems = question.payload.items;
+    // Find shuffled positions for the new order
+    const shuffledItems = question.payload.items;
+    const newShuffledOrder: number[] = [];
     for (const item of currentItems) {
-      const originalIndex = originalItems.indexOf(item);
-      if (originalIndex !== -1) {
-        newOrder.push(originalIndex);
+      const shuffledIndex = shuffledItems.indexOf(item);
+      if (shuffledIndex !== -1) {
+        newShuffledOrder.push(shuffledIndex);
       }
     }
     
-    // Save the new order
+    // Convert shuffled positions to original indices using shuffle map
+    const newOrder: number[] = newShuffledOrder.map(shuffledPos => shuffleMap[shuffledPos]);
+    
+    // Save the new order (in terms of original indices)
     this.answers.set(questionId, { questionId, answer: newOrder });
     this.orderingDragIndex = null;
     this.orderingDragOverIndex = null;

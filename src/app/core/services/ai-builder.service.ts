@@ -489,6 +489,8 @@ export interface QuizQuestionPayload {
   // For Ordering
   items?: string[];
   correct_order?: number[];
+  // For Ordering shuffle mapping (sent to frontend, used for answer validation)
+  item_shuffle_map?: number[]; // Maps shuffled position to original index
 }
 
 export interface CreateQuizQuestionPayload {
