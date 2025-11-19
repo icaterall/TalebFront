@@ -55,7 +55,7 @@ interface ContentPreview {
   standalone: true,
   imports: [CommonModule, TranslateModule],
   templateUrl: './course-preview.component.html',
-  styleUrls: ['./course-preview.component.scss'],
+  styleUrl: './course-preview.component.scss',
   animations: [
     trigger('expandCollapse', [
       state('collapsed', style({
@@ -497,5 +497,58 @@ export class CoursePreviewComponent implements OnInit {
       if (section.name) topics.add(section.name);
     });
     return Array.from(topics).filter(Boolean).slice(0, 6);
+  }
+
+  getLearningPoints(): string[] {
+    // Generate learning points based on course sections and content
+    const points: string[] = [];
+    
+    if (this.currentLang === 'ar') {
+      // Arabic learning points
+      if (this.course?.sections && this.course.sections.length > 0) {
+        this.course.sections.forEach((section, index) => {
+          if (index < 3 && section.name) { // Show first 3 sections as learning points
+            points.push(`إتقان ${section.name}`);
+          }
+        });
+      }
+      
+      // Add default learning points if needed
+      if (points.length < 6) {
+        const defaults = [
+          'فهم الأساسيات النظرية والتطبيقية',
+          'تطبيق المفاهيم على مشاريع حقيقية',
+          'حل التحديات والتمارين العملية',
+          'بناء مشروع متكامل من البداية',
+          'التعلم من أفضل الممارسات المهنية',
+          'الحصول على شهادة إتمام معتمدة'
+        ];
+        points.push(...defaults.slice(0, 6 - points.length));
+      }
+    } else {
+      // English learning points
+      if (this.course?.sections && this.course.sections.length > 0) {
+        this.course.sections.forEach((section, index) => {
+          if (index < 3 && section.name) { // Show first 3 sections as learning points
+            points.push(`Master ${section.name}`);
+          }
+        });
+      }
+      
+      // Add default learning points if needed
+      if (points.length < 6) {
+        const defaults = [
+          'Understand theoretical and practical fundamentals',
+          'Apply concepts to real-world projects',
+          'Solve practical challenges and exercises',
+          'Build a complete project from scratch',
+          'Learn from industry best practices',
+          'Earn a verified completion certificate'
+        ];
+        points.push(...defaults.slice(0, 6 - points.length));
+      }
+    }
+    
+    return points.slice(0, 6); // Return maximum 6 points
   }
 }

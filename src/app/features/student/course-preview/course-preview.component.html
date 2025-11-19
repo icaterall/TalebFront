@@ -1,182 +1,128 @@
-<div class="course-preview-wrapper" [class.rtl]="currentLang === 'ar'">
+<div class="course-preview-ar" [class.rtl]="currentLang === 'ar'">
   <div class="loading-container" *ngIf="loading">
     <div class="spinner-large"></div>
     <p>{{ currentLang === 'ar' ? 'جارٍ تحميل معاينة الدورة...' : 'Loading course preview...' }}</p>
   </div>
 
   <ng-container *ngIf="!loading && course as c">
-    <!-- Main Layout: Sidebar + Cover/Details -->
-    <div class="course-layout">
-      <!-- Sidebar: Sections & Content (Top Left) -->
-      <aside class="course-sidebar">
+    <div class="course-preview-layout" [class.rtl]="currentLang === 'ar'">
+      <!-- Main Content: Hero + Learning -->
+      <div class="main-content-area">
+        <!-- Hero Card -->
+        <div class="hero-card">
+          <div class="hero-header">
+            <div class="hero-badge">{{ currentLang === 'ar' ? 'مسودة' : 'Draft' }}</div>
+            <h1 class="hero-title">{{ c.name }}</h1>
+            <p class="hero-description" *ngIf="c.description">{{ c.description }}</p>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-card">
+              <div class="stat-icon">📚</div>
+              <div class="stat-info">
+                <div class="stat-value">{{ c.sections?.length || 0 }}</div>
+                <div class="stat-label">{{ currentLang === 'ar' ? 'أقسام' : 'Sections' }}</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">📝</div>
+              <div class="stat-info">
+                <div class="stat-value">{{ c.total_lessons || 0 }}</div>
+                <div class="stat-label">{{ currentLang === 'ar' ? 'دروس' : 'Lessons' }}</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-info">
+                <div class="stat-value">{{ formatStudentCount(c.student_count) }}</div>
+                <div class="stat-label"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">⭐</div>
+              <div class="stat-info">
+                <div class="stat-value">{{ formatRating(c.rating) }}</div>
+                <div class="stat-label">{{ currentLang === 'ar' ? 'التقييم' : 'Rating' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-footer">
+            <div class="teacher-info">
+              <img [src]="c.teacher?.avatar_url || 'assets/images/default-avatar.png'" 
+                   [alt]="c.teacher?.name || 'Instructor'"
+                   class="teacher-avatar">
+              <div class="teacher-details">
+                <span class="teacher-label">{{ currentLang === 'ar' ? 'المُقدِّم' : 'Instructor' }}</span>
+                <span class="teacher-name">{{ c.teacher?.name }}</span>
+              </div>
+            </div>
+            <div class="hero-buttons">
+              <button class="btn-publish" (click)="publishCourse()" [disabled]="publishing">
+                <span *ngIf="!publishing">{{ currentLang === 'ar' ? 'نشر الدورة' : 'Publish course' }}</span>
+                <span *ngIf="publishing">{{ currentLang === 'ar' ? 'جارٍ النشر...' : 'Publishing...' }}</span>
+              </button>
+              <button class="btn-back" (click)="backToBuilder()">
+                {{ currentLang === 'ar' ? 'العودة للتعديل' : 'Back to edit' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- What You'll Learn Card -->
+        <div class="learning-card" *ngIf="learningHighlights.length">
+          <h2 class="card-title">
+            <span class="title-icon">🎯</span>
+            {{ currentLang === 'ar' ? 'ما الذي ستتعلمه' : "What you'll learn" }}
+          </h2>
+          <div class="learning-list">
+            <div class="learning-item" *ngFor="let highlight of learningHighlights">
+              <div class="check-mark">✓</div>
+              <p>{{ highlight }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar: Course Sections -->
+      <aside class="sections-sidebar">
         <div class="sidebar-header">
-          <h2>{{ currentLang === 'ar' ? 'محتوى الدورة' : 'Course Content' }}</h2>
+          <h3>{{ currentLang === 'ar' ? 'محتوى الدورة' : 'Course Content' }}</h3>
           <p class="sidebar-subtitle">
             {{ c.sections?.length || 0 }} {{ currentLang === 'ar' ? 'قسم' : 'sections' }} • 
             {{ c.total_lessons }} {{ currentLang === 'ar' ? 'درس' : 'lessons' }}
           </p>
         </div>
-
-        <div class="sidebar-content">
-          <div class="sections-list">
-            <div class="section-item" *ngFor="let section of c.sections">
-              <button class="section-header-btn" (click)="toggleSection(section)">
-                <div class="section-header-content">
-                  <div class="section-icon">{{ section.icon || '📖' }}</div>
-                  <div class="section-info">
-                    <h3 class="section-title">{{ section.name }}</h3>
-                    <div class="section-meta">
-                      <span>{{ section.content_items.length }} {{ currentLang === 'ar' ? 'درس' : 'lessons' }}</span>
-                      <span *ngIf="section.total_duration">• {{ formatDuration(section.total_duration) }}</span>
-                    </div>
-                  </div>
+        <div class="sections-list">
+          <div class="section-card" *ngFor="let section of c.sections">
+            <button class="section-header" (click)="toggleSection(section)">
+              <div class="section-info">
+                <div class="section-icon">{{ section.icon || '📖' }}</div>
+                <div>
+                  <h4 class="section-title">{{ section.name }}</h4>
+                  <p class="section-meta">
+                    {{ section.content_items.length }} {{ currentLang === 'ar' ? 'درس' : 'lessons' }}
+                    <span *ngIf="section.total_duration"> • {{ formatDuration(section.total_duration) }}</span>
+                  </p>
                 </div>
-                <span class="expand-icon" [class.expanded]="section.isExpanded">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </span>
-              </button>
-
-              <div class="section-content" [@expandCollapse]="section.isExpanded ? 'expanded' : 'collapsed'">
-                <div class="content-items">
-                  <div class="content-item" 
-                       *ngFor="let item of section.content_items; let idx = index"
-                       (click)="onContentClick({sectionId: section.id, contentId: item.id})">
-                    <div class="content-item-icon">{{ getContentIcon(item.type) }}</div>
-                    <div class="content-item-info">
-                      <p class="content-item-title">{{ item.title }}</p>
-                      <div class="content-item-meta">
-                        <span class="content-type">{{ getContentTypeLabel(item.type) }}</span>
-                        <span *ngIf="item.duration" class="content-duration">{{ formatDuration(item.duration) }}</span>
-                      </div>
-                    </div>
-                    <div class="content-item-status">
-                      <span class="status-badge" [class]="'status-' + (item.status || 'available')">
-                        {{ getStatusLabel(item.status) }}
-                      </span>
-                    </div>
-                  </div>
+              </div>
+              <span class="expand-arrow" [class.expanded]="section.isExpanded">▼</span>
+            </button>
+            <div class="section-content" *ngIf="section.isExpanded" [@expandCollapse]="section.isExpanded ? 'expanded' : 'collapsed'">
+              <div class="lesson-item" *ngFor="let item of section.content_items" (click)="onContentClick({sectionId: section.id, contentId: item.id})">
+                <div class="lesson-icon">{{ getContentIcon(item.type) }}</div>
+                <div class="lesson-details">
+                  <p class="lesson-title">{{ item.title }}</p>
+                  <span class="lesson-meta">
+                    {{ getContentTypeLabel(item.type) }}
+                    <span *ngIf="item.duration"> • {{ formatDuration(item.duration) }}</span>
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </aside>
-
-      <!-- Cover Image & Course Details (Top Right) -->
-      <section class="course-header-section">
-        <!-- Cover Image Background -->
-        <div class="cover-background" 
-             [style.backgroundImage]="'url(' + (c.cover_image_url || 'assets/images/default-course-cover.jpg') + ')'">
-        </div>
-        
-        <!-- Content Overlay -->
-        <div class="header-content">
-          <!-- Course Info & Stats -->
-          <div class="course-info">
-            <div class="breadcrumbs">
-              <span>{{ currentLang === 'ar' ? 'الدورات' : 'Courses' }}</span>
-              <span class="divider">›</span>
-              <span>{{ c.category_name || (currentLang === 'ar' ? 'عام' : 'General') }}</span>
-              <span class="divider" *ngIf="c.grade">›</span>
-              <span *ngIf="c.grade">{{ c.grade }}</span>
-            </div>
-
-            <h1 class="course-title">{{ c.name }}</h1>
-            <p class="course-description" *ngIf="c.description">{{ c.description }}</p>
-
-            <!-- Statistics Grid -->
-            <div class="stats-grid">
-              <div class="stat-item">
-                <div class="stat-icon">📚</div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ c.sections?.length || 0 }}</div>
-                  <div class="stat-label">{{ currentLang === 'ar' ? 'أقسام' : 'Sections' }}</div>
-                </div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-icon">📝</div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ c.total_lessons }}</div>
-                  <div class="stat-label">{{ currentLang === 'ar' ? 'دروس' : 'Lessons' }}</div>
-                </div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ formatRating(c.rating) }}</div>
-                  <div class="stat-label">{{ currentLang === 'ar' ? 'التقييم' : 'Rating' }}</div>
-                </div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-icon">👥</div>
-                <div class="stat-content">
-                  <div class="stat-value" [class.long-text]="c.student_count && c.student_count > 999">{{ formatStudentCount(c.student_count) }}</div>
-                  <div class="stat-label"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Author & Actions -->
-            <div class="header-footer">
-              <div class="author-info">
-                <img [src]="c.teacher?.avatar_url || 'assets/images/default-avatar.png'" 
-                     [alt]="c.teacher?.name || 'Author'"
-                     class="author-avatar">
-                <div class="author-details">
-                  <span class="author-label">{{ currentLang === 'ar' ? 'المُقدِّم' : 'Created by' }}</span>
-                  <span class="author-name">{{ c.teacher?.name }}</span>
-                </div>
-              </div>
-              <div class="course-status-section">
-                <span class="status-badge" [class.status-published]="c.published" [class.status-draft]="!c.published">
-                  {{ getCourseStatusLabel() }}
-                </span>
-              </div>
-              <div class="header-actions">
-                <button class="btn-primary" (click)="publishCourse()" [disabled]="publishing">
-                  <span *ngIf="!publishing">{{ currentLang === 'ar' ? 'نشر الدورة' : 'Publish course' }}</span>
-                  <span *ngIf="publishing">{{ currentLang === 'ar' ? 'جارٍ النشر...' : 'Publishing...' }}</span>
-                </button>
-                <button class="btn-secondary" (click)="backToBuilder()">
-                  {{ currentLang === 'ar' ? 'العودة للتعديل' : 'Back to edit' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
-
-    <!-- Main Content Area -->
-    <main class="course-main">
-        <div class="main-content">
-          <!-- Learning Highlights -->
-          <div class="info-card" *ngIf="learningHighlights.length">
-            <h2 class="card-title">{{ currentLang === 'ar' ? 'ما الذي ستتعلمه' : "What you'll learn" }}</h2>
-            <div class="learning-list">
-              <div class="learning-point" *ngFor="let highlight of learningHighlights">
-                <span class="check-icon">✓</span>
-                <span>{{ highlight }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Related Topics -->
-          <div class="info-card" *ngIf="relatedTopics.length">
-            <h2 class="card-title">{{ currentLang === 'ar' ? 'مواضيع مرتبطة' : 'Related Topics' }}</h2>
-            <div class="topics-list">
-              <span class="topic-tag" *ngFor="let topic of relatedTopics">{{ topic }}</span>
-            </div>
-          </div>
-
-          <!-- Course Description -->
-          <div class="info-card" *ngIf="c.description">
-            <h2 class="card-title">{{ currentLang === 'ar' ? 'عن الدورة' : 'About this course' }}</h2>
-            <p class="description-text">{{ c.description }}</p>
-          </div>
-        </div>
-      </main>
   </ng-container>
 </div>
