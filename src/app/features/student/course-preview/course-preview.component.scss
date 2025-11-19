@@ -1,7 +1,7 @@
 .course-preview-ar {
   min-height: 100vh;
   background: #f8fafc;
-  padding: 1rem 2px 1rem;
+  padding: 1rem 5px 1rem;
 
   &.rtl {
     direction: rtl;
@@ -11,10 +11,9 @@
 
 .course-preview-layout {
   display: grid;
-  grid-template-columns: 1fr minmax(590px, 920px);
+  grid-template-columns: 1fr minmax(590px, 1080px);
   gap: 1rem;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
   align-items: start;
 
   @media (max-width: 1024px) {
@@ -373,7 +372,7 @@
 .sections-sidebar {
   background: white;
   border-radius: 5px;
-  padding: 1.5rem;
+  padding: 5px 5px 5px 5px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
   position: sticky;
@@ -387,8 +386,8 @@
   }
 
   .sidebar-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 10px;
     border-bottom: 2px solid #f1f5f9;
 
     h3 {
@@ -412,11 +411,12 @@
   }
 
   .section-card {
-    border: 1px solid #e2e8f0;
-    border-radius: 5px;
-    background: #fafbfc;
+    border: 1px solid #e2e8f036;
+    border-radius: 2px;
+    background: #efefef70;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.3s 
+ease;
     width: 100%;
 
     &:hover {
