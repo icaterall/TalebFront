@@ -1,0 +1,71 @@
+<aside 
+  class="course-sidebar"
+  [class.open]="isOpen"
+  [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+  <div class="sidebar-header">
+    <h3 class="course-title">{{ courseTitle }}</h3>
+    <button class="close-btn" (click)="closeSidebar.emit()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sidebar-content">
+    <nav class="sections-nav">
+      <div 
+        class="section-item"
+        *ngFor="let section of sections; trackBy: trackBySectionId"
+        [class.expanded]="section.isExpanded">
+        
+        <div class="section-header" (click)="toggleSection(section)">
+          <div class="section-icon">{{ section.icon || '📚' }}</div>
+          <div class="section-info">
+            <h4 class="section-title">{{ section.name }}</h4>
+            <span class="section-count">
+              {{ section.content_items?.length || 0 }} {{ currentLang === 'ar' ? 'درس' : 'lessons' }}
+            </span>
+          </div>
+          <div class="section-toggle">
+            <svg 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              stroke-width="2"
+              [class.rotated]="section.isExpanded">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <div class="section-content" *ngIf="section.isExpanded">
+          <div 
+            class="content-item"
+            *ngFor="let item of section.content_items; trackBy: trackByContentId"
+            [class]="getStatusClass(item.status)"
+            (click)="onContentClick(section.id, item.id)">
+            
+            <div class="content-icon">{{ getContentIcon(item.type) }}</div>
+            
+            <div class="content-info">
+              <span class="content-title">{{ item.title }}</span>
+              <span class="content-meta" *ngIf="item.duration">
+                {{ formatDuration(item.duration) }}
+              </span>
+            </div>
+
+            <div class="content-status">
+              <span class="status-icon" *ngIf="item.status === 'completed'">✓</span>
+              <span class="status-icon locked" *ngIf="item.status === 'locked'">🔒</span>
+              <span class="status-icon next" *ngIf="item.status === 'next'">▶</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+</aside>
+

@@ -445,6 +445,14 @@ export class AiBuilderService {
       { headers: this.getAuthHeaders() }
     );
   }
+
+  publishDraftCourse(courseId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/courses/draft/${courseId}/publish`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }
 
 // Quiz Attempt Interfaces

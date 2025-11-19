@@ -88,3 +88,54 @@
 .video-modal[dir='rtl'] .video-preview-container {
   text-align: right;
 }
+
+// Preview Course Button
+.btn-preview-course {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  .btn-icon {
+    font-size: 1.25rem;
+  }
+
+  .btn-text {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+    padding: 0.875rem 1.25rem;
+
+    .btn-icon {
+      font-size: 1.125rem;
+    }
+
+    .btn-text {
+      font-size: 0.95rem;
+    }
+  }
+}

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { I18nService } from '../../../../core/services/i18n.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { getProfilePhotoUrl } from '../../../../core/utils/profile-photo.util';
 import { firstValueFrom } from 'rxjs';
 
@@ -18,6 +19,7 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
   @Input() isMobile = false;
   @Input() menuOpen = false;
   @Output() menuToggle = new EventEmitter<void>();
+  @Input() hideMenuButton = false;
 
   private i18n = inject(I18nService);
   private authService = inject(AuthService);
@@ -25,6 +27,7 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
 
   user: any = null;
   showProfileMenu = false;
+  isCoursePreviewRoute = false;
 
   get currentLanguage(): string {
     return this.i18n.current === 'ar' ? 'EN' : 'ع';
@@ -60,10 +63,25 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
 
     this.user = this.authService.getCurrentUser();
     
+    // Check if we're on course preview route
+    this.checkRoute();
+    
+    // Listen to route changes
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.checkRoute();
+      });
+    
     // If no profile photo URL in either field, try to refresh user data from backend
     if (this.user && !this.user.profile_photo_url && !this.user.profile_photo) {
       this.authService.updateUserFromBackend();
     }
+  }
+
+  private checkRoute(): void {
+    const url = this.router.url;
+    this.isCoursePreviewRoute = url.includes('/course-preview') || url.includes('/preview');
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -73,6 +91,7 @@ export class StudentHeaderComponent implements OnInit, OnChanges {
   }
 
   onMenuToggle(): void {
+    // Always toggle student sidebar (hamburger controls student-sidebar)
     this.menuToggle.emit();
   }
 

@@ -453,6 +453,17 @@
             <span class="btn-icon">➕</span>
             <span class="btn-text">{{ currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add New Section' }}</span>
           </button>
+
+          <!-- Preview Course Button -->
+          <button
+            type="button"
+            class="btn-preview-course"
+            (click)="previewCourse()"
+            *ngIf="sections.length > 0"
+            [attr.aria-label]="currentLang === 'ar' ? 'معاينة الدورة' : 'Preview Course'">
+            <span class="btn-icon">👁️</span>
+            <span class="btn-text">{{ currentLang === 'ar' ? 'معاينة الدورة كما سيراها الطلاب' : 'Preview Course as Students Will See It' }}</span>
+          </button>
         </div>
 
         <!-- Skeleton Loader for Read-only Summary (shown when loading or data is being fetched) -->
@@ -2096,16 +2107,7 @@
         type="button"
         class="modal-close-btn"
         (click)="closeQuizEditor()"
-        [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'"
-        *ngIf="!(quizMode === 'ai' && quizQuestions.length > 0)">
-        ✕
-      </button>
-      <button
-        type="button"
-        class="modal-close-btn"
-        (click)="closeQuizEditor()"
-        [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'"
-        *ngIf="quizMode === 'ai' && quizQuestions.length > 0">
+        [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">
         ✕
       </button>
     </div>

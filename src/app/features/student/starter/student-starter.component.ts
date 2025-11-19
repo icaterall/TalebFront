@@ -7357,4 +7357,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return response.audioUrl;
   }
 
+  previewCourse(): void {
+    if (!this.draftCourseId) {
+      this.toastr?.warning?.(
+        this.currentLang === 'ar' ? 'لم يتم العثور على معرف الدورة' : 'Course ID not found'
+      );
+      return;
+    }
+
+    // Navigate to course preview page
+    this.router.navigate(['/student/course-preview', this.draftCourseId]);
+  }
+
  }

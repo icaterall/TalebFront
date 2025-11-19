@@ -1,5 +1,6 @@
 .sidebar {
   width: var(--sidebar-w, 260px);
+  z-index: 1000; // Above course sidebar
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
   border-left: 1px solid #e5e7eb;

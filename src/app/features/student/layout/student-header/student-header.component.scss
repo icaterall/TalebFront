@@ -17,7 +17,7 @@
 }
 
 .hamburger {
-  display: none;
+  display: inline-flex; // Always show hamburger (for course preview)
   width: 24px;
   height: 24px;
   border: none;
@@ -27,6 +27,8 @@
   cursor: pointer;
   flex-shrink: 0;
   position: relative; /* enable larger invisible hit area */
+  align-items: center;
+  justify-content: center;
 
   /* Invisible hit area to improve tap target without visual change */
   &::before {
@@ -48,19 +50,12 @@
   &:hover svg {
     fill: #111;
   }
-}
 
-@media (max-width: 992px) {
-  .hamburger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    /* Meet mobile accessibility target size */
-    min-width: 44px;
-    min-height: 44px;
-    /* Keep icon visually 24px while hit area larger */
-    svg { width: 24px; height: 24px; }
-  }
+  /* Meet mobile accessibility target size */
+  min-width: 44px;
+  min-height: 44px;
+  /* Keep icon visually 24px while hit area larger */
+  svg { width: 24px; height: 24px; }
 }
 
 .brand {
