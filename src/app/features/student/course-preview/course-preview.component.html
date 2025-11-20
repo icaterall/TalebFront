@@ -115,8 +115,8 @@
                 <div class="lesson-details">
                   <p class="lesson-title">{{ item.title }}</p>
                   <span class="lesson-meta">
-                    {{ getContentTypeLabel(item.type) }}
-                    <span *ngIf="item.duration"> • {{ formatDuration(item.duration) }}</span>
+                    <span class="lesson-type-icon">{{ getContentIcon(item.type) }}</span>
+                    <span *ngIf="item.duration">{{ formatDuration(item.duration) }}</span>
                   </span>
                 </div>
               </div>

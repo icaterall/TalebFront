@@ -598,29 +598,6 @@
 
     <!-- Action Buttons -->
     <div class="wizard-actions" [dir]="isRTL ? 'rtl' : 'ltr'">
-
-      
-      <button 
-        class="btn-continue" 
-        [disabled]="!canContinue || savingDraftCourse"
-        [attr.aria-busy]="savingDraftCourse"
-        *ngIf="step2Locked"
-        (click)="continue()">
-        <span *ngIf="savingDraftCourse" class="btn-spinner" aria-hidden="true"></span>
-        <span *ngIf="!savingDraftCourse" class="btn-icon">🤖</span>
-        <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
-      </button>
-      
-      <button 
-        class="btn-continue" 
-        [disabled]="!canContinue || step2Locked || savingDraftCourse"
-        [attr.aria-busy]="savingDraftCourse"
-        *ngIf="!step2Locked"
-        (click)="continue()">
-        <span *ngIf="savingDraftCourse" class="btn-spinner" aria-hidden="true"></span>
-        <span *ngIf="!savingDraftCourse" class="btn-icon">🤖</span>
-        <span>{{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}</span>
-      </button>
     </div>
 
     <div class="continue-error" *ngIf="continueErrorMessage" role="alert" aria-live="assertive">

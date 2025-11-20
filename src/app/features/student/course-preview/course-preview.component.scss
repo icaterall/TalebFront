@@ -90,6 +90,21 @@
     z-index: 0;
   }
 
+  // Soft edge fade overlay to blend image edges with background
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at center,
+      transparent 50%,
+      rgba(15, 23, 42, 0.4) 70%,
+      rgba(15, 23, 42, 0.9) 100%
+    );
+    z-index: 0;
+    pointer-events: none;
+  }
+
   > * {
     position: relative;
     z-index: 1;
@@ -558,6 +573,15 @@ ease;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+
+            .lesson-type-icon {
+              font-size: 0.75rem;
+              display: inline-flex;
+              align-items: center;
+            }
           }
         }
       }
