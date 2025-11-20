@@ -334,6 +334,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     additionalNotes: ''
   };
   
+  // Saved preferences for the course (stored after first successful section creation)
+  savedCoursePreferences: {
+    contentSource: ('youtube' | 'text' | 'text-to-audio')[];
+    educationalStage: string[];
+    country: number[];
+    additionalNotes: string;
+  } | null = null;
+  
   // Countries for preferences
   countries: Country[] = [];
   loadingCountries: boolean = false;
@@ -3162,12 +3170,28 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Show AI instruction section
   showAIInstructionSection(): void {
     this.sectionCreationMode = 'ai';
-    this.aiGenerationStep = 0; // Start with preferences step
     this.aiInstructionText = '';
     this.sectionFileSelected = false; // Clear file selection when switching
     this.clearSelectedSectionFile();
-    this.resetAIWizardState();
-    this.loadCountries(); // Load countries when opening preferences
+    
+    // If saved preferences exist, use them and skip to instruction step
+    if (this.savedCoursePreferences) {
+      this.aiPreferences = {
+        contentSource: [...this.savedCoursePreferences.contentSource],
+        educationalStage: [...this.savedCoursePreferences.educationalStage],
+        country: [...this.savedCoursePreferences.country],
+        additionalNotes: this.savedCoursePreferences.additionalNotes
+      };
+      // Load countries if not already loaded
+      if (this.countries.length === 0) {
+        this.loadCountries();
+      }
+      this.aiGenerationStep = 1; // Skip preferences, go to instruction step
+    } else {
+      this.resetAIWizardState();
+      this.aiGenerationStep = 0; // Start with preferences step
+      this.loadCountries(); // Load countries when opening preferences
+    }
     this.cdr.detectChanges();
   }
 
@@ -3279,6 +3303,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     } else {
       this.aiPreferences.educationalStage.push(stage);
     }
+  }
+  
+  // Get country name by ID
+  getCountryName(countryId: number): string {
+    const country = this.countries.find(c => c.id === countryId);
+    return country?.name || '';
   }
 
   proceedToAIStep2(): void {
@@ -3539,6 +3569,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.sectionFileUploadStep = this.currentLang === 'ar' ? '✅ اكتمل!' : '✅ Complete!';
         
         if (response.success && response.section) {
+          // Save preferences for future sections
+          if (!this.savedCoursePreferences) {
+            this.savedCoursePreferences = {
+              contentSource: [...this.aiPreferences.contentSource],
+              educationalStage: [...this.aiPreferences.educationalStage],
+              country: [...this.aiPreferences.country],
+              additionalNotes: this.aiPreferences.additionalNotes
+            };
+          }
+          
           // Add the new section to the sections array
           const newSection: Section & { available: boolean } = {
             id: response.section.id,
@@ -3863,6 +3903,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.sectionFileUploadStep = this.currentLang === 'ar' ? 'اكتمل!' : 'Complete!';
         
         if (response.success && response.section) {
+          // Save preferences for future sections
+          if (!this.savedCoursePreferences) {
+            this.savedCoursePreferences = {
+              contentSource: [...this.aiPreferences.contentSource],
+              educationalStage: [...this.aiPreferences.educationalStage],
+              country: [...this.aiPreferences.country],
+              additionalNotes: this.aiPreferences.additionalNotes
+            };
+          }
+          
           // Add the new section
           const newSection: Section & { available: boolean } = {
             ...response.section,

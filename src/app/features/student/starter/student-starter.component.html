@@ -1487,7 +1487,7 @@
 
       <!-- File Upload Section - Step 1 -->
       <div class="section-creation-panel" *ngIf="sectionCreationMode === 'upload' && uploadStep === 1">
-        <div class="upload-section-header">
+        <div class="upload-section-header" *ngIf="!savedCoursePreferences">
           <button 
             type="button"
             class="btn-back-upload"
@@ -1495,6 +1495,56 @@
             <span class="back-arrow">{{ currentLang === 'ar' ? '→' : '←' }}</span>
             <span>{{ currentLang === 'ar' ? 'رجوع' : 'Back' }}</span>
           </button>
+        </div>
+        
+        <!-- Saved Preferences Display (if exists) -->
+        <div class="saved-preferences-display" *ngIf="savedCoursePreferences">
+          <div class="saved-preferences-header">
+            <h4>{{ currentLang === 'ar' ? 'تفضيلات المحتوى المحفوظة' : 'Saved Content Preferences' }}</h4>
+            <button 
+              type="button"
+              class="btn-edit-preferences"
+              (click)="uploadStep = 0">
+              {{ currentLang === 'ar' ? 'تعديل' : 'Edit' }}
+            </button>
+          </div>
+          <div class="saved-preferences-content">
+            <div class="preference-item">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'المحتوى المفضل:' : 'Preferred Content:' }}</span>
+              <span class="preference-value">
+                <span *ngFor="let source of savedCoursePreferences.contentSource; let last = last">
+                  {{ source === 'youtube' ? (currentLang === 'ar' ? 'فيديوهات يوتيوب' : 'YouTube Videos') : 
+                     source === 'text' ? (currentLang === 'ar' ? 'نص' : 'Text') : 
+                     (currentLang === 'ar' ? 'نص إلى صوت' : 'Text to Audio') }}{{ !last ? ', ' : '' }}
+                </span>
+              </span>
+            </div>
+            <div class="preference-item">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'المرحلة التعليمية:' : 'Educational Stage:' }}</span>
+              <span class="preference-value">
+                <span *ngFor="let stage of savedCoursePreferences.educationalStage; let last = last">
+                  {{ stage === 'kindergarten' ? (currentLang === 'ar' ? 'رياض أطفال' : 'Kindergarten') :
+                     stage === 'primary' ? (currentLang === 'ar' ? 'ابتدائي' : 'Primary School') :
+                     stage === 'middle' ? (currentLang === 'ar' ? 'متوسط' : 'Middle School') :
+                     stage === 'high-school' ? (currentLang === 'ar' ? 'ثانوي' : 'High School') :
+                     stage === 'university' ? (currentLang === 'ar' ? 'جامعي' : 'University') :
+                     (currentLang === 'ar' ? 'تدريب مهني' : 'Professional Training') }}{{ !last ? ', ' : '' }}
+                </span>
+              </span>
+            </div>
+            <div class="preference-item" *ngIf="savedCoursePreferences.country.length > 0">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'البلد:' : 'Country:' }}</span>
+              <span class="preference-value">
+                <span *ngFor="let countryId of savedCoursePreferences.country; let last = last">
+                  {{ getCountryName(countryId) }}{{ !last ? ', ' : '' }}
+                </span>
+              </span>
+            </div>
+            <div class="preference-item" *ngIf="savedCoursePreferences.additionalNotes">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'ملاحظات:' : 'Notes:' }}</span>
+              <span class="preference-value">{{ savedCoursePreferences.additionalNotes }}</span>
+            </div>
+          </div>
         </div>
         <input
           #sectionFileInput
@@ -1693,6 +1743,56 @@
 
       <!-- AI Instruction Section - Step 1 -->
       <div class="section-creation-panel" *ngIf="sectionCreationMode === 'ai' && aiGenerationStep === 1">
+        <!-- Saved Preferences Display (if exists) -->
+        <div class="saved-preferences-display" *ngIf="savedCoursePreferences">
+          <div class="saved-preferences-header">
+            <h4>{{ currentLang === 'ar' ? 'تفضيلات المحتوى المحفوظة' : 'Saved Content Preferences' }}</h4>
+            <button 
+              type="button"
+              class="btn-edit-preferences"
+              (click)="aiGenerationStep = 0">
+              {{ currentLang === 'ar' ? 'تعديل' : 'Edit' }}
+            </button>
+          </div>
+          <div class="saved-preferences-content">
+            <div class="preference-item">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'المحتوى المفضل:' : 'Preferred Content:' }}</span>
+              <span class="preference-value">
+                <span *ngFor="let source of savedCoursePreferences.contentSource; let last = last">
+                  {{ source === 'youtube' ? (currentLang === 'ar' ? 'فيديوهات يوتيوب' : 'YouTube Videos') : 
+                     source === 'text' ? (currentLang === 'ar' ? 'نص' : 'Text') : 
+                     (currentLang === 'ar' ? 'نص إلى صوت' : 'Text to Audio') }}{{ !last ? ', ' : '' }}
+                </span>
+              </span>
+            </div>
+            <div class="preference-item">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'المرحلة التعليمية:' : 'Educational Stage:' }}</span>
+              <span class="preference-value">
+                <span *ngFor="let stage of savedCoursePreferences.educationalStage; let last = last">
+                  {{ stage === 'kindergarten' ? (currentLang === 'ar' ? 'رياض أطفال' : 'Kindergarten') :
+                     stage === 'primary' ? (currentLang === 'ar' ? 'ابتدائي' : 'Primary School') :
+                     stage === 'middle' ? (currentLang === 'ar' ? 'متوسط' : 'Middle School') :
+                     stage === 'high-school' ? (currentLang === 'ar' ? 'ثانوي' : 'High School') :
+                     stage === 'university' ? (currentLang === 'ar' ? 'جامعي' : 'University') :
+                     (currentLang === 'ar' ? 'تدريب مهني' : 'Professional Training') }}{{ !last ? ', ' : '' }}
+                </span>
+              </span>
+            </div>
+            <div class="preference-item" *ngIf="savedCoursePreferences.country.length > 0">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'البلد:' : 'Country:' }}</span>
+              <span class="preference-value">
+                <span *ngFor="let countryId of savedCoursePreferences.country; let last = last">
+                  {{ getCountryName(countryId) }}{{ !last ? ', ' : '' }}
+                </span>
+              </span>
+            </div>
+            <div class="preference-item" *ngIf="savedCoursePreferences.additionalNotes">
+              <span class="preference-label">{{ currentLang === 'ar' ? 'ملاحظات:' : 'Notes:' }}</span>
+              <span class="preference-value">{{ savedCoursePreferences.additionalNotes }}</span>
+            </div>
+          </div>
+        </div>
+        
         <div class="ai-instruction-form">
           <label class="instruction-label">
             {{ currentLang === 'ar' ? 'اكتب تعليماتك للذكاء الاصطناعي:' : 'Write your instructions to AI:' }}
