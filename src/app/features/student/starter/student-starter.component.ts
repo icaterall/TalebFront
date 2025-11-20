@@ -279,9 +279,58 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // AI Instruction Generation
   aiInstructionText: string = '';
   aiGenerating: boolean = false;
-  aiGenerationStep: 1 | 2 | null = null; // Track which AI generation step is active (1, 2 only - no content generation)
+  aiGenerationStep: 1 | 2 | 3 | null = null; // Track which AI generation step is active (1=instructions, 2=options, 3=preview)
   aiGenerationCurrentLesson: number = 0; // Current lesson being generated (1-based)
   aiGenerationTotalLessons: number = 0; // Total number of lessons to generate
+  
+  // AI Wizard Step 2: Content Type Selection
+  aiContentTypes: {
+    text: boolean;
+    quiz: boolean;
+    youtube: boolean;
+    summary: boolean;
+    homework: boolean;
+  } = {
+    text: true,
+    quiz: false,
+    youtube: false,
+    summary: false,
+    homework: false
+  };
+  
+  // YouTube-specific options
+  aiYoutubeOptions: {
+    maxVideos: number; // 1, 2, or 3
+    length: 'short' | 'medium'; // Short (≤5 min) or Medium (≤10 min)
+    mode: 'attach-only' | 'attach-with-summary'; // Attach video only or attach + AI summary
+  } = {
+    maxVideos: 1,
+    length: 'short',
+    mode: 'attach-only'
+  };
+  
+  // Advanced options
+  showAdvancedOptions: boolean = false;
+  aiAdvancedOptions: {
+    targetLength: '10-15' | '20-30'; // minutes
+    difficulty: 'easy' | 'medium' | 'exam-focus';
+    language: 'arabic-only' | 'english-only' | 'bilingual';
+    tone: 'friendly' | 'formal';
+  } = {
+    targetLength: '10-15',
+    difficulty: 'medium',
+    language: 'bilingual',
+    tone: 'friendly'
+  };
+  
+  // AI Plan Preview (Step 3)
+  aiPlanPreview: Array<{
+    type: 'text' | 'video' | 'quiz' | 'summary' | 'homework';
+    title: string;
+    duration?: string;
+    youtubeUrl?: string;
+    editable: boolean;
+  }> = [];
   
   // Dhikr/Istighfar display
   currentDhikr: string = '';
@@ -3034,11 +3083,212 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Show AI instruction section
   showAIInstructionSection(): void {
     this.sectionCreationMode = 'ai';
+    this.aiGenerationStep = 1;
+    this.aiInstructionText = '';
     this.sectionFileSelected = false; // Clear file selection when switching
     this.clearSelectedSectionFile();
+    this.resetAIWizardState();
     this.cdr.detectChanges();
   }
-  
+
+  resetAIWizardState(): void {
+    this.aiContentTypes = {
+      text: true,
+      quiz: false,
+      youtube: false,
+      summary: false,
+      homework: false
+    };
+    this.aiYoutubeOptions = {
+      maxVideos: 1,
+      length: 'short',
+      mode: 'attach-only'
+    };
+    this.showAdvancedOptions = false;
+    this.aiAdvancedOptions = {
+      targetLength: '10-15',
+      difficulty: 'medium',
+      language: 'bilingual',
+      tone: 'friendly'
+    };
+    this.aiPlanPreview = [];
+  }
+
+  proceedToAIStep2(): void {
+    if (!this.aiInstructionText || this.aiInstructionText.trim().length < 20) {
+      this.toastr?.warning?.(
+        this.currentLang === 'ar'
+          ? 'يرجى كتابة تعليمات واضحة (20 حرف على الأقل)'
+          : 'Please write clear instructions (at least 20 characters)'
+      );
+      return;
+    }
+    this.aiGenerationStep = 2;
+  }
+
+  proceedToAIStep3(): void {
+    if (!this.hasAnyContentTypeSelected()) {
+      this.toastr?.warning?.(
+        this.currentLang === 'ar'
+          ? 'يرجى اختيار نوع محتوى واحد على الأقل'
+          : 'Please select at least one content type'
+      );
+      return;
+    }
+    // Generate preview plan based on selected options
+    this.generateAIPlanPreview();
+    this.aiGenerationStep = 3;
+  }
+
+  hasAnyContentTypeSelected(): boolean {
+    return this.aiContentTypes.text || 
+           this.aiContentTypes.quiz || 
+           this.aiContentTypes.youtube || 
+           this.aiContentTypes.summary || 
+           this.aiContentTypes.homework;
+  }
+
+  onYouTubeToggle(): void {
+    if (!this.aiContentTypes.youtube) {
+      // Reset YouTube options when unchecked
+      this.aiYoutubeOptions = {
+        maxVideos: 1,
+        length: 'short',
+        mode: 'attach-only'
+      };
+    }
+  }
+
+  applyPreset(preset: 'quick-explainer' | 'video-first' | 'full-section'): void {
+    // Reset all first
+    this.aiContentTypes = {
+      text: false,
+      quiz: false,
+      youtube: false,
+      summary: false,
+      homework: false
+    };
+
+    switch (preset) {
+      case 'quick-explainer':
+        this.aiContentTypes.text = true;
+        this.aiContentTypes.quiz = true;
+        break;
+      case 'video-first':
+        this.aiContentTypes.youtube = true;
+        this.aiContentTypes.text = true;
+        this.aiYoutubeOptions.maxVideos = 2;
+        this.aiYoutubeOptions.mode = 'attach-with-summary';
+        break;
+      case 'full-section':
+        this.aiContentTypes.text = true;
+        this.aiContentTypes.youtube = true;
+        this.aiContentTypes.quiz = true;
+        this.aiYoutubeOptions.maxVideos = 1;
+        break;
+    }
+  }
+
+  generateAIPlanPreview(): void {
+    this.aiPlanPreview = [];
+    let itemIndex = 1;
+
+    // Text lessons
+    if (this.aiContentTypes.text) {
+      const textCount = this.aiAdvancedOptions.targetLength === '20-30' ? 3 : 2;
+      for (let i = 0; i < textCount; i++) {
+        this.aiPlanPreview.push({
+          type: 'text',
+          title: this.currentLang === 'ar' 
+            ? `درس ${itemIndex}: شرح ${itemIndex}` 
+            : `Lesson ${itemIndex}: Explanation ${itemIndex}`,
+          editable: true
+        });
+        itemIndex++;
+      }
+    }
+
+    // YouTube videos
+    if (this.aiContentTypes.youtube) {
+      for (let i = 0; i < this.aiYoutubeOptions.maxVideos; i++) {
+        this.aiPlanPreview.push({
+          type: 'video',
+          title: this.currentLang === 'ar'
+            ? `فيديو ${i + 1}: مثال من الحياة الواقعية`
+            : `Video ${i + 1}: Real Life Examples`,
+          duration: this.aiYoutubeOptions.length === 'short' ? '≤5 min' : '≤10 min',
+          editable: true
+        });
+        itemIndex++;
+      }
+    }
+
+    // Quiz
+    if (this.aiContentTypes.quiz) {
+      this.aiPlanPreview.push({
+        type: 'quiz',
+        title: this.currentLang === 'ar' ? 'اختبار: 5 أسئلة متعددة الخيارات' : 'Quiz: 5 MCQ questions',
+        editable: true
+      });
+      itemIndex++;
+    }
+
+    // Summary card
+    if (this.aiContentTypes.summary) {
+      this.aiPlanPreview.push({
+        type: 'summary',
+        title: this.currentLang === 'ar' ? 'بطاقة ملخص' : 'Summary card',
+        editable: true
+      });
+      itemIndex++;
+    }
+
+    // Homework
+    if (this.aiContentTypes.homework) {
+      this.aiPlanPreview.push({
+        type: 'homework',
+        title: this.currentLang === 'ar' ? 'واجب منزلي / مهام تدريبية' : 'Homework / practice tasks',
+        editable: true
+      });
+      itemIndex++;
+    }
+  }
+
+  getContentTypeIcon(type: string): string {
+    switch (type) {
+      case 'text': return '📄';
+      case 'video': return '🎥';
+      case 'quiz': return '📝';
+      case 'summary': return '📋';
+      case 'homework': return '📚';
+      default: return '📄';
+    }
+  }
+
+  previewPlanItem(index: number): void {
+    // TODO: Implement preview functionality
+    this.toastr?.info?.(
+      this.currentLang === 'ar'
+        ? 'معاينة قريباً'
+        : 'Preview coming soon'
+    );
+  }
+
+  editPlanItemTitle(index: number): void {
+    const item = this.aiPlanPreview[index];
+    const newTitle = prompt(
+      this.currentLang === 'ar' ? 'أدخل العنوان الجديد:' : 'Enter new title:',
+      item.title
+    );
+    if (newTitle && newTitle.trim()) {
+      item.title = newTitle.trim();
+    }
+  }
+
+  removePlanItem(index: number): void {
+    this.aiPlanPreview.splice(index, 1);
+  }
+
   // Generate AI content from instructions
   async generateAIContent(): Promise<void> {
     if (!this.aiInstructionText || this.aiInstructionText.trim().length < 20) {
@@ -3071,10 +3321,33 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Start progress simulation for AI generation
     this.startAIProgressSimulation();
 
-    const requestData = {
+    // Build request data with all options
+    const requestData: any = {
       courseId: this.draftCourseId,
-      instructions: this.aiInstructionText.trim()
+      instructions: this.aiInstructionText.trim(),
+      contentTypes: {
+        text: this.aiContentTypes.text,
+        quiz: this.aiContentTypes.quiz,
+        youtube: this.aiContentTypes.youtube,
+        summary: this.aiContentTypes.summary,
+        homework: this.aiContentTypes.homework
+      },
+      advancedOptions: {
+        targetLength: this.aiAdvancedOptions.targetLength,
+        difficulty: this.aiAdvancedOptions.difficulty,
+        language: this.aiAdvancedOptions.language,
+        tone: this.aiAdvancedOptions.tone
+      }
     };
+
+    // Add YouTube-specific options if YouTube is selected
+    if (this.aiContentTypes.youtube) {
+      requestData.youtubeOptions = {
+        maxVideos: this.aiYoutubeOptions.maxVideos,
+        length: this.aiYoutubeOptions.length,
+        mode: this.aiYoutubeOptions.mode
+      };
+    }
 
     this.http.post<any>(`${this.baseUrl}/courses/draft/sections/ai-generate`, requestData).subscribe({
       next: (response) => {
@@ -3273,8 +3546,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (!this.sectionFileUploading && !this.aiGenerating) {
       this.showAddSectionModal = false;
       this.sectionCreationMode = null;
-      this.sectionFileUploadError = null;
+      this.aiGenerationStep = null;
       this.aiInstructionText = '';
+      this.resetAIWizardState();
+      this.sectionFileSelected = false;
+      this.sectionFileUploadError = null;
       this.stopProgressSimulation();
       this.sectionFileUploadProgress = 0;
       this.sectionFileUploadStep = '';

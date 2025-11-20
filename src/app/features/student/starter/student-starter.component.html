@@ -1287,7 +1287,7 @@
         <div class="ai-section-group">
           <div class="ai-section-header">
             <div class="option-icon">🤖</div>
-            <h3 class="ai-section-title">{{ currentLang === 'ar' ? 'الذكاء الاصطناعي' : 'AI Generation' }}</h3>
+            <h3 class="ai-section-title">{{ currentLang === 'ar' ? 'مساعد القسم بالذكاء الاصطناعي 🤖' : 'AI Section Assistant 🤖' }}</h3>
           </div>
           <div class="ai-section-options">
             <!-- Upload File Option -->
@@ -1312,7 +1312,7 @@
               <div class="sub-option-icon">✨</div>
               <div class="sub-option-content">
                 <h4>{{ currentLang === 'ar' ? 'إنشاء بالذكاء الاصطناعي' : 'Generate with AI' }}</h4>
-                <p>{{ currentLang === 'ar' ? 'اكتب وصفاً أو تعليمات للذكاء الاصطناعي لإنشاء المحتوى' : 'Write description or instructions for AI to generate content' }}</p>
+                <p>{{ currentLang === 'ar' ? 'دع الذكاء الاصطناعي يبني الدروس والفيديوهات والاختبارات من موضوعك' : 'Let AI build lessons, videos and quizzes from your topic' }}</p>
               </div>
             </button>
           </div>
@@ -1350,8 +1350,8 @@
         </div>
       </div>
 
-      <!-- AI Instruction Section -->
-      <div class="section-creation-panel" *ngIf="sectionCreationMode === 'ai'">
+      <!-- AI Instruction Section - Step 1 -->
+      <div class="section-creation-panel" *ngIf="sectionCreationMode === 'ai' && aiGenerationStep === 1">
         <div class="ai-instruction-form">
           <label class="instruction-label">
             {{ currentLang === 'ar' ? 'اكتب تعليماتك للذكاء الاصطناعي:' : 'Write your instructions to AI:' }}
@@ -1379,9 +1379,227 @@
           
           <button 
             class="generate-ai-content-btn"
-            (click)="generateAIContent()"
+            (click)="proceedToAIStep2()"
             [disabled]="!aiInstructionText || aiInstructionText.trim().length < 20">
-            <span>{{ currentLang === 'ar' ? '✨ إنشاء المحتوى بالذكاء الاصطناعي' : '✨ Generate Content with AI' }}</span>
+            <span>{{ currentLang === 'ar' ? 'التالي' : 'Next' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Step 2: Content Type Selection -->
+      <div class="section-creation-panel ai-wizard-step2" *ngIf="sectionCreationMode === 'ai' && aiGenerationStep === 2">
+        <div class="ai-step-header">
+          <h3>{{ currentLang === 'ar' ? 'ما الذي يجب أن ينشئه الذكاء الاصطناعي لهذا القسم؟' : 'What should AI create for this section?' }}</h3>
+          <p class="ai-step-description">
+            {{ currentLang === 'ar' ? 'اختر ما يجب أن يعدّه الذكاء الاصطناعي لك. يمكنك تعديل كل شيء لاحقاً.' : 'Choose what AI should prepare for you. You can edit everything later.' }}
+          </p>
+        </div>
+
+        <!-- Content Types -->
+        <div class="ai-content-types-section">
+          <h4>{{ currentLang === 'ar' ? 'أنواع المحتوى' : 'Content types' }}</h4>
+          <div class="content-type-options">
+            <label class="content-type-checkbox" [class.checked]="aiContentTypes.text">
+              <input type="checkbox" [(ngModel)]="aiContentTypes.text">
+              <span class="checkmark">✅</span>
+              <span class="label-text">{{ currentLang === 'ar' ? 'دروس نصية (شرح)' : 'Text lessons (explainer notes)' }}</span>
+            </label>
+            <label class="content-type-checkbox" [class.checked]="aiContentTypes.quiz">
+              <input type="checkbox" [(ngModel)]="aiContentTypes.quiz">
+              <span class="checkmark">✅</span>
+              <span class="label-text">{{ currentLang === 'ar' ? 'أسئلة اختبار' : 'Quiz questions' }}</span>
+            </label>
+            <label class="content-type-checkbox" [class.checked]="aiContentTypes.youtube">
+              <input type="checkbox" [(ngModel)]="aiContentTypes.youtube" (change)="onYouTubeToggle()">
+              <span class="checkmark">✅</span>
+              <span class="label-text">{{ currentLang === 'ar' ? 'فيديوهات يوتيوب' : 'YouTube videos' }}</span>
+            </label>
+            <label class="content-type-checkbox" [class.checked]="aiContentTypes.summary">
+              <input type="checkbox" [(ngModel)]="aiContentTypes.summary">
+              <span class="checkmark">✅</span>
+              <span class="label-text">{{ currentLang === 'ar' ? 'بطاقة ملخص / ورقة مرجعية' : 'Summary card / cheat-sheet' }}</span>
+            </label>
+            <label class="content-type-checkbox" [class.checked]="aiContentTypes.homework">
+              <input type="checkbox" [(ngModel)]="aiContentTypes.homework">
+              <span class="checkmark">✅</span>
+              <span class="label-text">{{ currentLang === 'ar' ? 'واجبات منزلية / مهام تدريبية' : 'Homework / practice tasks' }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- YouTube Options (shown when YouTube is checked) -->
+        <div class="youtube-options-section" *ngIf="aiContentTypes.youtube">
+          <h4>{{ currentLang === 'ar' ? 'خيارات يوتيوب' : 'YouTube Options' }}</h4>
+          <div class="youtube-controls">
+            <div class="youtube-control-group">
+              <label>{{ currentLang === 'ar' ? 'الحد الأقصى للفيديوهات:' : 'Max videos:' }}</label>
+              <select [(ngModel)]="aiYoutubeOptions.maxVideos">
+                <option [value]="1">1</option>
+                <option [value]="2">2</option>
+                <option [value]="3">3</option>
+              </select>
+            </div>
+            <div class="youtube-control-group">
+              <label>{{ currentLang === 'ar' ? 'المدة:' : 'Length:' }}</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" [(ngModel)]="aiYoutubeOptions.length" value="short">
+                  {{ currentLang === 'ar' ? 'قصير (≤5 دقائق)' : 'Short (≤5 min)' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiYoutubeOptions.length" value="medium">
+                  {{ currentLang === 'ar' ? 'متوسط (≤10 دقائق)' : 'Medium (≤10 min)' }}
+                </label>
+              </div>
+            </div>
+            <div class="youtube-control-group">
+              <label>{{ currentLang === 'ar' ? 'الوضع:' : 'Mode:' }}</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" [(ngModel)]="aiYoutubeOptions.mode" value="attach-only">
+                  🔗 {{ currentLang === 'ar' ? 'إرفاق الفيديو فقط' : 'Attach video only' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiYoutubeOptions.mode" value="attach-with-summary">
+                  🧠 {{ currentLang === 'ar' ? 'إرفاق + ملخص بالذكاء الاصطناعي' : 'Attach + AI summary' }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mix Presets -->
+        <div class="ai-presets-section">
+          <h4>{{ currentLang === 'ar' ? 'إعدادات مختلطة (اختصارات سريعة)' : 'Mix presets (quick shortcuts)' }}</h4>
+          <div class="preset-buttons">
+            <button type="button" class="preset-btn" (click)="applyPreset('quick-explainer')">
+              🎯 {{ currentLang === 'ar' ? 'شرح سريع' : 'Quick Explainer' }}
+              <small>{{ currentLang === 'ar' ? 'درس نصي واحد + 3 أسئلة اختبار' : '1 text lesson + 3 quiz questions' }}</small>
+            </button>
+            <button type="button" class="preset-btn" (click)="applyPreset('video-first')">
+              🎥 {{ currentLang === 'ar' ? 'فيديو أولاً' : 'Video-first' }}
+              <small>{{ currentLang === 'ar' ? '1-2 فيديو يوتيوب + نص قصير' : '1-2 YouTube videos + short recap text' }}</small>
+            </button>
+            <button type="button" class="preset-btn" (click)="applyPreset('full-section')">
+              📚 {{ currentLang === 'ar' ? 'قسم كامل' : 'Full Section' }}
+              <small>{{ currentLang === 'ar' ? '2-3 دروس نصية + فيديو + اختبار' : '2-3 text lessons + 1 video + quiz' }}</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Advanced Options (Collapsed) -->
+        <div class="advanced-options-section">
+          <button type="button" class="advanced-toggle" (click)="showAdvancedOptions = !showAdvancedOptions">
+            <span>{{ currentLang === 'ar' ? 'خيارات متقدمة (اختياري)' : 'Advanced (optional)' }}</span>
+            <span class="toggle-icon">{{ showAdvancedOptions ? '▼' : '▶' }}</span>
+          </button>
+          <div class="advanced-options-content" *ngIf="showAdvancedOptions">
+            <div class="advanced-option-group">
+              <label>{{ currentLang === 'ar' ? 'المدة المستهدفة لهذا القسم' : 'Target length for this section' }}</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.targetLength" value="10-15">
+                  ⏱️ 10–15 {{ currentLang === 'ar' ? 'دقيقة' : 'min' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.targetLength" value="20-30">
+                  ⏱️ 20–30 {{ currentLang === 'ar' ? 'دقيقة' : 'min' }}
+                </label>
+              </div>
+            </div>
+            <div class="advanced-option-group">
+              <label>{{ currentLang === 'ar' ? 'الصعوبة' : 'Difficulty' }}</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.difficulty" value="easy">
+                  {{ currentLang === 'ar' ? 'سهل' : 'Easy' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.difficulty" value="medium">
+                  {{ currentLang === 'ar' ? 'متوسط' : 'Medium' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.difficulty" value="exam-focus">
+                  {{ currentLang === 'ar' ? 'تركيز على الامتحان' : 'Exam-focus' }}
+                </label>
+              </div>
+            </div>
+            <div class="advanced-option-group">
+              <label>{{ currentLang === 'ar' ? 'اللغة' : 'Language' }}</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.language" value="arabic-only">
+                  {{ currentLang === 'ar' ? 'عربي فقط' : 'Arabic only' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.language" value="english-only">
+                  {{ currentLang === 'ar' ? 'إنجليزي فقط' : 'English only' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.language" value="bilingual">
+                  {{ currentLang === 'ar' ? 'ثنائي اللغة' : 'Bilingual' }}
+                </label>
+              </div>
+            </div>
+            <div class="advanced-option-group">
+              <label>{{ currentLang === 'ar' ? 'النبرة' : 'Tone' }}</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.tone" value="friendly">
+                  {{ currentLang === 'ar' ? 'ودود وبسيط' : 'Friendly & simple' }}
+                </label>
+                <label>
+                  <input type="radio" [(ngModel)]="aiAdvancedOptions.tone" value="formal">
+                  {{ currentLang === 'ar' ? 'رسمي وأسلوب امتحان' : 'Formal & exam style' }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-step-actions">
+          <button type="button" class="btn-secondary" (click)="aiGenerationStep = 1">
+            {{ currentLang === 'ar' ? 'رجوع' : 'Back' }}
+          </button>
+          <button type="button" class="btn-primary" (click)="proceedToAIStep3()" [disabled]="!hasAnyContentTypeSelected()">
+            {{ currentLang === 'ar' ? 'التالي' : 'Next' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Step 3: Preview Plan -->
+      <div class="section-creation-panel ai-wizard-step3" *ngIf="sectionCreationMode === 'ai' && aiGenerationStep === 3">
+        <div class="ai-step-header">
+          <h3>{{ currentLang === 'ar' ? 'خطة الذكاء الاصطناعي لهذا القسم' : 'AI Plan for this Section' }}</h3>
+        </div>
+
+        <div class="ai-plan-preview">
+          <div class="plan-item" *ngFor="let item of aiPlanPreview; let i = index">
+            <div class="plan-item-header">
+              <span class="plan-item-type">{{ getContentTypeIcon(item.type) }}</span>
+              <span class="plan-item-title">{{ item.title }}</span>
+              <span class="plan-item-duration" *ngIf="item.duration">{{ item.duration }}</span>
+            </div>
+            <div class="plan-item-actions">
+              <button type="button" class="plan-action-btn" (click)="previewPlanItem(i)">
+                👁️ {{ currentLang === 'ar' ? 'معاينة' : 'Preview' }}
+              </button>
+              <button type="button" class="plan-action-btn" (click)="editPlanItemTitle(i)">
+                ✏️ {{ currentLang === 'ar' ? 'تعديل العنوان' : 'Edit title' }}
+              </button>
+              <button type="button" class="plan-action-btn plan-remove-btn" (click)="removePlanItem(i)">
+                🗑️ {{ currentLang === 'ar' ? 'إزالة من الخطة' : 'Remove from plan' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-step-actions">
+          <button type="button" class="btn-secondary" (click)="aiGenerationStep = 2">
+            {{ currentLang === 'ar' ? 'رجوع' : 'Back' }}
+          </button>
+          <button type="button" class="btn-primary" (click)="generateAIContent()">
+            {{ currentLang === 'ar' ? 'إنشاء القسم وإضافة المحتوى' : 'Create Section & Add Content' }}
           </button>
         </div>
       </div>
