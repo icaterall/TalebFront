@@ -1319,8 +1319,183 @@
         </div>
       </div>
 
-      <!-- File Upload Section -->
-      <div class="section-creation-panel" *ngIf="sectionCreationMode === 'upload'">
+      <!-- File Upload Preferences Section - Step 0 -->
+      <div class="section-creation-panel ai-preferences-panel" *ngIf="sectionCreationMode === 'upload' && uploadStep === 0">
+        <div class="ai-preferences-form">
+          <div class="preferences-header">
+            <h3>{{ currentLang === 'ar' ? 'تفضيلات المحتوى' : 'Content Preferences' }}</h3>
+            <p class="preferences-description">
+              {{ currentLang === 'ar' 
+                ? 'ساعدنا في تخصيص المحتوى بشكل أفضل من خلال إخبارنا ببعض التفاصيل' 
+                : 'Help us customize the content better by telling us some details' }}
+            </p>
+          </div>
+
+          <div class="preferences-form-grid">
+            <!-- Content Source Type (Multiple Selection) -->
+            <div class="preference-field-group full-width">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'المحتوى المفضل' : 'Preferred Content' }}
+                <span class="required">*</span>
+              </label>
+              <div class="content-source-options">
+                <label class="source-option" [class.selected]="aiPreferences.contentSource.includes('youtube')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.contentSource.includes('youtube')"
+                    (change)="toggleContentSource('youtube')">
+                  <div class="source-option-content">
+                    <span class="source-icon">🎥</span>
+                    <span class="source-label">{{ currentLang === 'ar' ? 'فيديوهات يوتيوب' : 'YouTube Videos' }}</span>
+                    <span class="check-mark" *ngIf="aiPreferences.contentSource.includes('youtube')">✓</span>
+                  </div>
+                </label>
+                <label class="source-option" [class.selected]="aiPreferences.contentSource.includes('text')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.contentSource.includes('text')"
+                    (change)="toggleContentSource('text')">
+                  <div class="source-option-content">
+                    <span class="source-icon">📝</span>
+                    <span class="source-label">{{ currentLang === 'ar' ? 'نص' : 'Text' }}</span>
+                    <span class="check-mark" *ngIf="aiPreferences.contentSource.includes('text')">✓</span>
+                  </div>
+                </label>
+                <label class="source-option" [class.selected]="aiPreferences.contentSource.includes('text-to-audio')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.contentSource.includes('text-to-audio')"
+                    (change)="toggleContentSource('text-to-audio')">
+                  <div class="source-option-content">
+                    <span class="source-icon">🔊</span>
+                    <span class="source-label">{{ currentLang === 'ar' ? 'نص إلى صوت' : 'Text to Audio' }}</span>
+                    <span class="check-mark" *ngIf="aiPreferences.contentSource.includes('text-to-audio')">✓</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Educational Stage (Multiple Selection) -->
+            <div class="preference-field-group">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'المرحلة التعليمية' : 'Educational Stage' }}
+                <span class="required">*</span>
+              </label>
+              <div class="multi-select-options">
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('kindergarten')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('kindergarten')"
+                    (change)="toggleEducationalStage('kindergarten')">
+                  <span>{{ currentLang === 'ar' ? 'رياض أطفال' : 'Kindergarten' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('kindergarten')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('primary')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('primary')"
+                    (change)="toggleEducationalStage('primary')">
+                  <span>{{ currentLang === 'ar' ? 'ابتدائي' : 'Primary School' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('primary')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('middle')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('middle')"
+                    (change)="toggleEducationalStage('middle')">
+                  <span>{{ currentLang === 'ar' ? 'متوسط' : 'Middle School' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('middle')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('high-school')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('high-school')"
+                    (change)="toggleEducationalStage('high-school')">
+                  <span>{{ currentLang === 'ar' ? 'ثانوي' : 'High School' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('high-school')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('university')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('university')"
+                    (change)="toggleEducationalStage('university')">
+                  <span>{{ currentLang === 'ar' ? 'جامعي' : 'University' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('university')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('professional')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('professional')"
+                    (change)="toggleEducationalStage('professional')">
+                  <span>{{ currentLang === 'ar' ? 'تدريب مهني' : 'Professional Training' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('professional')">✓</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Country (Multiple Selection from Backend) -->
+            <div class="preference-field-group">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'البلد / المنهج' : 'Country / Curriculum' }}
+              </label>
+              <ng-select
+                [items]="countries"
+                [multiple]="true"
+                bindLabel="name"
+                bindValue="id"
+                [(ngModel)]="aiPreferences.country"
+                [placeholder]="currentLang === 'ar' ? 'اختر البلد (اختياري)' : 'Select country (optional)'"
+                [loading]="loadingCountries"
+                [clearable]="true"
+                class="preference-select">
+              </ng-select>
+            </div>
+
+            <!-- Additional Notes -->
+            <div class="preference-field-group full-width">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'ملاحظات إضافية (اختياري)' : 'Additional Notes (Optional)' }}
+              </label>
+              <textarea 
+                class="preference-textarea"
+                [(ngModel)]="aiPreferences.additionalNotes"
+                [placeholder]="currentLang === 'ar' 
+                  ? 'أي معلومات إضافية قد تساعد في تحسين المحتوى...' 
+                  : 'Any additional information that might help improve the content...'"
+                rows="3">
+              </textarea>
+            </div>
+          </div>
+
+          <div class="preferences-actions">
+            <button 
+              type="button"
+              class="btn-cancel-preferences"
+              (click)="sectionCreationMode = null; uploadStep = null">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button 
+              type="button"
+              class="btn-proceed-preferences"
+              (click)="proceedFromPreferencesToUpload()"
+              [disabled]="aiPreferences.contentSource.length === 0 || aiPreferences.educationalStage.length === 0">
+              {{ currentLang === 'ar' ? 'التالي' : 'Next' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Upload Section - Step 1 -->
+      <div class="section-creation-panel" *ngIf="sectionCreationMode === 'upload' && uploadStep === 1">
+        <div class="upload-section-header">
+          <button 
+            type="button"
+            class="btn-back-upload"
+            (click)="uploadStep = 0">
+            <span class="back-arrow">{{ currentLang === 'ar' ? '→' : '←' }}</span>
+            <span>{{ currentLang === 'ar' ? 'رجوع' : 'Back' }}</span>
+          </button>
+        </div>
         <input
           #sectionFileInput
           id="sectionFileInput"
@@ -1346,6 +1521,172 @@
               <li>{{ currentLang === 'ar' ? 'أضف عناوين واضحة للأقسام' : 'Add clear section headings' }}</li>
               <li>{{ currentLang === 'ar' ? 'نظم الأفكار في نقاط' : 'Organize ideas in bullet points' }}</li>
             </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Preferences Section - Step 0 -->
+      <div class="section-creation-panel ai-preferences-panel" *ngIf="sectionCreationMode === 'ai' && aiGenerationStep === 0">
+        <div class="ai-preferences-form">
+          <div class="preferences-header">
+            <h3>{{ currentLang === 'ar' ? 'تفضيلات المحتوى' : 'Content Preferences' }}</h3>
+            <p class="preferences-description">
+              {{ currentLang === 'ar' 
+                ? 'ساعدنا في تخصيص المحتوى بشكل أفضل من خلال إخبارنا ببعض التفاصيل' 
+                : 'Help us customize the content better by telling us some details' }}
+            </p>
+          </div>
+
+          <div class="preferences-form-grid">
+            <!-- Content Source Type (Multiple Selection) -->
+            <div class="preference-field-group full-width">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'المحتوى المفضل' : 'Preferred Content' }}
+                <span class="required">*</span>
+              </label>
+              <div class="content-source-options">
+                <label class="source-option" [class.selected]="aiPreferences.contentSource.includes('youtube')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.contentSource.includes('youtube')"
+                    (change)="toggleContentSource('youtube')">
+                  <div class="source-option-content">
+                    <span class="source-icon">🎥</span>
+                    <span class="source-label">{{ currentLang === 'ar' ? 'فيديوهات يوتيوب' : 'YouTube Videos' }}</span>
+                    <span class="check-mark" *ngIf="aiPreferences.contentSource.includes('youtube')">✓</span>
+                  </div>
+                </label>
+                <label class="source-option" [class.selected]="aiPreferences.contentSource.includes('text')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.contentSource.includes('text')"
+                    (change)="toggleContentSource('text')">
+                  <div class="source-option-content">
+                    <span class="source-icon">📝</span>
+                    <span class="source-label">{{ currentLang === 'ar' ? 'نص' : 'Text' }}</span>
+                    <span class="check-mark" *ngIf="aiPreferences.contentSource.includes('text')">✓</span>
+                  </div>
+                </label>
+                <label class="source-option" [class.selected]="aiPreferences.contentSource.includes('text-to-audio')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.contentSource.includes('text-to-audio')"
+                    (change)="toggleContentSource('text-to-audio')">
+                  <div class="source-option-content">
+                    <span class="source-icon">🔊</span>
+                    <span class="source-label">{{ currentLang === 'ar' ? 'نص إلى صوت' : 'Text to Audio' }}</span>
+                    <span class="check-mark" *ngIf="aiPreferences.contentSource.includes('text-to-audio')">✓</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Educational Stage (Multiple Selection) -->
+            <div class="preference-field-group">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'المرحلة التعليمية' : 'Educational Stage' }}
+                <span class="required">*</span>
+              </label>
+              <div class="multi-select-options">
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('kindergarten')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('kindergarten')"
+                    (change)="toggleEducationalStage('kindergarten')">
+                  <span>{{ currentLang === 'ar' ? 'رياض أطفال' : 'Kindergarten' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('kindergarten')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('primary')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('primary')"
+                    (change)="toggleEducationalStage('primary')">
+                  <span>{{ currentLang === 'ar' ? 'ابتدائي' : 'Primary School' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('primary')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('middle')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('middle')"
+                    (change)="toggleEducationalStage('middle')">
+                  <span>{{ currentLang === 'ar' ? 'متوسط' : 'Middle School' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('middle')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('high-school')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('high-school')"
+                    (change)="toggleEducationalStage('high-school')">
+                  <span>{{ currentLang === 'ar' ? 'ثانوي' : 'High School' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('high-school')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('university')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('university')"
+                    (change)="toggleEducationalStage('university')">
+                  <span>{{ currentLang === 'ar' ? 'جامعي' : 'University' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('university')">✓</span>
+                </label>
+                <label class="multi-select-option" [class.selected]="aiPreferences.educationalStage.includes('professional')">
+                  <input 
+                    type="checkbox" 
+                    [checked]="aiPreferences.educationalStage.includes('professional')"
+                    (change)="toggleEducationalStage('professional')">
+                  <span>{{ currentLang === 'ar' ? 'تدريب مهني' : 'Professional Training' }}</span>
+                  <span class="check-mark" *ngIf="aiPreferences.educationalStage.includes('professional')">✓</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Country (Multiple Selection from Backend) -->
+            <div class="preference-field-group">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'البلد / المنهج' : 'Country / Curriculum' }}
+              </label>
+              <ng-select
+                [items]="countries"
+                [multiple]="true"
+                bindLabel="name"
+                bindValue="id"
+                [(ngModel)]="aiPreferences.country"
+                [placeholder]="currentLang === 'ar' ? 'اختر البلد (اختياري)' : 'Select country (optional)'"
+                [loading]="loadingCountries"
+                [clearable]="true"
+                class="preference-select">
+              </ng-select>
+            </div>
+
+            <!-- Additional Notes -->
+            <div class="preference-field-group full-width">
+              <label class="preference-label">
+                {{ currentLang === 'ar' ? 'ملاحظات إضافية (اختياري)' : 'Additional Notes (Optional)' }}
+              </label>
+              <textarea 
+                class="preference-textarea"
+                [(ngModel)]="aiPreferences.additionalNotes"
+                [placeholder]="currentLang === 'ar' 
+                  ? 'أي معلومات إضافية قد تساعد في تحسين المحتوى...' 
+                  : 'Any additional information that might help improve the content...'"
+                rows="3">
+              </textarea>
+            </div>
+          </div>
+
+          <div class="preferences-actions">
+            <button 
+              type="button"
+              class="btn-cancel-preferences"
+              (click)="sectionCreationMode = null; aiGenerationStep = null">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button 
+              type="button"
+              class="btn-proceed-preferences"
+              (click)="proceedFromPreferencesToInstructions()"
+              [disabled]="aiPreferences.contentSource.length === 0 || aiPreferences.educationalStage.length === 0">
+              {{ currentLang === 'ar' ? 'التالي' : 'Next' }}
+            </button>
           </div>
         </div>
       </div>

@@ -41,6 +41,7 @@ import { VideoSource, VideoFormState, VideoDetails, YouTubeVideoData } from './t
 import { VideoUploadService } from './services/video-upload.service';
 import { AudioSource, AudioFormState, AudioMetadata, AudioGenerationRequest } from './types/audio.types';
 import { AudioUploadService } from './services/audio-upload.service';
+import { GeographyService, Country } from '../../../core/services/geography.service';
 interface Category {
   id: number;
   name_en: string;
@@ -88,6 +89,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
   private readonly universalAuth = inject(UniversalAuthService);
+  private readonly geographyService = inject(GeographyService);
   private readonly ai = inject(AiBuilderService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -120,13 +122,34 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   resourceSaving: boolean = false;
   resourceUploadInProgress: boolean = false;
   resourceUploadProgress: number = 0;
-  resourceForm: ResourceFormState = this.createDefaultResourceForm();
+  resourceForm: ResourceFormState = {
+    title: '',
+    description: '',
+    displayType: 'compressed',
+    fileName: '',
+    fileType: '',
+    fileSize: 0,
+    dataUrl: null,
+    previewMode: 'download',
+    pageCount: null
+  };
   
   // Video Modal States
   showVideoModal: boolean = false;
   viewingVideoContent: boolean = false;
   videoContentItem: ContentItem | null = null;
-  videoForm: VideoFormState = this.createDefaultVideoForm();
+  videoForm: VideoFormState = {
+    source: null,
+    title: '',
+    description: '',
+    file: null,
+    fileName: undefined,
+    fileSize: undefined,
+    dataUrl: undefined,
+    youtubeUrl: '',
+    youtubeData: null,
+    metadata: undefined
+  };
   videoUploadError: string | null = null;
   videoUploadInProgress: boolean = false;
   videoUploadProgress: number = 0;
@@ -171,7 +194,21 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   creatingQuiz: boolean = false; // Creating quiz in progress
   viewingAudioContent: boolean = false;
   audioContentItem: ContentItem | null = null;
-  audioForm: AudioFormState = this.createDefaultAudioForm();
+  audioForm: AudioFormState = {
+    source: null,
+    title: '',
+    description: '',
+    file: null,
+    fileName: '',
+    fileSize: 0,
+    metadata: null,
+    textSource: 'lesson', // Default to selecting a lesson
+    selectedTextLessonId: null,
+    selectedTextLesson: null,
+    textContent: '',
+    voice: 'alloy',
+    speed: 1.0
+  };
   audioUploadError: string | null = null;
   audioUploadInProgress: boolean = false;
   audioUploadProgress: number = 0;
@@ -268,6 +305,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Add Section Modal
   showAddSectionModal: boolean = false; // Track add section modal visibility
   sectionCreationMode: 'upload' | 'ai' | null = null; // Track current section creation mode
+  uploadStep: 0 | 1 | null = null; // Track upload step (0=preferences, 1=file upload)
   sectionFileUploading: boolean = false; // Track section file upload state
   sectionFileUploadError: string | null = null; // Track section file upload errors
   sectionFileUploadErrorIsFileSize: boolean = false; // Track if error is file-size related
@@ -279,9 +317,26 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // AI Instruction Generation
   aiInstructionText: string = '';
   aiGenerating: boolean = false;
-  aiGenerationStep: 1 | 2 | 3 | null = null; // Track which AI generation step is active (1=instructions, 2=options, 3=preview)
+  aiGenerationStep: 0 | 1 | 2 | 3 | null = null; // Track which AI generation step is active (0=preferences, 1=instructions, 2=options, 3=preview)
   aiGenerationCurrentLesson: number = 0; // Current lesson being generated (1-based)
   aiGenerationTotalLessons: number = 0; // Total number of lessons to generate
+  
+  // AI Preferences (Step 0)
+  aiPreferences: {
+    contentSource: ('youtube' | 'text' | 'text-to-audio')[];
+    educationalStage: string[];
+    country: number[];
+    additionalNotes: string;
+  } = {
+    contentSource: [],
+    educationalStage: [],
+    country: [],
+    additionalNotes: ''
+  };
+  
+  // Countries for preferences
+  countries: Country[] = [];
+  loadingCountries: boolean = false;
   
   // AI Wizard Step 2: Content Type Selection
   aiContentTypes: {
@@ -3077,21 +3132,54 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   showFileUploadSection(): void {
     this.sectionCreationMode = 'upload';
     this.aiInstructionText = ''; // Clear AI instruction when switching
+    this.aiGenerationStep = null; // Clear AI generation step
+    // Reset preferences but keep uploadStep
+    this.aiPreferences = {
+      contentSource: [],
+      educationalStage: [],
+      country: [],
+      additionalNotes: ''
+    };
+    this.uploadStep = 0; // Start with preferences step
+    this.loadCountries(); // Load countries when opening preferences
+    this.cdr.detectChanges();
+  }
+  
+  // Proceed from preferences to file upload
+  proceedFromPreferencesToUpload(): void {
+    if (this.aiPreferences.contentSource.length === 0 || this.aiPreferences.educationalStage.length === 0) {
+      this.toastr?.warning?.(
+        this.currentLang === 'ar' 
+          ? 'يرجى ملء جميع الحقول المطلوبة' 
+          : 'Please fill in all required fields'
+      );
+      return;
+    }
+    this.uploadStep = 1;
     this.cdr.detectChanges();
   }
   
   // Show AI instruction section
   showAIInstructionSection(): void {
     this.sectionCreationMode = 'ai';
-    this.aiGenerationStep = 1;
+    this.aiGenerationStep = 0; // Start with preferences step
     this.aiInstructionText = '';
     this.sectionFileSelected = false; // Clear file selection when switching
     this.clearSelectedSectionFile();
     this.resetAIWizardState();
+    this.loadCountries(); // Load countries when opening preferences
     this.cdr.detectChanges();
   }
 
   resetAIWizardState(): void {
+    // Reset preferences
+    this.aiPreferences = {
+      contentSource: [],
+      educationalStage: [],
+      country: [],
+      additionalNotes: ''
+    };
+    this.uploadStep = null;
     this.aiContentTypes = {
       text: true,
       quiz: false,
@@ -3112,6 +3200,85 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       tone: 'friendly'
     };
     this.aiPlanPreview = [];
+  }
+  
+  // Proceed from preferences step to instruction step
+  proceedFromPreferencesToInstructions(): void {
+    if (this.aiPreferences.contentSource.length === 0 || this.aiPreferences.educationalStage.length === 0) {
+      this.toastr?.warning?.(
+        this.currentLang === 'ar' 
+          ? 'يرجى ملء جميع الحقول المطلوبة' 
+          : 'Please fill in all required fields'
+      );
+      return;
+    }
+    this.aiGenerationStep = 1;
+    this.cdr.detectChanges();
+  }
+  
+  // Load countries from backend
+  private loadCountries(): void {
+    if (this.countries.length > 0) {
+      return; // Already loaded
+    }
+    this.loadingCountries = true;
+    this.geographyService.getCountries().subscribe({
+      next: (response) => {
+        // Sort countries: Arab countries first, then others
+        // Arab country ISO codes (2-letter codes)
+        const arabCountryCodes = ['SA', 'AE', 'KW', 'QA', 'BH', 'OM', 'EG', 'JO', 'LB', 'IQ', 'SY', 'YE', 'LY', 'TN', 'DZ', 'MA', 'SD', 'PS'];
+        const countries = response.countries;
+        
+        // Separate Arab and other countries
+        const arabCountries: Country[] = [];
+        const otherCountries: Country[] = [];
+        
+        countries.forEach(country => {
+          const isoCode = country.iso_code?.toUpperCase() || '';
+          // Check if ISO code matches any Arab country (first 2 characters)
+          const isArab = arabCountryCodes.some(code => isoCode.startsWith(code));
+          
+          if (isArab) {
+            arabCountries.push(country);
+          } else {
+            otherCountries.push(country);
+          }
+        });
+        
+        // Sort Arab countries alphabetically, then other countries
+        arabCountries.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        otherCountries.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        
+        this.countries = [...arabCountries, ...otherCountries];
+        this.loadingCountries = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading countries:', error);
+        this.loadingCountries = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+  
+  // Toggle content source selection
+  toggleContentSource(source: 'youtube' | 'text' | 'text-to-audio'): void {
+    const index = this.aiPreferences.contentSource.indexOf(source);
+    if (index > -1) {
+      this.aiPreferences.contentSource.splice(index, 1);
+    } else {
+      this.aiPreferences.contentSource.push(source);
+    }
+  }
+  
+  // Toggle educational stage selection
+  toggleEducationalStage(stage: string): void {
+    const index = this.aiPreferences.educationalStage.indexOf(stage);
+    if (index > -1) {
+      this.aiPreferences.educationalStage.splice(index, 1);
+    } else {
+      this.aiPreferences.educationalStage.push(stage);
+    }
   }
 
   proceedToAIStep2(): void {
@@ -3325,6 +3492,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const requestData: any = {
       courseId: this.draftCourseId,
       instructions: this.aiInstructionText.trim(),
+      preferences: {
+        contentSource: this.aiPreferences.contentSource,
+        educationalStage: this.aiPreferences.educationalStage,
+        country: this.aiPreferences.country.length > 0 ? this.aiPreferences.country : undefined,
+        additionalNotes: this.aiPreferences.additionalNotes || undefined
+      },
       contentTypes: {
         text: this.aiContentTypes.text,
         quiz: this.aiContentTypes.quiz,
@@ -3644,6 +3817,20 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
     const formData = new FormData();
     formData.append('file', file);
+    
+    // Add preferences to form data
+    if (this.aiPreferences.contentSource.length > 0) {
+      formData.append('preferences[contentSource]', JSON.stringify(this.aiPreferences.contentSource));
+    }
+    if (this.aiPreferences.educationalStage.length > 0) {
+      formData.append('preferences[educationalStage]', JSON.stringify(this.aiPreferences.educationalStage));
+    }
+    if (this.aiPreferences.country.length > 0) {
+      formData.append('preferences[country]', JSON.stringify(this.aiPreferences.country));
+    }
+    if (this.aiPreferences.additionalNotes) {
+      formData.append('preferences[additionalNotes]', this.aiPreferences.additionalNotes);
+    }
 
     // Get draft course ID
     if (!this.draftCourseId) {
@@ -4875,7 +5062,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return termText;
   }
 
-  getCategoryName(cat: Category): string {
+  getCategoryName(cat: Category | null | undefined): string {
+    if (!cat) {
+      return '';
+    }
     return this.currentLang === 'ar' ? cat.name_ar : cat.name_en;
   }
 
@@ -7634,7 +7824,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
 
   previewCourse(): void {
-    if (!this.draftCourseId) {
+    if (!this.draftCourseId || !this.router) {
       this.toastr?.warning?.(
         this.currentLang === 'ar' ? 'لم يتم العثور على معرف الدورة' : 'Course ID not found'
       );
