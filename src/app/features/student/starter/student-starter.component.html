@@ -1263,7 +1263,7 @@
 </div>
 
 <!-- Add Section Modal -->
-<div class="modal-overlay" *ngIf="showAddSectionModal" (click)="closeAddSectionModal()">
+<div class="modal-overlay add-section-modal-overlay" *ngIf="showAddSectionModal" (click)="closeAddSectionModal()">
   <div class="modal-content add-section-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2 class="modal-title">{{ currentLang === 'ar' ? 'إضافة قسم جديد' : 'Add New Section' }}</h2>

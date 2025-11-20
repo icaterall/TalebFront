@@ -2791,13 +2791,23 @@
 }
 
 // Add Section Modal
+.add-section-modal-overlay {
+  z-index: 1001 !important; // Above student-sidebar (z-index 1000)
+}
+
 .add-section-modal {
-  max-width: 560px;
+  z-index: 1002 !important; // Above the overlay
+  max-width: 900px;
   width: 90%;
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   position: relative;
+  
+  @media (max-width: 1024px) {
+    max-width: 95%;
+    width: 95%;
+  }
   
   @media (max-width: 640px) {
     max-width: 95%;
@@ -2805,7 +2815,7 @@
   }
   
   .modal-header {
-    padding: 1.75rem 2rem 1.25rem;
+    padding: 1.25rem 1.5rem 0.875rem;
     border-bottom: 1px solid #f1f5f9;
     position: relative;
     display: flex;
@@ -2813,7 +2823,7 @@
     justify-content: space-between;
     
     @media (max-width: 640px) {
-      padding: 1.5rem 1.5rem 1rem;
+      padding: 1rem 1.25rem 0.75rem;
     }
     
     .modal-title {
@@ -2863,24 +2873,24 @@
   }
   
   .modal-body {
-    padding: 2rem;
+    padding: 1.25rem 1.5rem;
     
     @media (max-width: 640px) {
-      padding: 1.5rem;
+      padding: 1rem;
     }
   }
   
   .add-section-options {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-bottom: 0;
     
     .section-option-btn {
       display: flex;
       align-items: flex-start;
-      gap: 1.25rem;
-      padding: 1.5rem;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
       border: 2px solid #e2e8f0;
       border-radius: 12px;
       background: white;
@@ -2891,8 +2901,8 @@
       position: relative;
       
       @media (max-width: 640px) {
-        padding: 1.25rem;
-        gap: 1rem;
+        padding: 0.875rem 1rem;
+        gap: 0.875rem;
       }
       
       &:hover {
@@ -2923,13 +2933,13 @@
       }
       
       .option-icon {
-        font-size: 2.25rem;
+        font-size: 1.875rem;
         flex-shrink: 0;
         line-height: 1;
         margin-top: 0.125rem;
         
         @media (max-width: 640px) {
-          font-size: 2rem;
+          font-size: 1.75rem;
         }
       }
       
@@ -2938,27 +2948,27 @@
         min-width: 0;
         
         h3 {
-          margin: 0 0 0.5rem 0;
-          font-size: 1.125rem;
+          margin: 0 0 0.375rem 0;
+          font-size: 1.0625rem;
           font-weight: 700;
           color: #1e293b;
           line-height: 1.4;
           
           @media (max-width: 640px) {
-            font-size: 1rem;
-            margin-bottom: 0.375rem;
+            font-size: 0.9375rem;
+            margin-bottom: 0.25rem;
           }
         }
         
         p {
           margin: 0;
-          font-size: 0.9375rem;
+          font-size: 0.875rem;
           color: #64748b;
-          line-height: 1.6;
+          line-height: 1.5;
           
           @media (max-width: 640px) {
-            font-size: 0.875rem;
-            line-height: 1.5;
+            font-size: 0.8125rem;
+            line-height: 1.4;
           }
         }
       }
@@ -2980,33 +2990,33 @@
       .ai-section-header {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 1.25rem 1.5rem;
+        gap: 0.875rem;
+        padding: 0.875rem 1.25rem;
         background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
         border-bottom: 1px solid #e2e8f0;
         
         @media (max-width: 640px) {
-          padding: 1rem 1.25rem;
-          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          gap: 0.625rem;
         }
         
         .option-icon {
-          font-size: 2rem;
+          font-size: 1.75rem;
           flex-shrink: 0;
           
           @media (max-width: 640px) {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
           }
         }
         
         .ai-section-title {
           margin: 0;
-          font-size: 1.125rem;
+          font-size: 1.0625rem;
           font-weight: 700;
           color: #1e293b;
           
           @media (max-width: 640px) {
-            font-size: 1rem;
+            font-size: 0.9375rem;
           }
         }
       }
@@ -3014,19 +3024,19 @@
       .ai-section-options {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
-        padding: 1rem 1.5rem;
+        gap: 0.625rem;
+        padding: 0.875rem 1.25rem;
         
         @media (max-width: 640px) {
-          padding: 0.875rem 1.25rem;
-          gap: 0.625rem;
+          padding: 0.75rem 1rem;
+          gap: 0.5rem;
         }
         
         .ai-sub-option-btn {
           display: flex;
           align-items: flex-start;
-          gap: 1rem;
-          padding: 1.25rem;
+          gap: 0.875rem;
+          padding: 0.875rem 1rem;
           border: 2px solid #e2e8f0;
           border-radius: 10px;
           background: white;
@@ -3036,8 +3046,8 @@
           width: 100%;
           
           @media (max-width: 640px) {
-            padding: 1rem;
-            gap: 0.875rem;
+            padding: 0.75rem 0.875rem;
+            gap: 0.75rem;
           }
           
           &:hover {
@@ -3064,13 +3074,13 @@
           }
           
           .sub-option-icon {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             flex-shrink: 0;
             line-height: 1;
             margin-top: 0.125rem;
             
             @media (max-width: 640px) {
-              font-size: 1.5rem;
+              font-size: 1.375rem;
             }
           }
           
@@ -3079,23 +3089,23 @@
             min-width: 0;
             
             h4 {
-              margin: 0 0 0.375rem 0;
-              font-size: 1rem;
+              margin: 0 0 0.25rem 0;
+              font-size: 0.9375rem;
               font-weight: 700;
               color: #1e293b;
               line-height: 1.4;
               
               @media (max-width: 640px) {
-                font-size: 0.9375rem;
-                margin-bottom: 0.25rem;
+                font-size: 0.875rem;
+                margin-bottom: 0.1875rem;
               }
             }
             
             p {
               margin: 0;
-              font-size: 0.875rem;
+              font-size: 0.8125rem;
               color: #64748b;
-              line-height: 1.5;
+              line-height: 1.4;
               
               @media (max-width: 640px) {
                 font-size: 0.8125rem;
@@ -3153,7 +3163,7 @@
   }
   
   .section-creation-panel {
-    margin-top: 1.5rem;
+    margin-top: 1rem;
     animation: fadeIn 0.3s ease-in-out;
     
     @keyframes fadeIn {
@@ -3163,11 +3173,11 @@
     
     .upload-trigger-btn {
       width: 100%;
-      padding: 1rem;
+      padding: 0.875rem;
       background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
       border: 2px dashed #3b82f6;
       border-radius: 12px;
-      font-size: 1rem;
+      font-size: 0.9375rem;
       font-weight: 600;
       color: #1e40af;
       cursor: pointer;
@@ -3178,7 +3188,7 @@
       gap: 0.5rem;
       
       .upload-icon {
-        font-size: 1.5rem;
+        font-size: 1.375rem;
       }
       
       &:hover {
@@ -3191,38 +3201,38 @@
   }
   
   .section-upload-hint {
-    margin-top: 0.75rem;
-    padding: 0.9rem 1rem;
+    margin-top: 0.625rem;
+    padding: 0.75rem 0.875rem;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 0.875rem;
+    line-height: 1.4;
     color: #0f172a;
 
     .ai-upload-tips {
-      margin-top: 10px;
-      padding: 12px 14px;
+      margin-top: 0.625rem;
+      padding: 0.75rem 0.875rem;
       background: #eef2ff;
       border: 1px solid #c7d2fe;
       border-radius: 8px;
 
       h4 {
-        margin: 0 0 6px 0;
-        font-size: 13px;
+        margin: 0 0 0.375rem 0;
+        font-size: 0.8125rem;
         font-weight: 700;
         color: #1e1b4b;
       }
 
       ul {
         margin: 0;
-        padding-left: 18px;
-        font-size: 13px;
+        padding-left: 1.125rem;
+        font-size: 0.8125rem;
         color: #1e293b;
-        line-height: 1.45;
+        line-height: 1.4;
 
         li {
-          margin-bottom: 4px;
+          margin-bottom: 0.25rem;
         }
       }
     }
@@ -3232,19 +3242,19 @@
   .ai-instruction-form {
     .instruction-label {
       display: block;
-      font-size: 1rem;
+      font-size: 0.9375rem;
       font-weight: 600;
       color: #1e293b;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.625rem;
     }
     
     .ai-instruction-input {
       width: 100%;
-      padding: 1rem;
+      padding: 0.875rem;
       border: 2px solid #cbd5e1;
       border-radius: 12px;
-      font-size: 0.9375rem;
-      line-height: 1.6;
+      font-size: 0.875rem;
+      line-height: 1.5;
       resize: vertical;
       transition: all 0.3s ease;
       font-family: inherit;
