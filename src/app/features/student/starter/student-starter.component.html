@@ -232,8 +232,7 @@
                       </div>
                     </ng-container>
                     <ng-template #sectionTitleDisplay>
-                      <h3 class="section-name"
-                          (click)="$event.stopPropagation(); renameSection(section.id)">
+                      <h3 class="section-name">
                         <span class="section-number">{{ currentLang === 'ar' ? 'القسم' : 'Section' }} {{ section.number }}</span>
                         <span class="section-title">{{ section.name }}</span>
                       </h3>

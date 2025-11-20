@@ -17,7 +17,7 @@
 }
 
 .hamburger {
-  display: inline-flex; // Always show hamburger (for course preview)
+  display: none; // Hidden on desktop, shown on mobile only
   width: 24px;
   height: 24px;
   border: none;
@@ -308,6 +308,10 @@ html[dir="rtl"] .language-btn {
 }
 
 @media (max-width: 992px) {
+  .hamburger {
+    display: inline-flex; // Show hamburger on mobile only
+  }
+
   .brand {
     gap: 4px;
 
