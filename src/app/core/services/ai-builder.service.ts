@@ -88,10 +88,18 @@ export interface Section {
   number: number; // Section number (1, 2, 3, etc.)
   sort_order?: number;
   name: string;
+  description?: string | null;
   content_items: ContentItem[];
   isCollapsed?: boolean; // Fold/unfold state
   createdAt: string;
   updatedAt?: string;
+  suggestedTitles?: SectionTitleSuggestion[]; // AI-generated titles with hints
+}
+
+export interface SectionTitleSuggestion {
+  title: string;
+  hint: string;
+  position?: number;
 }
 
 export interface DraftCourseSectionResponse {

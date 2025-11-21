@@ -300,6 +300,36 @@
             
             <!-- Section Content (collapsible) -->
             <div class="section-content-body" *ngIf="!section.isCollapsed">
+              <!-- Section Description -->
+              <div class="section-description" *ngIf="section.description">
+                <p>{{ section.description }}</p>
+              </div>
+              
+              <!-- Suggested Titles (AI-generated) -->
+              <div class="suggested-titles-section" *ngIf="section.suggestedTitles && section.suggestedTitles.length > 0">
+                <div class="suggested-titles-header">
+                  <h4>{{ currentLang === 'ar' ? 'عناوين مقترحة للمحتوى' : 'Suggested Content Titles' }}</h4>
+                  <p class="suggested-titles-hint">{{ currentLang === 'ar' ? 'انقر على أي عنوان لإنشاء محتوى' : 'Click on any title to create content' }}</p>
+                </div>
+                <div class="suggested-titles-list">
+                  <button
+                    *ngFor="let titleSuggestion of section.suggestedTitles; let i = index"
+                    type="button"
+                    class="suggested-title-card"
+                    (click)="openContentBlockModal(section.id, titleSuggestion)"
+                    [attr.aria-label]="currentLang === 'ar' ? 'إنشاء محتوى للعنوان: ' + titleSuggestion.title : 'Create content for title: ' + titleSuggestion.title">
+                    <div class="suggested-title-number">{{ i + 1 }}</div>
+                    <div class="suggested-title-content">
+                      <h5 class="suggested-title-text">{{ titleSuggestion.title }}</h5>
+                      <p class="suggested-title-hint" *ngIf="titleSuggestion.hint">{{ titleSuggestion.hint }}</p>
+                    </div>
+                    <div class="suggested-title-action">
+                      <span class="action-icon">➕</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              
               <!-- Content Items List -->
               <div
                 class="content-items-list"
@@ -899,8 +929,8 @@
     </div>
 
     <!-- AI Hint Modal (shown above text editor modal) -->
-    <div class="modal-overlay ai-hint-overlay" *ngIf="showAIHintModal" (click)="cancelAIHint()" style="z-index: 10001;">
-      <div class="modal-content ai-hint-modal" (click)="$event.stopPropagation()" style="z-index: 10001;">
+    <div class="modal-overlay ai-hint-overlay" *ngIf="showAIHintModal" (click)="cancelAIHint()">
+      <div class="modal-content ai-hint-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ currentLang === 'ar' ? '🤖 تلميح للذكاء الاصطناعي' : '🤖 AI Hint' }}</h3>
           <button type="button" class="modal-close-btn" (click)="cancelAIHint()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
@@ -932,6 +962,69 @@
               [disabled]="!aiHint || !aiHint.trim()"
               (click)="proceedWithAIGeneration(true)">
               {{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Block Selection Modal -->
+    <div class="modal-overlay content-block-modal-overlay" *ngIf="showContentBlockModal" (click)="closeContentBlockModal()">
+      <div class="modal-content content-block-modal" (click)="$event.stopPropagation()" [dir]="isRTL ? 'rtl' : 'ltr'">
+        <div class="modal-header">
+          <h3>{{ currentLang === 'ar' ? 'اختر نوع المحتوى' : 'Choose Content Type' }}</h3>
+          <button type="button" class="modal-close-btn" (click)="closeContentBlockModal()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="content-block-title-preview" *ngIf="selectedTitleSuggestion">
+            <h4>{{ selectedTitleSuggestion.title }}</h4>
+            <p *ngIf="selectedTitleSuggestion.hint" class="title-hint">{{ selectedTitleSuggestion.hint }}</p>
+          </div>
+          
+          <div class="content-type-options">
+            <button
+              type="button"
+              class="content-type-option"
+              (click)="selectContentBlockType('text')">
+              <div class="content-type-icon">📝</div>
+              <div class="content-type-info">
+                <h4>{{ currentLang === 'ar' ? 'درس نصي' : 'Text Lesson' }}</h4>
+                <p>{{ currentLang === 'ar' ? 'اكتب أو أنشئ درساً نصياً باستخدام محرر النصوص' : 'Write or generate a text lesson using the text editor' }}</p>
+              </div>
+            </button>
+            
+            <button
+              type="button"
+              class="content-type-option"
+              (click)="selectContentBlockType('audio')">
+              <div class="content-type-icon">🎧</div>
+              <div class="content-type-info">
+                <h4>{{ currentLang === 'ar' ? 'درس صوتي' : 'Audio Lesson' }}</h4>
+                <p>{{ currentLang === 'ar' ? 'ارفع ملف صوتي أو أنشئ نصاً وتحويله إلى صوت باستخدام Amazon Polly' : 'Upload audio file or generate text and convert to audio using Amazon Polly' }}</p>
+              </div>
+            </button>
+            
+            <button
+              type="button"
+              class="content-type-option"
+              (click)="selectContentBlockType('video')">
+              <div class="content-type-icon">🎥</div>
+              <div class="content-type-info">
+                <h4>{{ currentLang === 'ar' ? 'فيديو / يوتيوب' : 'Video / YouTube' }}</h4>
+                <p>{{ currentLang === 'ar' ? 'ارفع فيديو أو أرفق رابط يوتيوب' : 'Upload video or attach YouTube link' }}</p>
+              </div>
+            </button>
+            
+            <button
+              type="button"
+              class="content-type-option"
+              (click)="selectContentBlockType('attachment')">
+              <div class="content-type-icon">📎</div>
+              <div class="content-type-info">
+                <h4>{{ currentLang === 'ar' ? 'مرفق (ملف)' : 'Attachment (File)' }}</h4>
+                <p>{{ currentLang === 'ar' ? 'ارفع ملف PDF أو ورقة عمل' : 'Upload PDF or worksheet file' }}</p>
+              </div>
             </button>
           </div>
         </div>
@@ -1539,7 +1632,8 @@
         <button
           type="button"
           class="section-option-btn"
-          (click)="addNewSectionManually()">
+          (click)="showManualSectionForm()"
+          [class.active]="sectionCreationMode === 'manual'">
           <div class="option-icon">✏️</div>
           <div class="option-content">
             <h3>{{ currentLang === 'ar' ? 'إدخال يدوي' : 'Manual Entry' }}</h3>
@@ -1597,6 +1691,50 @@
           <span class="upload-icon">📤</span>
           <span>{{ currentLang === 'ar' ? 'اختر ملف للرفع' : 'Choose file to upload' }}</span>
         </button>
+        
+        <!-- Page Range Input (shown when file is selected) -->
+        <div class="page-range-section" *ngIf="sectionFileSelected">
+          <div class="page-range-header">
+            <label class="page-range-checkbox">
+              <input type="checkbox" [(ngModel)]="usePageRange">
+              <span>{{ currentLang === 'ar' ? 'تحديد نطاق الصفحات (اختياري)' : 'Specify Page Range (Optional)' }}</span>
+            </label>
+            <p class="page-range-hint">
+              {{ currentLang === 'ar'
+                ? 'يمكنك تحديد صفحات معينة من الملف للاستخراج. اتركه فارغاً لاستخراج جميع الصفحات.'
+                : 'You can specify specific pages from the file to extract. Leave blank to extract all pages.' }}
+            </p>
+          </div>
+          
+          <div class="page-range-inputs" *ngIf="usePageRange">
+            <div class="page-range-input-group">
+              <label class="page-range-label">
+                {{ currentLang === 'ar' ? 'من صفحة' : 'From Page' }}
+              </label>
+              <input
+                type="number"
+                class="page-range-input"
+                [(ngModel)]="pageRangeStart"
+                min="1"
+                [placeholder]="currentLang === 'ar' ? '1' : '1'"
+                [dir]="isRTL ? 'rtl' : 'ltr'">
+            </div>
+            <div class="page-range-separator">{{ currentLang === 'ar' ? 'إلى' : 'to' }}</div>
+            <div class="page-range-input-group">
+              <label class="page-range-label">
+                {{ currentLang === 'ar' ? 'إلى صفحة' : 'To Page' }}
+              </label>
+              <input
+                type="number"
+                class="page-range-input"
+                [(ngModel)]="pageRangeEnd"
+                min="1"
+                [placeholder]="currentLang === 'ar' ? '10' : '10'"
+                [dir]="isRTL ? 'rtl' : 'ltr'">
+            </div>
+          </div>
+        </div>
+        
         <div class="section-upload-hint">
           <p>
             {{ currentLang === 'ar'
@@ -1610,6 +1748,94 @@
               <li>{{ currentLang === 'ar' ? 'أضف عناوين واضحة للأقسام' : 'Add clear section headings' }}</li>
               <li>{{ currentLang === 'ar' ? 'نظم الأفكار في نقاط' : 'Organize ideas in bullet points' }}</li>
             </ul>
+          </div>
+        </div>
+        
+        <!-- Upload Button (shown when file is selected) -->
+        <div class="upload-actions" *ngIf="sectionFileSelected">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="clearSelectedSectionFile()">
+            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="uploadSelectedSectionFile()"
+            [disabled]="sectionFileUploading || (usePageRange && (!pageRangeStart || !pageRangeEnd || pageRangeStart > pageRangeEnd))">
+            <span *ngIf="!sectionFileUploading">{{ currentLang === 'ar' ? 'رفع وتحليل' : 'Upload and Analyze' }}</span>
+            <span *ngIf="sectionFileUploading" class="btn-save-content">
+              <span class="inline-spinner" aria-hidden="true"></span>
+              <span>{{ currentLang === 'ar' ? 'جاري الرفع...' : 'Uploading...' }}</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Manual Section Creation Form -->
+      <div class="section-creation-panel" *ngIf="sectionCreationMode === 'manual'">
+        <div class="manual-section-form">
+          <div class="form-group">
+            <label class="form-label">
+              {{ currentLang === 'ar' ? 'اسم القسم' : 'Section Name' }}
+              <span class="required">*</span>
+            </label>
+            <div class="section-name-input-group">
+              <input
+                type="text"
+                class="form-input"
+                [(ngModel)]="manualSectionName"
+                [placeholder]="currentLang === 'ar' ? 'أدخل اسم القسم...' : 'Enter section name...'"
+                maxlength="200"
+                [dir]="isRTL ? 'rtl' : 'ltr'">
+              <button
+                *ngIf="aiSuggestedSectionName && !suggestingSectionName"
+                type="button"
+                class="btn-use-suggestion"
+                (click)="useSuggestedName()"
+                [attr.aria-label]="currentLang === 'ar' ? 'استخدام الاقتراح' : 'Use suggestion'">
+                <span class="suggestion-icon">✨</span>
+                <span class="suggestion-text">{{ currentLang === 'ar' ? 'استخدم الاقتراح' : 'Use suggestion' }}</span>
+              </button>
+            </div>
+            <div class="ai-suggestion-hint" *ngIf="suggestingSectionName">
+              <span class="spinner-inline"></span>
+              <span>{{ currentLang === 'ar' ? 'جارٍ اقتراح اسم القسم...' : 'Suggesting section name...' }}</span>
+            </div>
+            <div class="ai-suggestion-hint" *ngIf="aiSuggestedSectionName && !suggestingSectionName">
+              <span class="suggestion-hint-icon">💡</span>
+              <span>{{ currentLang === 'ar' ? 'اقتراح:' : 'Suggestion:' }} {{ aiSuggestedSectionName }}</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">
+              {{ currentLang === 'ar' ? 'وصف قصير (سطر واحد فقط)' : 'Short Description (one line only)' }}
+            </label>
+            <textarea
+              class="form-textarea"
+              [(ngModel)]="manualSectionDescription"
+              [placeholder]="currentLang === 'ar' ? 'أدخل وصفاً قصيراً للقسم...' : 'Enter a short description for the section...'"
+              rows="2"
+              maxlength="200"
+              [dir]="isRTL ? 'rtl' : 'ltr'"></textarea>
+          </div>
+          
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              (click)="sectionCreationMode = null">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button
+              type="button"
+              class="btn-primary"
+              (click)="createManualSection()"
+              [disabled]="!manualSectionName.trim() || manualSectionName.trim().length < 2">
+              {{ currentLang === 'ar' ? 'إنشاء القسم' : 'Create Section' }}
+            </button>
           </div>
         </div>
       </div>
@@ -1869,30 +2095,6 @@
         </div>
       </div>
 
-      <!-- File Selected Actions (shown when file is selected) -->
-      <div class="section-upload-actions" *ngIf="sectionFileSelected && !sectionFileUploading">
-        <p class="upload-info-text">
-          {{ currentLang === 'ar' 
-            ? '📄 الملف جاهز للمعالجة. سيتم تحليل المحتوى وإنشاء القسم والدروس بنفس لغة الملف.' 
-            : '📄 File ready to process. Content will be analyzed and section/lessons will be created in the same language as the file.' }}
-        </p>
-        <div class="upload-action-buttons">
-          <button
-            type="button"
-            class="btn-primary"
-            (click)="uploadSelectedSectionFile()"
-            [disabled]="sectionFileUploading">
-            {{ currentLang === 'ar' ? '🚀 إنشاء القسم' : '🚀 Create Section' }}
-          </button>
-          <button
-            type="button"
-            class="btn-secondary"
-            (click)="clearSelectedSectionFile()"
-            [disabled]="sectionFileUploading">
-            {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-          </button>
-        </div>
-      </div>
 
     </div>
     <div class="modal-actions">

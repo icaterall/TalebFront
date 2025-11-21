@@ -1,0 +1,108 @@
+.composer-container {
+  display: flex;
+  height: calc(100vh - 60px); // Adjust based on header
+  background-color: #f8f9fa;
+}
+
+.sections-sidebar {
+  width: 300px;
+  background: white;
+  border-right: 1px solid #dee2e6;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  
+  .section-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  .section-item {
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 5px;
+    &:hover { background-color: #f1f3f5; }
+    &.active { background-color: #e7f5ff; color: #007bff; font-weight: 500; }
+  }
+}
+
+.content-area {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  
+  &.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    font-size: 1.2rem;
+  }
+}
+
+.content-block-card {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: stretch;
+  
+  .block-handle {
+    width: 30px;
+    background: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+    color: #adb5bd;
+  }
+  
+  .block-content {
+    padding: 1rem;
+    flex: 1;
+  }
+}
+
+.suggestion-card {
+  cursor: pointer;
+  transition: transform 0.2s;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+}
+
+.editor-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-modal {
+  background: white;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  
+  .modal-body {
+    overflow-y: auto;
+    flex: 1;
+  }
+}
+
+.btn-magic {
+  background: linear-gradient(45deg, #6610f2, #fd7e14);
+  color: white;
+  border: none;
+}

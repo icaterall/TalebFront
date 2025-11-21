@@ -9,6 +9,10 @@ export const TEACHER_ROUTES: Routes = [
         path: '',
         loadComponent: () => import('./dashboard/dashboard.page').then(m => m.DashboardPage),
       },
+      {
+        path: 'course/:courseId/edit',
+        loadComponent: () => import('./course-editor/section-composer/section-composer.component').then(m => m.SectionComposerComponent),
+      },
     ],
   },
 ];

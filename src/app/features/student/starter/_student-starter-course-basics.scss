@@ -2764,6 +2764,121 @@
       display: none; // Hide as we now use section-content-title
     }
     
+    .section-description {
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: #F8FAFC;
+      border-left: 4px solid #3B82F6;
+      border-radius: 5px;
+      
+      p {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #475569;
+        line-height: 1.6;
+      }
+    }
+    
+    .suggested-titles-section {
+      margin-bottom: 24px;
+      padding: 20px;
+      background: #F0F9FF;
+      border: 2px solid #BAE6FD;
+      border-radius: 8px;
+      
+      .suggested-titles-header {
+        margin-bottom: 16px;
+        
+        h4 {
+          margin: 0 0 6px 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #1E293B;
+        }
+        
+        .suggested-titles-hint {
+          margin: 0;
+          font-size: 0.875rem;
+          color: #64748B;
+        }
+      }
+      
+      .suggested-titles-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        
+        .suggested-title-card {
+          display: flex;
+          align-items: flex-start;
+          gap: 16px;
+          padding: 16px;
+          background: white;
+          border: 2px solid #E2E8F0;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: left;
+          width: 100%;
+          
+          &:hover {
+            border-color: #3B82F6;
+            background: #F0F9FF;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+          }
+          
+          .suggested-title-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.875rem;
+            font-weight: 600;
+            flex-shrink: 0;
+          }
+          
+          .suggested-title-content {
+            flex: 1;
+            
+            .suggested-title-text {
+              margin: 0 0 6px 0;
+              font-size: 1rem;
+              font-weight: 600;
+              color: #1E293B;
+            }
+            
+            .suggested-title-hint {
+              margin: 0;
+              font-size: 0.875rem;
+              color: #64748B;
+              line-height: 1.5;
+            }
+          }
+          
+          .suggested-title-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #EFF6FF;
+            border-radius: 50%;
+            flex-shrink: 0;
+            
+            .action-icon {
+              font-size: 1.2rem;
+              color: #3B82F6;
+            }
+          }
+        }
+      }
+    }
+    
     .content-items-list {
       display: flex;
       flex-direction: column;

@@ -65,3 +65,8 @@
     width: 100%;
   }
 }
+
+.content:has(.has-open-modal) {
+  position: relative;
+  z-index: 10002; // Elevate above sidebar (1000) when modal is open
+}

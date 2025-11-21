@@ -1,0 +1,197 @@
+<div class="composer-container">
+  <!-- Sidebar: Sections List -->
+  <div class="sections-sidebar">
+    <h3>Sections</h3>
+    <div class="section-list">
+      <div *ngFor="let section of sections" 
+           class="section-item" 
+           [class.active]="section === activeSection"
+           (click)="selectSection(section)">
+        {{ section.name }}
+      </div>
+    </div>
+    
+    <div class="add-section-area">
+      <button *ngIf="!isAddingSection" (click)="startAddSection()" class="btn btn-primary w-100">
+        + Add New Section
+      </button>
+      
+      <div *ngIf="isAddingSection" class="add-section-form">
+        <div class="input-group mb-2">
+          <input type="text" class="form-control" [(ngModel)]="newSectionName" placeholder="Section Name">
+          <button class="btn btn-outline-secondary" (click)="suggestSectionName()" [disabled]="isSuggestingName">
+            <i class="bi bi-magic"></i> AI
+          </button>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-success btn-sm flex-grow-1" (click)="saveSection()">Save</button>
+          <button class="btn btn-secondary btn-sm" (click)="isAddingSection = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Area: Content Editor -->
+  <div class="content-area" *ngIf="activeSection">
+    <div class="section-header">
+      <h2>{{ activeSection.name }}</h2>
+      <p class="text-muted">{{ activeSection.description }}</p>
+    </div>
+
+    <!-- Content Blocks (Drag & Drop) -->
+    <div class="content-blocks" cdkDropList (cdkDropListDropped)="drop($event)">
+      <div *ngFor="let block of activeSection.blocks" class="content-block-card" cdkDrag>
+        <div class="block-handle" cdkDragHandle>
+          <i class="bi bi-grip-vertical"></i>
+        </div>
+        <div class="block-content">
+          <div class="block-header">
+            <span class="badge bg-secondary">{{ block.type | uppercase }}</span>
+            <strong>{{ block.title }}</strong>
+          </div>
+          <div class="block-preview">
+            <div *ngIf="block.type === 'text'" [innerHTML]="block.content | slice:0:100"></div>
+            <div *ngIf="block.type === 'video'">Video: {{ block.content }}</div>
+            <div *ngIf="block.type === 'audio'">Audio Clip</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggestions Area -->
+    <div class="suggestions-area mt-4" *ngIf="!activeContentBlock">
+      <h4>Suggested Content</h4>
+      <div *ngIf="isLoadingSuggestions" class="spinner-border text-primary" role="status"></div>
+      <div class="row g-3">
+        <div *ngFor="let suggestion of suggestedContent" class="col-md-6">
+          <div class="card h-100 suggestion-card" (click)="useSuggestion(suggestion)">
+            <div class="card-body">
+              <h5 class="card-title">{{ suggestion.title }}</h5>
+              <p class="card-text text-muted small">{{ suggestion.hint }}</p>
+              <span class="badge bg-light text-dark">+ Add Content</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Empty State -->
+  <div class="content-area empty-state" *ngIf="!activeSection">
+    <p>Select or create a section to start building.</p>
+  </div>
+</div>
+
+<!-- Content Editor Modal/Overlay -->
+<div class="editor-overlay" *ngIf="activeContentBlock">
+  <div class="editor-modal">
+    <div class="modal-header">
+      <h3>{{ activeContentBlock.title }}</h3>
+      <button class="btn-close" (click)="cancelEdit()"></button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="alert alert-info" *ngIf="activeContentBlock.hint">
+        <i class="bi bi-lightbulb"></i> Hint: {{ activeContentBlock.hint }}
+      </div>
+
+      <!-- Type Selection -->
+      <div class="type-selector mb-4" *ngIf="!editorType">
+        <div class="row text-center">
+          <div class="col-4">
+            <button class="btn btn-outline-primary w-100 py-4" (click)="chooseType('text')">
+              <i class="bi bi-file-text display-4"></i><br>Text Lesson
+            </button>
+          </div>
+          <div class="col-4">
+            <button class="btn btn-outline-primary w-100 py-4" (click)="chooseType('audio')">
+              <i class="bi bi-mic display-4"></i><br>Audio Lesson
+            </button>
+          </div>
+          <div class="col-4">
+            <button class="btn btn-outline-primary w-100 py-4" (click)="chooseType('video')">
+              <i class="bi bi-play-btn display-4"></i><br>Video / YouTube
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Editor -->
+      <div *ngIf="editorType === 'text'">
+        <div class="d-flex justify-content-end mb-2">
+          <button class="btn btn-sm btn-magic" (click)="generateTextWithAI()">
+            <i class="bi bi-stars"></i> Generate with AI
+          </button>
+        </div>
+        <ckeditor [editor]="Editor" [config]="editorConfig" [(ngModel)]="activeContentBlock.content" (ready)="onReady($event)"></ckeditor>
+      </div>
+
+      <!-- Audio Editor -->
+      <div *ngIf="editorType === 'audio'">
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item"><a class="nav-link active">Generate (TTS)</a></li>
+          <li class="nav-item"><a class="nav-link">Upload</a></li>
+        </ul>
+        
+        <div class="tts-controls">
+          <textarea class="form-control mb-3" rows="4" [(ngModel)]="audioText" placeholder="Enter text to convert to speech..."></textarea>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <select class="form-select" [(ngModel)]="selectedVoice">
+                <option value="Zeina">Zeina (Arabic)</option>
+                <option value="Hala">Hala (Arabic Neural)</option>
+                <option value="Joanna">Joanna (English)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <select class="form-select" [(ngModel)]="audioSpeed">
+                <option [value]="0.8">Slow</option>
+                <option [value]="1.0">Normal</option>
+                <option [value]="1.2">Fast</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" (click)="generateAudio()" [disabled]="isGeneratingAudio">
+            <span *ngIf="isGeneratingAudio" class="spinner-border spinner-border-sm"></span>
+            Generate Audio
+          </button>
+          
+          <div *ngIf="activeContentBlock.content" class="mt-3">
+            <audio controls [src]="activeContentBlock.content"></audio>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Editor -->
+      <div *ngIf="editorType === 'video'">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" [(ngModel)]="activeContentBlock.content" placeholder="Paste YouTube URL">
+        </div>
+        
+        <div class="suggestions">
+          <button class="btn btn-outline-secondary btn-sm mb-3" (click)="suggestVideos()">
+            Suggest Videos with AI
+          </button>
+          
+          <div *ngIf="isLoadingVideos" class="spinner-border spinner-border-sm"></div>
+          
+          <div class="list-group">
+            <button *ngFor="let video of suggestedVideos" class="list-group-item list-group-item-action" (click)="selectVideo(video)">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ video.title }}</h6>
+              </div>
+              <small>{{ video.description | slice:0:100 }}...</small>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    
+    <div class="modal-footer mt-3">
+      <button class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveContentBlock()" [disabled]="!editorType">Save Block</button>
+    </div>
+  </div>
+</div>

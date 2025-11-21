@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, ViewEncapsulation, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -16,6 +16,7 @@ import {
   ContentItem,
   ContentAsset,
   Section,
+  SectionTitleSuggestion,
   ResourceDetails,
   DraftCourseResponse,
   DraftCourseSectionResponse,
@@ -254,6 +255,27 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   showDeleteCoverModal: boolean = false;
   coverImageLoaded: boolean = false;
 
+  @HostBinding('class.has-open-modal')
+  get isAnyModalOpen(): boolean {
+    return this.showResourceModal || 
+           this.showResourcePreviewModal || 
+           this.showVideoModal || 
+           this.showAudioModal || 
+           this.showQuizWizardModal || 
+           this.showQuizEditorModal || 
+           this.showQuestionEditor || 
+           this.showDeleteCoverModal || 
+           this.showWarningModal || 
+           this.showContentTypeModal || 
+           this.showTextEditor || 
+           this.showEditCourseDetailsModal || 
+           this.showAIHintModal || 
+           this.showContentBlockModal || 
+           this.showAddSectionModal || 
+           this.showDeleteSectionModal || 
+           this.showStartFromScratchModal;
+  }
+
   // Step Management
   currentStep: number = 1; // 1 = Course Basics, 2 = Building Sections, 3 = Review & Publish
   step2Locked: boolean = false; // Track if Step 2 inputs are locked after continue
@@ -315,8 +337,21 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Add Section Modal
   showAddSectionModal: boolean = false; // Track add section modal visibility
-  sectionCreationMode: 'upload' | 'ai' | null = null; // Track current section creation mode
+  sectionCreationMode: 'upload' | 'ai' | 'manual' | null = null; // Track current section creation mode
   uploadStep: 1 | null = null; // Track upload step (1=file upload)
+  
+  // Manual Section Creation
+  manualSectionName: string = '';
+  manualSectionDescription: string = '';
+  aiSuggestedSectionName: string | null = null;
+  suggestingSectionName: boolean = false;
+  generatingSectionTitles: boolean = false;
+  
+  // Content Block Selection Modal
+  showContentBlockModal: boolean = false;
+  selectedTitleSuggestion: SectionTitleSuggestion | null = null;
+  selectedSectionIdForBlock: string | null = null;
+  contentBlockType: 'text' | 'audio' | 'video' | 'attachment' | null = null;
   sectionFileUploading: boolean = false; // Track section file upload state
   sectionFileUploadError: string | null = null; // Track section file upload errors
   sectionFileUploadErrorIsFileSize: boolean = false; // Track if error is file-size related
@@ -324,6 +359,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   sectionFileUploadProgress: number = 0; // Track upload progress percentage (0-100)
   sectionFileUploadStep: string = ''; // Track current upload step
   sectionFileUploadInterval: any = null; // Interval for progress simulation
+  pageRangeStart: number | null = null; // Optional page range start
+  pageRangeEnd: number | null = null; // Optional page range end
+  usePageRange: boolean = false; // Whether to use page range
   
   // AI Instruction Generation
   aiInstructionText: string = '';
@@ -509,7 +547,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         { name: 'resizeImage:75', value: '75', label: '75%', icon: 'large' },
         { name: 'resizeImage:original', value: null, label: this.currentLang === 'ar' ? 'الحجم الأصلي' : 'Original', icon: 'original' }
       ],
-      styles: ['inline', 'block', 'side']
+      styles: ['inline', 'block', 'side'],
+      // Configure image insertion to only allow upload, not URL
+      insert: {
+        type: 'auto'
+      }
     },
     heading: {
       options: [
@@ -738,6 +780,67 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   public onReady( editor: DecoupledEditor ): void {
     // Store editor instance for later use
     this.currentEditor = editor;
+    
+    // Remove dropdown from image button - make it always upload from computer
+    // Wait for toolbar to be ready, then modify the image button
+    setTimeout(() => {
+      const toolbarElement = editor.ui.view.toolbar.element;
+      if (toolbarElement) {
+        // Find the image button in the toolbar
+        const imageButton = toolbarElement.querySelector('[aria-label*="image" i], [aria-label*="Image" i]') as HTMLElement;
+        if (imageButton) {
+          // Hide the dropdown arrow if it exists
+          const arrow = imageButton.querySelector('.ck-button__arrow, .ck-dropdown__arrow') as HTMLElement;
+          if (arrow) {
+            arrow.style.display = 'none';
+          }
+          
+          // Override click to directly open file picker
+          imageButton.addEventListener('click', (e: Event) => {
+            // Check if it's clicking the arrow (which we've hidden, but just in case)
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('ck-button__arrow') || target.closest('.ck-button__arrow')) {
+              return; // Don't do anything if clicking the arrow
+            }
+            
+            // Create a file input element
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.style.display = 'none';
+            input.onchange = (fileEvent: Event) => {
+              const fileTarget = fileEvent.target as HTMLInputElement;
+              const file = fileTarget.files?.[0];
+              if (file) {
+                // Use the file repository to upload
+                const fileRepository = editor.plugins.get('FileRepository');
+                const loader = fileRepository.createLoader(file);
+                if (loader) {
+                  // Trigger the upload
+                  loader.upload().then((response: any) => {
+                    editor.model.change((writer: any) => {
+                      const imageElement = writer.createElement('imageBlock', {
+                        src: response.default || response.url
+                      });
+                      editor.model.insertContent(imageElement, editor.model.document.selection);
+                    });
+                  }).catch((error: any) => {
+                    console.error('Image upload failed:', error);
+                  });
+                }
+              }
+              if (document.body.contains(input)) {
+                document.body.removeChild(input);
+              }
+            };
+            document.body.appendChild(input);
+            input.click();
+            e.preventDefault();
+            e.stopPropagation();
+          }, true); // Use capture phase to intercept before CKEditor's handler
+        }
+      }
+    }, 200);
     
     const currentContentId = this.ensureCurrentEditingContentId();
     const uploadUrl = this.contentImageUploadUrl;
@@ -3257,6 +3360,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.sectionFileUploadError = null;
     this.sectionFileSelected = false; // Reset file selection
     this.aiInstructionText = ''; // Reset AI instruction text
+    this.manualSectionName = '';
+    this.manualSectionDescription = '';
+    this.aiSuggestedSectionName = null;
   }
   
   // Show file upload section
@@ -3820,6 +3926,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   clearSelectedSectionFile(): void {
     this.sectionFileSelected = false;
     this.sectionFileUploadError = null;
+    this.usePageRange = false;
+    this.pageRangeStart = null;
+    this.pageRangeEnd = null;
     // Clear the file input
     const fileInput = document.querySelector('input[type="file"]#sectionFileInput') as HTMLInputElement;
     if (fileInput) {
@@ -3847,21 +3956,90 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.resetAIWizardState();
       this.sectionFileSelected = false;
       this.sectionFileUploadError = null;
+      this.usePageRange = false;
+      this.pageRangeStart = null;
+      this.pageRangeEnd = null;
       this.stopProgressSimulation();
       this.sectionFileUploadProgress = 0;
       this.sectionFileUploadStep = '';
+      this.manualSectionName = '';
+      this.manualSectionDescription = '';
+      this.aiSuggestedSectionName = null;
     }
   }
 
-  // Add New Section Manually
-  addNewSectionManually(): void {
-    this.closeAddSectionModal();
+  // Show Manual Section Creation Form
+  showManualSectionForm(): void {
+    this.sectionCreationMode = 'manual';
+    this.manualSectionName = '';
+    this.manualSectionDescription = '';
+    this.aiSuggestedSectionName = null;
+    this.suggestingSectionName = false;
+    // Auto-suggest section name
+    this.suggestSectionName();
+    this.cdr.detectChanges();
+  }
+
+  // Suggest section name using AI
+  suggestSectionName(): void {
+    if (!this.selectedCategory || !this.courseName) return;
+    
+    this.suggestingSectionName = true;
+    const categoryId = this.selectedCategory.id;
+    // stage_id expects a number, but educationalStage is string[], so we pass undefined
+    // TODO: Add mapping from educational stage strings to numeric IDs if needed
+    const stageId: number | undefined = undefined;
+    const countryId = this.coursePreferences.country.length > 0 
+      ? this.coursePreferences.country[0] 
+      : undefined;
+    const locale = this.currentLang;
+    
+    // Use getUnits to get section name suggestions
+    this.ai.getUnits({
+      category_id: categoryId,
+      course_name: this.courseName,
+      stage_id: stageId,
+      country_id: countryId,
+      locale: locale
+    }).subscribe({
+      next: (response) => {
+        this.suggestingSectionName = false;
+        if (response.units && response.units.length > 0) {
+          // Use the first unit name as suggestion, or find one that matches section number
+          const sectionNumber = this.sections.length + 1;
+          const matchingUnit = response.units.find(u => u.order === sectionNumber);
+          this.aiSuggestedSectionName = matchingUnit?.name || response.units[0]?.name || null;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error suggesting section name:', error);
+        this.suggestingSectionName = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Create section with name and description
+  createManualSection(): void {
+    const trimmedName = this.manualSectionName.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      this.toastr?.warning?.(
+        this.currentLang === 'ar'
+          ? 'يرجى إدخال اسم القسم (حرفين على الأقل)'
+          : 'Please enter a section name (at least 2 characters)'
+      );
+      return;
+    }
+
+    const trimmedDescription = this.manualSectionDescription.trim();
     const newSectionNumber = this.sections.length + 1;
     const newSection: Section & { available: boolean } = {
       id: `section-${Date.now()}`,
       number: newSectionNumber,
       sort_order: newSectionNumber,
-      name: '',
+      name: trimmedName,
+      description: trimmedDescription || null,
       content_items: [],
       isCollapsed: false,
       available: true,
@@ -3871,11 +4049,134 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     this.sections.push(newSection);
     this.setActiveSection(newSection.id);
-    // Force immediate rename for the new section; block actions until named
-    this.editingSectionId = newSection.id;
-    this.editingSectionValue = '';
-    this.editingSection = true;
     this.normalizeSectionOrdering();
+    
+    // Save section to backend
+    this.saveSections();
+    
+    // Generate titles/hints for this section
+    this.generateSectionTitles(newSection);
+    
+    // Reset form and close modal
+    this.manualSectionName = '';
+    this.manualSectionDescription = '';
+    this.aiSuggestedSectionName = null;
+    this.sectionCreationMode = null;
+    this.closeAddSectionModal();
+    this.cdr.detectChanges();
+  }
+
+  // Generate AI titles/hints for a section
+  generateSectionTitles(section: Section): void {
+    if (!this.selectedCategory || !section.name) return;
+    
+    this.generatingSectionTitles = true;
+    const categoryId = this.selectedCategory.id;
+    // stage_id expects a number, but educationalStage is string[], so we pass undefined
+    // TODO: Add mapping from educational stage strings to numeric IDs if needed
+    const stageId: number | undefined = undefined;
+    const countryId = this.coursePreferences.country.length > 0 
+      ? this.coursePreferences.country[0] 
+      : undefined;
+    const locale = this.currentLang;
+    
+    this.ai.getTitles({
+      category_id: categoryId,
+      stage_id: stageId,
+      country_id: countryId,
+      locale: locale,
+      category_name: this.selectedCategory ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en) : undefined,
+      term: undefined,
+      mode: 'general'
+    }).subscribe({
+      next: (response) => {
+        this.generatingSectionTitles = false;
+        if (response.titles && response.titles.length > 0) {
+          // Convert titles to SectionTitleSuggestion format
+          section.suggestedTitles = response.titles.map((title, index) => ({
+            title: title.title,
+            hint: title.rationale || title.topics?.join(', ') || '',
+            position: index + 1
+          }));
+          this.saveSections(); // Save to localStorage
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Error generating section titles:', error);
+        this.generatingSectionTitles = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Use AI suggested name
+  useSuggestedName(): void {
+    if (this.aiSuggestedSectionName) {
+      this.manualSectionName = this.aiSuggestedSectionName;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Open content block selection modal for a suggested title
+  openContentBlockModal(sectionId: string, titleSuggestion: SectionTitleSuggestion): void {
+    this.selectedSectionIdForBlock = sectionId;
+    this.selectedTitleSuggestion = titleSuggestion;
+    this.contentBlockType = null;
+    this.showContentBlockModal = true;
+    this.cdr.detectChanges();
+  }
+
+  // Close content block selection modal
+  closeContentBlockModal(): void {
+    this.showContentBlockModal = false;
+    this.selectedSectionIdForBlock = null;
+    this.selectedTitleSuggestion = null;
+    this.contentBlockType = null;
+    this.cdr.detectChanges();
+  }
+
+  // Select content block type and proceed
+  selectContentBlockType(type: 'text' | 'audio' | 'video' | 'attachment'): void {
+    if (!this.selectedSectionIdForBlock || !this.selectedTitleSuggestion) return;
+    
+    this.contentBlockType = type;
+    this.closeContentBlockModal();
+    
+    // Set active section
+    this.setActiveSection(this.selectedSectionIdForBlock);
+    
+    // Open the appropriate content creation modal/editor
+    if (type === 'text') {
+      // Pre-fill title from suggestion
+      this.subsectionTitle = this.selectedTitleSuggestion.title;
+      this.textContent = '';
+      this.viewingContentItem = null;
+      this.currentEditor = null;
+      this.textSaveError = null;
+      this.showTextEditor = true;
+      this.selectedContentType = 'text';
+      this.pendingImageUploads.clear();
+      this.currentEditingContentId = this.generateDraftContentId();
+      this.editorActiveImageKeys.clear();
+      this.editorKnownImageMap.clear();
+      this.editorDeletedImageKeys.clear();
+    } else if (type === 'audio') {
+      // Pre-fill title from suggestion
+      this.audioForm.title = this.selectedTitleSuggestion.title;
+      this.audioForm.description = this.selectedTitleSuggestion.hint || '';
+      this.openAudioModal('audio');
+    } else if (type === 'video') {
+      // Pre-fill title from suggestion
+      this.videoForm.title = this.selectedTitleSuggestion.title;
+      this.openVideoModal();
+    } else if (type === 'attachment') {
+      // Pre-fill title from suggestion
+      this.resourceForm.title = this.selectedTitleSuggestion.title;
+      this.resourceForm.description = this.selectedTitleSuggestion.hint;
+      this.openResourceModal();
+    }
+    
     this.cdr.detectChanges();
   }
 
@@ -3885,11 +4186,18 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const file = input.files?.[0];
     if (!file) {
       this.sectionFileSelected = false;
+      this.usePageRange = false;
+      this.pageRangeStart = null;
+      this.pageRangeEnd = null;
       return;
     }
 
     // Mark file as selected
     this.sectionFileSelected = true;
+    // Reset page range when new file is selected
+    this.usePageRange = false;
+    this.pageRangeStart = null;
+    this.pageRangeEnd = null;
 
     // Validate file type
     const validTypes = [
@@ -3950,6 +4258,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     formData.append('generateText', hasText ? 'true' : 'false');
     formData.append('generateYoutube', hasYoutube ? 'true' : 'false');
     formData.append('generateAudio', hasTextToAudio ? 'true' : 'false');
+    
+    // Add page range if specified
+    if (this.usePageRange && this.pageRangeStart && this.pageRangeEnd) {
+      const pageRange = {
+        start: Math.max(1, Math.floor(this.pageRangeStart)),
+        end: Math.max(1, Math.floor(this.pageRangeEnd))
+      };
+      // Ensure start <= end
+      if (pageRange.start > pageRange.end) {
+        [pageRange.start, pageRange.end] = [pageRange.end, pageRange.start];
+      }
+      formData.append('pageRange', JSON.stringify(pageRange));
+    }
     
     // Add preferences to form data for AI context
     if (this.aiPreferences.contentSource.length > 0) {

@@ -1,26 +1,40 @@
 // Audio Modal Styles
 // Overlay enhancements
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 65px 20px;
-  background: rgba(15, 23, 42, 0.75);
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(15, 23, 42, 0.75) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 9990;
+  z-index: 10001 !important; // Above student sidebar (z-index: 1000)
   animation: fadeInOverlay 0.2s ease-out;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
   
   @supports not (backdrop-filter: blur(8px)) {
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.85) !important;
+  }
+  
+  // Apply padding to modal content, not overlay
+  .modal-content {
+    margin: 65px 20px;
   }
 }
 
 // Ensure warning modal appears above audio modal
 .modal-overlay.warning-modal-overlay {
-  z-index: 1000 !important;
+  z-index: 10002 !important; // Above other modals
 }
 
 @keyframes fadeInOverlay {
