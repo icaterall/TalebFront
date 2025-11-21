@@ -190,11 +190,11 @@
   }
   // AI Hint Modal should appear above Text Editor Modal
   .ai-hint-overlay {
-    z-index: 10002 !important; // Above other modals
+    z-index: 100000 !important; // Above other modals
   }
   
   .ai-hint-modal {
-    z-index: 10002 !important;
+    z-index: 100000 !important;
   }
   
   .modal-content {

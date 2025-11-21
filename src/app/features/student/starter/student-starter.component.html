@@ -928,45 +928,7 @@
       </div>
     </div>
 
-    <!-- AI Hint Modal (shown above text editor modal) -->
-    <div class="modal-overlay ai-hint-overlay" *ngIf="showAIHintModal" (click)="cancelAIHint()">
-      <div class="modal-content ai-hint-modal" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>{{ currentLang === 'ar' ? '🤖 تلميح للذكاء الاصطناعي' : '🤖 AI Hint' }}</h3>
-          <button type="button" class="modal-close-btn" (click)="cancelAIHint()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="hint-field">
-            <label class="field-label">
-              {{ viewingContentItem?.meta?.['hint'] 
-                ? (currentLang === 'ar' ? '🤖 تلميح من الذكاء الاصطناعي (يمكنك التعديل)' : '🤖 AI-Generated Hint (You can modify)')
-                : (currentLang === 'ar' ? 'أضف تلميحاً للذكاء الاصطناعي' : 'Add hint for AI') }}
-            </label>
-            <textarea 
-              class="hint-input"
-              [class.ai-generated]="viewingContentItem?.meta?.['hint']"
-              [(ngModel)]="aiHint"
-              [placeholder]="currentLang === 'ar' ? 'مثال: ركز على الأساسيات، استخدم أمثلة عملية، اجعل المحتوى مناسباً للمبتدئين...' : 'Example: Focus on fundamentals, use practical examples, make content suitable for beginners...'"
-              [dir]="isRTL ? 'rtl' : 'ltr'"
-              rows="4"
-              maxlength="250"></textarea>
-            <div class="field-help">
-              {{ viewingContentItem?.meta?.['hint']
-                ? (currentLang === 'ar' ? 'هذا التلميح تم إنشاؤه بواسطة الذكاء الاصطناعي (50 كلمة كحد أقصى). يمكنك تعديله أو إضافة المزيد من التفاصيل.' : 'This hint was AI-generated (max 50 words). You can modify it or add more details.')
-                : (currentLang === 'ar' ? 'التلميح مطلوب لتوجيه الذكاء الاصطناعي لإنشاء محتوى مناسب (50 كلمة كحد أقصى)' : 'Hint is required to guide AI for appropriate content generation (max 50 words)') }}
-            </div>
-          </div>
-          
-          <div class="hint-actions">
-            <button type="button" class="btn-continue" 
-              [disabled]="!aiHint || !aiHint.trim()"
-              (click)="proceedWithAIGeneration(true)">
-              {{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Content Block Selection Modal -->
     <div class="modal-overlay content-block-modal-overlay" *ngIf="showContentBlockModal" (click)="closeContentBlockModal()">
@@ -1590,6 +1552,46 @@
           <button type="button" class="btn-cancel" (click)="closeResourcePreview()">
             {{ currentLang === 'ar' ? 'إغلاق' : 'Close' }}
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Hint Modal (shown above text editor modal) -->
+    <div class="modal-overlay ai-hint-overlay" *ngIf="showAIHintModal" (click)="cancelAIHint()">
+      <div class="modal-content ai-hint-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ currentLang === 'ar' ? '🤖 تلميح للذكاء الاصطناعي' : '🤖 AI Hint' }}</h3>
+          <button type="button" class="modal-close-btn" (click)="cancelAIHint()" [attr.aria-label]="currentLang === 'ar' ? 'إغلاق' : 'Close'">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="hint-field">
+            <label class="field-label">
+              {{ viewingContentItem?.meta?.['hint'] 
+                ? (currentLang === 'ar' ? '🤖 تلميح من الذكاء الاصطناعي (يمكنك التعديل)' : '🤖 AI-Generated Hint (You can modify)')
+                : (currentLang === 'ar' ? 'أضف تلميحاً للذكاء الاصطناعي' : 'Add hint for AI') }}
+            </label>
+            <textarea 
+              class="hint-input"
+              [class.ai-generated]="viewingContentItem?.meta?.['hint']"
+              [(ngModel)]="aiHint"
+              [placeholder]="currentLang === 'ar' ? 'مثال: ركز على الأساسيات، استخدم أمثلة عملية، اجعل المحتوى مناسباً للمبتدئين...' : 'Example: Focus on fundamentals, use practical examples, make content suitable for beginners...'"
+              [dir]="isRTL ? 'rtl' : 'ltr'"
+              rows="4"
+              maxlength="500"></textarea>
+            <div class="field-help">
+              {{ viewingContentItem?.meta?.['hint']
+                ? (currentLang === 'ar' ? 'هذا التلميح تم إنشاؤه بواسطة الذكاء الاصطناعي (100 كلمة كحد أقصى). يمكنك تعديله أو إضافة المزيد من التفاصيل.' : 'This hint was AI-generated (max 100 words). You can modify it or add more details.')
+                : (currentLang === 'ar' ? 'التلميح مطلوب لتوجيه الذكاء الاصطناعي لإنشاء محتوى مناسب (100 كلمة كحد أقصى)' : 'Hint is required to guide AI for appropriate content generation (max 100 words)') }}
+            </div>
+          </div>
+          
+          <div class="hint-actions">
+            <button type="button" class="btn-continue" 
+              [disabled]="!aiHint || !aiHint.trim()"
+              (click)="proceedWithAIGeneration(true)">
+              {{ currentLang === 'ar' ? 'متابعة' : 'Continue' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>

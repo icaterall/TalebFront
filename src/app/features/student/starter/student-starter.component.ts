@@ -1411,6 +1411,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.textContent = '';
       this.currentEditor = null;
       this.textSaveError = null;
+      // Close AI hint modal if it's open
+      this.showAIHintModal = false;
+      this.aiHint = '';
+      this.pendingAiAction = null;
       this.showTextEditor = true;
       this.selectedContentType = 'text';
       this.pendingImageUploads.clear();
@@ -2271,7 +2275,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Show hint modal first
     this.pendingAiAction = 'textContent';
     
-    // Pre-fill hint from meta field if it exists (max 50 words from AI generation)
+    // Pre-fill hint from meta field if it exists (max 100 words from AI generation)
     if (this.viewingContentItem?.meta && typeof this.viewingContentItem.meta === 'object') {
       const meta = this.viewingContentItem.meta as any;
       if (meta.hint && typeof meta.hint === 'string') {
@@ -2871,9 +2875,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       // Open text editor with this content
       this.subsectionTitle = item.title;
       this.textContent = item.content || '<p></p>';
-       this.textSaveError = null;
+      this.textSaveError = null;
+      // Close AI hint modal if it's open
+      this.showAIHintModal = false;
+      this.aiHint = '';
+      this.pendingAiAction = null;
       this.showTextEditor = true;
-  this.pendingImageUploads.clear();
+      this.pendingImageUploads.clear();
       this.currentEditingContentId = item.id;
       this.editorKnownImageMap.clear();
       this.editorDeletedImageKeys.clear();
@@ -4154,6 +4162,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.viewingContentItem = null;
       this.currentEditor = null;
       this.textSaveError = null;
+      // Close AI hint modal if it's open
+      this.showAIHintModal = false;
+      this.aiHint = '';
+      this.pendingAiAction = null;
       this.showTextEditor = true;
       this.selectedContentType = 'text';
       this.pendingImageUploads.clear();
