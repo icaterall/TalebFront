@@ -5,7 +5,7 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { I18nService } from '../../../core/services/i18n.service';
@@ -56,6 +56,19 @@ type ResourceDisplayType = 'pdf' | 'word' | 'excel' | 'ppt' | 'compressed';
 
 type ResourcePreviewMode = 'inline' | 'download';
 
+interface ContentBlock {
+  id?: number | string;
+  content_id?: number;
+  block_type: 'text' | 'video' | 'audio' | 'file';
+  title?: string | null;
+  body_html?: string | null;
+  asset_id?: number | null;
+  meta?: Record<string, unknown> | null;
+  position: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface ResourceFormState {
   title: string;
   description: string;
@@ -89,6 +102,7 @@ interface ResourceFormState {
 })
 export class StudentStarterComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly i18n = inject(I18nService);
   private readonly universalAuth = inject(UniversalAuthService);
   private readonly geographyService = inject(GeographyService);
@@ -152,6 +166,13 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     youtubeData: null,
     metadata: undefined
   };
+
+  // AI YouTube Search
+  youtubeSearchQuery: string = '';
+  searchingYoutube: boolean = false;
+  youtubeSearchResults: any[] = [];
+  youtubeSearchError: string | null = null;
+
   videoUploadError: string | null = null;
   videoUploadInProgress: boolean = false;
   videoUploadProgress: number = 0;
@@ -296,6 +317,23 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   aiHint: string = ''; // Store optional AI hint
   pendingAiAction: 'textContent' | null = null; // Track which AI action is pending hint input
   
+  // Lesson Builder
+  showLessonBuilder: boolean = false; // Track lesson builder visibility
+  editingLessonTitle: string = ''; // Current lesson title being edited
+  lessonBlocks: ContentBlock[] = []; // Blocks for current lesson
+  selectedBlockId: number | string | null = null; // Currently selected block
+  selectedBlock: ContentBlock | null = null; // Currently selected block object
+  showBlockTypeChooser: boolean = false; // Block type chooser modal
+  lessonHint: string = ''; // Hint for AI assistant
+  savingLessonBuilder: boolean = false; // Track save state
+  currentLessonContentId: number | string | null = null; // ID of content being edited
+  videoTab: 'youtube-ai' | 'youtube-manual' | 'upload' = 'youtube-ai'; // Video block tab
+  private saveBlocksTimeout: any = null; // Timeout for debounced block saving
+  youtubeSuggestions: Array<{ videoId: string; title: string; description: string; duration: string; durationSeconds: number; thumbnail: string; channelTitle: string; publishedAt: string; viewCount: string }> = [];
+  loadingYouTubeSuggestions: boolean = false;
+  previewingYouTubeVideo: { videoId: string; title: string; description: string; duration: string; thumbnail: string; channelTitle: string; publishedAt?: string; viewCount: string } | null = null;
+  showYouTubePreviewModal: boolean = false;
+  
   // Section Management
   sections: (Section & { available?: boolean })[] = []; // Store all sections with availability toggle
   activeSectionId: string | null = null; // Currently active/selected section
@@ -349,6 +387,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Content Block Selection Modal
   showContentBlockModal: boolean = false;
+  showContentTypeSelectionModal: boolean = false; // New modal for selecting type after creation
+  selectedDraftItem: ContentItem | null = null; // Item being configured
   selectedTitleSuggestion: SectionTitleSuggestion | null = null;
   selectedSectionIdForBlock: string | null = null;
   contentBlockType: 'text' | 'audio' | 'video' | 'attachment' | null = null;
@@ -707,6 +747,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         }, 500); // Match the delay from the observable subscription
       }) as EventListener);
     }
+    
+    // Check if contentId is in route params (for lesson builder persistence)
+    // This will be handled after draft is loaded in afterDraftLoaded
   }
 
   ngOnDestroy(): void {
@@ -2866,11 +2909,28 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // View Content Item
   viewContentItem(item: ContentItem): void {
+    console.log('viewContentItem called with:', item);
+    // Open lesson builder for all content types
+    this.openLessonBuilder(item);
+  }
+
+  // Legacy method - kept for backward compatibility
+  viewContentItemLegacy(item: ContentItem): void {
     this.viewingContentItem = item;
     // Set active section to match the content's section
     if (item.section_id) {
       this.setActiveSection(item.section_id);
     }
+
+    // Check if it is a draft (type text and empty content)
+    // We treat empty content or just empty paragraph as draft
+    const isDraft = item.type === 'text' && (!item.content || item.content.trim() === '' || item.content === '<p></p>');
+    
+    if (isDraft) {
+      this.openContentTypeSelectionModal(item);
+      return;
+    }
+
     if (item.type === 'text') {
       // Open text editor with this content
       this.subsectionTitle = item.title;
@@ -4128,10 +4188,91 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   // Open content block selection modal for a suggested title
   openContentBlockModal(sectionId: string, titleSuggestion: SectionTitleSuggestion): void {
-    this.selectedSectionIdForBlock = sectionId;
-    this.selectedTitleSuggestion = titleSuggestion;
-    this.contentBlockType = null;
-    this.showContentBlockModal = true;
+    // Instead of asking for type, immediately create a draft item
+    this.createDraftContent(sectionId, titleSuggestion);
+  }
+
+  // Create a draft content item from suggestion
+  createDraftContent(sectionId: string, titleSuggestion: SectionTitleSuggestion): void {
+    const section = this.sections.find(s => s.id === sectionId);
+    if (!section) return;
+
+    const newItem: ContentItem = {
+      id: this.generateDraftContentId(),
+      type: 'text', // Default to text, but empty content marks it as draft
+      title: titleSuggestion.title,
+      content: '', // Empty content
+      section_id: sectionId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      position: section.content_items.length + 1,
+      status: true,
+      meta: {
+        hint: titleSuggestion.hint // Store hint in meta
+      }
+    };
+
+    section.content_items.push(newItem);
+    this.saveSections();
+    this.cdr.detectChanges();
+    
+    this.toastr?.success?.(
+      this.currentLang === 'ar' 
+        ? 'تم إنشاء المحتوى. انقر عليه لتحديد نوعه.' 
+        : 'Content created. Click on it to select its type.'
+    );
+  }
+
+  // Open Content Type Selection Modal
+  openContentTypeSelectionModal(item: ContentItem): void {
+    this.selectedDraftItem = item;
+    this.showContentTypeSelectionModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeContentTypeSelectionModal(): void {
+    this.showContentTypeSelectionModal = false;
+    this.selectedDraftItem = null;
+    this.cdr.detectChanges();
+  }
+
+  // Select content type for a draft item
+  selectContentType(type: 'text' | 'audio' | 'video' | 'resources'): void {
+    if (!this.selectedDraftItem) return;
+
+    const item = this.selectedDraftItem;
+    this.closeContentTypeSelectionModal();
+
+    // Update item type
+    item.type = type;
+    
+    // Open specific editor/modal
+    if (type === 'text') {
+      // Initialize content if empty so it's not treated as draft
+      if (!item.content || item.content.trim() === '') {
+        item.content = '<p></p>';
+      }
+      this.viewContentItem(item); // Will open text editor since type is text
+    } else if (type === 'audio') {
+      this.audioForm.title = item.title;
+      this.audioForm.description = (item.meta as any)?.hint || '';
+      this.openAudioModal('audio');
+      // Link the modal to this item
+      this.currentEditingContentId = item.id;
+    } else if (type === 'video') {
+      this.videoForm.title = item.title;
+      this.openVideoModal();
+      // Link the modal to this item
+      this.currentEditingContentId = item.id;
+    } else if (type === 'resources') {
+      this.resourceForm.title = item.title;
+      this.resourceForm.description = (item.meta as any)?.hint || '';
+      this.openResourceModal();
+      // Link the modal to this item
+      this.currentEditingContentId = item.id;
+    }
+    
+    this.saveSections();
     this.cdr.detectChanges();
   }
 
@@ -5640,6 +5781,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.loadProfileFromBackend();
     this.loadAllCategories();
     this.initializeSections();
+    
+    // Check if contentId is in route params (for lesson builder persistence)
+    // Wait for sections to be fully initialized and content items to be loaded
+    this.route.queryParams.subscribe(params => {
+      const contentId = params['contentId'];
+      if (contentId && !this.showLessonBuilder) {
+        // Wait for sections to be loaded, then load content items if needed
+        this.loadAndOpenLessonBuilderWithRetry(contentId);
+      }
+    });
   }
 
   private mapApiSectionToLocal(section: DraftCourseSectionResponse): (Section & { available?: boolean }) {
@@ -7401,6 +7552,46 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.fetchingYouTubeData = false;
     this.savingVideo = false;
     this.deletingVideo = false;
+    // Reset AI Search
+    this.youtubeSearchQuery = '';
+    this.searchingYoutube = false;
+    this.youtubeSearchResults = [];
+    this.youtubeSearchError = null;
+  }
+
+  searchYoutubeAI(): void {
+    if (!this.youtubeSearchQuery || !this.youtubeSearchQuery.trim()) return;
+    
+    this.searchingYoutube = true;
+    this.youtubeSearchError = null;
+    this.youtubeSearchResults = [];
+    
+    this.http.post<{ videos: any[] }>(`${this.baseUrl}/ai/youtube/search`, { 
+      query: this.youtubeSearchQuery,
+      locale: this.currentLang 
+    }).subscribe({
+      next: (response) => {
+        this.searchingYoutube = false;
+        this.youtubeSearchResults = response.videos || [];
+        if (this.youtubeSearchResults.length === 0) {
+          this.youtubeSearchError = this.currentLang === 'ar' ? 'لم يتم العثور على نتائج' : 'No results found';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('YouTube search error', err);
+        this.searchingYoutube = false;
+        this.youtubeSearchError = this.currentLang === 'ar' ? 'حدث خطأ أثناء البحث' : 'Error searching YouTube';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  selectYoutubeResult(result: any): void {
+    this.videoForm.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
+    this.youtubeSearchResults = [];
+    this.youtubeSearchQuery = '';
+    this.fetchYouTubeMetadata();
   }
 
   selectVideoSource(source: VideoSource): void {
@@ -8353,4 +8544,602 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.router.navigate(['/student/course-preview', this.draftCourseId]);
   }
 
- }
+  // ============ LESSON BUILDER METHODS ============
+  
+  openLessonBuilder(item: ContentItem): void {
+    try {
+      console.log('Opening lesson builder for item:', item);
+      this.currentLessonContentId = item.id;
+      this.editingLessonTitle = item.title || '';
+      this.lessonHint = (item.meta as any)?.hint || '';
+      this.selectedBlockId = null;
+      this.selectedBlock = null;
+      this.showBlockTypeChooser = false;
+      this.videoTab = 'youtube-ai';
+      
+      // Clear YouTube suggestions temporarily - they will be loaded from localStorage
+      this.youtubeSuggestions = [];
+      this.youtubeSearchQuery = '';
+      
+      // Update URL with contentId for persistence
+      if (item.id) {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { contentId: item.id },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+        
+        // Load existing blocks and YouTube suggestions for this content
+        this.loadLessonBlocks(item.id);
+      }
+      
+      this.showLessonBuilder = true;
+      this.cdr.detectChanges();
+      console.log('Lesson builder opened, showLessonBuilder:', this.showLessonBuilder);
+    } catch (error) {
+      console.error('Error opening lesson builder:', error);
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'حدث خطأ في فتح محرر الدرس' : 'Error opening lesson editor');
+    }
+  }
+
+  closeLessonBuilder(): void {
+    // Save blocks before closing
+    if (this.currentLessonContentId) {
+      this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
+    }
+    
+    // Clear any pending save timeout
+    if (this.saveBlocksTimeout) {
+      clearTimeout(this.saveBlocksTimeout);
+      this.saveBlocksTimeout = null;
+    }
+    
+    this.showLessonBuilder = false;
+    this.currentLessonContentId = null;
+    this.editingLessonTitle = '';
+    this.lessonBlocks = [];
+    this.selectedBlockId = null;
+    this.selectedBlock = null;
+    this.lessonHint = '';
+    
+    // Remove contentId from URL
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { contentId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+    
+    this.cdr.detectChanges();
+  }
+
+  loadLessonBlocks(contentId: string | number): void {
+    try {
+      // First, try to load from localStorage
+      const storageKey = `lesson-blocks-${contentId}`;
+      const storedBlocks = localStorage.getItem(storageKey);
+      
+      if (storedBlocks) {
+        try {
+          this.lessonBlocks = JSON.parse(storedBlocks);
+          console.log('✅ Loaded lesson blocks from localStorage:', {
+            contentId,
+            blocksCount: this.lessonBlocks.length,
+            blocks: this.lessonBlocks.map(b => ({ id: b.id, type: b.block_type, title: b.title }))
+          });
+        } catch (parseError) {
+          console.warn('Failed to parse stored blocks, initializing empty:', parseError);
+          this.lessonBlocks = [];
+        }
+      } else {
+        // TODO: Load blocks from API if not in localStorage
+        this.lessonBlocks = [];
+        console.log('No stored blocks found in localStorage for content:', contentId);
+      }
+      
+      // Ensure positions are correct
+      this.lessonBlocks.forEach((block, index) => {
+        block.position = index + 1;
+      });
+      
+      // Load YouTube suggestions from localStorage
+      this.loadYouTubeSuggestionsFromLocalStorage(contentId);
+      
+      // If a video block has a selected YouTube video, ensure it's visible
+      const videoBlock = this.lessonBlocks.find(b => b.block_type === 'video' && b.meta && b.meta['youtubeVideoId']);
+      if (videoBlock && this.videoTab === 'youtube-ai') {
+        // Video is already selected in the block, suggestions should be loaded
+        console.log('Found video block with selected YouTube video:', videoBlock.meta?.['youtubeVideoId']);
+      }
+      
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error loading lesson blocks:', error);
+      this.lessonBlocks = [];
+    }
+  }
+
+  loadYouTubeSuggestionsFromLocalStorage(contentId: string | number): void {
+    try {
+      const storageKey = `youtube-suggestions-${contentId}`;
+      const storedData = localStorage.getItem(storageKey);
+      
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          this.youtubeSuggestions = parsed.videos || [];
+          this.youtubeSearchQuery = parsed.searchQuery || '';
+          console.log('✅ Loaded YouTube suggestions from localStorage:', {
+            contentId,
+            key: storageKey,
+            videosCount: this.youtubeSuggestions.length,
+            searchQuery: this.youtubeSearchQuery,
+            videos: this.youtubeSuggestions.map(v => v.videoId)
+          });
+        } catch (parseError) {
+          console.warn('❌ Failed to parse stored YouTube suggestions:', parseError);
+          this.youtubeSuggestions = [];
+          this.youtubeSearchQuery = '';
+        }
+      } else {
+        console.log('ℹ️ No YouTube suggestions found in localStorage for content:', contentId, 'key:', storageKey);
+        this.youtubeSuggestions = [];
+        this.youtubeSearchQuery = '';
+      }
+    } catch (error) {
+      console.error('❌ Error loading YouTube suggestions from localStorage:', error);
+      this.youtubeSuggestions = [];
+      this.youtubeSearchQuery = '';
+    }
+  }
+
+  saveYouTubeSuggestionsToLocalStorage(contentId: string | number | null): void {
+    if (!contentId) {
+      console.warn('Cannot save YouTube suggestions: contentId is null');
+      return;
+    }
+    
+    try {
+      const storageKey = `youtube-suggestions-${contentId}`;
+      const dataToStore = {
+        videos: this.youtubeSuggestions || [],
+        searchQuery: this.youtubeSearchQuery || ''
+      };
+      const jsonString = JSON.stringify(dataToStore);
+      localStorage.setItem(storageKey, jsonString);
+      console.log('✅ Saved YouTube suggestions to localStorage:', {
+        contentId,
+        key: storageKey,
+        videosCount: this.youtubeSuggestions.length,
+        searchQuery: this.youtubeSearchQuery,
+        dataSize: jsonString.length
+      });
+    } catch (error) {
+      console.error('❌ Error saving YouTube suggestions to localStorage:', error);
+      // Check if it's a quota exceeded error
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error('localStorage quota exceeded. Clearing old data...');
+        // Optionally clear old data or notify user
+      }
+    }
+  }
+
+  saveLessonBlocksToLocalStorage(contentId: string | number | null): void {
+    if (!contentId) {
+      return;
+    }
+    
+    try {
+      const storageKey = `lesson-blocks-${contentId}`;
+      localStorage.setItem(storageKey, JSON.stringify(this.lessonBlocks));
+      console.log('Saved lesson blocks to localStorage for content:', contentId, 'blocks:', this.lessonBlocks.length);
+    } catch (error) {
+      console.error('Error saving lesson blocks to localStorage:', error);
+    }
+  }
+
+  selectBlock(blockId: number | string): void {
+    this.selectedBlockId = blockId;
+    this.selectedBlock = this.lessonBlocks.find(b => b.id === blockId) || null;
+    
+    // Ensure meta is initialized
+    if (this.selectedBlock && !this.selectedBlock.meta) {
+      this.selectedBlock.meta = {};
+    }
+    
+    this.cdr.detectChanges();
+  }
+
+  getBlockTypeLabel(blockType: string): string {
+    const labels: Record<string, { en: string; ar: string }> = {
+      'text': { en: 'Text', ar: 'نص' },
+      'video': { en: 'Video', ar: 'فيديو' },
+      'audio': { en: 'Audio', ar: 'صوت' },
+      'file': { en: 'File', ar: 'ملف' }
+    };
+    return labels[blockType]?.[this.currentLang === 'ar' ? 'ar' : 'en'] || blockType;
+  }
+
+  addBlock(blockType: 'text' | 'video' | 'audio' | 'file'): void {
+    this.showBlockTypeChooser = false;
+    
+    const newBlock: ContentBlock = {
+      id: `draft-${Date.now()}`,
+      block_type: blockType,
+      title: null,
+      body_html: blockType === 'text' ? '<p></p>' : null,
+      asset_id: null,
+      meta: {} as Record<string, unknown>,
+      position: this.lessonBlocks.length + 1
+    };
+    
+    this.lessonBlocks.push(newBlock);
+    this.selectBlock(newBlock.id!);
+    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
+    this.cdr.detectChanges();
+  }
+
+  onBlockDrop(event: CdkDragDrop<ContentBlock[]>): void {
+    moveItemInArray(this.lessonBlocks, event.previousIndex, event.currentIndex);
+    // Update positions
+    this.lessonBlocks.forEach((block, index) => {
+      block.position = index + 1;
+    });
+    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
+    this.cdr.detectChanges();
+  }
+
+  deleteBlock(blockId: string | number, event: Event): void {
+    event.stopPropagation(); // Prevent selecting the block when clicking delete
+    
+    const blockIndex = this.lessonBlocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) {
+      return;
+    }
+
+    // If the deleted block was selected, clear selection
+    if (this.selectedBlockId === blockId) {
+      this.selectedBlockId = null;
+      this.selectedBlock = null;
+    }
+
+    // Remove the block
+    this.lessonBlocks.splice(blockIndex, 1);
+
+    // Update positions for remaining blocks
+    this.lessonBlocks.forEach((block, index) => {
+      block.position = index + 1;
+    });
+
+    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
+    this.cdr.detectChanges();
+  }
+
+  saveLessonBuilder(closeAfterSave: boolean = false): void {
+    if (!this.currentLessonContentId) {
+      this.toastr?.error?.(this.currentLang === 'ar' ? 'معرف المحتوى غير موجود' : 'Content ID not found');
+      return;
+    }
+
+    this.savingLessonBuilder = true;
+    this.cdr.detectChanges();
+
+    // TODO: Implement API call to save blocks
+    // For now, just simulate save
+    setTimeout(() => {
+      this.savingLessonBuilder = false;
+      this.toastr?.success?.(this.currentLang === 'ar' ? 'تم الحفظ بنجاح' : 'Saved successfully');
+      
+      if (closeAfterSave) {
+        this.closeLessonBuilder();
+      }
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  // AI Action Methods
+  generateTextParagraph(): void {
+    // TODO: Implement AI paragraph generation
+    console.log('Generate text paragraph');
+  }
+
+  improveText(): void {
+    // TODO: Implement AI text improvement
+    console.log('Improve text');
+  }
+
+  addTransition(): void {
+    // TODO: Implement AI transition generation
+    console.log('Add transition');
+  }
+
+  suggestVideoTitle(): void {
+    if (!this.selectedBlock || !this.currentLessonContentId) {
+      return;
+    }
+
+    this.loadingYouTubeSuggestions = true;
+    this.youtubeSuggestions = [];
+
+    // Get course information
+    const courseId = this.draftCourseId ? Number(this.draftCourseId) : undefined;
+
+    // Get content title and hint
+    const contentTitle = this.editingLessonTitle || '';
+    const hint = this.lessonHint || '';
+    
+    // Find the section that contains this content
+    let sectionTitle = '';
+    if (this.currentLessonContentId) {
+      for (const section of this.sections) {
+        if (section.content_items && section.content_items.some(item => String(item.id) === String(this.currentLessonContentId))) {
+          sectionTitle = section.name || '';
+          break;
+        }
+      }
+    }
+
+    this.ai.suggestYouTubeVideos({
+      contentTitle: contentTitle,
+      hint: hint,
+      courseId: courseId,
+      sectionTitle: sectionTitle
+    }).subscribe({
+      next: (response) => {
+        this.loadingYouTubeSuggestions = false;
+        this.youtubeSuggestions = response.videos || [];
+        this.youtubeSearchQuery = response.searchQuery || '';
+        
+        // Save to localStorage immediately
+        if (this.currentLessonContentId) {
+          this.saveYouTubeSuggestionsToLocalStorage(this.currentLessonContentId);
+          console.log('✅ Saved YouTube suggestions to localStorage after fetch:', {
+            contentId: this.currentLessonContentId,
+            videosCount: this.youtubeSuggestions.length,
+            searchQuery: this.youtubeSearchQuery
+          });
+        } else {
+          console.error('❌ Cannot save YouTube suggestions: currentLessonContentId is null');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error suggesting YouTube videos:', error);
+        this.loadingYouTubeSuggestions = false;
+        this.toastr?.error?.(
+          this.currentLang === 'ar' 
+            ? 'فشل في اقتراح فيديوهات YouTube' 
+            : 'Failed to suggest YouTube videos'
+        );
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  previewYouTubeVideo(video: any, event?: Event): void {
+    if (event) {
+      event.stopPropagation(); // Prevent triggering selectYouTubeVideo
+    }
+    this.previewingYouTubeVideo = video;
+    this.showYouTubePreviewModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeYouTubePreviewModal(): void {
+    this.showYouTubePreviewModal = false;
+    this.previewingYouTubeVideo = null;
+    this.cdr.detectChanges();
+  }
+
+  selectYouTubeVideo(video: { videoId: string; title: string; description: string; duration: string; thumbnail: string; channelTitle: string }): void {
+    if (!this.selectedBlock) {
+      return;
+    }
+
+    // Ensure meta object exists
+    if (!this.selectedBlock.meta) {
+      this.selectedBlock.meta = {};
+    }
+
+    // Update block with video information
+    this.selectedBlock.title = video.title;
+    this.selectedBlock.meta = {
+      ...this.selectedBlock.meta,
+      youtubeVideoId: video.videoId,
+      youtubeTitle: video.title,
+      youtubeDescription: video.description,
+      youtubeThumbnail: video.thumbnail,
+      youtubeChannel: video.channelTitle,
+      youtubeDuration: video.duration
+    };
+
+    // Save blocks immediately to localStorage
+    if (this.currentLessonContentId) {
+      this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
+      console.log('✅ Saved selected YouTube video to localStorage:', video.videoId, 'for content:', this.currentLessonContentId);
+    }
+    this.cdr.detectChanges();
+  }
+
+  useYouTubeVideo(video: any): void {
+    this.selectYouTubeVideo(video);
+    this.closeYouTubePreviewModal();
+  }
+
+  isYouTubeVideoSelected(video: any): boolean {
+    if (!this.selectedBlock || !this.selectedBlock.meta || !video) {
+      return false;
+    }
+    const selectedVideoId = this.selectedBlock.meta['youtubeVideoId'];
+    return selectedVideoId === video.videoId;
+  }
+
+  openYouTubeVideo(videoId: string): void {
+    window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+  }
+
+  getYouTubeEmbedUrl(videoId: string): SafeResourceUrl {
+    const url = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  addVideoIntro(): void {
+    // TODO: Implement AI video intro generation
+    console.log('Add video intro');
+  }
+
+  shortenAudioScript(): void {
+    // TODO: Implement AI script shortening
+    console.log('Shorten audio script');
+  }
+
+  addAudioClosing(): void {
+    // TODO: Implement AI audio closing generation
+    console.log('Add audio closing');
+  }
+
+  suggestFileLabel(): void {
+    // TODO: Implement AI file label suggestion
+    console.log('Suggest file label');
+  }
+
+  onEditorReady(editor: DecoupledEditor, blockId: number | string): void {
+    // Store editor instance for this block
+    // TODO: Store in a map if needed
+    
+    // Auto-save when editor content changes
+    editor.model.document.on('change:data', () => {
+      const block = this.lessonBlocks.find(b => b.id === blockId);
+      if (block) {
+        block.body_html = editor.getData();
+        // Debounce the save to avoid too many localStorage writes
+        this.debouncedSaveBlocks();
+      }
+    });
+  }
+
+  private debouncedSaveBlocks(): void {
+    if (this.saveBlocksTimeout) {
+      clearTimeout(this.saveBlocksTimeout);
+    }
+    this.saveBlocksTimeout = setTimeout(() => {
+      this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
+    }, 500); // Save after 500ms of inactivity
+  }
+
+  loadAndOpenLessonBuilder(contentId: string | number): boolean {
+    // Find the content item in the current sections
+    let foundItem: ContentItem | null = null;
+    
+    for (const section of this.sections) {
+      if (section.content_items && Array.isArray(section.content_items) && section.content_items.length > 0) {
+        foundItem = section.content_items.find(item => String(item.id) === String(contentId)) || null;
+        if (foundItem) {
+          break;
+        }
+      }
+    }
+    
+    if (foundItem) {
+      console.log('Found content item for lesson builder:', foundItem);
+      this.openLessonBuilder(foundItem);
+      return true;
+    }
+    
+    // If not found, check if we need to load content items for any section
+    let needsLoading = false;
+    for (const section of this.sections) {
+      // Check if this section might contain the content (we need to load its content items)
+      if (!this.loadedSectionContentIds.has(section.id)) {
+        // Load content items for this section
+        this.ensureSectionContentLoaded(section.id);
+        needsLoading = true;
+      }
+    }
+    
+    if (needsLoading) {
+      // Content items are being loaded, will retry
+      return false;
+    }
+    
+    // If still not found after loading all sections, show warning
+    console.warn('Content item not found in current sections:', contentId);
+    this.toastr?.warning?.(this.currentLang === 'ar' ? 'لم يتم العثور على المحتوى' : 'Content not found');
+    return false;
+  }
+
+  loadAndOpenLessonBuilderWithRetry(contentId: string | number, retries: number = 0): void {
+    const maxRetries = 10; // Try for up to 5 seconds (10 * 500ms)
+    
+    if (retries >= maxRetries) {
+      console.warn('Max retries reached for loading content item:', contentId);
+      this.toastr?.warning?.(this.currentLang === 'ar' ? 'فشل في تحميل المحتوى' : 'Failed to load content');
+      return;
+    }
+    
+    // Wait a bit for sections to be initialized
+    setTimeout(() => {
+      // First, try to find the content item
+      let foundItem: ContentItem | null = null;
+      let sectionNeedsLoading: Section | null = null;
+      
+      for (const section of this.sections) {
+        if (section.content_items && Array.isArray(section.content_items) && section.content_items.length > 0) {
+          foundItem = section.content_items.find(item => String(item.id) === String(contentId)) || null;
+          if (foundItem) {
+            break;
+          }
+        } else if (!this.loadedSectionContentIds.has(section.id)) {
+          // This section hasn't loaded its content items yet
+          sectionNeedsLoading = section;
+        }
+      }
+      
+      if (foundItem) {
+        console.log('Found content item for lesson builder:', foundItem);
+        this.openLessonBuilder(foundItem);
+        return;
+      }
+      
+      // If we found a section that needs loading, load it and retry
+      if (sectionNeedsLoading) {
+        console.log('Loading content items for section:', sectionNeedsLoading.id);
+        this.ensureSectionContentLoaded(sectionNeedsLoading.id);
+        // Retry after content is loaded
+        setTimeout(() => {
+          this.loadAndOpenLessonBuilderWithRetry(contentId, retries + 1);
+        }, 1000);
+        return;
+      }
+      
+      // If all sections are loaded but content not found, retry a few more times
+      if (retries < maxRetries) {
+        setTimeout(() => {
+          this.loadAndOpenLessonBuilderWithRetry(contentId, retries + 1);
+        }, 500);
+      } else {
+        console.warn('Content item not found after all retries:', contentId);
+        this.toastr?.warning?.(this.currentLang === 'ar' ? 'لم يتم العثور على المحتوى' : 'Content not found');
+      }
+    }, retries === 0 ? 1000 : 500); // Initial delay longer, then shorter
+  }
+
+  getYouTubeUrl(): string {
+    if (!this.selectedBlock || !this.selectedBlock.meta) {
+      return '';
+    }
+    return (this.selectedBlock.meta['youtubeUrl'] as string) || '';
+  }
+
+  setYouTubeUrl(url: string): void {
+    if (!this.selectedBlock) {
+      return;
+    }
+    if (!this.selectedBlock.meta) {
+      this.selectedBlock.meta = {};
+    }
+    this.selectedBlock.meta['youtubeUrl'] = url;
+    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
+  }
+}

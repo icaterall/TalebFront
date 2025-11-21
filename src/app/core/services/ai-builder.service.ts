@@ -294,6 +294,14 @@ export class AiBuilderService {
     return this.http.post<{ units: { name: string; order: number }[] }>(`${this.baseUrl}/ai/units`, payload);
   }
 
+  suggestYouTubeVideos(payload: { contentTitle: string; hint?: string; courseId?: number; sectionTitle?: string }): Observable<{ videos: Array<{ videoId: string; title: string; description: string; duration: string; durationSeconds: number; thumbnail: string; channelTitle: string; publishedAt: string; viewCount: string }>; searchQuery: string; suggestedKeywords: string[] }> {
+    return this.http.post<{ videos: Array<{ videoId: string; title: string; description: string; duration: string; durationSeconds: number; thumbnail: string; channelTitle: string; publishedAt: string; viewCount: string }>; searchQuery: string; suggestedKeywords: string[] }>(
+      `${this.baseUrl}/courses/draft/youtube/suggest`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   getSectionContent(sectionId: number | string): Observable<SectionContentListResponse> {
     return this.http.get<SectionContentListResponse>(
       `${this.baseUrl}/courses/draft/sections/${sectionId}/content`,
