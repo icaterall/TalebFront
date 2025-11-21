@@ -48,8 +48,12 @@
   
   // Field Groups (Step 2)
   .field-group {
-    margin-bottom: 0px;
+    margin-bottom: 20px;
     width: 100%;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
     
     &.category-display-group {
       margin-bottom: 20px;
@@ -57,6 +61,12 @@
       padding-top: 8px;
       display: block !important;
       visibility: visible !important;
+    }
+    
+    // Educational Stage and Country fields spacing
+    &:has(.multi-select-options),
+    &:has(.course-preference-select) {
+      margin-bottom: 24px;
     }
   
     .field-label {
@@ -80,11 +90,245 @@
       margin-top: 8px;
       line-height: 1.5;
     }
+    
+    .field-input,
+    .field-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #E2E8F0;
+      border-radius: 5px;
+      font-size: 15px;
+      font-weight: 400;
+      color: #1F2937;
+      background: white;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      
+      &::placeholder {
+        color: #94A3B8;
+      }
+      
+      &:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+      }
+      
+      &:hover:not(:focus) {
+        border-color: #CBD5E1;
+      }
+    }
+    
+    .field-textarea {
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.5;
+    }
   }
   
   // Course Name Input Group
   .course-name-input-group {
     margin-bottom: 24px;
+  }
+  
+  // Course Description Input Group
+  .course-description-input-group {
+    margin-bottom: 24px;
+  }
+  
+  .course-description-input-row {
+    width: 100%;
+  }
+  
+  .course-description-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #E2E8F0;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 400;
+    color: #1F2937;
+    background: white;
+    transition: all 0.2s ease;
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+    line-height: 1.5;
+    
+    &::placeholder {
+      color: #94A3B8;
+    }
+    
+    &:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    &:hover:not(:focus) {
+      border-color: #CBD5E1;
+    }
+  }
+  
+  // Educational Stage Selection
+  .field-group {
+    &:has(.multi-select-options) {
+      margin-bottom: 20px;
+    }
+    
+    .multi-select-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+      
+      @media (max-width: 900px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+      }
+      
+      .multi-select-option {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        border: 2px solid #E2E8F0;
+        border-radius: 5px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-height: 52px;
+        
+        input[type="checkbox"] {
+          width: 20px;
+          height: 20px;
+          cursor: pointer;
+          accent-color: #3B82F6;
+          flex-shrink: 0;
+          margin: 0;
+        }
+        
+        span:not(.check-mark) {
+          font-size: 15px;
+          font-weight: 500;
+          color: #475569;
+          flex: 1;
+          line-height: 1.4;
+        }
+        
+        .check-mark {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 24px;
+          height: 24px;
+          background: #10B981;
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          font-weight: 700;
+          box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+          flex-shrink: 0;
+          
+          [dir="rtl"] & {
+            left: 8px;
+            right: auto;
+          }
+        }
+        
+        &:hover {
+          border-color: #CBD5E1;
+          background: #F8FAFC;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        &.selected {
+          border-color: #3B82F6;
+          background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+          
+          span:not(.check-mark) {
+            color: #1E40AF;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+    
+    // Country/Curriculum Select
+    .course-preference-select {
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+      
+      ::ng-deep {
+        .ng-select {
+          position: relative;
+          z-index: 1;
+          
+          .ng-select-container {
+            min-height: 52px;
+            border: 2px solid #E2E8F0;
+            border-radius: 5px;
+            background: white;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              border-color: #CBD5E1;
+            }
+            
+            &.ng-select-focused {
+              border-color: #3B82F6;
+              box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            }
+          }
+          
+          .ng-value-container {
+            padding: 12px 16px;
+            
+            .ng-placeholder {
+              color: #94A3B8;
+              font-size: 15px;
+              font-weight: 400;
+            }
+            
+            .ng-value {
+              font-size: 15px;
+              font-weight: 500;
+              color: #1F2937;
+            }
+            
+            .ng-input {
+              input {
+                font-size: 15px;
+                color: #1F2937;
+                padding: 0;
+              }
+            }
+          }
+          
+          .ng-arrow-wrapper {
+            .ng-arrow {
+              border-color: #64748B transparent transparent;
+            }
+          }
+          
+          &.ng-select-opened {
+            .ng-arrow-wrapper .ng-arrow {
+              border-color: transparent transparent #64748B;
+            }
+          }
+        }
+      }
+    }
   }
   
   .course-name-input-row {
@@ -778,6 +1022,38 @@
     }
   }
   
+  
+  // Global ng-select dropdown panel z-index fix when appended to body
+  // This ensures the dropdown appears above the wizard-card (z-index: 10)
+  ::ng-deep body > .ng-dropdown-panel {
+    z-index: 10000 !important;
+    border: 2px solid #E2E8F0 !important;
+    border-radius: 5px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    background: white !important;
+    margin-top: 4px !important;
+    
+    .ng-dropdown-panel-items {
+      .ng-option {
+        padding: 12px 16px !important;
+        font-size: 15px !important;
+        color: #1F2937 !important;
+        transition: all 0.2s ease !important;
+        
+        &.ng-option-highlighted {
+          background: #F1F5F9 !important;
+          color: #1E40AF !important;
+        }
+        
+        &.ng-option-selected {
+          background: #EFF6FF !important;
+          color: #1E40AF !important;
+          font-weight: 600 !important;
+        }
+      }
+    }
+  }
+  
   // RTL Support
   [dir="rtl"] {
     .cat-arrow {
@@ -1331,6 +1607,47 @@
           min-width: 0;
         }
         
+        .summary-actions-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+        
+        .btn-edit-course-details {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 18px;
+          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+          color: white;
+          border: none;
+          border-radius: 5px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+          white-space: nowrap;
+          
+          .btn-icon {
+            font-size: 14px;
+          }
+          
+          .btn-text {
+            white-space: nowrap;
+          }
+          
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          }
+          
+          &:active {
+            transform: translateY(0);
+          }
+        }
+        
         .btn-start-from-scratch {
           display: flex;
           align-items: center;
@@ -1418,6 +1735,17 @@
           text-decoration-color: rgba(16, 185, 129, 0.4); // Green underline
         }
         
+        &.summary-description {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.5;
+          white-space: normal;
+        }
+        
         .section-number {
           font-weight: 700;
           color: #065F46; // Dark green for bold section number
@@ -1428,7 +1756,6 @@
           color: #047857; // Medium green for section name
         }
       }
-      
     }
   
     // RTL support
@@ -1521,10 +1848,9 @@
           font-size: 15px;
         }
   
-        .summary-value {
-          font-size: 15px;
-          width: 100%;
-        }
+      .summary-value {
+        font-size: 15px;
+        width: 100%;
       }
     }
   }
@@ -2808,3 +3134,4 @@
       }
     }
   }
+}

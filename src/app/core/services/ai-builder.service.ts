@@ -136,6 +136,10 @@ export interface CreateDraftCoursePayload {
     availability?: any;
     cover_image_url?: string | null;
     default_section_name?: string;
+    preferences?: {
+      educationalStage?: string[];
+      country?: number[];
+    };
   };
   sections?: Array<{
     name: string;
@@ -151,6 +155,10 @@ export interface UpdateDraftCoursePayload {
   description?: string | null;
   country_id?: number | null;
   availability?: any;
+  preferences?: {
+    educationalStage?: string[];
+    country?: number[];
+  };
 }
 
 export interface CourseDraft {
@@ -169,6 +177,10 @@ export interface CourseDraft {
     stage_id?: number;
     country_id?: number;
     term?: number; // 1 or 2
+  };
+  preferences?: {
+    educationalStage?: string[];
+    country?: number[];
   };
   units?: { id: string; name: string; order?: number }[];
   objectives?: string[];

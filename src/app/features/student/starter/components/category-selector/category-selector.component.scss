@@ -102,3 +102,36 @@
   padding: 12px 14px;
   border-radius: 6px;
 }
+
+// Global ng-select dropdown panel z-index fix (appended to body)
+::ng-deep body > .ng-dropdown-panel {
+  z-index: 10000 !important;
+  position: absolute !important;
+  border: 1px solid rgba(148, 163, 184, 0.6) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  background: white !important;
+  
+  .ng-dropdown-panel-items {
+    .ng-option {
+      padding: 10px 14px !important;
+      font-size: 0.95rem !important;
+      color: #1e293b !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      
+      &.ng-option-highlighted {
+        background: rgba(59, 130, 246, 0.1) !important;
+        color: #1e40af !important;
+      }
+      
+      &.ng-option-selected {
+        background: rgba(59, 130, 246, 0.15) !important;
+        color: #1e40af !important;
+        font-weight: 600 !important;
+      }
+    }
+  }
+}

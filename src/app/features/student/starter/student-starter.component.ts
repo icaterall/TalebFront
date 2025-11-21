@@ -20,6 +20,7 @@ import {
   DraftCourseResponse,
   DraftCourseSectionResponse,
   CreateDraftCoursePayload,
+  UpdateDraftCoursePayload,
   SectionContentRecord,
   CreateSectionContentPayload,
   UploadResourceResponse,
@@ -283,9 +284,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   
   // Editing States
   editingCourseName: boolean = false; // Track if editing course name
+  showEditCourseDetailsModal: boolean = false; // Track if showing edit course details modal
   savingCourseName: boolean = false; // Track if saving course name to backend
-  editingSection: boolean = false; // Track if editing section
+  savingCourseDetails: boolean = false; // Track if saving course details to backend
   editingCourseNameValue: string = ''; // Temp value for editing course name
+  editingCourseDescriptionValue: string = ''; // Temp value for editing course description
+  editingCoursePreferences: {
+    educationalStage: string[];
+    country: number[];
+  } = {
+    educationalStage: [],
+    country: []
+  };
+  editingSection: boolean = false; // Track if editing section
   editingSectionValue: string = ''; // Temp value for editing section
   editingSectionId: string | null = null; // Track which section is being edited
   
@@ -305,7 +316,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Add Section Modal
   showAddSectionModal: boolean = false; // Track add section modal visibility
   sectionCreationMode: 'upload' | 'ai' | null = null; // Track current section creation mode
-  uploadStep: 0 | 1 | null = null; // Track upload step (0=preferences, 1=file upload)
+  uploadStep: 1 | null = null; // Track upload step (1=file upload)
   sectionFileUploading: boolean = false; // Track section file upload state
   sectionFileUploadError: string | null = null; // Track section file upload errors
   sectionFileUploadErrorIsFileSize: boolean = false; // Track if error is file-size related
@@ -317,29 +328,29 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // AI Instruction Generation
   aiInstructionText: string = '';
   aiGenerating: boolean = false;
-  aiGenerationStep: 0 | 1 | 2 | 3 | null = null; // Track which AI generation step is active (0=preferences, 1=instructions, 2=options, 3=preview)
+  aiGenerationStep: 1 | 2 | 3 | null = null; // Track which AI generation step is active (1=instructions, 2=options, 3=preview)
   aiGenerationCurrentLesson: number = 0; // Current lesson being generated (1-based)
   aiGenerationTotalLessons: number = 0; // Total number of lessons to generate
   
   // AI Preferences (Step 0)
   aiPreferences: {
     contentSource: ('youtube' | 'text' | 'text-to-audio')[];
+  } = {
+    contentSource: []
+  };
+  
+  // Course-level preferences (set during course creation)
+  coursePreferences: {
     educationalStage: string[];
     country: number[];
-    additionalNotes: string;
   } = {
-    contentSource: [],
     educationalStage: [],
-    country: [],
-    additionalNotes: ''
+    country: []
   };
   
   // Saved preferences for the course (stored after first successful section creation)
   savedCoursePreferences: {
     contentSource: ('youtube' | 'text' | 'text-to-audio')[];
-    educationalStage: string[];
-    country: number[];
-    additionalNotes: string;
   } | null = null;
   
   // Countries for preferences
@@ -419,6 +430,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   // Step 2: Course Basics
   courseName: string = '';
+  courseDescription: string = '';
   courseTitleSuggestions: { title: string; rationale?: string; topics?: string[] }[] = [];
   loadingTitles: boolean = false;
   currentTerm: number = 1; // 1 or 2, detected from date
@@ -526,9 +538,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   get canContinue(): boolean {
     if (this.currentStep === 1) {
-      // In Step 1, require category AND course name (min 3 chars) - no section required
+      // In Step 1, require category, course name (min 3 chars), and at least one educational stage
       return this.selectedCategory !== null && 
-             this.courseName.trim().length >= 3;
+             this.courseName.trim().length >= 3 &&
+             this.coursePreferences.educationalStage.length > 0;
     }
     if (this.currentStep === 2) {
       return this.courseName.trim().length >= 3;
@@ -616,6 +629,9 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (!this.universalAuth.validateAccess('Student')) return;
+    
+    // Load countries for course preferences
+    this.loadCountries();
     this.student = this.universalAuth.getCurrentUser();
     
     // Detect current term from date (Term 1: Sept-Feb)
@@ -1003,6 +1019,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
         country_id: this.student?.country_id,
         term: this.currentTerm
+      },
+      preferences: {
+        educationalStage: this.coursePreferences.educationalStage.length > 0 
+          ? this.coursePreferences.educationalStage 
+          : undefined,
+        country: this.coursePreferences.country.length > 0 
+          ? this.coursePreferences.country 
+          : undefined
       },
       user_id: userId,
       last_saved_at: new Date().toISOString()
@@ -2560,16 +2584,17 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const userId = this.student?.id || this.student?.user_id;
     const topicValue = this.selectedTopic.trim() || this.subjectSlug.trim();
     
-    const payload: Partial<CourseDraft> = {
+    const payload: UpdateDraftCoursePayload = {
       name: trimmedName,
       subject_slug: topicValue || undefined,
-      mode: this.courseMode,
-      context: {
-        stage_id: this.student?.education_stage_id ?? this.student?.stage_id,
-        country_id: this.student?.country_id,
-        term: this.currentTerm
-      },
-      user_id: userId
+      preferences: {
+        educationalStage: this.coursePreferences.educationalStage.length > 0 
+          ? this.coursePreferences.educationalStage 
+          : undefined,
+        country: this.coursePreferences.country.length > 0 
+          ? this.coursePreferences.country 
+          : undefined
+      }
     };
 
     this.ai.updateDraftCourse(payload).subscribe({
@@ -2588,6 +2613,104 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   cancelCourseNameEdit(): void {
     this.editingCourseName = false;
     this.editingCourseNameValue = '';
+  }
+  
+  // Edit Course Details (Name, Description, Stage, Country)
+  startEditingCourseDetails(): void {
+    this.showEditCourseDetailsModal = true;
+    this.editingCourseNameValue = this.courseName;
+    this.editingCourseDescriptionValue = this.courseDescription;
+    this.editingCoursePreferences = {
+      educationalStage: [...this.coursePreferences.educationalStage],
+      country: [...this.coursePreferences.country]
+    };
+    // Load countries if not already loaded
+    if (this.countries.length === 0) {
+      this.loadCountries();
+    }
+  }
+  
+  cancelEditingCourseDetails(): void {
+    this.showEditCourseDetailsModal = false;
+    this.editingCourseNameValue = '';
+    this.editingCourseDescriptionValue = '';
+    this.editingCoursePreferences = {
+      educationalStage: [],
+      country: []
+    };
+  }
+  
+  saveCourseDetails(): void {
+    const trimmedName = this.editingCourseNameValue.trim();
+    if (!trimmedName || this.savingCourseDetails || this.editingCoursePreferences.educationalStage.length === 0) {
+      return;
+    }
+
+    this.savingCourseDetails = true;
+    this.courseName = trimmedName;
+    this.courseDescription = this.editingCourseDescriptionValue.trim();
+    this.coursePreferences.educationalStage = [...this.editingCoursePreferences.educationalStage];
+    this.coursePreferences.country = [...this.editingCoursePreferences.country];
+    
+    // Save to localStorage first
+    this.saveDraftStep2();
+
+    // Save to backend
+    const userId = this.student?.id || this.student?.user_id;
+    const topicValue = this.selectedTopic.trim() || this.subjectSlug.trim();
+    
+    const payload: UpdateDraftCoursePayload = {
+      name: trimmedName,
+      subject_slug: topicValue || undefined,
+      description: this.courseDescription || undefined,
+      preferences: {
+        educationalStage: this.coursePreferences.educationalStage.length > 0 
+          ? this.coursePreferences.educationalStage 
+          : undefined,
+        country: this.coursePreferences.country.length > 0 
+          ? this.coursePreferences.country 
+          : undefined
+      }
+    };
+
+    this.ai.updateDraftCourse(payload).subscribe({
+      next: (response) => {
+        this.savingCourseDetails = false;
+        this.showEditCourseDetailsModal = false;
+        this.editingCourseNameValue = '';
+        this.editingCourseDescriptionValue = '';
+        if (response) {
+          this.handleDraftCourseResponse(response, userId);
+        }
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.savingCourseDetails = false;
+        console.error('Failed to save course details', error);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+  
+  toggleEditingEducationalStage(stage: string): void {
+    const index = this.editingCoursePreferences.educationalStage.indexOf(stage);
+    if (index > -1) {
+      this.editingCoursePreferences.educationalStage.splice(index, 1);
+    } else {
+      this.editingCoursePreferences.educationalStage.push(stage);
+    }
+  }
+  
+  getEducationalStageDisplayName(stage: string): string {
+    const stageNames: { [key: string]: { en: string; ar: string } } = {
+      'kindergarten': { en: 'Kindergarten', ar: 'رياض أطفال' },
+      'primary': { en: 'Primary School', ar: 'ابتدائي' },
+      'middle': { en: 'Middle School', ar: 'متوسط' },
+      'high-school': { en: 'High School', ar: 'ثانوي' },
+      'university': { en: 'University', ar: 'جامعي' },
+      'professional': { en: 'Professional Training', ar: 'تدريب مهني' }
+    };
+    return stageNames[stage] ? (this.currentLang === 'ar' ? stageNames[stage].ar : stageNames[stage].en) : stage;
   }
   
   // Edit Section
@@ -3141,29 +3264,11 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.sectionCreationMode = 'upload';
     this.aiInstructionText = ''; // Clear AI instruction when switching
     this.aiGenerationStep = null; // Clear AI generation step
-    // Reset preferences but keep uploadStep
+    // Reset preferences
     this.aiPreferences = {
-      contentSource: [],
-      educationalStage: [],
-      country: [],
-      additionalNotes: ''
+      contentSource: []
     };
-    this.uploadStep = 0; // Start with preferences step
-    this.loadCountries(); // Load countries when opening preferences
-    this.cdr.detectChanges();
-  }
-  
-  // Proceed from preferences to file upload
-  proceedFromPreferencesToUpload(): void {
-    if (this.aiPreferences.contentSource.length === 0 || this.aiPreferences.educationalStage.length === 0) {
-      this.toastr?.warning?.(
-        this.currentLang === 'ar' 
-          ? 'يرجى ملء جميع الحقول المطلوبة' 
-          : 'Please fill in all required fields'
-      );
-      return;
-    }
-    this.uploadStep = 1;
+    this.uploadStep = 1; // Go directly to file upload step
     this.cdr.detectChanges();
   }
   
@@ -3174,34 +3279,19 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.sectionFileSelected = false; // Clear file selection when switching
     this.clearSelectedSectionFile();
     
-    // If saved preferences exist, use them and skip to instruction step
-    if (this.savedCoursePreferences) {
-      this.aiPreferences = {
-        contentSource: [...this.savedCoursePreferences.contentSource],
-        educationalStage: [...this.savedCoursePreferences.educationalStage],
-        country: [...this.savedCoursePreferences.country],
-        additionalNotes: this.savedCoursePreferences.additionalNotes
-      };
-      // Load countries if not already loaded
-      if (this.countries.length === 0) {
-        this.loadCountries();
-      }
-      this.aiGenerationStep = 1; // Skip preferences, go to instruction step
-    } else {
-      this.resetAIWizardState();
-      this.aiGenerationStep = 0; // Start with preferences step
-      this.loadCountries(); // Load countries when opening preferences
-    }
+    // Reset preferences
+    this.aiPreferences = {
+      contentSource: []
+    };
+    // Go directly to instruction step (skip preferences)
+    this.aiGenerationStep = 1;
     this.cdr.detectChanges();
   }
 
   resetAIWizardState(): void {
     // Reset preferences
     this.aiPreferences = {
-      contentSource: [],
-      educationalStage: [],
-      country: [],
-      additionalNotes: ''
+      contentSource: []
     };
     this.uploadStep = null;
     this.aiContentTypes = {
@@ -3227,19 +3317,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   }
   
   // Proceed from preferences step to instruction step
-  proceedFromPreferencesToInstructions(): void {
-    if (this.aiPreferences.contentSource.length === 0 || this.aiPreferences.educationalStage.length === 0) {
-      this.toastr?.warning?.(
-        this.currentLang === 'ar' 
-          ? 'يرجى ملء جميع الحقول المطلوبة' 
-          : 'Please fill in all required fields'
-      );
-      return;
-    }
-    this.aiGenerationStep = 1;
-    this.cdr.detectChanges();
-  }
-  
   // Load countries from backend
   private loadCountries(): void {
     if (this.countries.length > 0) {
@@ -3295,14 +3372,15 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     }
   }
   
-  // Toggle educational stage selection
-  toggleEducationalStage(stage: string): void {
-    const index = this.aiPreferences.educationalStage.indexOf(stage);
+  // Toggle course educational stage selection
+  toggleCourseEducationalStage(stage: string): void {
+    const index = this.coursePreferences.educationalStage.indexOf(stage);
     if (index > -1) {
-      this.aiPreferences.educationalStage.splice(index, 1);
+      this.coursePreferences.educationalStage.splice(index, 1);
     } else {
-      this.aiPreferences.educationalStage.push(stage);
+      this.coursePreferences.educationalStage.push(stage);
     }
+    this.cdr.detectChanges();
   }
   
   // Get country name by ID
@@ -3518,20 +3596,28 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     // Start progress simulation for AI generation
     this.startAIProgressSimulation();
 
+    // Map preferences contentSource to content generation flags
+    const hasText = this.aiPreferences.contentSource.includes('text');
+    const hasYoutube = this.aiPreferences.contentSource.includes('youtube');
+    const hasTextToAudio = this.aiPreferences.contentSource.includes('text-to-audio');
+    
     // Build request data with all options
     const requestData: any = {
       courseId: this.draftCourseId,
       instructions: this.aiInstructionText.trim(),
       preferences: {
         contentSource: this.aiPreferences.contentSource,
-        educationalStage: this.aiPreferences.educationalStage,
-        country: this.aiPreferences.country.length > 0 ? this.aiPreferences.country : undefined,
-        additionalNotes: this.aiPreferences.additionalNotes || undefined
+        educationalStage: this.coursePreferences.educationalStage,
+        country: this.coursePreferences.country.length > 0 ? this.coursePreferences.country : undefined
       },
+      // Map preferences to content generation flags for backend
+      generateText: hasText || this.aiContentTypes.text,
+      generateYoutube: hasYoutube || this.aiContentTypes.youtube,
+      generateAudio: hasTextToAudio,
       contentTypes: {
-        text: this.aiContentTypes.text,
+        text: this.aiContentTypes.text || hasText,
         quiz: this.aiContentTypes.quiz,
-        youtube: this.aiContentTypes.youtube,
+        youtube: this.aiContentTypes.youtube || hasYoutube,
         summary: this.aiContentTypes.summary,
         homework: this.aiContentTypes.homework
       },
@@ -3572,10 +3658,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           // Save preferences for future sections
           if (!this.savedCoursePreferences) {
             this.savedCoursePreferences = {
-              contentSource: [...this.aiPreferences.contentSource],
-              educationalStage: [...this.aiPreferences.educationalStage],
-              country: [...this.aiPreferences.country],
-              additionalNotes: this.aiPreferences.additionalNotes
+              contentSource: [...this.aiPreferences.contentSource]
             };
           }
           
@@ -3858,18 +3941,25 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     const formData = new FormData();
     formData.append('file', file);
     
-    // Add preferences to form data
+    // Map preferences to backend format
+    // Content source preferences
+    const hasText = this.aiPreferences.contentSource.includes('text');
+    const hasYoutube = this.aiPreferences.contentSource.includes('youtube');
+    const hasTextToAudio = this.aiPreferences.contentSource.includes('text-to-audio');
+    
+    formData.append('generateText', hasText ? 'true' : 'false');
+    formData.append('generateYoutube', hasYoutube ? 'true' : 'false');
+    formData.append('generateAudio', hasTextToAudio ? 'true' : 'false');
+    
+    // Add preferences to form data for AI context
     if (this.aiPreferences.contentSource.length > 0) {
       formData.append('preferences[contentSource]', JSON.stringify(this.aiPreferences.contentSource));
     }
-    if (this.aiPreferences.educationalStage.length > 0) {
-      formData.append('preferences[educationalStage]', JSON.stringify(this.aiPreferences.educationalStage));
+    if (this.coursePreferences.educationalStage.length > 0) {
+      formData.append('preferences[educationalStage]', JSON.stringify(this.coursePreferences.educationalStage));
     }
-    if (this.aiPreferences.country.length > 0) {
-      formData.append('preferences[country]', JSON.stringify(this.aiPreferences.country));
-    }
-    if (this.aiPreferences.additionalNotes) {
-      formData.append('preferences[additionalNotes]', this.aiPreferences.additionalNotes);
+    if (this.coursePreferences.country.length > 0) {
+      formData.append('preferences[country]', JSON.stringify(this.coursePreferences.country));
     }
 
     // Get draft course ID
@@ -3906,10 +3996,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           // Save preferences for future sections
           if (!this.savedCoursePreferences) {
             this.savedCoursePreferences = {
-              contentSource: [...this.aiPreferences.contentSource],
-              educationalStage: [...this.aiPreferences.educationalStage],
-              country: [...this.aiPreferences.country],
-              additionalNotes: this.aiPreferences.additionalNotes
+              contentSource: [...this.aiPreferences.contentSource]
             };
           }
           
@@ -5094,6 +5181,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         country_id: this.student?.country_id,
         term: this.currentTerm
       },
+      preferences: {
+        educationalStage: this.coursePreferences.educationalStage.length > 0 
+          ? this.coursePreferences.educationalStage 
+          : undefined,
+        country: this.coursePreferences.country.length > 0 
+          ? this.coursePreferences.country 
+          : undefined
+      },
       user_id: userId,
       last_saved_at: new Date().toISOString()
     };
@@ -5183,6 +5278,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.subjectSlug = draft.subject_slug;
         this.selectedTopic = draft.subject_slug;
       }
+      // Note: description is not stored in CourseDraft interface, it's only in the backend
       if (draft.mode) {
         this.courseMode = draft.mode;
       }
@@ -5191,6 +5287,14 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       }
       if (draft.cover_image_url) {
         this.courseCoverPreview = draft.cover_image_url;
+      }
+      if (draft.preferences) {
+        if (Array.isArray(draft.preferences.educationalStage)) {
+          this.coursePreferences.educationalStage = draft.preferences.educationalStage;
+        }
+        if (Array.isArray(draft.preferences.country)) {
+          this.coursePreferences.country = draft.preferences.country;
+        }
       }
       if (draft.category_id && draft.name && draft.name.trim().length >= 3) {
         this.step2Locked = true;
@@ -5311,12 +5415,25 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     if (response.course) {
       this.draftCourseId = response.course.id;
       this.courseName = response.course.name || this.courseName;
+      this.courseDescription = response.course.description || this.courseDescription;
       this.subjectSlug = response.course.subject_slug || this.subjectSlug;
       this.selectedTopic = this.subjectSlug;
       this.courseCoverPreview = response.course.cover_image_url ?? null;
       if (response.course.category_id) {
         this.selectedCategoryId = response.course.category_id;
       }
+      
+      // Restore preferences from availability
+      if (response.course.availability && response.course.availability.preferences) {
+        const prefs = response.course.availability.preferences;
+        if (Array.isArray(prefs.educationalStage)) {
+          this.coursePreferences.educationalStage = prefs.educationalStage;
+        }
+        if (Array.isArray(prefs.country)) {
+          this.coursePreferences.country = prefs.country;
+        }
+      }
+      
       this.step2Locked = true;
       this.currentStep = 1;
     }
@@ -5338,7 +5455,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         subject_slug: response.course?.subject_slug ?? this.subjectSlug,
         country_id: response.course?.country_id ?? undefined,
         cover_image_url: response.course?.cover_image_url ?? null,
+        // Note: description is stored in backend but not in CourseDraft interface
         last_saved_at: response.course?.updated_at ?? new Date().toISOString(),
+        preferences: response.course?.availability?.preferences ? {
+          educationalStage: Array.isArray(response.course.availability.preferences.educationalStage) 
+            ? response.course.availability.preferences.educationalStage 
+            : undefined,
+          country: Array.isArray(response.course.availability.preferences.country) 
+            ? response.course.availability.preferences.country 
+            : undefined
+        } : undefined,
         sections: mappedSections
       };
       this.ai.saveDraft(draftForLocal, resolvedUserId);
@@ -5362,7 +5488,16 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         subject_slug: (this.selectedTopic || this.subjectSlug || this.courseName).trim(),
         category_id: this.selectedCategory?.id,
         country_id: this.student?.country_id ?? undefined,
-        cover_image_url: this.courseCoverPreview ?? undefined
+        cover_image_url: this.courseCoverPreview ?? undefined,
+        description: this.courseDescription.trim() || undefined,
+        preferences: {
+          educationalStage: this.coursePreferences.educationalStage.length > 0 
+            ? this.coursePreferences.educationalStage 
+            : undefined,
+          country: this.coursePreferences.country.length > 0 
+            ? this.coursePreferences.country 
+            : undefined
+        }
       },
       sections: sectionsPayload.length > 0 ? sectionsPayload : undefined
     };
