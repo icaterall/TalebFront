@@ -302,6 +302,13 @@ export class AiBuilderService {
     );
   }
 
+  getYouTubeMetadata(videoId: string): Observable<{ videoId: string; title: string; description: string; duration: string; thumbnail: string; embedUrl: string }> {
+    return this.http.get<{ videoId: string; title: string; description: string; duration: string; thumbnail: string; embedUrl: string }>(
+      `${this.baseUrl}/courses/youtube/metadata?videoId=${encodeURIComponent(videoId)}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   getSectionContent(sectionId: number | string): Observable<SectionContentListResponse> {
     return this.http.get<SectionContentListResponse>(
       `${this.baseUrl}/courses/draft/sections/${sectionId}/content`,
@@ -400,6 +407,62 @@ export class AiBuilderService {
       {
         headers: this.getAuthHeaders(),
         body: { keys }
+      }
+    );
+  }
+
+  uploadDraftContentVideo(file: File, contentId?: number | string, metadata?: { duration?: number; width?: number; height?: number }): Observable<HttpEvent<{ message: string; asset: { url: string; key: string; mime: string; filename: string; size: number; duration?: number; width?: number; height?: number; position?: number | null; id?: number | null } }>> {
+    const formData = new FormData();
+    formData.append('video', file);
+    if (contentId !== undefined && contentId !== null) {
+      formData.append('content_id', String(contentId));
+    }
+    if (metadata) {
+      if (metadata.duration) formData.append('duration', String(metadata.duration));
+      if (metadata.width) formData.append('width', String(metadata.width));
+      if (metadata.height) formData.append('height', String(metadata.height));
+    }
+
+    return this.http.post<{ message: string; asset: { url: string; key: string; mime: string; filename: string; size: number; duration?: number; width?: number; height?: number; position?: number | null; id?: number | null } }>(
+      `${this.baseUrl}/courses/draft/content/videos`,
+      formData,
+      {
+        headers: this.getAuthHeaders(),
+        reportProgress: true,
+        observe: 'events'
+      }
+    );
+  }
+
+  getContentBlocks(sectionId: number | string, contentId: number | string): Observable<{ content: Array<{ id: number; content_id: number; block_type: string; title: string | null; body_html: string | null; asset_id: number | null; meta: Record<string, unknown>; position: number; created_at: string; updated_at: string; asset?: { id: number; url: string; filename: string; kind: string; mime: string; filesize_bytes: number; duration_sec: number | null } | null }> }> {
+    return this.http.get<{ content: Array<{ id: number; content_id: number; block_type: string; title: string | null; body_html: string | null; asset_id: number | null; meta: Record<string, unknown>; position: number; created_at: string; updated_at: string; asset?: { id: number; url: string; filename: string; kind: string; mime: string; filesize_bytes: number; duration_sec: number | null } | null }> }>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/blocks`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  createContentBlock(sectionId: number | string, contentId: number | string, payload: { block_type: string; title?: string | null; body_html?: string | null; asset_id?: number | null; meta?: Record<string, unknown>; position?: number }): Observable<{ content: { id: number; content_id: number; block_type: string; title: string | null; body_html: string | null; asset_id: number | null; meta: Record<string, unknown>; position: number; created_at: string; updated_at: string } }> {
+    return this.http.post<{ content: { id: number; content_id: number; block_type: string; title: string | null; body_html: string | null; asset_id: number | null; meta: Record<string, unknown>; position: number; created_at: string; updated_at: string } }>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/blocks`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  updateContentBlock(sectionId: number | string, contentId: number | string, blockId: number | string, payload: { title?: string | null; body_html?: string | null; asset_id?: number | null; meta?: Record<string, unknown>; position?: number }): Observable<{ content: { id: number; content_id: number; block_type: string; title: string | null; body_html: string | null; asset_id: number | null; meta: Record<string, unknown>; position: number; created_at: string; updated_at: string } }> {
+    return this.http.put<{ content: { id: number; content_id: number; block_type: string; title: string | null; body_html: string | null; asset_id: number | null; meta: Record<string, unknown>; position: number; created_at: string; updated_at: string } }>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/blocks/${blockId}`,
+      payload,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  deleteDraftContentVideos(urls: string[]): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.baseUrl}/courses/draft/content/videos`,
+      {
+        body: { urls },
+        headers: this.getAuthHeaders()
       }
     );
   }
