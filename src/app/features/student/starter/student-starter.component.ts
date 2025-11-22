@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, ViewEncapsulation, HostBinding } from '@angular/core';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
@@ -34,6 +35,7 @@ import { HttpClient, HttpEventType } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { skip, finalize } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 import DecoupledEditor from '@ckeditor/ckeditor5-build-decoupled-document';
 import { CKEditor5CustomUploadAdapter, UploadedEditorImageAsset } from './custom-uploader';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
@@ -56,18 +58,7 @@ type ResourceDisplayType = 'pdf' | 'word' | 'excel' | 'ppt' | 'compressed';
 
 type ResourcePreviewMode = 'inline' | 'download';
 
-interface ContentBlock {
-  id?: number | string;
-  content_id?: number;
-  block_type: 'text' | 'video' | 'audio' | 'file';
-  title?: string | null;
-  body_html?: string | null;
-  asset_id?: number | null;
-  meta?: Record<string, unknown> | null;
-  position: number;
-  created_at?: string;
-  updated_at?: string;
-}
+
 
 interface ResourceFormState {
   title: string;
@@ -301,8 +292,10 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   currentStep: number = 1; // 1 = Course Basics, 2 = Building Sections, 3 = Review & Publish
   step2Locked: boolean = false; // Track if Step 2 inputs are locked after continue
   showWarningModal: boolean = false; // Track warning modal visibility
-  warningModalType: 'goBack' | 'deleteContent' | null = null; // Track warning modal type
+  warningModalType: 'goBack' | 'deleteContent' | 'deleteBlock' | null = null; // Track warning modal type
   itemToDelete: string | null = null; // Track which content item is being deleted
+  blockToDelete: string | number | null = null; // Track which block is being deleted
+  isDeletingBlock: boolean = false; // Track block deletion state
   showContentTypeModal: boolean = false; // Track content type modal visibility
   selectedContentType: 'video' | 'resources' | 'text' | 'audio' | 'quiz' | null = null; // Track selected content type
   showTextEditor: boolean = false; // Track text editor visibility
@@ -317,27 +310,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   aiHint: string = ''; // Store optional AI hint
   pendingAiAction: 'textContent' | null = null; // Track which AI action is pending hint input
   
-  // Lesson Builder
-  showLessonBuilder: boolean = false; // Track lesson builder visibility
-  editingLessonTitle: string = ''; // Current lesson title being edited
-  lessonBlocks: ContentBlock[] = []; // Blocks for current lesson
-  selectedBlockId: number | string | null = null; // Currently selected block
-  selectedBlock: ContentBlock | null = null; // Currently selected block object
-  showBlockTypeChooser: boolean = false; // Block type chooser modal
-  lessonHint: string = ''; // Hint for AI assistant
-  savingLessonBuilder: boolean = false; // Track save state
-  currentLessonContentId: number | string | null = null; // ID of content being edited
-  videoTab: 'youtube-ai' | 'youtube-manual' | 'upload' = 'youtube-ai'; // Video block tab
-  generatingTextBlock: boolean = false; // Track AI generation for text blocks
-  private saveBlocksTimeout: any = null; // Timeout for debounced block saving
-  private blockEditors: Map<string | number, DecoupledEditor> = new Map(); // Store editor instances by block ID
-  youtubeSuggestions: Array<{ videoId: string; title: string; description: string; duration: string; durationSeconds: number; thumbnail: string; channelTitle: string; publishedAt: string; viewCount: string }> = [];
-  loadingYouTubeSuggestions: boolean = false;
-  previewingYouTubeVideo: { videoId: string; title: string; description: string; duration: string; thumbnail: string; channelTitle: string; publishedAt?: string; viewCount: string } | null = null;
-  showYouTubePreviewModal: boolean = false;
-  previewingUploadedVideo: { url: string; title: string; thumbnail?: string; duration?: string } | null = null;
-  showUploadedVideoModal: boolean = false;
-  showDeleteVideoModal: boolean = false;
+
+
   
   // Section Management
   sections: (Section & { available?: boolean })[] = []; // Store all sections with availability toggle
@@ -1449,6 +1423,35 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.warningModalType = null;
     this.itemToDelete = null;
     this.isDeletingContent = false;
+  }
+
+  cancelDeleteBlock(): void {
+    // User cancelled block deletion - just close modal
+    this.showWarningModal = false;
+    this.warningModalType = null;
+    this.blockToDelete = null;
+    this.isDeletingBlock = false;
+  }
+
+  confirmDeleteBlock(): void {
+    // This method should be implemented based on where blocks are stored
+    // For now, just close the modal - the actual deletion logic should be added
+    // when we know where blocks are managed in this component
+    if (!this.blockToDelete) {
+      this.cancelDeleteBlock();
+      return;
+    }
+
+    this.isDeletingBlock = true;
+    
+    // TODO: Implement actual block deletion logic here
+    // This depends on how blocks are stored in this component
+    // For now, we'll just close the modal
+    
+    this.showWarningModal = false;
+    this.warningModalType = null;
+    this.blockToDelete = null;
+    this.isDeletingBlock = false;
   }
 
   // Content Type Modal Methods
@@ -2631,7 +2634,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         this.setContentStatusPending(placeholderItemId, true);
       }
 
-      this.rebuildLegacyContentItems();
       this.cdr.detectChanges();
     }
 
@@ -2687,7 +2689,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
           responseSection.updatedAt = mappedItem.updatedAt || new Date().toISOString();
           this.loadedSectionContentIds.add(responseSectionKey);
-          this.rebuildLegacyContentItems();
           this.saveSections();
           this.setContentStatusPending(mappedItem.id, false);
 
@@ -2705,14 +2706,12 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
             const fallbackSection = this.getSection(sectionKey);
             if (fallbackSection) {
               fallbackSection.content_items = fallbackSection.content_items.filter(item => item.id !== placeholderItemId);
-              this.rebuildLegacyContentItems();
             }
             this.setContentStatusPending(placeholderItemId, false);
           }
 
           if (previousItemSnapshot && targetSection && targetSectionIndex >= 0) {
             targetSection.content_items[targetSectionIndex] = previousItemSnapshot;
-            this.rebuildLegacyContentItems();
             this.setContentStatusPending(previousItemSnapshot.id, false);
           }
         }
@@ -2921,96 +2920,8 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     this.openLessonBuilder(item);
   }
 
-  // Legacy method - kept for backward compatibility
-  viewContentItemLegacy(item: ContentItem): void {
-    this.viewingContentItem = item;
-    // Set active section to match the content's section
-    if (item.section_id) {
-      this.setActiveSection(item.section_id);
-    }
 
-    // Check if it is a draft (type text and empty content)
-    // We treat empty content or just empty paragraph as draft
-    const isDraft = item.type === 'text' && (!item.content || item.content.trim() === '' || item.content === '<p></p>');
-    
-    if (isDraft) {
-      this.openContentTypeSelectionModal(item);
-      return;
-    }
 
-    if (item.type === 'text') {
-      // Open text editor with this content
-      this.subsectionTitle = item.title;
-      this.textContent = item.content || '<p></p>';
-      this.textSaveError = null;
-      // Close AI hint modal if it's open
-      this.showAIHintModal = false;
-      this.aiHint = '';
-      this.pendingAiAction = null;
-      this.showTextEditor = true;
-      this.pendingImageUploads.clear();
-      this.currentEditingContentId = item.id;
-      this.editorKnownImageMap.clear();
-      this.editorDeletedImageKeys.clear();
-      this.editorActiveImageKeys.clear();
-
-      const existingKeys = this.extractImageKeysFromHtml(this.textContent || '');
-      existingKeys.forEach((key) => this.editorActiveImageKeys.add(key));
-
-      if (Array.isArray(item.assets)) {
-        item.assets.forEach((asset: any) => {
-          const assetKey = asset?.key || asset?.extra?.s3Key || null;
-          const assetUrl = asset?.url || null;
-          if (assetKey && assetUrl) {
-            this.editorKnownImageMap.set(this.normalizeAssetUrl(assetUrl) || assetUrl, assetKey);
-            this.editorActiveImageKeys.add(assetKey);
-          }
-        });
-      }
-      this.cdr.detectChanges();
-    } else if (item.type === 'resources') {
-      this.openResourcePreview(item);
-    } else if (item.type === 'video') {
-      // Open video modal in view mode
-      this.videoContentItem = item;
-      this.viewingVideoContent = true;
-      this.showVideoModal = true;
-      this.selectedContentType = 'video';
-      this.cdr.detectChanges();
-    } else if (item.type === 'quiz') {
-      // Open quiz editor modal
-      this.currentQuizId = item.id;
-      this.openQuizEditor();
-    } else if (item.type === 'audio') {
-      // Open audio modal in view mode
-      this.audioContentItem = item;
-      this.viewingAudioContent = true;
-      this.showAudioModal = true;
-      this.selectedContentType = 'audio';
-      this.cdr.detectChanges();
-    }
-  }
-  // Update content item when editing existing content
-  updateContentItem(itemId: string, title: string, content: string): void {
-    const index = this.contentItems.findIndex(item => item.id === itemId);
-    if (index >= 0) {
-      this.contentItems[index] = {
-        ...this.contentItems[index],
-        title: title.trim(),
-        content: content,
-        updatedAt: new Date().toISOString()
-      };
-      
-      const userId = this.student?.id || this.student?.user_id;
-      const draft = this.ai.getDraft(userId);
-      this.ai.saveDraft({
-        ...draft,
-        content_items: this.contentItems
-      }, userId);
-      
-      this.cdr.detectChanges();
-    }
-  }
   
   // Delete Content Item - Show warning modal first
   deleteContentItem(itemId: string): void {
@@ -3049,6 +2960,24 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
       this.contentItems = this.contentItems.filter((item) => item.id !== this.itemToDelete);
       this.saveSections();
+
+      // Delete from localStorage: blocks and YouTube suggestions for this content
+      if (this.itemToDelete) {
+        const contentId = this.itemToDelete;
+        try {
+          // Remove lesson blocks from localStorage
+          const blocksKey = `lesson-blocks-${contentId}`;
+          localStorage.removeItem(blocksKey);
+          
+          // Remove YouTube suggestions from localStorage
+          const suggestionsKey = `youtube-suggestions-${contentId}`;
+          localStorage.removeItem(suggestionsKey);
+          
+          console.log('✅ Deleted localStorage data for content:', contentId);
+        } catch (error) {
+          console.error('Error deleting localStorage data:', error);
+        }
+      }
 
       // Close video modal if deleting the currently viewed video
       if (this.viewingVideoContent && this.videoContentItem && this.videoContentItem.id === this.itemToDelete) {
@@ -5117,7 +5046,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   // Save Sections to localStorage
   private saveSections(): void {
     this.normalizeSectionOrdering();
-    this.rebuildLegacyContentItems();
     const userId = this.student?.id || this.student?.user_id;
     const draft = this.ai.getDraft(userId);
     this.ai.saveDraft({
@@ -5430,19 +5358,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     return baseItem;
   }
 
-  private rebuildLegacyContentItems(): void {
-    const aggregated: ContentItem[] = [];
-    for (const section of this.sections) {
-      if (!section || !Array.isArray(section.content_items)) {
-        continue;
-      }
-      const sectionId = section.id;
-      section.content_items.forEach((item) => {
-        aggregated.push({ ...item, section_id: sectionId });
-      });
-    }
-    this.contentItems = aggregated;
-  }
+
 
   private ensureSectionContentLoaded(sectionId: string | null | undefined): void {
     if (!sectionId || this.loadedSectionContentIds.has(sectionId)) {
@@ -5468,7 +5384,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
         }
 
         this.loadedSectionContentIds.add(sectionId);
-        this.rebuildLegacyContentItems();
         this.saveSections();
         this.cdr.detectChanges();
       },
@@ -5791,13 +5706,7 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
     
     // Check if contentId is in route params (for lesson builder persistence)
     // Wait for sections to be fully initialized and content items to be loaded
-    this.route.queryParams.subscribe(params => {
-      const contentId = params['contentId'];
-      if (contentId && !this.showLessonBuilder) {
-        // Wait for sections to be loaded, then load content items if needed
-        this.loadAndOpenLessonBuilderWithRetry(contentId);
-      }
-    });
+
   }
 
   private mapApiSectionToLocal(section: DraftCourseSectionResponse): (Section & { available?: boolean }) {
@@ -5961,7 +5870,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       this.ai.saveDraft(draftForLocal, resolvedUserId);
     }
 
-    this.rebuildLegacyContentItems();
     this.cdr.detectChanges();
   }
 
@@ -6250,7 +6158,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           targetSection.updatedAt = mappedItem.updatedAt || new Date().toISOString();
         }
         this.loadedSectionContentIds.add(sectionKey);
-        this.rebuildLegacyContentItems();
         this.saveSections();
         this.cdr.detectChanges();
 
@@ -6438,7 +6345,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
 
     targetSection.content_items[itemIndex] = updatedItem;
     this.setContentStatusPending(contentId, false);
-    this.rebuildLegacyContentItems();
     this.saveSections();
     this.cdr.detectChanges();
 
@@ -6462,7 +6368,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
             ...refreshedSection.content_items[refreshedIndex],
             ...refreshed
           };
-          this.rebuildLegacyContentItems();
           this.saveSections();
           this.cdr.detectChanges();
         }
@@ -6480,7 +6385,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       targetSection.updatedAt = new Date().toISOString();
     }
 
-    this.rebuildLegacyContentItems();
     this.saveSections();
     this.pendingContentStatus.delete(contentId);
   }
@@ -7418,7 +7322,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
       ...section.content_items.slice(itemIndex + 1)
     ];
     section.updatedAt = timestamp;
-    this.rebuildLegacyContentItems();
     this.cdr.detectChanges();
     this.setContentStatusPending(contentId, true);
 
@@ -7457,7 +7360,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           ...section.content_items.slice(itemIndex + 1)
         ];
         section.updatedAt = mapped.updatedAt || section.updatedAt;
-        this.rebuildLegacyContentItems();
         this.saveSections();
         this.setContentStatusPending(mapped.id, false);
         this.cdr.detectChanges();
@@ -7470,7 +7372,6 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
           ...section.content_items.slice(itemIndex + 1)
         ];
         section.updatedAt = previousState.updatedAt || section.updatedAt;
-        this.rebuildLegacyContentItems();
         this.saveSections();
         this.setContentStatusPending(contentId, false);
         this.cdr.detectChanges();
@@ -8556,1844 +8457,30 @@ export class StudentStarterComponent implements OnInit, OnDestroy {
   openLessonBuilder(item: ContentItem): void {
     try {
       console.log('Opening lesson builder for item:', item);
-      this.currentLessonContentId = item.id;
-      this.editingLessonTitle = item.title || '';
-      this.lessonHint = (item.meta as any)?.hint || '';
-      this.selectedBlockId = null;
-      this.selectedBlock = null;
-      this.showBlockTypeChooser = false;
-      this.videoTab = 'youtube-ai';
       
-      // Clear YouTube suggestions temporarily - they will be loaded from localStorage
-      this.youtubeSuggestions = [];
-      this.youtubeSearchQuery = '';
+      // Find section ID if not present on item
+      let sectionId: number | string | null = item.section_id || null;
       
-      // Update URL with contentId for persistence
-      if (item.id) {
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { contentId: item.id },
-          queryParamsHandling: 'merge',
-          replaceUrl: true
-        });
-        
-        // Load existing blocks and YouTube suggestions for this content
-        this.loadLessonBlocks(item.id);
+      if (!sectionId) {
+        for (const section of this.sections) {
+          if (section.content_items && section.content_items.some(c => String(c.id) === String(item.id))) {
+            sectionId = section.id;
+            break;
+          }
+        }
       }
-      
-      this.showLessonBuilder = true;
-      this.cdr.detectChanges();
-      console.log('Lesson builder opened, showLessonBuilder:', this.showLessonBuilder);
+
+      if (sectionId) {
+        this.router.navigate(['/student/starter/content', item.id], {
+          queryParams: { sectionId: sectionId }
+        });
+      } else {
+        console.error('Could not find section for content item', item);
+        this.toastr.error(this.currentLang === 'ar' ? 'تعذر العثور على القسم' : 'Could not find section');
+      }
     } catch (error) {
       console.error('Error opening lesson builder:', error);
       this.toastr?.error?.(this.currentLang === 'ar' ? 'حدث خطأ في فتح محرر الدرس' : 'Error opening lesson editor');
     }
-  }
-
-  closeLessonBuilder(): void {
-    // Save blocks before closing
-    if (this.currentLessonContentId) {
-      this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-    }
-    
-    // Clear any pending save timeout
-    if (this.saveBlocksTimeout) {
-      clearTimeout(this.saveBlocksTimeout);
-      this.saveBlocksTimeout = null;
-    }
-    
-    this.showLessonBuilder = false;
-    this.currentLessonContentId = null;
-    this.editingLessonTitle = '';
-    this.lessonBlocks = [];
-    this.selectedBlockId = null;
-    this.selectedBlock = null;
-    this.lessonHint = '';
-    
-    // Remove contentId from URL
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { contentId: null },
-      queryParamsHandling: 'merge',
-      replaceUrl: true
-    });
-    
-    this.cdr.detectChanges();
-  }
-
-  loadLessonBlocks(contentId: string | number): void {
-    try {
-      // Find the section that contains this content
-      let sectionId: number | string | null = null;
-      for (const section of this.sections) {
-        if (section.content_items && section.content_items.some(item => String(item.id) === String(contentId))) {
-          sectionId = section.id;
-          break;
-        }
-      }
-
-      if (!sectionId) {
-        console.warn('Section not found for content:', contentId);
-        // Fallback to localStorage only
-        this.loadLessonBlocksFromLocalStorage(contentId);
-        return;
-      }
-
-      // Load blocks from API first
-      this.ai.getContentBlocks(sectionId, contentId).subscribe({
-        next: (response) => {
-          if (response && response.content && Array.isArray(response.content)) {
-            // Convert API response to ContentBlock format
-            this.lessonBlocks = response.content.map(block => ({
-              id: block.id,
-              block_type: block.block_type as 'text' | 'video' | 'audio' | 'file',
-              title: block.title || '',
-              body_html: block.body_html || '',
-              asset_id: block.asset_id,
-              meta: block.meta || {},
-              position: block.position
-            }));
-
-            // Save to localStorage for offline access
-            this.saveLessonBlocksToLocalStorage(contentId);
-
-            console.log('✅ Loaded lesson blocks from API:', {
-              contentId,
-              blocksCount: this.lessonBlocks.length,
-              blocks: this.lessonBlocks.map(b => ({ id: b.id, type: b.block_type, title: b.title }))
-            });
-          } else {
-            // No blocks in database, try localStorage
-            this.loadLessonBlocksFromLocalStorage(contentId);
-          }
-
-          // Ensure positions are correct
-          this.lessonBlocks.forEach((block, index) => {
-            block.position = index + 1;
-          });
-
-          // Load YouTube suggestions from localStorage
-          this.loadYouTubeSuggestionsFromLocalStorage(contentId);
-
-          // If a video block has a selected YouTube video, ensure it's visible
-          const videoBlock = this.lessonBlocks.find(b => b.block_type === 'video' && b.meta && b.meta['youtubeVideoId']);
-          if (videoBlock && this.videoTab === 'youtube-ai') {
-            console.log('Found video block with selected YouTube video:', videoBlock.meta?.['youtubeVideoId']);
-          }
-
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error loading blocks from API, falling back to localStorage:', error);
-          // Fallback to localStorage
-          this.loadLessonBlocksFromLocalStorage(contentId);
-        }
-      });
-    } catch (error) {
-      console.error('Error loading lesson blocks:', error);
-      this.loadLessonBlocksFromLocalStorage(contentId);
-    }
-  }
-
-  private loadLessonBlocksFromLocalStorage(contentId: string | number): void {
-    const storageKey = `lesson-blocks-${contentId}`;
-    const storedBlocks = localStorage.getItem(storageKey);
-    
-    if (storedBlocks) {
-      try {
-        this.lessonBlocks = JSON.parse(storedBlocks);
-        console.log('✅ Loaded lesson blocks from localStorage:', {
-          contentId,
-          blocksCount: this.lessonBlocks.length
-        });
-      } catch (parseError) {
-        console.warn('Failed to parse stored blocks:', parseError);
-        this.lessonBlocks = [];
-      }
-    } else {
-      this.lessonBlocks = [];
-      console.log('No stored blocks found in localStorage for content:', contentId);
-    }
-
-    // Ensure positions are correct
-    this.lessonBlocks.forEach((block, index) => {
-      block.position = index + 1;
-    });
-
-    // Load YouTube suggestions from localStorage
-    this.loadYouTubeSuggestionsFromLocalStorage(contentId);
-    this.cdr.detectChanges();
-  }
-
-  loadYouTubeSuggestionsFromLocalStorage(contentId: string | number): void {
-    try {
-      const storageKey = `youtube-suggestions-${contentId}`;
-      const storedData = localStorage.getItem(storageKey);
-      
-      if (storedData) {
-        try {
-          const parsed = JSON.parse(storedData);
-          this.youtubeSuggestions = parsed.videos || [];
-          this.youtubeSearchQuery = parsed.searchQuery || '';
-          console.log('✅ Loaded YouTube suggestions from localStorage:', {
-            contentId,
-            key: storageKey,
-            videosCount: this.youtubeSuggestions.length,
-            searchQuery: this.youtubeSearchQuery,
-            videos: this.youtubeSuggestions.map(v => v.videoId)
-          });
-        } catch (parseError) {
-          console.warn('❌ Failed to parse stored YouTube suggestions:', parseError);
-          this.youtubeSuggestions = [];
-          this.youtubeSearchQuery = '';
-        }
-      } else {
-        console.log('ℹ️ No YouTube suggestions found in localStorage for content:', contentId, 'key:', storageKey);
-        this.youtubeSuggestions = [];
-        this.youtubeSearchQuery = '';
-      }
-    } catch (error) {
-      console.error('❌ Error loading YouTube suggestions from localStorage:', error);
-      this.youtubeSuggestions = [];
-      this.youtubeSearchQuery = '';
-    }
-  }
-
-  saveYouTubeSuggestionsToLocalStorage(contentId: string | number | null): void {
-    if (!contentId) {
-      console.warn('Cannot save YouTube suggestions: contentId is null');
-      return;
-    }
-    
-    try {
-      const storageKey = `youtube-suggestions-${contentId}`;
-      const dataToStore = {
-        videos: this.youtubeSuggestions || [],
-        searchQuery: this.youtubeSearchQuery || ''
-      };
-      const jsonString = JSON.stringify(dataToStore);
-      localStorage.setItem(storageKey, jsonString);
-      console.log('✅ Saved YouTube suggestions to localStorage:', {
-        contentId,
-        key: storageKey,
-        videosCount: this.youtubeSuggestions.length,
-        searchQuery: this.youtubeSearchQuery,
-        dataSize: jsonString.length
-      });
-    } catch (error) {
-      console.error('❌ Error saving YouTube suggestions to localStorage:', error);
-      // Check if it's a quota exceeded error
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.error('localStorage quota exceeded. Clearing old data...');
-        // Optionally clear old data or notify user
-      }
-    }
-  }
-
-  saveLessonBlocksToLocalStorage(contentId: string | number | null): void {
-    if (!contentId) {
-      return;
-    }
-    
-    try {
-      const storageKey = `lesson-blocks-${contentId}`;
-      localStorage.setItem(storageKey, JSON.stringify(this.lessonBlocks));
-      console.log('Saved lesson blocks to localStorage for content:', contentId, 'blocks:', this.lessonBlocks.length);
-    } catch (error) {
-      console.error('Error saving lesson blocks to localStorage:', error);
-    }
-  }
-
-  selectBlock(blockId: number | string): void {
-    this.selectedBlockId = blockId;
-    this.selectedBlock = this.lessonBlocks.find(b => b.id === blockId) || null;
-    
-    // Ensure meta is initialized
-    if (this.selectedBlock && !this.selectedBlock.meta) {
-      this.selectedBlock.meta = {};
-    }
-    
-    // Auto-switch to appropriate video tab based on block content
-    if (this.selectedBlock && this.selectedBlock.block_type === 'video') {
-      if (this.selectedBlock.meta && this.selectedBlock.meta['videoUrl']) {
-        // Has uploaded video - switch to upload tab and load video info
-        this.videoTab = 'upload';
-        this.loadUploadedVideoInfo(this.selectedBlock);
-      } else if (this.selectedBlock.meta && this.selectedBlock.meta['youtubeVideoId']) {
-        // Has YouTube video - check if it's from manual or AI
-        if (this.selectedBlock.meta['youtubeUrl']) {
-          // Manual YouTube video (has youtubeUrl in meta)
-          this.videoTab = 'youtube-manual';
-          this.loadManualYouTubeVideoInfo(this.selectedBlock);
-        } else {
-          // AI suggested YouTube video
-          this.videoTab = 'youtube-ai';
-        }
-      } else {
-        // No video yet - default to AI tab
-        this.videoTab = 'youtube-ai';
-      }
-    }
-    
-    
-    this.cdr.detectChanges();
-  }
-
-  loadUploadedVideoInfo(block: ContentBlock): void {
-    if (!block.meta || !block.meta['videoUrl']) {
-      return;
-    }
-
-    // Set uploaded video info from block metadata
-    this.uploadedVideoMetadata = {
-      thumbnail: block.meta['videoThumbnail'] || null,
-      durationFormatted: block.meta['videoDuration'] || null,
-      width: block.meta['videoWidth'] || null,
-      height: block.meta['videoHeight'] || null,
-      fileSize: block.meta['videoFileSize'] || null,
-      fileName: block.meta['videoFileName'] || null
-    };
-
-    // Set the title from block
-    this.uploadedVideoTitle = block.title || '';
-
-    // Create a dummy file object for display (we won't actually use it for upload)
-    // The uploadedVideoFile will remain null, but we'll show the metadata
-  }
-
-  loadManualYouTubeVideoInfo(block: ContentBlock): void {
-    if (!block.meta || !block.meta['youtubeVideoId']) {
-      return;
-    }
-
-    // Set manual YouTube video info from block metadata
-    this.manualYouTubeVideo = {
-      videoId: block.meta['youtubeVideoId'] as string,
-      title: block.meta['youtubeTitle'] as string || '',
-      description: block.meta['youtubeDescription'] as string || '',
-      duration: block.meta['youtubeDuration'] as string || '',
-      thumbnail: block.meta['youtubeThumbnail'] as string || ''
-    };
-
-    // Set the YouTube URL
-    if (block.meta['youtubeUrl']) {
-      this.setYouTubeUrl(block.meta['youtubeUrl'] as string);
-    }
-  }
-
-  getBlockTypeLabel(blockType: string): string {
-    const labels: Record<string, { en: string; ar: string }> = {
-      'text': { en: 'Text', ar: 'نص' },
-      'video': { en: 'Video', ar: 'فيديو' },
-      'audio': { en: 'Audio', ar: 'صوت' },
-      'file': { en: 'File', ar: 'ملف' }
-    };
-    return labels[blockType]?.[this.currentLang === 'ar' ? 'ar' : 'en'] || blockType;
-  }
-
-  addBlock(blockType: 'text' | 'video' | 'audio' | 'file'): void {
-    this.showBlockTypeChooser = false;
-    
-    const newBlock: ContentBlock = {
-      id: `draft-${Date.now()}`,
-      block_type: blockType,
-      title: null,
-      body_html: blockType === 'text' ? '<p></p>' : null,
-      asset_id: null,
-      meta: {} as Record<string, unknown>,
-      position: this.lessonBlocks.length + 1
-    };
-    
-    this.lessonBlocks.push(newBlock);
-    this.selectBlock(newBlock.id!);
-    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-    this.cdr.detectChanges();
-  }
-
-  onBlockDrop(event: CdkDragDrop<ContentBlock[]>): void {
-    moveItemInArray(this.lessonBlocks, event.previousIndex, event.currentIndex);
-    // Update positions
-    this.lessonBlocks.forEach((block, index) => {
-      block.position = index + 1;
-    });
-    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-    this.cdr.detectChanges();
-  }
-
-  deleteBlock(blockId: string | number, event: Event): void {
-    event.stopPropagation(); // Prevent selecting the block when clicking delete
-    
-    const blockIndex = this.lessonBlocks.findIndex(b => b.id === blockId);
-    if (blockIndex === -1) {
-      return;
-    }
-
-    // If the deleted block was selected, clear selection
-    if (this.selectedBlockId === blockId) {
-      this.selectedBlockId = null;
-      this.selectedBlock = null;
-    }
-
-    // Clean up editor instance
-    this.blockEditors.delete(blockId);
-
-    // Remove the block
-    this.lessonBlocks.splice(blockIndex, 1);
-
-    // Update positions for remaining blocks
-    this.lessonBlocks.forEach((block, index) => {
-      block.position = index + 1;
-    });
-
-    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-    this.cdr.detectChanges();
-  }
-
-  saveLessonBuilder(closeAfterSave: boolean = false): void {
-    if (!this.currentLessonContentId) {
-      this.toastr?.error?.(this.currentLang === 'ar' ? 'معرف المحتوى غير موجود' : 'Content ID not found');
-      return;
-    }
-
-    this.savingLessonBuilder = true;
-    this.cdr.detectChanges();
-
-    // TODO: Implement API call to save blocks
-    // For now, just simulate save
-    setTimeout(() => {
-      this.savingLessonBuilder = false;
-      this.toastr?.success?.(this.currentLang === 'ar' ? 'تم الحفظ بنجاح' : 'Saved successfully');
-      
-      if (closeAfterSave) {
-        this.closeLessonBuilder();
-      }
-      this.cdr.detectChanges();
-    }, 1000);
-  }
-
-  // AI Action Methods
-  generateTextParagraph(): void {
-    // TODO: Implement AI paragraph generation
-    console.log('Generate text paragraph');
-  }
-
-  improveText(): void {
-    // TODO: Implement AI text improvement
-    console.log('Improve text');
-  }
-
-  addTransition(): void {
-    // TODO: Implement AI transition generation
-    console.log('Add transition');
-  }
-
-  suggestVideoTitle(): void {
-    if (!this.selectedBlock || !this.currentLessonContentId) {
-      return;
-    }
-
-    this.loadingYouTubeSuggestions = true;
-    this.youtubeSuggestions = [];
-
-    // Get course information
-    const courseId = this.draftCourseId ? Number(this.draftCourseId) : undefined;
-
-    // Get content title and hint
-    const contentTitle = this.editingLessonTitle || '';
-    const hint = this.lessonHint || '';
-    
-    // Find the section that contains this content
-    let sectionTitle = '';
-    if (this.currentLessonContentId) {
-      for (const section of this.sections) {
-        if (section.content_items && section.content_items.some(item => String(item.id) === String(this.currentLessonContentId))) {
-          sectionTitle = section.name || '';
-          break;
-        }
-      }
-    }
-
-    this.ai.suggestYouTubeVideos({
-      contentTitle: contentTitle,
-      hint: hint,
-      courseId: courseId,
-      sectionTitle: sectionTitle
-    }).subscribe({
-      next: (response) => {
-        this.loadingYouTubeSuggestions = false;
-        this.youtubeSuggestions = response.videos || [];
-        this.youtubeSearchQuery = response.searchQuery || '';
-        
-        // Save to localStorage immediately
-        if (this.currentLessonContentId) {
-          this.saveYouTubeSuggestionsToLocalStorage(this.currentLessonContentId);
-          console.log('✅ Saved YouTube suggestions to localStorage after fetch:', {
-            contentId: this.currentLessonContentId,
-            videosCount: this.youtubeSuggestions.length,
-            searchQuery: this.youtubeSearchQuery
-          });
-        } else {
-          console.error('❌ Cannot save YouTube suggestions: currentLessonContentId is null');
-        }
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error suggesting YouTube videos:', error);
-        this.loadingYouTubeSuggestions = false;
-        this.toastr?.error?.(
-          this.currentLang === 'ar' 
-            ? 'فشل في اقتراح فيديوهات YouTube' 
-            : 'Failed to suggest YouTube videos'
-        );
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  previewYouTubeVideo(video: any, event?: Event): void {
-    if (event) {
-      event.stopPropagation(); // Prevent triggering selectYouTubeVideo
-    }
-    this.previewingYouTubeVideo = video;
-    this.showYouTubePreviewModal = true;
-    this.cdr.detectChanges();
-  }
-
-  closeYouTubePreviewModal(): void {
-    this.showYouTubePreviewModal = false;
-    this.previewingYouTubeVideo = null;
-    this.cdr.detectChanges();
-  }
-
-  selectYouTubeVideo(video: { videoId: string; title: string; description: string; duration: string; thumbnail: string; channelTitle: string }): void {
-    if (!this.selectedBlock) {
-      return;
-    }
-
-    // Ensure meta object exists
-    if (!this.selectedBlock.meta) {
-      this.selectedBlock.meta = {};
-    }
-
-    // Delete old uploaded video from S3 if exists (when switching from upload to YouTube)
-    const oldVideoUrl = this.selectedBlock.meta['videoUrl'] as string | undefined;
-    if (oldVideoUrl) {
-      this.ai.deleteDraftContentVideos([oldVideoUrl]).subscribe({
-        next: () => {
-          console.log('Old uploaded video deleted from S3:', oldVideoUrl);
-        },
-        error: (error) => {
-          console.warn('Failed to delete old uploaded video from S3:', error);
-        }
-      });
-    }
-
-    // Update block with video information
-    this.selectedBlock.title = video.title;
-    this.selectedBlock.meta = {
-      ...this.selectedBlock.meta,
-      youtubeVideoId: video.videoId,
-      youtubeTitle: video.title,
-      youtubeDescription: video.description,
-      youtubeThumbnail: video.thumbnail,
-      youtubeChannel: video.channelTitle,
-      youtubeDuration: video.duration,
-      // Remove uploaded video fields
-      videoUrl: undefined,
-      videoFileName: undefined,
-      videoFileSize: undefined,
-      videoDuration: undefined,
-      videoThumbnail: undefined,
-      videoWidth: undefined,
-      videoHeight: undefined,
-      assetId: undefined
-    };
-    this.selectedBlock.asset_id = null;
-
-    // Switch to AI YouTube tab
-    this.videoTab = 'youtube-ai';
-
-    // Save blocks immediately to localStorage
-    if (this.currentLessonContentId) {
-      this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-      console.log('✅ Saved selected YouTube video to localStorage:', video.videoId, 'for content:', this.currentLessonContentId);
-    }
-    this.cdr.detectChanges();
-  }
-
-  useYouTubeVideo(video: any): void {
-    this.selectYouTubeVideo(video);
-    this.closeYouTubePreviewModal();
-  }
-
-  isYouTubeVideoSelected(video: any): boolean {
-    if (!this.selectedBlock || !this.selectedBlock.meta || !video) {
-      return false;
-    }
-    const selectedVideoId = this.selectedBlock.meta['youtubeVideoId'];
-    return selectedVideoId === video.videoId;
-  }
-
-  openYouTubeVideo(videoId: string): void {
-    window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
-  }
-
-  getYouTubeEmbedUrl(videoId: string): SafeResourceUrl {
-    const url = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  }
-
-  previewUploadedVideo(): void {
-    if (!this.selectedBlock || !this.selectedBlock.meta || !this.selectedBlock.meta['videoUrl']) {
-      return;
-    }
-
-    const videoUrl = this.selectedBlock.meta['videoUrl'] as string;
-    const title = this.selectedBlock.title || this.uploadedVideoTitle || 'Video';
-    const thumbnail = this.selectedBlock.meta['videoThumbnail'] as string | undefined;
-    const duration = this.selectedBlock.meta['videoDuration'] as string | undefined;
-
-    this.previewingUploadedVideo = {
-      url: videoUrl,
-      title: title,
-      thumbnail: thumbnail,
-      duration: duration
-    };
-    this.showUploadedVideoModal = true;
-    this.cdr.detectChanges();
-  }
-
-  closeUploadedVideoModal(): void {
-    this.showUploadedVideoModal = false;
-    this.previewingUploadedVideo = null;
-    this.cdr.detectChanges();
-  }
-
-  getUploadedVideoUrl(): SafeResourceUrl | null {
-    if (!this.previewingUploadedVideo) {
-      return null;
-    }
-    return this.sanitizer.bypassSecurityTrustResourceUrl(this.previewingUploadedVideo.url);
-  }
-
-  addVideoIntro(): void {
-    // TODO: Implement AI video intro generation
-    console.log('Add video intro');
-  }
-
-  shortenAudioScript(): void {
-    // TODO: Implement AI script shortening
-    console.log('Shorten audio script');
-  }
-
-  addAudioClosing(): void {
-    // TODO: Implement AI audio closing generation
-    console.log('Add audio closing');
-  }
-
-  suggestFileLabel(): void {
-    // TODO: Implement AI file label suggestion
-    console.log('Suggest file label');
-  }
-
-  onEditorReady(editor: DecoupledEditor, blockId: number | string, toolbarContainer?: HTMLElement): void {
-    // Store editor instance for this block
-    this.blockEditors.set(blockId, editor);
-    
-    // Insert toolbar into DOM (required for DecoupledEditor)
-    const element = editor.ui.getEditableElement()!;
-    const parent = element.parentElement!;
-    const toolbar = editor.ui.view.toolbar.element;
-    
-    // Wait a bit to ensure DOM is ready
-    setTimeout(() => {
-      if (toolbar) {
-        // Check if toolbar is already in DOM
-        if (!toolbar.parentElement) {
-          // Try to find toolbar container in the DOM if not passed directly
-          let container: HTMLElement | null = null;
-          if (toolbarContainer && toolbarContainer instanceof HTMLElement) {
-            container = toolbarContainer;
-          } else {
-            // Try to find it by class
-            const wrapper = parent.closest('.ckeditor-wrapper');
-            if (wrapper) {
-              container = wrapper.querySelector('.ck-toolbar-container') as HTMLElement;
-            }
-          }
-          
-          if (container) {
-            // Clear container first
-            container.innerHTML = '';
-            // Insert toolbar into the provided container
-            container.appendChild(toolbar);
-          } else {
-            // Fallback: insert before editable element
-            parent.insertBefore(toolbar, element);
-          }
-        }
-        
-        // Ensure toolbar is visible
-        toolbar.style.display = 'flex';
-        toolbar.style.visibility = 'visible';
-        toolbar.style.opacity = '1';
-        
-        // Set direction on toolbar
-        const direction = this.isRTL ? 'rtl' : 'ltr';
-        toolbar.setAttribute('dir', direction);
-        toolbar.style.setProperty('direction', direction, 'important');
-      }
-    }, 100);
-    
-    // Setup image upload adapter (same as onReady for text editor modal)
-    const currentContentId = this.currentLessonContentId ? String(this.currentLessonContentId) : undefined;
-    const uploadUrl = this.contentImageUploadUrl;
-    
-    editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
-      return new CKEditor5CustomUploadAdapter(loader, {
-        uploadUrl,
-        token: this.universalAuth.getAccessToken(),
-        contentId: currentContentId,
-        onUploadStart: (file: File) => {
-          const tempUrl = URL.createObjectURL(file);
-          this.uploadingImageUrls.add(tempUrl);
-          this.markImageAsUploading(editor, tempUrl);
-          
-          const model = editor.model;
-          const imageInsertListener = () => {
-            model.document.off('change:data', imageInsertListener);
-            setTimeout(() => {
-              this.markImageAsUploading(editor, tempUrl);
-            }, 50);
-          };
-          model.document.on('change:data', imageInsertListener);
-        },
-        onUploaded: (asset) => {
-          this.registerPendingImageAsset(asset);
-          this.uploadingImageUrls.forEach((url) => {
-            this.removeImageUploadingState(editor, url);
-          });
-          if (asset.url) {
-            this.removeImageUploadingState(editor, asset.url);
-          }
-          this.uploadingImageUrls.forEach((url) => {
-            if (url.startsWith('blob:')) {
-              URL.revokeObjectURL(url);
-            }
-          });
-          this.uploadingImageUrls.clear();
-        },
-        onError: (error) => {
-          console.error('CKEditor image upload failed:', error);
-          const message = this.currentLang === 'ar'
-            ? 'فشل رفع الصورة. حاول مرة أخرى.'
-            : 'Failed to upload the image. Please try again.';
-          this.toastr?.error?.(message);
-          this.uploadingImageUrls.clear();
-          this.removeAllImageUploadingStates(editor);
-        },
-        onAbort: (asset) => {
-          if (asset?.key) {
-            this.pendingImageUploads.delete(asset.key);
-            this.ai.deleteDraftContentImages([asset.key]).subscribe({
-              error: (error: unknown) => {
-                console.error('Failed to delete aborted editor image:', error);
-              }
-            });
-          }
-          if (asset?.url) {
-            this.removeImageUploadingState(editor, asset.url);
-          }
-        }
-      });
-    };
-    
-    // Remove dropdown from image button - make it always upload from computer
-    // Also remove file manager option from dropdown menu
-    setTimeout(() => {
-      const toolbarElement = editor.ui.view.toolbar.element;
-      if (toolbarElement) {
-        // Find the image button (could be splitbutton or dropdown)
-        const imageButton = toolbarElement.querySelector('[aria-label*="image" i], [aria-label*="Image" i], .ck-splitbutton, .ck-dropdown__button') as HTMLElement;
-        if (imageButton) {
-          // Hide all arrow elements
-          const arrows = imageButton.querySelectorAll('.ck-button__arrow, .ck-dropdown__arrow, .ck-splitbutton__arrow');
-          arrows.forEach((arrow: Element) => {
-            (arrow as HTMLElement).style.display = 'none';
-          });
-          
-          // Also hide arrow on parent splitbutton if it exists
-          const splitButton = imageButton.closest('.ck-splitbutton');
-          if (splitButton) {
-            const splitButtonArrow = splitButton.querySelector('.ck-splitbutton__arrow, .ck-button__arrow');
-            if (splitButtonArrow) {
-              (splitButtonArrow as HTMLElement).style.display = 'none';
-            }
-          }
-          
-          // Remove file manager option from dropdown menu if it exists
-          const removeFileManagerOption = () => {
-            const dropdownPanel = document.querySelector('.ck-dropdown__panel, .ck-list');
-            if (dropdownPanel) {
-              const fileManagerItems = dropdownPanel.querySelectorAll('[data-cke-command-id*="fileManager"], [data-cke-command-id*="filemanager"], [aria-label*="file manager" i], [aria-label*="File Manager" i]');
-              fileManagerItems.forEach((item: Element) => {
-                (item as HTMLElement).style.display = 'none';
-                item.remove();
-              });
-            }
-          };
-          
-          // Override click to directly open file picker and prevent dropdown
-          imageButton.addEventListener('click', (e: Event) => {
-            const target = e.target as HTMLElement;
-            // Ignore clicks on arrow elements
-            if (target.classList.contains('ck-button__arrow') || 
-                target.classList.contains('ck-dropdown__arrow') ||
-                target.classList.contains('ck-splitbutton__arrow') ||
-                target.closest('.ck-button__arrow') ||
-                target.closest('.ck-dropdown__arrow') ||
-                target.closest('.ck-splitbutton__arrow')) {
-              return;
-            }
-            
-            // Prevent default dropdown behavior
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            // Remove file manager option if dropdown was opened
-            setTimeout(removeFileManagerOption, 10);
-            
-            // Create a file input element
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.style.display = 'none';
-            input.onchange = (fileEvent: Event) => {
-              const fileTarget = fileEvent.target as HTMLInputElement;
-              const file = fileTarget.files?.[0];
-              if (file) {
-                const fileRepository = editor.plugins.get('FileRepository');
-                const loader = fileRepository.createLoader(file);
-                if (loader) {
-                  loader.upload().then((response: any) => {
-                    editor.model.change((writer: any) => {
-                      const imageElement = writer.createElement('imageBlock', {
-                        src: response.default || response.url
-                      });
-                      editor.model.insertContent(imageElement, editor.model.document.selection);
-                    });
-                  }).catch((error: any) => {
-                    console.error('Image upload failed:', error);
-                  });
-                }
-              }
-              if (document.body.contains(input)) {
-                document.body.removeChild(input);
-              }
-            };
-            document.body.appendChild(input);
-            input.click();
-          }, true); // Use capture phase to intercept before CKEditor's handler
-          
-          // Also watch for dropdown opening and remove file manager option
-          const observer = new MutationObserver(() => {
-            removeFileManagerOption();
-          });
-          observer.observe(document.body, {
-            childList: true,
-            subtree: true
-          });
-          
-          // Clean up observer when editor is destroyed
-          editor.on('destroy', () => {
-            observer.disconnect();
-          });
-        }
-      }
-    }, 200);
-    
-    // Set direction on editable element (reuse element from above)
-    const editableElement = editor.ui.getEditableElement()!;
-    const direction = this.isRTL ? 'rtl' : 'ltr';
-    editableElement.setAttribute('dir', direction);
-    editableElement.style.setProperty('direction', direction, 'important');
-    
-    if (this.isRTL) {
-      editableElement.setAttribute('lang', 'ar');
-    } else {
-      editableElement.setAttribute('lang', 'en');
-    }
-    
-    // Auto-save when editor content changes
-    editor.model.document.on('change:data', () => {
-      const block = this.lessonBlocks.find(b => b.id === blockId);
-      if (block) {
-        block.body_html = editor.getData();
-        // Debounce the save to avoid too many localStorage writes
-        this.debouncedSaveBlocks();
-      }
-    });
-  }
-  
-  generateTextBlockWithAI(): void {
-    if (this.generatingTextBlock || !this.selectedBlock) {
-      return;
-    }
-    
-    // Warn user if content already exists
-    if (this.selectedBlock.body_html && this.selectedBlock.body_html.trim().length > 0) {
-      const confirmReplace = confirm(
-        this.currentLang === 'ar'
-          ? 'المحتوى الحالي سيتم استبداله بالمحتوى الذي سيولده الذكاء الاصطناعي. هل تريد المتابعة؟'
-          : 'The current content will be replaced with new AI-generated content. Do you want to continue?'
-      );
-      if (!confirmReplace) {
-        return;
-      }
-    }
-    
-    this.generatingTextBlock = true;
-    this.startTextEditorDhikrRotation();
-    
-    const grade = this.stageName || '';
-    const country = this.countryName || '';
-    const course_name = this.courseName || '';
-    const category = this.selectedCategory 
-      ? (this.currentLang === 'ar' ? this.selectedCategory.name_ar : this.selectedCategory.name_en)
-      : '';
-    
-    // Find section name from current lesson
-    let sectionName = '';
-    if (this.currentLessonContentId) {
-      for (const section of this.sections) {
-        if (section.content_items && section.content_items.some(item => String(item.id) === String(this.currentLessonContentId))) {
-          sectionName = section.name;
-          break;
-        }
-      }
-    }
-    const section = sectionName || '';
-    // Get content title from the content item, not the block
-    let contentTitle = '';
-    if (this.currentLessonContentId) {
-      for (const section of this.sections) {
-        const contentItem = section.content_items?.find(item => String(item.id) === String(this.currentLessonContentId));
-        if (contentItem) {
-          contentTitle = contentItem.title || '';
-          break;
-        }
-      }
-    }
-    const title = contentTitle;
-    const hintText = this.lessonHint?.trim() || '';
-    
-    const restrictions: string[] = [];
-    if (course_name) {
-      restrictions.push(
-        this.currentLang === 'ar' 
-          ? `يجب أن يكون المحتوى متعلقًا فقط بدورة "${course_name}" ولا يتضمن مواضيع خارجية`
-          : `Content must be strictly related to the course "${course_name}" and must not include unrelated topics`
-      );
-    }
-    if (section) {
-      restrictions.push(
-        this.currentLang === 'ar'
-          ? `يجب أن يكون المحتوى متعلقًا بقسم "${section}" فقط`
-          : `Content must be strictly related to the section "${section}" only`
-      );
-    }
-    if (title) {
-      restrictions.push(
-        this.currentLang === 'ar'
-          ? `يجب أن يركز المحتوى على العنوان "${title}" فقط ولا يتجاوزه`
-          : `Content must focus strictly on the title "${title}" and must not deviate from it`
-      );
-    }
-    
-    const payload: any = {
-      grade,
-      country,
-      course_name,
-      category,
-      section,
-      title,
-      locale: this.currentLang
-    };
-    
-    // Limit to 10 lines maximum
-    const richContentInstruction = this.currentLang === 'ar'
-      ? 'ينبغي أن يكون المحتوى بتنسيق HTML صالح ومتوافق مع CKEditor 5، مع تضمين عناوين منسقة بمستويات مناسبة، قوائم نقطية أو مرقمة عند الحاجة، نصوص مميزة باستخدام الوسوم <strong> و <em>، واستخدام رموز تعبيرية (Unicode emoji) مناسبة لزيادة التوضيح متى ما أمكن دون مبالغة. يجب أن يكون المحتوى قصيراً ومختصراً - لا يزيد عن 10 أسطر. يُمنع استخدام سكربتات أو وسوم غير مدعومة. يجب إرجاع النتيجة النهائية في JSON بالهيكل { "content": "..." }.'
-      : 'Return the final result as JSON with the shape { "content": "..." }. The HTML string must be valid for CKEditor 5 and feel rich: include semantic headings, bullet/numbered lists where useful, highlighted text via <strong> / <em>, and sprinkle relevant Unicode emojis to enhance clarity (without overusing them). Content must be SHORT and CONCISE - no more than 10 lines. Absolutely no scripts or unsupported embeds.';
-
-    if (restrictions.length > 0) {
-      restrictions.push(richContentInstruction);
-      payload.restrictions = restrictions.join('. ');
-      payload.instructions = this.currentLang === 'ar'
-        ? `مهم جداً: يجب أن يقتصر المحتوى على موضوع الدورة "${course_name}" وقسم "${section}" والعنوان "${title}" فقط. لا تتضمن أي معلومات أو أمثلة غير متعلقة بهذه الموضوعات. المحتوى يجب أن يكون قصيراً - لا يزيد عن 10 أسطر.`
-        : `CRITICAL: Content must be strictly limited to the course "${course_name}", section "${section}", and title "${title}" only. Do not include any information or examples unrelated to these topics. Content must be SHORT - no more than 10 lines.`;
-    } else {
-      payload.instructions = richContentInstruction;
-    }
-    
-    if (payload.instructions && payload.instructions !== richContentInstruction) {
-      payload.instructions = `${payload.instructions} ${richContentInstruction}`;
-    }
-    
-    if (hintText) {
-      payload.hint = hintText;
-    }
-    
-    console.log('Generating text block content with AI...', payload);
-    
-    this.http.post<{ content: string }>(`${this.baseUrl}/ai/content/text`, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept-Language': this.currentLang === 'ar' ? 'ar' : 'en'
-      }
-    }).subscribe({
-      next: (response) => {
-        const generatedContent = response.content || '<p>No content generated.</p>';
-        
-        if (this.selectedBlock && this.selectedBlock.id) {
-          this.selectedBlock.body_html = generatedContent;
-          
-          // Update CKEditor if it exists for this block
-          const editor = this.blockEditors.get(this.selectedBlock.id);
-          if (editor) {
-            editor.setData(generatedContent);
-          }
-          
-          // Save to database
-          this.saveBlockToDatabase(this.selectedBlock).then(() => {
-            // Save to localStorage
-            this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-            
-            this.generatingTextBlock = false;
-            this.stopTextEditorDhikrRotation();
-            this.toastr?.success?.(
-              this.currentLang === 'ar' 
-                ? 'تم إنشاء المحتوى بنجاح' 
-                : 'Content generated successfully'
-            );
-            this.cdr.detectChanges();
-          }).catch((error) => {
-            console.error('Error saving generated block:', error);
-            this.generatingTextBlock = false;
-            this.stopTextEditorDhikrRotation();
-            this.cdr.detectChanges();
-          });
-        }
-      },
-      error: (error) => {
-        console.error('AI text block generation error:', error);
-        this.generatingTextBlock = false;
-        this.stopTextEditorDhikrRotation();
-        this.toastr?.error?.(
-          this.currentLang === 'ar' 
-            ? 'فشل في إنشاء المحتوى. يرجى المحاولة مرة أخرى.' 
-            : 'Failed to generate content. Please try again.'
-        );
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  private debouncedSaveBlocks(): void {
-    if (this.saveBlocksTimeout) {
-      clearTimeout(this.saveBlocksTimeout);
-    }
-    this.saveBlocksTimeout = setTimeout(() => {
-      this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-    }, 500); // Save after 500ms of inactivity
-  }
-
-  loadAndOpenLessonBuilder(contentId: string | number): boolean {
-    // Find the content item in the current sections
-    let foundItem: ContentItem | null = null;
-    
-    for (const section of this.sections) {
-      if (section.content_items && Array.isArray(section.content_items) && section.content_items.length > 0) {
-        foundItem = section.content_items.find(item => String(item.id) === String(contentId)) || null;
-        if (foundItem) {
-          break;
-        }
-      }
-    }
-    
-    if (foundItem) {
-      console.log('Found content item for lesson builder:', foundItem);
-      this.openLessonBuilder(foundItem);
-      return true;
-    }
-    
-    // If not found, check if we need to load content items for any section
-    let needsLoading = false;
-    for (const section of this.sections) {
-      // Check if this section might contain the content (we need to load its content items)
-      if (!this.loadedSectionContentIds.has(section.id)) {
-        // Load content items for this section
-        this.ensureSectionContentLoaded(section.id);
-        needsLoading = true;
-      }
-    }
-    
-    if (needsLoading) {
-      // Content items are being loaded, will retry
-      return false;
-    }
-    
-    // If still not found after loading all sections, show warning
-    console.warn('Content item not found in current sections:', contentId);
-    this.toastr?.warning?.(this.currentLang === 'ar' ? 'لم يتم العثور على المحتوى' : 'Content not found');
-    return false;
-  }
-
-  loadAndOpenLessonBuilderWithRetry(contentId: string | number, retries: number = 0): void {
-    const maxRetries = 10; // Try for up to 5 seconds (10 * 500ms)
-    
-    if (retries >= maxRetries) {
-      console.warn('Max retries reached for loading content item:', contentId);
-      this.toastr?.warning?.(this.currentLang === 'ar' ? 'فشل في تحميل المحتوى' : 'Failed to load content');
-      return;
-    }
-    
-    // Wait a bit for sections to be initialized
-    setTimeout(() => {
-      // First, try to find the content item
-      let foundItem: ContentItem | null = null;
-      let sectionNeedsLoading: Section | null = null;
-      
-      for (const section of this.sections) {
-        if (section.content_items && Array.isArray(section.content_items) && section.content_items.length > 0) {
-          foundItem = section.content_items.find(item => String(item.id) === String(contentId)) || null;
-          if (foundItem) {
-            break;
-          }
-        } else if (!this.loadedSectionContentIds.has(section.id)) {
-          // This section hasn't loaded its content items yet
-          sectionNeedsLoading = section;
-        }
-      }
-      
-      if (foundItem) {
-        console.log('Found content item for lesson builder:', foundItem);
-        this.openLessonBuilder(foundItem);
-        return;
-      }
-      
-      // If we found a section that needs loading, load it and retry
-      if (sectionNeedsLoading) {
-        console.log('Loading content items for section:', sectionNeedsLoading.id);
-        this.ensureSectionContentLoaded(sectionNeedsLoading.id);
-        // Retry after content is loaded
-        setTimeout(() => {
-          this.loadAndOpenLessonBuilderWithRetry(contentId, retries + 1);
-        }, 1000);
-        return;
-      }
-      
-      // If all sections are loaded but content not found, retry a few more times
-      if (retries < maxRetries) {
-        setTimeout(() => {
-          this.loadAndOpenLessonBuilderWithRetry(contentId, retries + 1);
-        }, 500);
-      } else {
-        console.warn('Content item not found after all retries:', contentId);
-        this.toastr?.warning?.(this.currentLang === 'ar' ? 'لم يتم العثور على المحتوى' : 'Content not found');
-      }
-    }, retries === 0 ? 1000 : 500); // Initial delay longer, then shorter
-  }
-
-  getYouTubeUrl(): string {
-    if (!this.selectedBlock || !this.selectedBlock.meta) {
-      return '';
-    }
-    return (this.selectedBlock.meta['youtubeUrl'] as string) || '';
-  }
-
-  setYouTubeUrl(url: string): void {
-    if (!this.selectedBlock) {
-      return;
-    }
-    if (!this.selectedBlock.meta) {
-      this.selectedBlock.meta = {};
-    }
-    this.selectedBlock.meta['youtubeUrl'] = url;
-    this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-  }
-
-  extractYouTubeVideoIdForBlock(url: string): string | null {
-    if (!url) return null;
-    
-    // Various YouTube URL formats
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
-      /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
-    ];
-    
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    
-    return null;
-  }
-
-  fetchingYouTubeMetadata: boolean = false;
-  manualYouTubeVideo: any = null;
-
-  fetchYouTubeMetadataForBlock(): void {
-    const url = this.getYouTubeUrl();
-    if (!url) {
-      this.toastr?.warning?.(
-        this.currentLang === 'ar' 
-          ? 'يرجى إدخال رابط YouTube' 
-          : 'Please enter a YouTube URL'
-      );
-      return;
-    }
-
-    const videoId = this.extractYouTubeVideoIdForBlock(url);
-    if (!videoId) {
-      this.toastr?.error?.(
-        this.currentLang === 'ar' 
-          ? 'رابط YouTube غير صحيح' 
-          : 'Invalid YouTube URL'
-      );
-      return;
-    }
-
-    this.fetchingYouTubeMetadata = true;
-    this.manualYouTubeVideo = null;
-
-    this.ai.getYouTubeMetadata(videoId).subscribe({
-      next: (metadata) => {
-        this.fetchingYouTubeMetadata = false;
-        
-        // Parse duration from ISO 8601 format (PT15M33S) to readable format
-        const parseDuration = (isoDuration: string): string => {
-          const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-          if (!match) return '0:00';
-          const hours = parseInt(match[1] || '0', 10);
-          const minutes = parseInt(match[2] || '0', 10);
-          const seconds = parseInt(match[3] || '0', 10);
-          
-          if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-          }
-          return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        };
-
-        const formattedMetadata = {
-          videoId: metadata.videoId,
-          title: metadata.title,
-          description: metadata.description,
-          duration: parseDuration(metadata.duration),
-          thumbnail: metadata.thumbnail,
-          embedUrl: metadata.embedUrl
-        };
-
-        this.manualYouTubeVideo = formattedMetadata;
-
-        // Delete old uploaded video from S3 if exists (when switching from upload to manual YouTube)
-        if (this.selectedBlock?.meta?.['videoUrl']) {
-          const oldVideoUrl = this.selectedBlock.meta['videoUrl'] as string;
-          this.ai.deleteDraftContentVideos([oldVideoUrl]).subscribe({
-            next: () => {
-              console.log('Old uploaded video deleted from S3:', oldVideoUrl);
-            },
-            error: (error) => {
-              console.warn('Failed to delete old uploaded video from S3:', error);
-            }
-          });
-        }
-
-        // Update the block with video information
-        if (this.selectedBlock) {
-          if (!this.selectedBlock.meta) {
-            this.selectedBlock.meta = {};
-          }
-          
-          this.selectedBlock.title = formattedMetadata.title;
-          this.selectedBlock.meta = {
-            ...this.selectedBlock.meta,
-            youtubeVideoId: formattedMetadata.videoId,
-            youtubeUrl: url,
-            youtubeTitle: formattedMetadata.title,
-            youtubeDescription: formattedMetadata.description,
-            youtubeThumbnail: formattedMetadata.thumbnail,
-            youtubeDuration: formattedMetadata.duration,
-            // Remove uploaded video fields
-            videoUrl: undefined,
-            videoFileName: undefined,
-            videoFileSize: undefined,
-            videoDuration: undefined,
-            videoThumbnail: undefined,
-            videoWidth: undefined,
-            videoHeight: undefined,
-            assetId: undefined
-          };
-          this.selectedBlock.asset_id = null;
-
-          // Switch to manual YouTube tab
-          this.videoTab = 'youtube-manual';
-
-          // Save to localStorage
-          if (this.currentLessonContentId) {
-            this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-          }
-        }
-
-        this.toastr?.success?.(
-          this.currentLang === 'ar' 
-            ? 'تم جلب معلومات الفيديو بنجاح' 
-            : 'Video information fetched successfully'
-        );
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.fetchingYouTubeMetadata = false;
-        console.error('Error fetching YouTube metadata:', error);
-        this.toastr?.error?.(
-          this.currentLang === 'ar' 
-            ? 'فشل في جلب معلومات الفيديو' 
-            : 'Failed to fetch video information'
-        );
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  useManualYouTubeVideo(): void {
-    if (this.manualYouTubeVideo && this.selectedBlock) {
-      // Delete old uploaded video from S3 if exists (when switching from upload to manual YouTube)
-      const oldVideoUrl = this.selectedBlock.meta?.['videoUrl'] as string | undefined;
-      if (oldVideoUrl) {
-        this.ai.deleteDraftContentVideos([oldVideoUrl]).subscribe({
-          next: () => {
-            console.log('Old uploaded video deleted from S3:', oldVideoUrl);
-          },
-          error: (error) => {
-            console.warn('Failed to delete old uploaded video from S3:', error);
-          }
-        });
-      }
-
-      // Video is already saved in fetchYouTubeMetadata, just confirm and clear preview
-      // Switch to manual YouTube tab
-      this.videoTab = 'youtube-manual';
-      
-      this.toastr?.success?.(
-        this.currentLang === 'ar' 
-          ? 'تم حفظ الفيديو بنجاح' 
-          : 'Video saved successfully'
-      );
-      this.manualYouTubeVideo = null;
-      this.cdr.detectChanges();
-    }
-  }
-
-  // Video upload for lesson builder
-  uploadedVideoFile: File | null = null;
-  uploadingVideo: boolean = false;
-  blockVideoUploadProgress: number = 0;
-  blockVideoUploadError: string | null = null;
-  uploadedVideoMetadata: any = null;
-  uploadedVideoTitle: string = ''; // Title for uploaded video
-  editingUploadedVideoTitle: boolean = false; // Track if editing uploaded video title
-  deletingBlockVideo: boolean = false; // Track if deleting uploaded video from block
-  savingVideoTitle: boolean = false; // Track if saving video title
-
-  onVideoFileSelectedForBlock(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input?.files?.[0];
-    if (!file) {
-      return;
-    }
-    
-    // Validate file type
-    const isValidType = this.VIDEO_ACCEPTED_FORMATS.some(format => {
-      if (format.startsWith('.')) {
-        return file.name.toLowerCase().endsWith(format);
-      }
-      return file.type === format;
-    });
-    
-    if (!isValidType) {
-      this.blockVideoUploadError = this.currentLang === 'ar' 
-        ? 'نوع الملف غير مدعوم. الصيغ المسموح بها: MP4, AVI.'
-        : 'Unsupported file type. Allowed formats are MP4, AVI.';
-      return;
-    }
-    
-    // Validate file size (100MB)
-    if (file.size > this.VIDEO_MAX_SIZE) {
-      this.blockVideoUploadError = this.currentLang === 'ar'
-        ? 'الملف كبير جدًا. الحد الأقصى 100 ميجابايت.'
-        : 'File is too large. Maximum allowed size is 100 MB.';
-      return;
-    }
-    
-    this.blockVideoUploadError = null;
-    this.uploadedVideoFile = file;
-    
-    // Extract video metadata
-    this.extractVideoMetadataForBlock(file);
-    
-    // Reset input
-    input.value = '';
-    this.cdr.detectChanges();
-  }
-
-  private extractVideoMetadataForBlock(file: File): void {
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    
-    video.onloadedmetadata = () => {
-      const duration = Math.floor(video.duration);
-      this.uploadedVideoMetadata = {
-        duration: duration,
-        durationFormatted: this.formatDuration(duration),
-        width: video.videoWidth,
-        height: video.videoHeight,
-        fileSize: file.size,
-        fileName: file.name
-      };
-      
-      // Create thumbnail from video
-      video.currentTime = Math.min(1, duration / 10); // Get frame at 10% or 1 second
-      this.cdr.detectChanges();
-    };
-    
-    video.onseeked = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        if (this.uploadedVideoMetadata) {
-          this.uploadedVideoMetadata.thumbnail = canvas.toDataURL('image/jpeg', 0.7);
-        }
-      }
-      URL.revokeObjectURL(video.src);
-      this.cdr.detectChanges();
-    };
-    
-    video.src = URL.createObjectURL(file);
-  }
-
-  validateVideoTitle(): boolean {
-    if (!this.uploadedVideoFile) {
-      return true; // No file selected, validation not needed
-    }
-    
-    const isValid = !!(this.uploadedVideoTitle && this.uploadedVideoTitle.trim());
-    if (!isValid) {
-      this.blockVideoUploadError = this.currentLang === 'ar' 
-        ? 'عنوان الفيديو مطلوب' 
-        : 'Video title is required';
-    } else {
-      // Clear error if title is valid
-      if (this.blockVideoUploadError && this.blockVideoUploadError.includes('title')) {
-        this.blockVideoUploadError = null;
-      }
-    }
-    this.cdr.detectChanges();
-    return isValid;
-  }
-
-  uploadVideoForBlock(): void {
-    if (!this.uploadedVideoFile || !this.currentLessonContentId) {
-      return;
-    }
-
-    // Validate title is provided
-    if (!this.validateVideoTitle()) {
-      this.toastr?.warning?.(
-        this.currentLang === 'ar' 
-          ? 'يرجى إدخال عنوان للفيديو قبل الرفع' 
-          : 'Please enter a video title before uploading'
-      );
-      return;
-    }
-
-    // If no block is selected, create a new video block first
-    if (!this.selectedBlock) {
-      const newBlock: ContentBlock = {
-        id: `draft-${Date.now()}`,
-        block_type: 'video',
-        title: null,
-        body_html: null,
-        asset_id: null,
-        meta: {} as Record<string, unknown>,
-        position: this.lessonBlocks.length + 1
-      };
-      this.lessonBlocks.push(newBlock);
-      this.selectBlock(newBlock.id!);
-    }
-
-    // Delete old video from S3 if exists
-    const oldVideoUrl = this.selectedBlock?.meta?.['videoUrl'] as string | undefined;
-    if (oldVideoUrl) {
-      this.ai.deleteDraftContentVideos([oldVideoUrl]).subscribe({
-        next: () => {
-          console.log('Old video deleted from S3:', oldVideoUrl);
-        },
-        error: (error) => {
-          console.warn('Failed to delete old video from S3:', error);
-          // Continue with upload even if deletion fails
-        }
-      });
-    }
-
-    // Switch to upload tab
-    this.videoTab = 'upload';
-
-    this.uploadingVideo = true;
-    this.blockVideoUploadProgress = 0;
-    this.blockVideoUploadError = null;
-
-    const metadata = {
-      duration: this.uploadedVideoMetadata?.duration,
-      width: this.uploadedVideoMetadata?.width,
-      height: this.uploadedVideoMetadata?.height
-    };
-
-    this.ai.uploadDraftContentVideo(this.uploadedVideoFile, this.currentLessonContentId, metadata).subscribe({
-      next: (event) => {
-        if (event.type === 1) { // HttpEventType.UploadProgress
-          if (event.total) {
-            // Keep progress at max 95% during upload (reserve 5% for database save)
-            const uploadProgress = Math.round((95 * event.loaded) / event.total);
-            this.blockVideoUploadProgress = uploadProgress;
-            this.cdr.detectChanges();
-          }
-        } else if (event.type === 4) { // HttpEventType.Response
-          const response = event.body;
-          if (response && response.asset && this.selectedBlock && this.uploadedVideoFile) {
-            // Upload complete, now saving to database (show 95-99%)
-            this.blockVideoUploadProgress = 95;
-            this.cdr.detectChanges();
-
-            // Update block with video information
-            if (!this.selectedBlock.meta) {
-              this.selectedBlock.meta = {};
-            }
-            
-            // Use the user-provided title or fallback to filename
-            const videoTitle = this.uploadedVideoTitle.trim() || this.uploadedVideoFile.name.replace(/\.[^/.]+$/, '');
-            const blockMeta = {
-              ...this.selectedBlock.meta,
-              videoUrl: response.asset.url,
-              videoFileName: response.asset.filename,
-              videoFileSize: response.asset.size,
-              videoDuration: this.uploadedVideoMetadata?.durationFormatted,
-              videoThumbnail: this.uploadedVideoMetadata?.thumbnail,
-              videoWidth: response.asset.width,
-              videoHeight: response.asset.height,
-              assetId: response.asset.id
-            };
-
-            this.selectedBlock.title = videoTitle;
-            this.selectedBlock.meta = blockMeta;
-            this.selectedBlock.asset_id = response.asset.id;
-
-            // Save block to database (show 99% during this)
-            this.blockVideoUploadProgress = 99;
-            this.cdr.detectChanges();
-
-            // Save block to database
-            this.saveBlockToDatabase(this.selectedBlock).then(() => {
-              // Save to localStorage
-              this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-
-              // Complete! Show 100% briefly
-              this.blockVideoUploadProgress = 100;
-              this.cdr.detectChanges();
-
-              // Switch to upload tab to show the uploaded video
-              this.videoTab = 'upload';
-              
-              // Load the uploaded video info for display
-              if (this.selectedBlock) {
-                this.loadUploadedVideoInfo(this.selectedBlock);
-              }
-
-              this.toastr?.success?.(
-                this.currentLang === 'ar' 
-                  ? 'تم رفع الفيديو بنجاح' 
-                  : 'Video uploaded successfully'
-              );
-
-              // Clear upload file state but keep metadata for display
-              this.uploadedVideoFile = null;
-              this.uploadingVideo = false;
-              this.blockVideoUploadProgress = 0;
-              this.cdr.detectChanges();
-            }).catch((error) => {
-              console.error('Error saving block to database:', error);
-              // Still save to localStorage even if database save fails
-              this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-              this.uploadedVideoFile = null;
-              this.uploadedVideoMetadata = null;
-              this.uploadingVideo = false;
-              this.blockVideoUploadProgress = 0;
-              this.cdr.detectChanges();
-            });
-          }
-        }
-      },
-      error: (error) => {
-        console.error('Video upload error:', error);
-        this.uploadingVideo = false;
-        this.blockVideoUploadProgress = 0;
-        this.blockVideoUploadError = error.error?.message || (this.currentLang === 'ar' 
-          ? 'فشل في رفع الفيديو' 
-          : 'Failed to upload video');
-        if (this.blockVideoUploadError) {
-          this.toastr?.error?.(this.blockVideoUploadError);
-        }
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  removeUploadedVideoFile(): void {
-    this.uploadedVideoFile = null;
-    this.uploadedVideoMetadata = null;
-    this.uploadedVideoTitle = '';
-    this.blockVideoUploadError = null;
-    this.blockVideoUploadProgress = 0;
-    this.cdr.detectChanges();
-  }
-
-  editUploadedVideoTitle(): void {
-    if (!this.selectedBlock || !this.selectedBlock.meta?.['videoUrl']) {
-      return;
-    }
-    this.editingUploadedVideoTitle = true;
-    this.uploadedVideoTitle = this.selectedBlock.title || '';
-    this.cdr.detectChanges();
-  }
-
-  saveUploadedVideoTitle(): void {
-    if (!this.selectedBlock || !this.uploadedVideoTitle?.trim()) {
-      this.toastr?.warning?.(
-        this.currentLang === 'ar' 
-          ? 'يرجى إدخال عنوان للفيديو' 
-          : 'Please enter a video title'
-      );
-      return;
-    }
-
-    if (!this.selectedBlock.meta?.['videoUrl']) {
-      return;
-    }
-
-    this.savingVideoTitle = true;
-
-    // Update block title
-    this.selectedBlock.title = this.uploadedVideoTitle.trim();
-    
-    // Save to database
-    this.saveBlockToDatabase(this.selectedBlock).then(() => {
-      // Save to localStorage
-      this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-      
-      this.editingUploadedVideoTitle = false;
-      this.savingVideoTitle = false;
-      this.toastr?.success?.(
-        this.currentLang === 'ar' 
-          ? 'تم تحديث عنوان الفيديو بنجاح' 
-          : 'Video title updated successfully'
-      );
-      this.cdr.detectChanges();
-    }).catch((error) => {
-      console.error('Error updating video title:', error);
-      this.savingVideoTitle = false;
-      this.toastr?.error?.(
-        this.currentLang === 'ar' 
-          ? 'فشل في تحديث عنوان الفيديو' 
-          : 'Failed to update video title'
-      );
-      this.cdr.detectChanges();
-    });
-  }
-
-  cancelEditUploadedVideoTitle(): void {
-    this.editingUploadedVideoTitle = false;
-    // Restore original title
-    if (this.selectedBlock) {
-      this.uploadedVideoTitle = this.selectedBlock.title || '';
-    }
-    this.cdr.detectChanges();
-  }
-
-  deleteUploadedVideo(): void {
-    if (!this.selectedBlock || !this.selectedBlock.meta?.['videoUrl']) {
-      return;
-    }
-
-    // Show delete confirmation modal
-    this.showDeleteVideoModal = true;
-    this.cdr.detectChanges();
-  }
-
-  confirmDeleteVideo(): void {
-    if (!this.selectedBlock || !this.selectedBlock.meta?.['videoUrl']) {
-      return;
-    }
-
-    this.deletingBlockVideo = true;
-
-    const videoUrl = this.selectedBlock.meta['videoUrl'] as string;
-    const assetId = this.selectedBlock.asset_id;
-
-    // Delete from S3
-    this.ai.deleteDraftContentVideos([videoUrl]).subscribe({
-      next: () => {
-        console.log('Video deleted from S3:', videoUrl);
-        
-        // Remove video metadata from block
-        if (this.selectedBlock) {
-          this.selectedBlock.title = null;
-          this.selectedBlock.asset_id = null;
-          this.selectedBlock.meta = {
-            ...this.selectedBlock.meta,
-            videoUrl: undefined,
-            videoFileName: undefined,
-            videoFileSize: undefined,
-            videoDuration: undefined,
-            videoThumbnail: undefined,
-            videoWidth: undefined,
-            videoHeight: undefined,
-            assetId: undefined
-          };
-
-          // Save to database
-          this.saveBlockToDatabase(this.selectedBlock).then(() => {
-            // Save to localStorage
-            this.saveLessonBlocksToLocalStorage(this.currentLessonContentId);
-            
-            // Clear local state
-            this.uploadedVideoFile = null;
-            this.uploadedVideoMetadata = null;
-            this.uploadedVideoTitle = '';
-            
-            this.deletingBlockVideo = false;
-            this.toastr?.success?.(
-              this.currentLang === 'ar' 
-                ? 'تم حذف الفيديو بنجاح' 
-                : 'Video deleted successfully'
-            );
-            
-            // Close delete modal
-            this.showDeleteVideoModal = false;
-            this.cdr.detectChanges();
-          }).catch((error) => {
-            console.error('Error updating block after video deletion:', error);
-            this.deletingBlockVideo = false;
-            this.toastr?.error?.(
-              this.currentLang === 'ar' 
-                ? 'فشل في تحديث الكتلة بعد حذف الفيديو' 
-                : 'Failed to update block after video deletion'
-            );
-            this.showDeleteVideoModal = false;
-            this.cdr.detectChanges();
-          });
-        }
-      },
-      error: (error) => {
-        console.error('Error deleting video from S3:', error);
-        this.deletingBlockVideo = false;
-        this.toastr?.error?.(
-          this.currentLang === 'ar' 
-            ? 'فشل في حذف الفيديو' 
-            : 'Failed to delete video'
-        );
-        this.showDeleteVideoModal = false;
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  cancelDeleteVideo(): void {
-    this.showDeleteVideoModal = false;
-    this.cdr.detectChanges();
-  }
-
-  // Save block to database
-  private saveBlockToDatabase(block: ContentBlock): Promise<void> {
-    if (!this.currentLessonContentId) {
-      return Promise.resolve();
-    }
-
-    // Find the section that contains this content
-    let sectionId: number | string | null = null;
-    for (const section of this.sections) {
-      if (section.content_items && section.content_items.some(item => String(item.id) === String(this.currentLessonContentId))) {
-        sectionId = section.id;
-        break;
-      }
-    }
-
-    if (!sectionId) {
-      console.warn('Section not found for content:', this.currentLessonContentId);
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      // Check if block has a database ID (numeric) or is a draft (string starting with 'draft-')
-      const isDraft = typeof block.id === 'string' && block.id.startsWith('draft-');
-
-      if (isDraft) {
-        // Create new block
-        this.ai.createContentBlock(sectionId!, this.currentLessonContentId!, {
-          block_type: block.block_type,
-          title: block.title,
-          body_html: block.body_html,
-          asset_id: block.asset_id,
-          meta: block.meta || {},
-          position: block.position
-        }).subscribe({
-          next: (response) => {
-            // Update block with database ID
-            block.id = response.content.id;
-            resolve();
-          },
-          error: (error) => {
-            console.error('Error creating block in database:', error);
-            reject(error);
-          }
-        });
-      } else {
-        // Update existing block
-        if (!block.id) {
-          console.warn('Cannot update block: block.id is undefined');
-          reject(new Error('Block ID is required for update'));
-          return;
-        }
-        
-        this.ai.updateContentBlock(sectionId!, this.currentLessonContentId!, block.id, {
-          title: block.title,
-          body_html: block.body_html,
-          asset_id: block.asset_id,
-          meta: block.meta || {},
-          position: block.position
-        }).subscribe({
-          next: () => {
-            resolve();
-          },
-          error: (error) => {
-            console.error('Error updating block in database:', error);
-            reject(error);
-          }
-        });
-      }
-    });
   }
 }

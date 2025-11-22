@@ -457,9 +457,34 @@ export class AiBuilderService {
     );
   }
 
+  deleteContentBlock(sectionId: number | string, contentId: number | string, blockId: number | string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/blocks/${blockId}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  reorderContentBlocks(sectionId: number | string, contentId: number | string, blocks: Array<{ id: number | string; position: number }>): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(
+      `${this.baseUrl}/courses/draft/sections/${sectionId}/content/${contentId}/blocks/reorder`,
+      { blocks },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   deleteDraftContentVideos(urls: string[]): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
       `${this.baseUrl}/courses/draft/content/videos`,
+      {
+        body: { urls },
+        headers: this.getAuthHeaders()
+      }
+    );
+  }
+
+  deleteDraftContentAudios(urls: string[]): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.baseUrl}/courses/draft/content/audios`,
       {
         body: { urls },
         headers: this.getAuthHeaders()

@@ -21,9 +21,10 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   menuOpen = false;
   isMobile = false;
   isCoursePreviewRoute = false;
+  isContentBuilderRoute = false;
 
   get showSidebar(): boolean {
-    if (this.isCoursePreviewRoute) {
+    if (this.isCoursePreviewRoute || this.isContentBuilderRoute) {
       return false;
     }
     // Always show student sidebar when menu is open (even on course preview route)
@@ -31,7 +32,7 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get showBackdrop(): boolean {
-    if (this.isCoursePreviewRoute) {
+    if (this.isCoursePreviewRoute || this.isContentBuilderRoute) {
       return false;
     }
     return this.isMobile && this.menuOpen;
@@ -61,8 +62,12 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   private checkRoute(): void {
     const url = this.router.url;
     const wasPreview = this.isCoursePreviewRoute;
+    const wasContentBuilder = this.isContentBuilderRoute;
+    
     this.isCoursePreviewRoute = url.includes('/course-preview') || url.includes('/preview');
-    if (this.isCoursePreviewRoute && !wasPreview) {
+    this.isContentBuilderRoute = url.includes('/starter/content');
+    
+    if ((this.isCoursePreviewRoute && !wasPreview) || (this.isContentBuilderRoute && !wasContentBuilder)) {
       this.menuOpen = false;
       this.updateBodyScrollLock();
     }
@@ -103,7 +108,7 @@ export class StudentShellComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateBodyScrollLock(): void {
-    const shouldLock = !this.isCoursePreviewRoute && this.isMobile && this.menuOpen;
+    const shouldLock = !this.isCoursePreviewRoute && !this.isContentBuilderRoute && this.isMobile && this.menuOpen;
     if (shouldLock) {
       document.body.classList.add('no-scroll');
     } else {

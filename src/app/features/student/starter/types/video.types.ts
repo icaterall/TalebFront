@@ -13,8 +13,12 @@ export interface YouTubeVideoData {
   title: string;
   description: string;
   duration: number; // in seconds
+  durationFormatted?: string; // e.g., "5:30"
   thumbnail: string;
   embedUrl: string;
+  channelTitle?: string;
+  viewCount?: number;
+  publishedAt?: string;
 }
 
 export interface VideoFormState {

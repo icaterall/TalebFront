@@ -1,0 +1,691 @@
+<div class="lesson-builder-container" [dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+    <!-- Header Bar -->
+    <div class="lesson-builder-header">
+      <button 
+        type="button" 
+        class="btn-back"
+        (click)="goBack()"
+        [attr.aria-label]="currentLang === 'ar' ? 'العودة' : 'Back'">
+        <span class="back-icon">{{ currentLang === 'ar' ? '→' : '←' }}</span>
+        <span>{{ currentLang === 'ar' ? 'العودة' : 'Back' }}</span>
+      </button>
+      
+      <input 
+        type="text"
+        class="lesson-title-input"
+        [(ngModel)]="editingLessonTitle"
+        (blur)="saveContent()"
+        [placeholder]="currentLang === 'ar' ? 'عنوان الدرس' : 'Lesson Title'"
+        maxlength="200">
+      
+      <div class="header-actions">
+          <button class="btn-save" (click)="saveContent()" [disabled]="isSaving || loading">
+            <span *ngIf="!isSaving">{{ currentLang === 'ar' ? 'حفظ' : 'Save' }}</span>
+            <span *ngIf="isSaving">{{ currentLang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...' }}</span>
+          </button>
+      </div>
+    </div>
+
+    <!-- 3-Column Layout -->
+    <div class="lesson-builder-body">
+      <!-- Left Sidebar - Blocks List -->
+      <div class="blocks-sidebar">
+        <div class="blocks-header">
+          <h3>{{ currentLang === 'ar' ? 'ترتيب أجزاء المحتوى في هذا الدرس' : 'Blocks' }}</h3>
+        </div>
+        <div class="blocks-list" cdkDropList (cdkDropListDropped)="onBlockDrop($event)">
+          <div 
+            *ngFor="let block of lessonBlocks; let i = index"
+            class="block-item"
+            [class.selected]="selectedBlockId === block.id"
+            (click)="selectBlock(block.id)"
+            cdkDrag>
+            <div class="block-item-handle" cdkDragHandle>
+              <span class="drag-icon">☰</span>
+            </div>
+            <div class="block-item-icon">
+              <span *ngIf="block.block_type === 'text'">📝</span>
+              <span *ngIf="block.block_type === 'video'">▶</span>
+              <span *ngIf="block.block_type === 'audio'">🎧</span>
+              <span *ngIf="block.block_type === 'file'">📎</span>
+            </div>
+            <div class="block-item-label">
+              <div class="block-item-title">{{ (block.title || getBlockTypeLabel(block.block_type)) | slice:0:30 }}{{ (block.title || getBlockTypeLabel(block.block_type)).length > 30 ? '...' : '' }}</div>
+              <div class="block-item-type">{{ getBlockTypeLabel(block.block_type) }}</div>
+            </div>
+            <button 
+              type="button"
+              class="block-item-delete"
+              (click)="deleteBlock(block.id, $event); $event.stopPropagation()"
+              [attr.aria-label]="currentLang === 'ar' ? 'حذف جزء المحتوى' : 'Delete block'"
+              [attr.title]="currentLang === 'ar' ? 'حذف جزء المحتوى' : 'Delete block'">
+              🗑️
+            </button>
+          </div>
+        </div>
+        <button 
+          type="button"
+          class="btn-add-block"
+          (click)="showBlockTypeChooser = true">
+          <span>+</span>
+          <span>{{ currentLang === 'ar' ? 'إضافة جزء محتوى جديد' : 'Add Block' }}</span>
+        </button>
+      </div>
+
+      <!-- Center - Block Editor/Preview -->
+      <div class="block-editor">
+        <div *ngIf="!selectedBlock" class="no-block-selected">
+          <p>{{ currentLang === 'ar' ? 'اختر جزء محتوى من القائمة الجانبية لبدء التحرير' : 'Select a block from the sidebar to start editing' }}</p>
+        </div>
+
+        <!-- Text Block Editor -->
+        <div *ngIf="selectedBlock && selectedBlock.block_type === 'text'" class="block-editor-content">
+          <div class="editor-toolbar">
+            <div class="ai-button-group">
+              <button 
+                type="button"
+                class="btn-generate-ai"
+                [disabled]="generatingTextBlock"
+                (click)="generateTextBlockWithAI()">
+                <span class="btn-icon">🤖</span>
+                <span class="btn-text">{{ currentLang === 'ar' ? 'إنشاء محتوى بالذكاء الاصطناعي' : 'Generate Text with AI' }}</span>
+                <span class="btn-hint">{{ currentLang === 'ar' ? '(سوف يستغرق دقيقة)' : '(Will take a minute)' }}</span>
+              </button>
+              <div class="ai-generating-dhikr" *ngIf="generatingTextBlock">
+                <div class="dhikr-badge">
+                  <div class="dhikr-spinner">
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                  </div>
+                  <span class="dhikr-icon">✨</span>
+                  <span class="dhikr-phrase">{{ currentDhikr }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="block-editor-field">
+            <label>{{ currentLang === 'ar' ? 'المحتوى' : 'Content' }}</label>
+            <div class="ckeditor-wrapper">
+              <div #toolbarContainer class="ck-toolbar-container"></div>
+              <ckeditor
+                *ngIf="selectedBlock"
+                [(ngModel)]="selectedBlock.body_html"
+                [editor]="Editor"
+                [config]="editorConfig"
+                (ready)="onEditorReady($event, selectedBlock?.id || 'temp', toolbarContainer)"
+                [disabled]="false">
+              </ckeditor>
+            </div>
+            <div class="field-help">
+              {{ currentLang === 'ar' ? 'الحد الأقصى: ~10 أسطر' : 'Max: ~10 lines' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Block Editor -->
+        <div *ngIf="selectedBlock && selectedBlock.block_type === 'video'" class="block-editor-content">
+          <div class="block-title-field">
+            <label>{{ currentLang === 'ar' ? 'عنوان جزء المحتوى (اختياري)' : 'Block Title (Optional)' }}</label>
+            <input 
+              type="text"
+              [(ngModel)]="selectedBlock.title"
+              [placeholder]="currentLang === 'ar' ? 'مثال: فيديو توضيحي' : 'Example: Demonstration Video'"
+              maxlength="200">
+          </div>
+          <div class="video-tabs">
+            <button 
+              type="button"
+              class="tab-btn"
+              [class.active]="videoTab === 'youtube-ai'"
+              (click)="videoTab = 'youtube-ai'">
+              {{ currentLang === 'ar' ? 'YouTube (اقتراحات الذكاء الاصطناعي)' : 'YouTube (AI Suggested)' }}
+            </button>
+            <button 
+              type="button"
+              class="tab-btn"
+              [class.active]="videoTab === 'youtube-manual'"
+              (click)="videoTab = 'youtube-manual'">
+              {{ currentLang === 'ar' ? 'YouTube (رابط يدوي)' : 'YouTube (Manual Link)' }}
+            </button>
+            <button 
+              type="button"
+              class="tab-btn"
+              [class.active]="videoTab === 'upload'"
+              (click)="videoTab = 'upload'">
+              {{ currentLang === 'ar' ? 'رفع فيديو' : 'Upload Video' }}
+            </button>
+          </div>
+          
+          <!-- YouTube AI Suggested Tab -->
+          <div *ngIf="videoTab === 'youtube-ai'" class="video-tab-content">
+            <div class="youtube-ai-controls">
+              <button 
+                type="button"
+                class="btn-suggest-videos"
+                (click)="suggestVideoTitle()"
+                [disabled]="loadingYouTubeSuggestions">
+                <span *ngIf="!loadingYouTubeSuggestions">
+                  {{ currentLang === 'ar' ? 'اقتراح فيديوهات YouTube' : 'Suggest YouTube Videos' }}
+                </span>
+                <span *ngIf="loadingYouTubeSuggestions" class="btn-loading">
+                  <span class="spinner"></span>
+                  <span>{{ currentLang === 'ar' ? 'جاري البحث...' : 'Searching...' }}</span>
+                </span>
+              </button>
+            </div>
+
+            <div *ngIf="youtubeSuggestions.length > 0" class="youtube-videos-list">
+              <div 
+                *ngFor="let video of youtubeSuggestions"
+                class="youtube-video-item"
+                [class.video-selected]="isYouTubeVideoSelected(video)">
+                <div class="video-thumbnail" (click)="previewYouTubeVideo(video)">
+                  <img [src]="video.thumbnail" [alt]="video.title">
+                  <div class="video-duration">{{ video.durationFormatted || formatDuration(video.duration) }}</div>
+                  <div class="video-play-overlay">
+                    <span class="play-icon">▶</span>
+                  </div>
+                  <div *ngIf="isYouTubeVideoSelected(video)" class="video-selected-check">
+                    <span class="check-icon">✓</span>
+                  </div>
+                </div>
+                <div class="video-info">
+                  <h4 class="video-title" (click)="previewYouTubeVideo(video)">{{ video.title }}</h4>
+                  <p class="video-channel" *ngIf="video.channelTitle">{{ video.channelTitle }}</p>
+                  <p class="video-description">{{ video.description | slice:0:150 }}{{ video.description.length > 150 ? '...' : '' }}</p>
+                  <div class="video-meta">
+                    <span class="video-views" *ngIf="video.viewCount">{{ video.viewCount | number }} {{ currentLang === 'ar' ? 'مشاهدة' : 'views' }}</span>
+                  </div>
+                  <div class="video-actions">
+                    <button 
+                      type="button"
+                      class="btn-preview-video"
+                      (click)="previewYouTubeVideo(video, $event)">
+                      {{ currentLang === 'ar' ? 'معاينة' : 'Preview' }}
+                    </button>
+                    <button 
+                      type="button"
+                      class="btn-select-video"
+                      (click)="selectYouTubeVideo(video); $event.stopPropagation()">
+                      {{ currentLang === 'ar' ? 'اختيار' : 'Select' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!loadingYouTubeSuggestions && youtubeSuggestions.length === 0" class="no-videos-message">
+              <p>{{ currentLang === 'ar' ? 'انقر على الزر أعلاه للبحث عن فيديوهات YouTube' : 'Click the button above to search for YouTube videos' }}</p>
+            </div>
+          </div>
+
+          <!-- YouTube Manual Tab -->
+          <div *ngIf="videoTab === 'youtube-manual'" class="video-tab-content">
+            <div class="youtube-manual-controls">
+              <label>{{ currentLang === 'ar' ? 'رابط YouTube' : 'YouTube URL' }}</label>
+              <input 
+                type="text"
+                [ngModel]="getYouTubeUrl()"
+                (ngModelChange)="setYouTubeUrl($event)"
+                [placeholder]="currentLang === 'ar' ? 'https://www.youtube.com/watch?v=...' : 'https://www.youtube.com/watch?v=...'"
+                [disabled]="fetchingYouTubeMetadata">
+              <button 
+                type="button"
+                class="btn-fetch-video"
+                (click)="fetchYouTubeMetadataForBlock()"
+                [disabled]="fetchingYouTubeMetadata || !getYouTubeUrl()">
+                <span *ngIf="!fetchingYouTubeMetadata">
+                  {{ currentLang === 'ar' ? 'جلب معلومات الفيديو' : 'Fetch Video Info' }}
+                </span>
+                <span *ngIf="fetchingYouTubeMetadata" class="btn-loading">
+                  <span class="spinner"></span>
+                  <span>{{ currentLang === 'ar' ? 'جاري الجلب...' : 'Fetching...' }}</span>
+                </span>
+              </button>
+            </div>
+
+            <!-- Video Preview -->
+            <div *ngIf="manualYouTubeVideo" class="manual-youtube-preview">
+              <div class="video-preview-thumbnail">
+                <img [src]="manualYouTubeVideo.thumbnail" [alt]="manualYouTubeVideo.title">
+                <div class="video-preview-duration">{{ manualYouTubeVideo.duration }}</div>
+              </div>
+              <div class="video-preview-info">
+                <h4 class="video-preview-title">{{ manualYouTubeVideo.title }}</h4>
+                <p class="video-preview-description" *ngIf="manualYouTubeVideo.description">
+                  {{ manualYouTubeVideo.description | slice:0:200 }}{{ manualYouTubeVideo.description.length > 200 ? '...' : '' }}
+                </p>
+                <div class="video-preview-actions">
+                  <button 
+                    type="button"
+                    class="btn-preview-video"
+                    (click)="previewYouTubeVideo(manualYouTubeVideo)">
+                    {{ currentLang === 'ar' ? 'معاينة' : 'Preview' }}
+                  </button>
+                  <button 
+                    type="button"
+                    class="btn-use-video"
+                    (click)="useManualYouTubeVideo()">
+                    {{ currentLang === 'ar' ? 'استخدام هذا الفيديو' : 'Use This Video' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Show selected video info if already selected -->
+            <div *ngIf="!manualYouTubeVideo && selectedBlock && selectedBlock.meta && selectedBlock.meta['youtubeVideoId']" class="manual-youtube-selected">
+              <div class="selected-video-info">
+                <div class="selected-video-thumbnail">
+                  <img [src]="selectedBlock.meta['youtubeThumbnail']" [alt]="selectedBlock.meta['youtubeTitle']">
+                </div>
+                <div class="selected-video-details">
+                  <h4>{{ selectedBlock.meta['youtubeTitle'] }}</h4>
+                  <p class="selected-video-duration" *ngIf="selectedBlock.meta['youtubeDuration']">
+                    {{ currentLang === 'ar' ? 'المدة:' : 'Duration:' }} {{ selectedBlock.meta['youtubeDuration'] }}
+                  </p>
+                  <button 
+                    type="button"
+                    class="btn-change-video"
+                    (click)="manualYouTubeVideo = null; setYouTubeUrl('')">
+                    {{ currentLang === 'ar' ? 'تغيير الفيديو' : 'Change Video' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload Video Tab -->
+          <div *ngIf="videoTab === 'upload'" class="video-tab-content">
+            <div class="video-upload-controls">
+              <!-- Hide upload area if video is already uploaded -->
+              <div *ngIf="!selectedBlock?.meta?.['videoUrl']" class="video-upload-area" 
+                   [class.has-file]="uploadedVideoFile"
+                   [class.has-error]="blockVideoUploadError">
+                <input 
+                  type="file"
+                  id="video-upload-input"
+                  accept="video/mp4,video/x-msvideo,.mp4,.avi"
+                  (change)="onVideoFileSelectedForBlock($event)"
+                  [disabled]="uploadingVideo">
+                <label for="video-upload-input" class="upload-label">
+                  <span class="upload-icon">📹</span>
+                  <span class="upload-text">
+                    {{ uploadedVideoFile 
+                      ? (currentLang === 'ar' ? 'تم اختيار ملف فيديو' : 'Video file selected')
+                      : (currentLang === 'ar' ? 'اختر ملف فيديو للرفع (حد أقصى 100 ميجابايت)' : 'Select a video file to upload (max 100 MB)') }}
+                  </span>
+                </label>
+              </div>
+
+              <div *ngIf="blockVideoUploadError" class="upload-error">
+                {{ blockVideoUploadError }}
+              </div>
+
+              <!-- Video Title Input -->
+              <div *ngIf="uploadedVideoFile && uploadedVideoMetadata" class="video-title-input">
+                <label for="video-title">
+                  {{ currentLang === 'ar' ? 'عنوان الفيديو' : 'Video Title' }}
+                  <span class="required">*</span>
+                </label>
+                <input 
+                  type="text"
+                  id="video-title"
+                  [(ngModel)]="uploadedVideoTitle"
+                  [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الفيديو' : 'Enter video title'"
+                  [disabled]="uploadingVideo"
+                  [required]="true"
+                  [class.error]="!uploadedVideoTitle?.trim() && uploadedVideoFile"
+                  class="title-input"
+                  (blur)="validateVideoTitle()">
+                <div *ngIf="!uploadedVideoTitle?.trim() && uploadedVideoFile && !uploadingVideo" class="title-error-message">
+                  {{ currentLang === 'ar' ? 'عنوان الفيديو مطلوب' : 'Video title is required' }}
+                </div>
+              </div>
+
+              <!-- Video Preview -->
+              <div *ngIf="(uploadedVideoFile && uploadedVideoMetadata) || (selectedBlock?.meta?.['videoUrl'] && !uploadingVideo)" class="uploaded-video-preview">
+                <!-- Loading Overlay -->
+                <div *ngIf="uploadingVideo" class="video-upload-overlay">
+                  <div class="upload-overlay-content">
+                    <div class="upload-spinner">
+                      <div class="spinner-ring"></div>
+                    </div>
+                    <div class="upload-progress-container">
+                      <div class="upload-progress-bar">
+                        <div class="upload-progress-fill" [style.width.%]="blockVideoUploadProgress"></div>
+                      </div>
+                      <p class="upload-progress-text">
+                        <span *ngIf="blockVideoUploadProgress < 95">
+                          {{ currentLang === 'ar' ? 'جاري رفع الفيديو...' : 'Uploading video...' }}
+                        </span>
+                        <span *ngIf="blockVideoUploadProgress >= 95 && blockVideoUploadProgress < 100">
+                          {{ currentLang === 'ar' ? 'جاري الحفظ...' : 'Saving...' }}
+                        </span>
+                        <span *ngIf="blockVideoUploadProgress === 100">
+                          {{ currentLang === 'ar' ? 'اكتمل!' : 'Complete!' }}
+                        </span>
+                        <span class="progress-percentage">{{ blockVideoUploadProgress }}%</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="video-preview-thumbnail" 
+                     (click)="previewUploadedVideo()"
+                     *ngIf="selectedBlock?.meta?.['videoUrl']"
+                     [class.clickable]="selectedBlock?.meta?.['videoUrl']">
+                  <img *ngIf="uploadedVideoMetadata?.thumbnail || selectedBlock?.meta?.['videoThumbnail']" 
+                       [src]="uploadedVideoMetadata?.thumbnail || selectedBlock?.meta?.['videoThumbnail']" 
+                       [alt]="uploadedVideoTitle || selectedBlock?.title || 'Video'">
+                  <div class="video-preview-duration" *ngIf="uploadedVideoMetadata?.durationFormatted || selectedBlock?.meta?.['videoDuration']">
+                    {{ uploadedVideoMetadata?.durationFormatted || selectedBlock?.meta?.['videoDuration'] }}
+                  </div>
+                  <div class="video-play-overlay">
+                    <div class="play-icon"></div>
+                  </div>
+                </div>
+                <div class="video-preview-thumbnail" 
+                     *ngIf="!selectedBlock?.meta?.['videoUrl']">
+                  <img *ngIf="uploadedVideoMetadata?.thumbnail" 
+                       [src]="uploadedVideoMetadata?.thumbnail" 
+                       [alt]="uploadedVideoTitle || uploadedVideoFile?.name || 'Video'">
+                  <div class="video-preview-duration" *ngIf="uploadedVideoMetadata?.durationFormatted">
+                    {{ uploadedVideoMetadata?.durationFormatted }}
+                  </div>
+                </div>
+                <div class="video-preview-info">
+                  <!-- Title Display/Edit -->
+                  <div *ngIf="!editingUploadedVideoTitle" class="video-title-display">
+                    <h4 class="video-preview-title">{{ uploadedVideoTitle || selectedBlock?.title || (uploadedVideoFile?.name || 'Video') }}</h4>
+                    <button 
+                      type="button"
+                      class="btn-edit-title"
+                      (click)="editUploadedVideoTitle()"
+                      *ngIf="selectedBlock?.meta?.['videoUrl'] && !uploadedVideoFile">
+                      <span>{{ currentLang === 'ar' ? '✏️ تعديل العنوان' : '✏️ Edit Title' }}</span>
+                    </button>
+                  </div>
+                  <div *ngIf="editingUploadedVideoTitle" class="video-title-edit">
+                    <input 
+                      type="text"
+                      [(ngModel)]="uploadedVideoTitle"
+                      [placeholder]="currentLang === 'ar' ? 'أدخل عنوان الفيديو' : 'Enter video title'"
+                      class="title-edit-input"
+                      [disabled]="savingVideoTitle"
+                      (keyup.enter)="saveUploadedVideoTitle()"
+                      (keyup.escape)="cancelEditUploadedVideoTitle()">
+                    <div class="title-edit-actions">
+                      <button 
+                        type="button"
+                        class="btn-save-title"
+                        (click)="saveUploadedVideoTitle()"
+                        [disabled]="savingVideoTitle">
+                        <span *ngIf="!savingVideoTitle">{{ currentLang === 'ar' ? 'حفظ' : 'Save' }}</span>
+                        <span *ngIf="savingVideoTitle" class="btn-loading">
+                          <span class="spinner"></span>
+                          <span>{{ currentLang === 'ar' ? 'جاري الحفظ...' : 'Saving...' }}</span>
+                        </span>
+                      </button>
+                      <button 
+                        type="button"
+                        class="btn-cancel-title"
+                        (click)="cancelEditUploadedVideoTitle()"
+                        [disabled]="savingVideoTitle">
+                        {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="video-preview-meta">
+                    <span *ngIf="uploadedVideoMetadata?.fileSize || selectedBlock?.meta?.['videoFileSize']">
+                      {{ formatFileSize(uploadedVideoMetadata?.fileSize || selectedBlock?.meta?.['videoFileSize'] || 0) }}
+                    </span>
+                    <span *ngIf="(uploadedVideoMetadata?.width && uploadedVideoMetadata?.height) || (selectedBlock?.meta?.['videoWidth'] && selectedBlock?.meta?.['videoHeight'])">
+                      {{ (uploadedVideoMetadata?.width || selectedBlock?.meta?.['videoWidth']) }}×{{ (uploadedVideoMetadata?.height || selectedBlock?.meta?.['videoHeight']) }}
+                    </span>
+                  </div>
+                  <div class="video-preview-actions">
+                    <button 
+                      type="button"
+                      class="btn-remove-video"
+                      (click)="removeUploadedVideoFile()"
+                      [disabled]="uploadingVideo"
+                      *ngIf="uploadedVideoFile && !selectedBlock?.meta?.['videoUrl']">
+                      {{ currentLang === 'ar' ? 'إزالة' : 'Remove' }}
+                    </button>
+                    <button 
+                      type="button"
+                      class="btn-upload-video"
+                      (click)="uploadVideoForBlock()"
+                      [disabled]="uploadingVideo || !uploadedVideoTitle?.trim()"
+                      *ngIf="uploadedVideoFile && !selectedBlock?.meta?.['videoUrl']">
+                      {{ currentLang === 'ar' ? 'رفع الفيديو' : 'Upload Video' }}
+                    </button>
+                    <button 
+                      type="button"
+                      class="btn-delete-video"
+                      (click)="deleteUploadedVideo()"
+                      *ngIf="selectedBlock?.meta?.['videoUrl'] && !uploadedVideoFile">
+                      {{ currentLang === 'ar' ? '🗑️ حذف الفيديو' : '🗑️ Delete Video' }}
+                    </button>
+                    <div *ngIf="selectedBlock?.meta?.['videoUrl'] && !uploadedVideoFile && !editingUploadedVideoTitle" class="uploaded-badge">
+                      {{ currentLang === 'ar' ? 'تم الرفع' : 'Uploaded' }}
+                    </div>
+                  </div>
+                </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Uploaded Video Preview Modal -->
+<div *ngIf="showUploadedVideoModal && previewingUploadedVideo" class="modal-overlay uploaded-video-preview-modal" (click)="closeUploadedVideoModal()">
+  <div class="modal-content uploaded-video-preview-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ currentLang === 'ar' ? 'معاينة الفيديو' : 'Video Preview' }}</h3>
+      <button type="button" class="modal-close" (click)="closeUploadedVideoModal()">
+        ✕
+      </button>
+    </div>
+    <div class="modal-body uploaded-video-preview-body">
+      <div class="uploaded-video-player">
+        <video 
+          *ngIf="getUploadedVideoUrl()"
+          [src]="getUploadedVideoUrl()!"
+          controls
+          autoplay
+          style="width: 100%; max-height: 70vh; border-radius: 8px;">
+          {{ currentLang === 'ar' ? 'متصفحك لا يدعم تشغيل الفيديو' : 'Your browser does not support video playback' }}
+        </video>
+      </div>
+      <div class="uploaded-video-details">
+        <h2 class="preview-video-title">{{ previewingUploadedVideo.title }}</h2>
+        <div class="preview-video-meta" *ngIf="previewingUploadedVideo.duration">
+          <div class="meta-item">
+            <span class="meta-label">{{ currentLang === 'ar' ? 'المدة:' : 'Duration:' }}</span>
+            <span class="meta-value">{{ previewingUploadedVideo.duration }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <!-- Audio Block Editor -->
+        <div *ngIf="selectedBlock && selectedBlock.block_type === 'audio'" class="block-editor-content">
+          <!-- Audio editor content will be implemented -->
+        </div>
+
+        <!-- File Block Editor -->
+        <div *ngIf="selectedBlock && selectedBlock.block_type === 'file'" class="block-editor-content">
+          <!-- File editor content will be implemented -->
+        </div>
+      </div>
+
+      <!-- Right Sidebar - AI Assistant -->
+      <div class="ai-assistant-sidebar">
+        <div class="ai-assistant-header">
+          <h3>🤖 {{ currentLang === 'ar' ? 'المساعد الذكي' : 'AI Assistant' }}</h3>
+        </div>
+        <div class="ai-hint-section">
+          <label>{{ currentLang === 'ar' ? 'التلميح' : 'Hint' }}</label>
+          <textarea 
+            [(ngModel)]="lessonHint"
+            [placeholder]="currentLang === 'ar' ? 'تلميح للذكاء الاصطناعي...' : 'Hint for AI...'"
+            maxlength="500"></textarea>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- Block Type Chooser Modal -->
+<div class="modal-overlay" *ngIf="showBlockTypeChooser" (click)="showBlockTypeChooser = false">
+  <div class="modal-content block-type-chooser" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ currentLang === 'ar' ? 'اختر نوع جزء المحتوى' : 'Choose Block Type' }}</h3>
+      <button 
+        type="button"
+        class="modal-close-btn"
+        (click)="showBlockTypeChooser = false">
+        ✕
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="block-type-options">
+        <button 
+          type="button"
+          class="block-type-option"
+          (click)="addBlock('text')">
+          <span class="block-type-icon">📝</span>
+          <span class="block-type-label">{{ currentLang === 'ar' ? 'نص' : 'Text' }}</span>
+        </button>
+        <button 
+          type="button"
+          class="block-type-option"
+          (click)="addBlock('video')">
+          <span class="block-type-icon">▶</span>
+          <span class="block-type-label">{{ currentLang === 'ar' ? 'فيديو' : 'Video' }}</span>
+        </button>
+        <button 
+          type="button"
+          class="block-type-option"
+          (click)="addBlock('audio')">
+          <span class="block-type-icon">🎧</span>
+          <span class="block-type-label">{{ currentLang === 'ar' ? 'صوت' : 'Audio' }}</span>
+        </button>
+        <button 
+          type="button"
+          class="block-type-option"
+          (click)="addBlock('file')">
+          <span class="block-type-icon">📎</span>
+          <span class="block-type-label">{{ currentLang === 'ar' ? 'ملف' : 'File' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube Video Preview Modal -->
+<div *ngIf="showYouTubePreviewModal && previewingYouTubeVideo" class="modal-overlay youtube-preview-modal" (click)="closeYouTubePreviewModal()">
+  <div class="modal-content youtube-preview-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ currentLang === 'ar' ? 'معاينة الفيديو' : 'Video Preview' }}</h3>
+      <button type="button" class="modal-close" (click)="closeYouTubePreviewModal()">
+        ✕
+      </button>
+    </div>
+    <div class="modal-body youtube-preview-body">
+      <div class="youtube-preview-player">
+        <iframe 
+          width="100%" 
+          height="400" 
+          [src]="getYouTubeEmbedUrl(previewingYouTubeVideo.videoId)"
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div class="youtube-preview-details">
+        <h2 class="preview-video-title">{{ previewingYouTubeVideo.title }}</h2>
+        <div class="preview-video-meta">
+          <div class="meta-item">
+            <span class="meta-label">{{ currentLang === 'ar' ? 'القناة:' : 'Channel:' }}</span>
+            <span class="meta-value">{{ previewingYouTubeVideo.channelTitle }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">{{ currentLang === 'ar' ? 'المدة:' : 'Duration:' }}</span>
+            <span class="meta-value">{{ previewingYouTubeVideo.duration }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">{{ currentLang === 'ar' ? 'المشاهدات:' : 'Views:' }}</span>
+            <span class="meta-value">{{ previewingYouTubeVideo.viewCount | number }}</span>
+          </div>
+          <div class="meta-item" *ngIf="previewingYouTubeVideo.publishedAt">
+            <span class="meta-label">{{ currentLang === 'ar' ? 'تاريخ النشر:' : 'Published:' }}</span>
+            <span class="meta-value">{{ previewingYouTubeVideo.publishedAt | date:'medium' }}</span>
+          </div>
+        </div>
+        <div class="preview-video-description">
+          <h4>{{ currentLang === 'ar' ? 'الوصف:' : 'Description:' }}</h4>
+          <p>{{ previewingYouTubeVideo.description || (currentLang === 'ar' ? 'لا يوجد وصف' : 'No description available') }}</p>
+        </div>
+      </div>
+      <div class="youtube-preview-actions">
+        <button 
+          type="button"
+          class="btn-open-youtube"
+          (click)="openYouTubeVideo(previewingYouTubeVideo.videoId)">
+          {{ currentLang === 'ar' ? 'فتح في YouTube' : 'Open in YouTube' }}
+        </button>
+        <button 
+          type="button"
+          class="btn-use-video"
+          (click)="useYouTubeVideo(previewingYouTubeVideo)">
+          {{ currentLang === 'ar' ? 'استخدام هذا الفيديو' : 'Use This Video' }}
+        </button>
+        <button 
+          type="button"
+          class="btn-close-preview"
+          (click)="closeYouTubePreviewModal()">
+          {{ currentLang === 'ar' ? 'إغلاق' : 'Close' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Warning Modal -->
+<div class="modal-overlay warning-modal-overlay" *ngIf="showWarningModal" (click)="warningModalType === 'deleteBlock' ? cancelDeleteBlock() : cancelGoBack()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ currentLang === 'ar' ? 'تحذير' : 'Warning' }}</h3>
+    </div>
+    <div class="modal-body">
+      <p class="warning-modal-text" *ngIf="warningModalType === 'goBack'">{{ currentLang === 'ar' 
+        ? 'سيتم حذف جميع البيانات المدخلة. هل أنت متأكد أنك تريد العودة؟ ستحتاج إلى البدء من جديد.' 
+        : 'All entered data will be deleted. Are you sure you want to go back? You will need to start from scratch.' }}</p>
+      <p class="warning-modal-text" *ngIf="warningModalType === 'deleteContent'">{{ currentLang === 'ar' 
+        ? 'هل أنت متأكد أنك تريد حذف هذا المحتوى؟ لا يمكن التراجع عن هذا الإجراء.' 
+        : 'Are you sure you want to delete this content? This action cannot be undone.' }}</p>
+      <p class="warning-modal-text" *ngIf="warningModalType === 'deleteBlock'">{{ currentLang === 'ar' 
+        ? 'هل أنت متأكد أنك تريد حذف جزء المحتوى هذا؟ سيتم حذفه نهائياً من قاعدة البيانات والتخزين. لا يمكن التراجع عن هذا الإجراء.' 
+        : 'Are you sure you want to delete this content block? It will be permanently deleted from the database and storage. This action cannot be undone.' }}</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="warningModalType === 'deleteBlock' ? cancelDeleteBlock() : cancelGoBack()">
+        {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+      </button>
+      <button
+        class="btn-confirm"
+        [disabled]="(warningModalType === 'deleteContent' && isDeletingContent) || (warningModalType === 'deleteBlock' && isDeletingBlock)"
+        [attr.aria-busy]="((warningModalType === 'deleteContent' && isDeletingContent) || (warningModalType === 'deleteBlock' && isDeletingBlock)) ? 'true' : null"
+        (click)="warningModalType === 'goBack' ? confirmGoBack() : (warningModalType === 'deleteContent' ? confirmDeleteContent() : confirmDeleteBlock())"
+      >
+        <span *ngIf="(warningModalType === 'deleteContent' && isDeletingContent) || (warningModalType === 'deleteBlock' && isDeletingBlock)" class="btn-spinner" aria-hidden="true"></span>
+        <span>{{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}</span>
+      </button>
+    </div>
+  </div>
+</div>

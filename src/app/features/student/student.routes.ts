@@ -47,6 +47,10 @@ export const STUDENT_ROUTES: Routes = [
         loadComponent: () => import('./starter/student-starter.component').then(m => m.StudentStarterComponent),
       },
       {
+        path: 'starter/content/:contentId',
+        loadComponent: () => import('./starter/content/student-content.component').then(m => m.StudentContentComponent),
+      },
+      {
         path: 'starter/quiz-test',
         loadComponent: () => import('./starter/quiz-test/quiz-test.component').then(m => m.QuizTestComponent),
       },
